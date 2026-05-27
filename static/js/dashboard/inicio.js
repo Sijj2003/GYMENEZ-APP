@@ -102,6 +102,9 @@ function setMotivationalQuote() {
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
     
+    // 0. QUITAR EL DIFUMINADO INICIAL Y MOSTRAR TARJETAS
+    document.body.classList.add('loaded');
+    
     // 1. Activar frase
     setMotivationalQuote();
 
