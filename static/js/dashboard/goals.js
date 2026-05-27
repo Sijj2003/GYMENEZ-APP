@@ -1,76 +1,143 @@
-// Configuración del Endpoint
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
 // ==========================================
-// 🎬 MOTOR DE ANIMACIÓN INTERACTIVA 3D (Scroll Physics)
+// 🎬 MOTOR CINEMÁTICO REALISTA DE 4 ETAPAS
 // ==========================================
 function initCinematicScroll3D() {
     const showcaseView = document.getElementById('basico-showcase-view');
-    const card3D = document.getElementById('sc-card-3d');
-    const progressBar = document.getElementById('sc-progress-bar');
-    const counterText = document.getElementById('sc-counter');
-    const fadeText = document.getElementById('sc-fade-text');
+    const masterCard = document.getElementById('sc-master-card');
+    const cardBar = document.getElementById('sc-card-bar');
+    const cardValue = document.getElementById('sc-card-value');
+    const barLabel = document.getElementById('sc-bar-label');
+    const barPercent = document.getElementById('sc-bar-percent');
+    const cardTitle = document.getElementById('sc-card-title');
+    const cardTag = document.getElementById('sc-card-tag');
+    const cardIndicator = document.getElementById('sc-card-indicator');
+    
+    const mainTitle = document.getElementById('sc-main-title');
+    const mainDesc = document.getElementById('sc-main-desc');
     const ctaLock = document.getElementById('sc-cta-lock');
 
+    // Cambiar fondos dinámicamente
+    function switchBg(activeId) {
+        document.querySelectorAll('.sc-bg-fade').forEach(bg => {
+            if(bg.id === activeId) bg.classList.add('active-bg');
+            else bg.classList.remove('active-bg');
+        });
+    }
+
     window.addEventListener('scroll', () => {
-        // Calcular la posición exacta del scroll dentro de la sección cinemática
         const rect = showcaseView.getBoundingClientRect();
         const viewHeight = showcaseView.offsetHeight - window.innerHeight;
-        const scrolled = -rect.top;
+        let progress = -rect.top / viewHeight;
         
-        // Porcentaje de progreso del scroll (de 0 a 1)
-        let progress = scrolled / viewHeight;
         if (progress < 0) progress = 0;
         if (progress > 1) progress = 1;
 
-        // Fase 1: Rotación Tridimensional Matemática Interactiva
-        // Arranca inclinado (20deg, -15deg) y se endereza a (0, 0) a mitad de scroll (0.5)
-        if (progress <= 0.5) {
-            const factor = progress * 2; // Normalizar de 0 a 1 en la primera mitad
-            const rotX = 20 - (20 * factor);
-            const rotY = -15 + (15 * factor);
-            const rotZ = 5 - (5 * factor);
-            const transZ = factor * 50;
+        // --- ETAPA 1: FUERZA INCREMENTAL (0% a 25% del Scroll) ---
+        if (progress >= 0 && progress < 0.25) {
+            let p = progress / 0.25; // Normalizar a escala 0-1
+            switchBg('sc-bg-1');
+            
+            // Física 3D: Va enderezándose progresivamente
+            const rotX = 22 - (22 * p);
+            const rotY = -18 + (18 * p);
+            const rotZ = 6 - (6 * p);
+            masterCard.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg) translateZ(${p * 40}px)`;
+            masterCard.style.opacity = '1';
+            masterCard.style.filter = 'none';
 
-            card3D.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg) translateZ(${transZ}px)`;
-            card3D.style.opacity = '1';
-            card3D.style.filter = 'blur(0px)';
+            // Data Inyectada Realista
+            cardTag.textContent = "Potencia / Sobrecarga Progresiva";
+            cardTitle.textContent = "Fuerza Incremental";
+            cardIndicator.className = "w-2.5 h-2.5 rounded-full bg-sky-400 shadow-[0_0_15px_#38bdf8]";
+            cardBar.className = "h-full rounded-full bg-sky-400";
+            barLabel.textContent = "1RM Prensa e Hilera Coeficiente";
             
-            // Llenar barra de progreso y contador numérico en tiempo real
-            const percentage = (factor * 18.5).toFixed(1);
-            progressBar.style.width = `${factor * 100}%`;
-            counterText.textContent = `+${percentage}%`;
-            
-            // Atenuar texto superior inicial
-            fadeText.style.opacity = `${1 - factor}`;
-            fadeText.style.transform = `translateY(-${factor * 20}px)`;
-            
-            // Asegurar que el CTA final esté totalmente oculto
+            let val = (p * 14.2).toFixed(1);
+            cardValue.textContent = `+${val}%`;
+            cardValue.className = "text-5xl md:text-6xl font-[900] tracking-tighter font-mono text-white";
+            cardBar.style.width = `${p * 100}%`;
+            barPercent.textContent = `${Math.round(p * 100)}%`;
+
+            // Textos del Título Narrativo Superior
+            mainTitle.textContent = "Potencia Pura";
+            mainTitle.style.color = "#white";
+            mainDesc.textContent = "Monitoreo del Índice de Sobrecarga Progresiva";
+            document.getElementById('sc-narrative-text').style.opacity = '1';
             ctaLock.style.opacity = '0';
-            ctaLock.style.transform = 'scale(0.95)';
-            ctaLock.style.pointerEvents = 'none';
-        } 
-        // Fase 2: Desvanecimiento de tarjeta y emergencia del Bloqueo CTA
-        else {
-            const factor = (progress - 0.5) * 2; // Normalizar de 0 a 1 en la segunda mitad
-            
-            // Desvanecer tarjeta hacia el fondo
-            card3D.style.transform = `rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateZ(${50 + (factor * 100)}px)`;
-            card3D.style.opacity = `${1 - factor}`;
-            card3D.style.filter = `blur(${factor * 10}px)`;
-            
-            // Llenar la barra al 100%
-            progressBar.style.width = '100%';
-            counterText.textContent = '+18.5%';
-            counterText.className = "text-[#FFC300] font-mono text-xs animate-pulse";
+        }
+        
+        // --- ETAPA 2: COMPOSICIÓN LIPÍDICA (25% a 50% del Scroll) ---
+        else if (progress >= 0.25 && progress < 0.50) {
+            let p = (progress - 0.25) / 0.25; // Normalizar
+            switchBg('sc-bg-2');
 
-            // Emerger llamado a la acción (CTA) con botón dorado
-            ctaLock.style.opacity = `${factor}`;
-            ctaLock.style.transform = `scale(${0.95 + (factor * 0.05)})`;
+            masterCard.style.transform = `rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateZ(40px)`;
+            masterCard.style.opacity = '1';
+            masterCard.style.filter = 'none';
+
+            // Data Inyectada Realista
+            cardTag.textContent = "Composición Corporal / Antropometría";
+            cardTitle.textContent = "Pérdida Lipídica";
+            cardIndicator.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_15px_#34d399]";
+            cardBar.className = "h-full rounded-full bg-emerald-400";
+            barLabel.textContent = "Oxidación de Ácidos Grasos Libres";
+
+            let val = (p * -3.8).toFixed(1);
+            cardValue.textContent = `${val} KG`;
+            cardValue.className = "text-5xl md:text-6xl font-[900] tracking-tighter font-mono text-emerald-400";
+            cardBar.style.width = `${p * 100}%`;
+            barPercent.textContent = `${Math.round(p * 100)}%`;
+
+            mainTitle.textContent = "Déficit Calibrado";
+            mainDesc.textContent = "Telemetría de Masa Grasa vs Masa Magra";
+            document.getElementById('sc-narrative-text').style.opacity = '1';
+        }
+
+        // --- ETAPA 3: CONSISTENCIA TÁCTICA (50% a 75% del Scroll) ---
+        else if (progress >= 0.50 && progress < 0.75) {
+            let p = (progress - 0.50) / 0.25; // Normalizar
+            switchBg('sc-bg-3');
+
+            masterCard.style.transform = `rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateZ(40px)`;
+            masterCard.style.opacity = `${1 - p}`; // Se va desvaneciendo al final de su fase
+            masterCard.style.filter = `blur(${p * 4}px)`;
+
+            // Data Inyectada Realista
+            cardTag.textContent = "Adherencia / Frecuencia Semanal";
+            cardTitle.textContent = "Consistencia Táctica";
+            cardIndicator.className = "w-2.5 h-2.5 rounded-full bg-[#FFC300] shadow-[0_0_15px_#FFC300]";
+            cardBar.className = "h-full rounded-full bg-[#FFC300]";
+            barLabel.textContent = "Volumen de bloques completados";
+
+            let currentRoutines = Math.round(p * 14);
+            cardValue.textContent = `${currentRoutines} / 18`;
+            cardValue.className = "text-5xl md:text-6xl font-[900] tracking-tighter font-mono text-[#FFC300]";
+            cardBar.style.width = `${(currentRoutines/18) * 100}%`;
+            barPercent.textContent = `${Math.round((currentRoutines/18) * 100)}%`;
+
+            mainTitle.textContent = "Disciplina Inmutable";
+            mainDesc.textContent = "Control de Bloques Físicos Ejecutados";
+            document.getElementById('sc-narrative-text').style.opacity = `${1 - p}`;
+        }
+
+        // --- ETAPA 4: PAYWALL CINEMÁTICO FINAL (75% a 100% del Scroll) ---
+        else if (progress >= 0.75) {
+            let p = (progress - 0.75) / 0.25; // Normalizar
+            // Fondo totalmente oscuro para máxima concentración en el botón
+            document.querySelectorAll('.sc-bg-fade').forEach(bg => bg.style.opacity = '0');
+
+            masterCard.style.opacity = '0';
+            masterCard.style.transform = `scale(${1 - p})`;
             
-            if (factor > 0.8) {
-                ctaLock.style.pointerEvents = 'auto'; // Activar el botón de suscripción al final
+            // Emerge el candado dorado con aceleración suave
+            ctaLock.style.opacity = `${p}`;
+            ctaLock.style.transform = `scale(${0.92 + (p * 0.08)})`;
+            
+            if (p > 0.8) {
+                ctaLock.style.pointerEvents = 'auto'; // Habilitar clics al botón
             } else {
                 ctaLock.style.pointerEvents = 'none';
             }
@@ -79,35 +146,30 @@ function initCinematicScroll3D() {
 }
 
 // ==========================================
-// 👑 RENDERIZADOR PREMIUM (PLUS / ULTRA)
+// 👑 RENDERIZADOR DEL DASHBOARD PREMIUM (PLUS/ULTRA)
 // ==========================================
 function renderPremiumDashboard(metrics) {
-    // Si no hay datos asignados aún por el Administrador, colocamos valores por defecto elegantes
     document.getElementById('g-focus-title').textContent = metrics.foco_titulo || "Fase de Recomposición Corporal";
     document.getElementById('g-focus-desc').textContent = metrics.foco_descripcion || "Optimización del índice metabólico mediante carga progresiva y control estricto de macros de alta densidad biológica.";
     
-    // Contadores Dinámicos Animados
     document.getElementById('g-routines-count').textContent = metrics.rutinas_completadas || "14";
     document.getElementById('g-routines-target').textContent = `Meta: ${metrics.rutinas_meta || "18"} Entrenamientos`;
     const routinesPct = ((metrics.rutines_completadas || 14) / (metrics.rutines_meta || 18)) * 100;
     document.getElementById('g-routines-bar').style.width = `${routinesPct}%`;
 
-    // Peso
     const pesoDiff = metrics.peso_variacion || "-3.8";
     document.getElementById('g-weight-diff').textContent = `${pesoDiff} KG`;
     document.getElementById('g-weight-bar').style.width = `${Math.abs(pesoDiff) * 15}%`;
 
-    // Fuerza
     const fuerzaIdx = metrics.fuerza_indice || "+14.2";
     document.getElementById('g-strength-index').textContent = `${fuerzaIdx}%`;
     document.getElementById('g-strength-bar').style.width = `${parseFloat(fuerzaIdx) * 4}%`;
 }
 
 // ==========================================
-// 🚀 INICIALIZADOR CENTRAL DEL CORE
+// 🚀 INICIALIZADOR CENTRAL DEL CONTROLADOR
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
-    // Quitar la cortina de opacidad
     document.body.classList.add('loaded');
 
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
@@ -117,34 +179,30 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        // Consultar el perfil inmutable para verificar jerarquía
         const profileRes = await fetch(`${API_BASE_URL}/api/profile/me`);
-        if (!profileRes.ok) throw new Error("Fallo de autenticación");
+        if (!profileRes.ok) throw new Error("Fallo de sesión");
         
         const profileData = await profileRes.json();
         const level = profileData.profile.subscription_level || 'BASICO';
 
-        // Ocultar spinner inicial
         document.getElementById('loading-spinner').classList.add('hidden');
 
-        // Evaluación de Jerarquía de Acceso
         if (level === 'PLUS' || level === 'ULTRA') {
-            // Activar Vista Premium y renderizar datos
             const plusView = document.getElementById('plus-goals-view');
             plusView.classList.remove('hidden');
             plusView.classList.add('flex');
             
-            // Buscamos las metas del atleta (Reutilizamos el endpoint desbloqueado)
             const metricsRes = await fetch(`${API_BASE_URL}/api/client/metrics`);
             if (metricsRes.ok) {
                 const metricsData = await metricsRes.json();
                 renderPremiumDashboard(metricsData.metrics || {});
             }
         } else {
-            // Activar Vista Cinemática 3D Interactiva para usuarios Básicos
+            // Cargar la experiencia interactiva cinematográfica para usuarios Básicos
+            document.getElementById('basico-showcycle-view');
             const basicoView = document.getElementById('basico-showcase-view');
             basicoView.classList.remove('hidden');
-            initCinematicScroll3D(); // Encender motor matemático de scroll
+            initCinematicScroll3D(); 
         }
 
     } catch (error) {
