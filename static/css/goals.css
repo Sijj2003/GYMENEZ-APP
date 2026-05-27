@@ -1,28 +1,28 @@
-/* --- PERSPECTIVA TRIDIMENSIONAL NATAL --- */
+/* --- PERSPECTIVA TRIDIMENSIONAL PREMIUM --- */
 .perspective-container {
-    perspective: 1400px;
+    perspective: 1600px;
     transform-style: preserve-3d;
-    position: relative;
 }
 
 /* La Tarjeta que rotará interactivamente con el scroll */
 .mock-card-3d {
     transform-style: preserve-3d;
     backface-visibility: hidden;
-    /* Valores por defecto de inclinación tridimensional */
-    transform: rotateX(20deg) rotateY(-15deg) rotateZ(5deg) translateZ(0px);
-    transition: transform 0.1s ease-out, opacity 0.4s ease, filter 0.4s ease;
+    transform: rotateX(22deg) rotateY(-18deg) rotateZ(6deg) translateZ(0px);
+    will-change: transform, opacity, filter;
 }
 
-/* Efectos de Iluminación interna de los textos de datos */
+/* Manejador de Fondos Fotográficos Oscuros */
+.sc-bg-fade {
+    filter: brightness(12%) grayscale(100%) blur(2px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sc-bg-fade.active-bg {
+    opacity: 0.35;
+    transform: scale(1);
+}
+
+/* Tipografía de datos tabulares */
 .data-value {
     font-variant-numeric: tabular-nums;
-}
-
-/* Suavizado de transiciones para elementos internos del Showcase */
-#sc-progress-bar {
-    transition: width 0.1s ease-out;
-}
-#sc-counter {
-    transition: color 0.3s ease;
 }
