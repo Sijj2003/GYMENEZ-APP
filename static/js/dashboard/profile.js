@@ -2,7 +2,6 @@
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
-// Utilidades
 function showUIFeedback(message, type = 'error') {
     const box = document.getElementById('message-box');
     if(!box) return;
@@ -11,34 +10,6 @@ function showUIFeedback(message, type = 'error') {
     box.style.opacity = '1';
     box.style.transform = 'translate(-50%, 0)';
     setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 4000);
-}
-
-// 🔒 FUNCIÓN ESCUDO VISUAL (Frontend Zero Trust UI)
-function applyZeroTrustLock(cardId, requiredLevel) {
-    const card = document.getElementById(cardId);
-    if (!card) return;
-    
-    // 1. Aplicar clase para difuminar los datos subyacentes
-    card.classList.add('is-locked');
-
-    // 2. Crear y montar el velo protector con Glassmorphism
-    const overlay = document.createElement('div');
-    overlay.className = 'lock-overlay absolute inset-0 z-20 bg-[#030305]/70 flex flex-col items-center justify-center cursor-not-allowed';
-    
-    overlay.innerHTML = `
-        <div class="bg-[#111] border border-white/10 px-5 py-3 rounded-xl uppercase tracking-widest text-[9px] font-black text-gray-300 shadow-2xl flex items-center gap-3 transition-colors hover:border-[#FFC300]/50 hover:text-[#FFC300]">
-            <svg class="w-4 h-4 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-            REQUIERE PLAN ${requiredLevel}
-        </div>
-    `;
-    
-    // 3. Interacción: Avisar al usuario por qué está bloqueado
-    overlay.onclick = (e) => {
-        e.stopPropagation();
-        showUIFeedback(`ACCESO DENEGADO: El registro biométrico requiere Plan ${requiredLevel}.`, 'error');
-    };
-    
-    card.appendChild(overlay);
 }
 
 // Renderizadores de Datos
@@ -50,7 +21,6 @@ function renderProfile(data) {
     const level = data.subscription_level ? data.subscription_level.toUpperCase() : 'BÁSICO';
     subElement.textContent = `PLAN ${level}`;
     
-    // Colorimetría según nivel
     if (level === 'ULTRA') {
         subElement.className = "px-3 py-1 bg-[#FFC300] text-black text-[8px] md:text-[9px] font-black rounded border border-[#FFC300] uppercase tracking-widest inline-block mb-4 shadow-[0_0_15px_rgba(255,195,0,0.5)]";
     }
@@ -105,30 +75,37 @@ window.addEventListener('DOMContentLoaded', async () => {
     try {
         // 1. Fetch de la Fuente Única de Verdad (Perfil Base)
         const profileRes = await fetch(`${API_BASE_URL}/api/profile/me`);
-        
         if (profileRes.ok) {
             const profileData = await profileRes.json();
             renderProfile(profileData.profile);
         }
 
-        // 2. Fetch de Telemetría Biológica Avanzada (Sujeta a Escudo Backend)
-        const metricsRes = await fetch(`${API_BASE_URL}/api/client/plus/metrics`);
+        // 2. Fetch de Métricas Biológicas
+        const metricsRes = await fetch(`${API_BASE_URL}/api/client/metrics`);
         
-        // 🚨 AQUÍ ESTÁ LA MAGIA DATA-DRIVEN: Si el backend dice 403, bloqueamos visualmente
-        if (metricsRes.status === 403) {
-            applyZeroTrustLock('card-metrics-base', 'PLUS');
-            applyZeroTrustLock('card-upper-body', 'PLUS');
-            applyZeroTrustLock('card-lower-body', 'PLUS');
-            applyZeroTrustLock('card-medical', 'PLUS');
-        } 
-        else if (metricsRes.ok) {
+        if (metricsRes.ok) {
             const metricsData = await metricsRes.json();
-            renderMetrics(metricsData.metrics || {});
+            const m = metricsData.metrics || {};
+            
+            // Lógica de visibilidad del botón "Solicitar Mediciones"
+            const hasData = m.peso || m.estatura || m.cuello || m.cintura;
+            
+            if (!hasData) {
+                // Si el objeto está vacío, mostramos el botón
+                document.getElementById('request-metrics-container').classList.remove('hidden');
+                document.getElementById('request-metrics-container').classList.add('flex');
+            } else {
+                // Si hay datos, lo mantenemos oculto y renderizamos la data
+                document.getElementById('request-metrics-container').classList.add('hidden');
+            }
+            
+            renderMetrics(m);
         }
 
-        // Transición de spinner a contenido
+        // 3. Transición de spinner a contenido
         document.getElementById('loading-spinner').classList.add('hidden');
         document.getElementById('profile-content').classList.remove('hidden');
+        document.getElementById('profile-content').classList.add('flex');
 
     } catch (error) {
         const spinner = document.getElementById('loading-spinner');
