@@ -1,8 +1,6 @@
 // Configuración de API
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
-const AUTH_TOKEN_KEY = 'gymen_auth_token';
-const DEVICE_ID_KEY = 'gymen_device_id';
 
 // ==========================================
 // UTILIDADES DE INTERFAZ
