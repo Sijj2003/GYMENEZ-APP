@@ -1,0 +1,51 @@
+/* Hover effects para las tarjetas Bento */
+.bento-card { 
+    transition: all 0.3s ease; 
+    cursor: pointer; 
+}
+.bento-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    border-color: rgba(255, 195, 0, 0.3);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 195, 0, 0.1);
+    z-index: 10;
+}
+
+/* Variantes de color para módulos específicos */
+.hover-green:hover { border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.8), 0 0 20px rgba(16, 185, 129, 0.15); }
+.hover-red:hover { border-color: rgba(220, 38, 38, 0.4); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.8), 0 0 20px rgba(220, 38, 38, 0.15); }
+.hover-sky:hover { border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.8), 0 0 20px rgba(56, 189, 248, 0.15); }
+
+/* Estilo para tarjetas bloqueadas por Suscripción */
+.locked-card {
+    filter: grayscale(100%);
+    opacity: 0.6;
+    cursor: not-allowed !important;
+}
+.locked-card:hover {
+    transform: none !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: none !important;
+}
+
+/* Imágenes de fondo para módulos Premium */
+.bg-eats {
+    background: linear-gradient(to top, rgba(5,5,5,1) 10%, rgba(5,5,5,0.4)), url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=800');
+    background-size: cover; background-position: center;
+}
+.bg-on {
+    background: linear-gradient(to top, rgba(5,5,5,1) 10%, rgba(5,5,5,0.4)), url('https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=800');
+    background-size: cover; background-position: center;
+}
+.bg-workout {
+    background: radial-gradient(circle at top right, rgba(255,195,0,0.1), transparent 50%);
+}
+
+/* Animación de entrada suave del Dashboard */
+.fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0; 
+    transform: translateY(20px);
+}
+@keyframes fadeInUp { 
+    to { opacity: 1; transform: translateY(0); } 
+}
