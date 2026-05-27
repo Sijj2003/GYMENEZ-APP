@@ -52,8 +52,6 @@
 
         <!-- Bento Grid de Progreso Físico -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 auto-rows-auto">
-            
-            <!-- Tarjeta 1: Foco Principal -->
             <div class="md:col-span-3 glass-panel rounded-[24px] md:rounded-[32px] p-6 md:p-8 border-t border-[#FFC300]/20 bg-gradient-to-r from-[#FFC300]/5 to-transparent flex flex-col justify-between min-h-[140px]">
                 <div>
                     <span class="text-[8px] md:text-[9px] text-[#FFC300] font-black uppercase tracking-[0.2em] mb-2 block">Directiva de Entrenamiento</span>
@@ -62,7 +60,6 @@
                 <p id="g-focus-desc" class="text-gray-400 text-xs md:text-sm mt-3 leading-relaxed max-w-2xl">Esperando actualización del Administrador del sistema.</p>
             </div>
 
-            <!-- Tarjeta 2: Consistencia de Rutinas (Progreso Circular Simulado) -->
             <div class="glass-panel rounded-[24px] md:rounded-[32px] p-6 flex flex-col justify-between min-h-[220px]">
                 <div>
                     <span class="text-[8px] font-black text-gray-500 uppercase tracking-widest block mb-1">Consistencia</span>
@@ -73,14 +70,12 @@
                         <p id="g-routines-count" class="text-5xl font-black tracking-tighter text-[#FFC300]">0</p>
                         <p id="g-routines-target" class="text-[9px] text-gray-500 font-black uppercase tracking-widest mt-1">Meta: 0 Entrenamientos</p>
                     </div>
-                    <!-- Barra de progreso lineal premium -->
                     <div class="w-24 bg-white/5 h-2 rounded-full overflow-hidden border border-white/5">
                         <div id="g-routines-bar" class="bg-[#FFC300] h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tarjeta 3: Peso Perdido/Ganado -->
             <div class="glass-panel rounded-[24px] md:rounded-[32px] p-6 flex flex-col justify-between min-h-[220px]">
                 <div>
                     <span class="text-[8px] font-black text-gray-500 uppercase tracking-widest block mb-1">Evolución</span>
@@ -97,7 +92,6 @@
                 </div>
             </div>
 
-            <!-- Tarjeta 4: Sobrecarga Progresiva (Fuerza) -->
             <div class="glass-panel rounded-[24px] md:rounded-[32px] p-6 flex flex-col justify-between min-h-[220px]">
                 <div>
                     <span class="text-[8px] font-black text-gray-500 uppercase tracking-widest block mb-1">Potencia</span>
@@ -111,69 +105,72 @@
                     <div id="g-strength-bar" class="bg-sky-400 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
                 </div>
             </div>
-
         </div>
     </main>
 
 
     <!-- ======================================================== -->
-    <!-- 🎬 VISTA 2: CINEMÁTICA INTERACTIVA 3D (Usuarios BÁSICOS)  -->
+    <!-- 🎬 VISTA 2: SHOWCASE PARALLAX PREMIUM (Usuarios BÁSICOS)  -->
     <!-- ======================================================== -->
-    <div id="basico-showcase-view" class="hidden relative w-full h-[220vh] bg-[#030305]">
+    <div id="basico-showcase-view" class="hidden relative w-full h-[500vh] bg-[#020204]">
         
-        <!-- Contenedor Fijo donde ocurre la magia al hacer scroll -->
+        <!-- Imágenes de Fondo Cambiantes (Filtro Oscuro de Alta Gama) -->
+        <div id="sc-bg-1" class="sc-bg-fade fixed inset-0 bg-[url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1800')] bg-cover bg-center opacity-0 -z-20 scale-105 transition-all duration-1000"></div>
+        <div id="sc-bg-2" class="sc-bg-fade fixed inset-0 bg-[url('https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=1800')] bg-cover bg-center opacity-0 -z-20 scale-105 transition-all duration-1000"></div>
+        <div id="sc-bg-3" class="sc-bg-fade fixed inset-0 bg-[url('https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=1800')] bg-cover bg-center opacity-0 -z-20 scale-105 transition-all duration-1000"></div>
+        <div class="fixed inset-0 bg-gradient-to-b from-black/80 via-[#030305]/95 to-black/90 -z-10"></div>
+
+        <!-- Contenedor Fijo de la Experiencia -->
         <div class="sticky top-0 w-full h-screen flex flex-col items-center justify-center p-4 perspective-container overflow-hidden">
             
-            <!-- Cortina de Texto Reveladora Inicial -->
-            <div id="sc-fade-text" class="absolute top-24 text-center max-w-md px-4 transition-all duration-500">
-                <span class="text-[#FFC300] text-[8px] font-black uppercase tracking-[0.5em] block mb-2">Módulo Premium</span>
-                <h3 class="text-2xl md:text-3xl font-black uppercase tracking-tighter text-white">Tu Evolución en 3D</h3>
-                <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mt-2">Haz scroll lentamente para escanear el servicio</p>
+            <!-- Texto Narrativo Central -->
+            <div id="sc-narrative-text" class="absolute top-20 text-center max-w-xl px-4 transition-all duration-500 z-30">
+                <span class="text-[#FFC300] text-[9px] font-black uppercase tracking-[0.6em] block mb-3">Módulo Biométrico</span>
+                <h3 id="sc-main-title" class="text-3xl md:text-5xl font-[900] uppercase tracking-tighter text-white leading-none transition-all duration-500">Tu Evolución</h3>
+                <p id="sc-main-desc" class="text-gray-400 text-[10px] md:text-xs uppercase font-bold tracking-[0.25em] mt-3 transition-all duration-500">Desplaza para escanear el sistema</p>
             </div>
 
-            <!-- 🎴 LA TARJETA CINEMÁTICA 3D -->
-            <div id="sc-card-3d" class="mock-card-3d glass-panel rounded-[28px] md:rounded-[36px] p-6 md:p-8 w-full max-w-sm md:max-w-md min-h-[300px] flex flex-col justify-between border-[#FFC300]/10 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.9)]">
+            <!-- 🎴 PANEL CENTRAL INTERACTIVO (Giro y Datos Reales) -->
+            <div id="sc-master-card" class="mock-card-3d glass-panel rounded-[32px] p-6 md:p-10 w-full max-w-md min-h-[320px] flex flex-col justify-between border-white/10 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.95)] z-20">
                 
-                <div>
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <span class="text-[8px] font-black text-[#FFC300] uppercase tracking-widest block mb-1">Evolución Biológica</span>
-                            <h4 class="text-xl font-black uppercase tracking-tighter text-white">Métricas de Fuerza</h4>
-                        </div>
-                        <div class="w-3 h-3 rounded-full bg-sky-500 animate-pulse shadow-[0_0_10px_#38bdf8]"></div>
-                    </div>
-                    <p class="text-gray-400 text-[11px] uppercase tracking-wider leading-relaxed">Simulación automatizada del índice de sobrecarga progresiva basado en tus cargas reales.</p>
-                </div>
-
-                <!-- Elementos internos que se animarán dinámicamente con el scroll -->
-                <div class="my-6 border-t border-b border-white/5 py-4 space-y-4">
+                <div class="flex justify-between items-start">
                     <div>
-                        <div class="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1.5">
-                            <span class="text-gray-500">Sobrecarga Progresiva</span>
-                            <span id="sc-counter" class="text-sky-400 font-mono text-xs">+0.0%</span>
+                        <span id="sc-card-tag" class="text-[8px] font-black text-gray-500 uppercase tracking-widest block mb-1">Métrica Activa</span>
+                        <h4 id="sc-card-title" class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">Análisis de Carga</h4>
+                    </div>
+                    <div id="sc-card-indicator" class="w-2.5 h-2.5 rounded-full bg-[#FFC300] shadow-[0_0_15px_#FFC300]"></div>
+                </div>
+
+                <!-- Zona de impacto visual: Números y Barras Técnicas -->
+                <div class="my-6 space-y-4">
+                    <p id="sc-card-value" class="text-5xl md:text-6xl font-[900] tracking-tighter text-white font-mono">+0.0%</p>
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between text-[8px] font-black uppercase tracking-widest text-gray-500">
+                            <span id="sc-bar-label">Sobrecarga Progresiva</span>
+                            <span id="sc-bar-percent">0%</span>
                         </div>
-                        <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/5">
-                            <div id="sc-progress-bar" class="bg-gradient-to-r from-sky-500 to-sky-400 h-full rounded-full" style="width: 0%;"></div>
+                        <div class="w-full bg-black/50 h-2 rounded-full overflow-hidden border border-white/5 relative">
+                            <div id="sc-card-bar" class="h-full rounded-full bg-[#FFC300]" style="width: 0%;"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex justify-between items-center text-[9px] font-black text-gray-500 uppercase tracking-widest">
-                    <span> GYMENEZ ENGINE v1.5</span>
-                    <span class="text-white/20">PREVIEW</span>
+                <div class="flex justify-between items-center text-[8px] font-black text-gray-600 uppercase tracking-widest">
+                    <span>GYMENEZ PERFORMANCE®</span>
+                    <span class="text-white/20 tracking-normal">TIER PREVIEW</span>
                 </div>
             </div>
 
-            <!-- 🔒 CIERRE Y LLAMADO A LA ACCIÓN (Emerge al final del scroll) -->
-            <div id="sc-cta-lock" class="absolute flex flex-col items-center justify-center text-center p-6 transform scale-95 opacity-0 pointer-events-none transition-all duration-700 max-w-md">
-                <div class="w-14 h-14 bg-[#FFC300]/10 rounded-full flex items-center justify-center border border-[#FFC300]/30 shadow-[0_0_30px_rgba(255,195,0,0.15)] mb-6 animate-bounce">
-                    <svg class="w-6 h-6 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            <!-- 🔒 CIERRE Y CONVERSIÓN DE ALTA GAMA -->
+            <div id="sc-cta-lock" class="absolute flex flex-col items-center justify-center text-center p-6 transform scale-95 opacity-0 pointer-events-none transition-all duration-700 max-w-md z-30">
+                <div class="w-16 h-16 bg-[#FFC300]/10 rounded-full flex items-center justify-center border border-[#FFC300]/30 shadow-[0_0_40px_rgba(255,195,0,0.2)] mb-6">
+                    <svg class="w-7 h-7 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                 </div>
-                <h3 class="text-2xl md:text-3xl font-black uppercase tracking-tighter text-white">Optimiza tu Biología</h3>
-                <p class="text-gray-400 text-[10px] md:text-xs font-medium uppercase tracking-widest mt-2 max-w-xs leading-relaxed">El control analítico de fuerza, consistencia y foco está reservado para atletas de élite.</p>
+                <h3 class="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white">Toma el control</h3>
+                <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2 max-w-xs leading-relaxed">Deja de entrenar a ciegas. Desbloquea la telemetría avanzada y domina tus números.</p>
                 
                 <div class="mt-8 w-full px-4">
-                    <a href="/billing/planes.html" class="btn-gold w-full py-4 rounded-xl text-[10px] md:text-xs uppercase tracking-[0.2em] inline-block shadow-[0_0_30px_rgba(255,195,0,0.25)]">Adquirir Nivel Plus / Ultra</a>
+                    <a href="/billing/planes.html" class="btn-gold w-full py-4.5 rounded-xl text-xs uppercase font-black tracking-[0.2em] inline-block shadow-[0_0_30px_rgba(255,195,0,0.3)]">Suscribirse al Plan Plus</a>
                 </div>
             </div>
 
@@ -182,7 +179,7 @@
 
     <!-- Footer -->
     <footer id="main-footer" class="text-center py-6 border-t border-white/5 bg-[#030305]/80 backdrop-blur-md mt-auto relative z-40">
-        <p class="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • DATA-DRIVEN ANALYSIS</p>
+        <p class="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • PREMIUM TELEMETRY</p>
     </footer>
 
     <!-- Scripts de Control -->
