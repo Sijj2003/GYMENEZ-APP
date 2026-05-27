@@ -22,49 +22,13 @@ function showMessage(message, type = 'error') {
 }
 
 // ==========================================
-// SISTEMA DE BLOQUEO DE PLANES (Zero Trust Frontend)
+// SISTEMA DE SUSCRIPCIÓN (Visuales, sin bloqueos)
 // ==========================================
-function lockCard(cardElement, requiredLevel) {
-    if (!cardElement) return;
-    
-    // Anula el link y lanza alerta
-    cardElement.href = "javascript:void(0)"; 
-    cardElement.onclick = (e) => {
-        e.preventDefault();
-        showMessage(`MÓDULO BLOQUEADO: Requiere Plan ${requiredLevel}. Mejora tu suscripción.`, 'error');
-    };
-
-    // Aplica filtros visuales
-    cardElement.classList.add('locked-card');
-    cardElement.classList.remove('hover-green', 'hover-red', 'hover-sky'); 
-
-    // Inserta la etiqueta visual de candado
-    const tag = cardElement.querySelector('.badge-tag');
-    if (tag) {
-        tag.innerHTML = `🔒 PLAN ${requiredLevel}`;
-        tag.className = 'badge-tag bg-gray-800/80 text-gray-300 text-[7px] md:text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest mb-2 inline-block border border-gray-600 shadow-md';
-        tag.classList.remove('hidden'); 
-    }
-}
-
 function applySubscriptionLocks(level) {
     const normalizedLevel = (level || 'No Suscrito').toUpperCase();
-    
-    const cardEats = document.getElementById('card-eats');
-    const cardOn = document.getElementById('card-on');
-    const cardGoals = document.getElementById('card-goals');
-
     const isUltra = normalizedLevel === 'ULTRA';
-    const isPlus = normalizedLevel === 'PLUS' || isUltra;
 
-    // Ejecuta las reglas de negocio
-    if (!isUltra) lockCard(cardEats, 'ULTRA');
-    if (!isPlus) {
-        lockCard(cardOn, 'PLUS');    
-        lockCard(cardGoals, 'PLUS'); 
-    }
-
-    // Actualiza el banner si ya está en el plan máximo
+    // Actualiza el banner si ya está en el plan máximo, ocultando el botón de mejorar plan.
     if (isUltra) {
         const bannerTitle = document.getElementById('upgrade-banner-title');
         const bannerDesc = document.getElementById('upgrade-banner-desc');
