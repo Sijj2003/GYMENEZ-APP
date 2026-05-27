@@ -1,0 +1,62 @@
+/* Filas de métricas dentro de las tarjetas */
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+}
+.metric-row:last-child {
+    border-bottom: none;
+}
+.metric-row .label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.metric-row .value {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #e5e7eb;
+    font-family: monospace;
+}
+
+/* Animación de entrada de las tarjetas */
+.fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0; 
+    transform: translateY(20px);
+}
+
+@keyframes fadeInUp { 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+/* ========================================================
+   🔒 ESTILOS PARA EL ESCUDO ZERO TRUST (CANDADOS)
+   ======================================================== */
+.lock-overlay {
+    animation: fadeInLock 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInLock {
+    from { 
+        opacity: 0; 
+        backdrop-filter: blur(0px); 
+        -webkit-backdrop-filter: blur(0px);
+    }
+    to { 
+        opacity: 1; 
+        backdrop-filter: blur(12px); 
+        -webkit-backdrop-filter: blur(12px);
+    }
+}
+
+/* Oscurecer los textos originales cuando está bloqueado */
+.is-locked .data-value {
+    filter: blur(4px);
+    opacity: 0.3;
+    user-select: none;
+}
