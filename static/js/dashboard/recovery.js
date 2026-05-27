@@ -1,11 +1,8 @@
-// Constante de Auth compatible con el ecosistema
-const AUTH_TOKEN_KEY = 'authToken';
-
 window.addEventListener('DOMContentLoaded', () => {
     // 1. Quitar el difuminado inicial del body
     document.body.classList.add('loaded');
     
-    // 2. Verificación estricta de sesión
+    // 2. Verificación estricta de sesión (AUTH_TOKEN_KEY viene heredado de auth_middleware.js)
     const storedSession = localStorage.getItem('userSession');
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     
