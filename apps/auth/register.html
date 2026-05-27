@@ -1,1 +1,134 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GYMENEZ | Unirse al Ecosistema</title>
+    
+    <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/auth.css">
+</head>
+<body class="selection:bg-[#FFC300] selection:text-black min-h-screen relative flex flex-col justify-between overflow-hidden">
+    
+    <div id="preloader" class="fixed inset-0 bg-[#030305] z-[10000] transition-opacity duration-1000"></div>
+    
+    <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-400 text-center border backdrop-blur-md w-11/12 max-w-[360px] pointer-events-none"></div>
 
+    <div class="parallax-bg" style="background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070');"></div>
+    <div class="parallax-overlay"></div>
+
+    <nav class="relative w-full z-40 py-6 px-6 md:px-12 flex justify-between items-center transition-all duration-1000 opacity-0 transform -translate-y-4" id="main-nav">
+        <div class="flex items-center cursor-pointer group" onclick="window.location.href='/index.html'">
+            <span class="text-[#FFC300] font-[900] text-2xl md:text-3xl italic tracking-tighter">GYM</span>
+            <span class="text-white font-[900] text-2xl md:text-3xl italic tracking-tighter">ENEZ</span>
+        </div>
+        <div class="flex items-center gap-5 md:gap-6">
+            <a href="/index.html" class="text-[10px] font-black tracking-widest text-gray-400 hover:text-white transition uppercase whitespace-nowrap">Regresar</a>
+            <a href="/apps/start/login.html" class="border border-white/10 bg-white/5 text-white hover:bg-white hover:text-black px-5 py-2 rounded-full text-[10px] font-black tracking-widest transition-all uppercase whitespace-nowrap">Ingresar</a>
+        </div>
+    </nav>
+
+    <main id="register-container" class="relative z-10 w-full flex-grow flex items-center justify-center p-4 md:p-8">
+        <div class="glass-panel p-6 md:p-10 w-full max-w-xl rounded-[28px] md:rounded-[36px] flex flex-col justify-between relative overflow-hidden min-h-[480px]">
+            
+            <div class="absolute top-0 left-0 w-full flex">
+                <div id="dot-1" class="step-dot active"></div>
+                <div id="dot-2" class="step-dot"></div>
+                <div id="dot-3" class="step-dot"></div>
+            </div>
+
+            <div class="text-center mb-8 mt-4">
+                <h1 id="register-title" class="text-2xl md:text-3xl font-[900] text-white uppercase tracking-tighter transition-all duration-300">Identidad Base</h1>
+                <p id="register-subtitle" class="text-gray-500 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] mt-1.5">Paso 1 de 3 • Datos de Cuenta</p>
+            </div>
+
+            <form id="multi-step-form" class="flex-grow flex flex-col justify-between" novalidate>
+                
+                <div id="step-section-1" class="space-y-5 transition-all duration-500">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Nombre</label>
+                            <input type="text" id="reg-name" required class="w-full glass-input px-5 py-4 rounded-xl text-xs uppercase font-bold" placeholder="Ej. Carlos">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Apellido</label>
+                            <input type="text" id="reg-lastname" required class="w-full glass-input px-5 py-4 rounded-xl text-xs uppercase font-bold" placeholder="Ej. Mendoza">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Correo Electrónico Verificado</label>
+                        <input type="email" id="reg-email" required maxlength="25" class="w-full glass-input px-5 py-4 rounded-xl text-xs font-medium" placeholder="atleta@gymenez.com">
+                    </div>
+                    <div class="pt-6">
+                        <button type="button" id="btn-next-1" class="w-full btn-gold py-4 md:py-5 rounded-xl text-[10px] uppercase tracking-[0.25em]">Continuar</button>
+                    </div>
+                </div>
+
+                <div id="step-section-2" class="hidden opacity-0 space-y-5 transition-all duration-500">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Nacimiento</label>
+                            <input type="text" id="reg-dob" required class="w-full glass-input px-5 py-4 rounded-xl text-xs font-mono" placeholder="DD/MM/YYYY" maxlength="10">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Sexo Biológico</label>
+                            <select id="reg-sex" class="w-full glass-input px-5 py-4 rounded-xl text-xs font-bold appearance-none cursor-pointer" required>
+                                <option value="" disabled selected>Seleccionar...</option>
+                                <option value="Hombre">Hombre</option>
+                                <option value="Mujer">Mujer</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">WhatsApp</label>
+                        <div class="flex gap-2">
+                            <select id="reg-phone-prefix" class="w-24 px-2 py-4 rounded-xl glass-input text-xs font-bold text-center cursor-pointer">
+                                <option value="0414">0414</option>
+                                <option value="0424">0424</option>
+                                <option value="0412">0412</option>
+                                <option value="0422">0422</option>
+                                <option value="0416">0416</option>
+                                <option value="0426">0426</option>
+                            </select>
+                            <input type="text" id="reg-phone-num" required minlength="7" maxlength="7" class="flex-1 glass-input px-5 py-4 rounded-xl text-xs font-mono" placeholder="1234567">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 pt-6">
+                        <button type="button" id="btn-prev-2" class="bg-white/5 border border-white/10 text-white font-bold text-[9px] uppercase tracking-widest rounded-xl hover:bg-white/10 transition py-4">Atrás</button>
+                        <button type="button" id="btn-next-2" class="col-span-2 btn-gold py-4 rounded-xl text-[10px] uppercase tracking-[0.25em]">Continuar</button>
+                    </div>
+                </div>
+
+                <div id="step-section-3" class="hidden opacity-0 space-y-6 transition-all duration-500">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] text-center mb-4">Define tu Clave Secreta</label>
+                        <input type="password" id="reg-password" minlength="6" maxlength="18" required class="w-full glass-input px-5 py-5 rounded-xl text-center text-xl font-mono tracking-[0.5em]" placeholder="••••••">
+                        <span class="block text-[8px] text-gray-500 text-center uppercase tracking-widest mt-2">Entre 6 y 18 caracteres</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 pt-4">
+                        <button type="button" id="btn-prev-3" class="bg-white/5 border border-white/10 text-white font-bold text-[9px] uppercase tracking-widest rounded-xl hover:bg-white/10 transition py-4">Atrás</button>
+                        <button type="submit" id="btn-submit" class="col-span-2 btn-gold py-4 rounded-xl text-[10px] uppercase tracking-[0.25em]">Activar Perfil</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <div id="setup-screen" class="fixed inset-0 bg-[#030305] z-[5000] hidden flex flex-col items-center justify-center p-6 text-center transition-all duration-1000 opacity-0">
+        <div class="kinetic-orb mb-12 flex items-center justify-center scale-125">
+            <div class="kinetic-ring"></div>
+            <div class="kinetic-ring-inner"></div>
+            <div class="w-3 h-3 bg-[#FFC300] rounded-full shadow-[0_0_15px_#FFC300]"></div>
+        </div>
+        <h2 id="setup-message" class="text-2xl md:text-4xl font-black text-white uppercase tracking-tighter max-w-lg transition-all duration-700 transform scale-95 opacity-0 filter blur-[6px]">Iniciando</h2>
+        <p class="text-gray-600 text-[9px] font-black uppercase tracking-[0.5em] mt-8">Ecosistema GYMENEZ PERFORMANCE</p>
+    </div>
+
+    <footer class="relative z-10 py-8 text-center border-t border-white/5 opacity-0 transition-all duration-1000 delay-500" id="main-footer">
+        <p class="text-[9px] font-bold uppercase tracking-[0.5em] text-gray-600">© 2026 GYMENEZ PERFORMANCE</p>
+    </footer>
+
+    <script src="/static/js/auth/register.js"></script>
+</body>
+</html>
