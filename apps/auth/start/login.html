@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GYMENEZ | Portal del Atleta</title>
+    
+    <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/auth.css">
+</head>
+<body class="selection:bg-[#FFC300] selection:text-black min-h-screen relative flex flex-col justify-between overflow-hidden">
+
+    <div id="preloader" class="fixed inset-0 bg-[#030305] z-[10000] transition-opacity duration-1000"></div>
+
+    <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-400 text-center border backdrop-blur-md w-11/12 max-w-[360px] pointer-events-none"></div>
+
+    <div class="parallax-bg" style="background-image: url('https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=2070');"></div>
+    <div class="parallax-overlay"></div>
+
+    <nav class="relative w-full z-40 py-6 px-6 md:px-12 flex justify-between items-center transition-all duration-1000 opacity-0 transform -translate-y-4" id="main-nav">
+        <div class="flex items-center cursor-pointer group" onclick="window.location.href='/index.html'">
+            <span class="text-[#FFC300] font-[900] text-2xl md:text-3xl italic tracking-tighter">GYM</span>
+            <span class="text-white font-[900] text-2xl md:text-3xl italic tracking-tighter">ENEZ</span>
+        </div>
+        <div class="flex items-center gap-5 md:gap-6">
+            <a href="/index.html" class="text-[10px] font-black tracking-widest text-gray-400 hover:text-white transition uppercase whitespace-nowrap">Regresar</a>
+            <a href="/apps/start/register.html" class="border border-white/10 bg-white/5 text-white hover:bg-white hover:text-black px-5 py-2 rounded-full text-[10px] font-black tracking-widest transition-all uppercase whitespace-nowrap">Registrarse</a>
+        </div>
+    </nav>
+
+    <main id="login-screen" class="relative z-10 w-full flex-grow flex items-center justify-center p-4 md:p-6">
+        <div class="glass-panel p-6 md:p-12 w-full max-w-md mx-auto rounded-[24px] md:rounded-[36px] relative">
+            
+            <div class="text-center mb-8 md:mb-10">
+                <span class="text-[#FFC300] text-[8px] md:text-[9px] font-black uppercase tracking-[0.4em] mb-3 block drop-shadow-md">System Core</span>
+                <h1 class="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase mb-3">Portal Atleta</h1>
+                <div class="w-10 h-1 bg-[#FFC300] mx-auto mb-4 rounded-full shadow-[0_0_15px_rgba(255,195,0,0.6)]"></div>
+                <p class="text-gray-500 text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em]">Acceso Encriptado</p>
+            </div>
+
+            <form id="login-form" class="space-y-4 md:space-y-5">
+                <div>
+                    <label class="block text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Correo Electrónico</label>
+                    <input type="email" id="login-email" name="email" placeholder="atleta@gymenez.com" class="w-full glass-input px-4 md:px-5 py-3.5 md:py-4 rounded-xl text-white text-xs md:text-sm font-medium" required>
+                </div>
+                <div>
+                    <label class="block text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Clave de Acceso</label>
+                    <input type="password" id="login-password" name="password" placeholder="••••••••" class="w-full glass-input px-4 md:px-5 py-3.5 md:py-4 rounded-xl text-white text-xs md:text-sm font-mono tracking-widest" required>
+                </div>
+
+                <div class="pt-3 md:pt-4">
+                    <button type="submit" id="login-btn" class="btn-gold w-full py-4 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-[0.25em]">Ingresar al Sistema</button>
+                </div>
+            </form>
+            
+            <div id="login-help-links" class="mt-8 pt-5 border-t border-white/5 flex justify-between items-center px-1">
+                <button id="staff-access-link" type="button" class="text-[8px] md:text-[9px] font-bold text-gray-500 hover:text-white transition uppercase tracking-[0.15em]">Acceso Staff</button>
+                <button id="forgot-password-link" type="button" class="text-[8px] md:text-[9px] font-bold text-gray-500 hover:text-white transition uppercase tracking-[0.15em]">Recuperar Credencial</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="active-session-modal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-[1000] p-4 opacity-0 transition-opacity duration-300">
+        <div class="glass-panel p-6 md:p-10 w-full max-w-md mx-auto rounded-[24px] md:rounded-[32px] border-t border-red-500/50">
+            <div class="w-12 h-12 md:w-14 md:h-14 mx-auto mb-4 bg-red-500/10 rounded-full flex items-center justify-center border border-red-500/20">
+                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <h3 class="text-lg font-black mb-2 text-white text-center uppercase tracking-widest">Sesión en Uso</h3>
+            <p class="text-gray-400 text-[10px] text-center mb-6 uppercase tracking-wider leading-relaxed">Tus credenciales se encuentran activas en otra terminal.</p>
+            
+            <div id="modal-options" class="space-y-4">
+                <button id="modal-confirm-btn" class="w-full py-3.5 rounded-xl bg-red-600 text-white font-black text-[10px] uppercase tracking-widest hover:bg-red-500 transition-all">Solicitar Código SHIELD</button>
+                <button id="modal-cancel-btn" class="w-full py-3 rounded-xl border border-white/10 text-gray-400 font-bold text-[10px] uppercase tracking-widest hover:text-white hover:bg-white/5 transition-all">Cancelar</button>
+            </div>
+
+            <form id="force-logout-form" class="hidden mt-4 pt-4 border-t border-white/10 space-y-5">
+                <p class="text-[9px] font-black text-[#FFC300] text-center uppercase tracking-[0.2em]">Protocolo SHIELD de Desconexión</p>
+                <input type="hidden" id="force-email">
+                <div>
+                    <input type="text" id="force-shield-code" maxlength="6" placeholder="······" class="w-full max-w-[260px] mx-auto block px-2 py-3 text-center text-3xl tracking-[0.4em] rounded-xl glass-input text-[#FFC300] font-mono focus:border-red-500" required>
+                </div>
+                <div class="pt-2 space-y-2">
+                    <button type="submit" id="force-logout-btn" class="w-full py-3.5 rounded-xl bg-red-600 text-white font-black text-[10px] uppercase tracking-widest hover:bg-red-500 transition-all">Expulsar Dispositivo Remoto</button>
+                    <button type="button" id="force-logout-cancel" class="w-full text-center text-[9px] font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-all mt-3">Abortar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="activation-modal" class="hidden fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl opacity-0 transition-opacity duration-300">
+        <div class="glass-panel relative w-full max-w-md mx-auto p-6 md:p-10 rounded-[24px] md:rounded-[36px] text-center">
+            <h3 class="text-2xl font-black mb-2 text-white tracking-tighter uppercase">Falta Activación</h3>
+            <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Tu perfil requiere verificación. Ingresa la clave OTP enviada a tu correo.</p>
+            <form id="activation-form" class="space-y-6">
+                <input type="hidden" id="activation-email">
+                <div>
+                    <input type="text" id="activation-code" maxlength="6" placeholder="······" class="w-full max-w-[260px] mx-auto block px-2 py-3 text-center text-3xl tracking-[0.4em] rounded-xl glass-input text-[#FFC300] font-mono" required>
+                </div>
+                <div class="space-y-2">
+                    <button type="submit" id="verify-btn" class="btn-gold w-full py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em]">Autenticar Código</button>
+                    <button type="button" id="close-activation-modal" class="w-full py-2 text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all">Volver</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="area-selection-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[1100] p-4 opacity-0 transition-opacity duration-300">
+        <div class="glass-panel p-6 md:p-10 w-full max-w-sm mx-auto rounded-[24px] md:rounded-[32px] text-center border-t border-[#FFC300]/30">
+            <h3 class="text-base md:text-lg font-black mb-6 text-white uppercase tracking-[0.2em]">División Operativa</h3>
+            <button type="button" onclick="window.location.href='/apps/staff/trainer.html'" class="w-full py-3.5 mb-3 rounded-xl bg-white/5 border border-white/5 font-bold text-[10px] hover:border-[#FFC300] hover:text-[#FFC300] hover:bg-white/10 uppercase tracking-widest transition-all">Portal Coach</button>
+            <button type="button" onclick="window.location.href='/apps/admin/login.html'" class="w-full py-3.5 mb-6 rounded-xl bg-white/5 border border-white/5 font-bold text-[10px] hover:border-red-500 hover:text-red-500 hover:bg-white/10 uppercase tracking-widest transition-all">Portal Admin</button>
+            <button type="button" id="modal-close-btn" class="w-full py-2 text-[9px] font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-all">Cerrar</button>
+        </div>
+    </div>
+
+    <footer class="relative z-10 py-8 text-center border-t border-white/5 opacity-0 transition-all duration-1000 delay-500" id="main-footer">
+        <p class="text-[9px] font-bold uppercase tracking-[0.5em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • EL ESTÁNDAR DE EXCELENCIA</p>
+    </footer>
+
+    <script src="/static/js/auth/login.js"></script>
+</body>
+</html>
