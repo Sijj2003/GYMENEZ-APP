@@ -1,5 +1,5 @@
 /* Importar tipografía */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
 
 /* --- BASE --- */
 body { 
@@ -9,7 +9,7 @@ body {
     overflow-x: hidden;
 }
 
-/* --- FONDOS PARALLAX (Reciclado de index.html) --- */
+/* --- FONDOS PARALLAX --- */
 .parallax-bg {
     background-attachment: fixed;
     background-position: center;
@@ -18,7 +18,14 @@ body {
     position: absolute;
     inset: 0;
     z-index: 0;
+    /* Animación de entrada */
+    transform: scale(1.1);
+    transition: transform 2s cubic-bezier(0.16, 1, 0.3, 1);
 }
+body.loaded .parallax-bg { 
+    transform: scale(1); 
+}
+
 .parallax-overlay {
     position: absolute;
     inset: 0;
@@ -33,6 +40,16 @@ body {
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8);
+    /* Animación de entrada */
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(10px);
+    transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+body.loaded .glass-panel {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
 }
 
 /* --- FORMULARIOS --- */
@@ -65,6 +82,13 @@ select.glass-input option {
     transform: translateY(-2px);
     box-shadow: 0 15px 30px -5px rgba(255, 195, 0, 0.35);
 }
+/* Estado de carga ("VALIDANDO...") */
+.btn-gold:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
 
 /* --- INDICADORES DE PASOS (STEPS) --- */
 .step-dot {
@@ -77,3 +101,35 @@ select.glass-input option {
     background: #FFC300;
     box-shadow: 0 0 10px rgba(255,195,0,0.5);
 }
+
+/* --- ANIMACIÓN CINEMÁTICA FINAL (Kinetic Orb) --- */
+.kinetic-orb {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,195,0,0.15) 0%, transparent 70%);
+}
+.kinetic-ring {
+    position: absolute;
+    inset: 0;
+    border: 2px solid transparent;
+    border-top-color: #FFC300;
+    border-radius: 50%;
+    animation: spinRing 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    filter: drop-shadow(0 0 8px #FFC300);
+}
+.kinetic-ring-inner {
+    position: absolute;
+    inset: 10px;
+    border: 1.5px solid transparent;
+    border-bottom-color: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    animation: spinRingInverse 1.5s linear infinite;
+}
+@keyframes spinRing { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes spinRingInverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+
+/* --- UTILIDADES --- */
+/* Ocultar scrollbars nativas para un look más limpio de app móvil */
+.no-scrollbar::-webkit-scrollbar { display: none; }
