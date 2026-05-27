@@ -1,0 +1,79 @@
+/* Importar tipografía */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap');
+
+/* --- BASE --- */
+body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: #030305; 
+    color: white; 
+    overflow-x: hidden;
+}
+
+/* --- FONDOS PARALLAX (Reciclado de index.html) --- */
+.parallax-bg {
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+.parallax-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(3,3,5,0.9) 0%, rgba(3,3,5,0.7) 50%, rgba(3,3,5,0.95) 100%);
+    z-index: 1;
+}
+
+/* --- GLASSMORPHISM PREMIUM --- */
+.glass-panel {
+    background: rgba(10, 10, 15, 0.45);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8);
+}
+
+/* --- FORMULARIOS --- */
+.glass-input {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: white;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-input:focus {
+    border-color: #FFC300;
+    box-shadow: 0 0 15px rgba(255, 195, 0, 0.2);
+    background: rgba(0, 0, 0, 0.8);
+    outline: none;
+}
+/* Personalización de los 'options' del select para que no se vean blancos */
+select.glass-input option {
+    background-color: #0a0a0f;
+    color: white;
+}
+
+/* --- BOTONES --- */
+.btn-gold {
+    background: linear-gradient(135deg, #FFC300 0%, #eab308 100%);
+    color: #000;
+    font-weight: 900;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px -5px rgba(255, 195, 0, 0.35);
+}
+
+/* --- INDICADORES DE PASOS (STEPS) --- */
+.step-dot {
+    width: 33.33%;
+    height: 3px;
+    background: rgba(255,255,255,0.05);
+    transition: all 0.5s ease;
+}
+.step-dot.active {
+    background: #FFC300;
+    box-shadow: 0 0 10px rgba(255,195,0,0.5);
+}
