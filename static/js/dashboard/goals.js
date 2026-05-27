@@ -2,7 +2,7 @@ const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || windo
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
 // ==========================================
-// 🎬 MOTOR CINEMÁTICO REALISTA DE 4 ETAPAS
+// 🎬 MOTOR CINEMÁTICO REALISTA DE 4 ETAPAS (CORREGIDO)
 // ==========================================
 function initCinematicScroll3D() {
     const showcaseView = document.getElementById('basico-showcase-view');
@@ -15,9 +15,13 @@ function initCinematicScroll3D() {
     const cardTag = document.getElementById('sc-card-tag');
     const cardIndicator = document.getElementById('sc-card-indicator');
     
+    const narrativeText = document.getElementById('sc-narrative-text');
     const mainTitle = document.getElementById('sc-main-title');
     const mainDesc = document.getElementById('sc-main-desc');
     const ctaLock = document.getElementById('sc-cta-lock');
+
+    // Escudo protector: Si falta algún elemento crítico, abortamos para no romper la consola
+    if (!showcaseView || !masterCard || !narrativeText || !ctaLock) return;
 
     // Cambiar fondos dinámicamente
     function switchBg(activeId) {
@@ -37,18 +41,17 @@ function initCinematicScroll3D() {
 
         // --- ETAPA 1: FUERZA INCREMENTAL (0% a 25% del Scroll) ---
         if (progress >= 0 && progress < 0.25) {
-            let p = progress / 0.25; // Normalizar a escala 0-1
+            let p = progress / 0.25; 
             switchBg('sc-bg-1');
             
-            // Física 3D: Va enderezándose progresivamente
             const rotX = 22 - (22 * p);
             const rotY = -18 + (18 * p);
             const rotZ = 6 - (6 * p);
+            
             masterCard.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg) translateZ(${p * 40}px)`;
             masterCard.style.opacity = '1';
             masterCard.style.filter = 'none';
 
-            // Data Inyectada Realista
             cardTag.textContent = "Potencia / Sobrecarga Progresiva";
             cardTitle.textContent = "Fuerza Incremental";
             cardIndicator.className = "w-2.5 h-2.5 rounded-full bg-sky-400 shadow-[0_0_15px_#38bdf8]";
@@ -61,24 +64,23 @@ function initCinematicScroll3D() {
             cardBar.style.width = `${p * 100}%`;
             barPercent.textContent = `${Math.round(p * 100)}%`;
 
-            // Textos del Título Narrativo Superior
             mainTitle.textContent = "Potencia Pura";
-            mainTitle.style.color = "#white";
             mainDesc.textContent = "Monitoreo del Índice de Sobrecarga Progresiva";
-            document.getElementById('sc-narrative-text').style.opacity = '1';
+            
+            narrativeText.style.opacity = `${1 - p}`;
+            narrativeText.style.transform = `translateY(-${p * 20}px)`;
             ctaLock.style.opacity = '0';
         }
         
         // --- ETAPA 2: COMPOSICIÓN LIPÍDICA (25% a 50% del Scroll) ---
         else if (progress >= 0.25 && progress < 0.50) {
-            let p = (progress - 0.25) / 0.25; // Normalizar
+            let p = (progress - 0.25) / 0.25; 
             switchBg('sc-bg-2');
 
             masterCard.style.transform = `rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateZ(40px)`;
             masterCard.style.opacity = '1';
             masterCard.style.filter = 'none';
 
-            // Data Inyectada Realista
             cardTag.textContent = "Composición Corporal / Antropometría";
             cardTitle.textContent = "Pérdida Lipídica";
             cardIndicator.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_15px_#34d399]";
@@ -93,19 +95,20 @@ function initCinematicScroll3D() {
 
             mainTitle.textContent = "Déficit Calibrado";
             mainDesc.textContent = "Telemetría de Masa Grasa vs Masa Magra";
-            document.getElementById('sc-narrative-text').style.opacity = '1';
+            
+            narrativeText.style.opacity = '1';
+            narrativeText.style.transform = 'translateY(0)';
         }
 
         // --- ETAPA 3: CONSISTENCIA TÁCTICA (50% a 75% del Scroll) ---
         else if (progress >= 0.50 && progress < 0.75) {
-            let p = (progress - 0.50) / 0.25; // Normalizar
+            let p = (progress - 0.50) / 0.25; 
             switchBg('sc-bg-3');
 
             masterCard.style.transform = `rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateZ(40px)`;
-            masterCard.style.opacity = `${1 - p}`; // Se va desvaneciendo al final de su fase
+            masterCard.style.opacity = `${1 - p}`; 
             masterCard.style.filter = `blur(${p * 4}px)`;
 
-            // Data Inyectada Realista
             cardTag.textContent = "Adherencia / Frecuencia Semanal";
             cardTitle.textContent = "Consistencia Táctica";
             cardIndicator.className = "w-2.5 h-2.5 rounded-full bg-[#FFC300] shadow-[0_0_15px_#FFC300]";
@@ -120,24 +123,24 @@ function initCinematicScroll3D() {
 
             mainTitle.textContent = "Disciplina Inmutable";
             mainDesc.textContent = "Control de Bloques Físicos Ejecutados";
-            document.getElementById('sc-narrative-text').style.opacity = `${1 - p}`;
+            
+            narrativeText.style.opacity = `${1 - p}`;
+            narrativeText.style.transform = `translateY(-${p * 20}px)`;
         }
 
         // --- ETAPA 4: PAYWALL CINEMÁTICO FINAL (75% a 100% del Scroll) ---
         else if (progress >= 0.75) {
-            let p = (progress - 0.75) / 0.25; // Normalizar
-            // Fondo totalmente oscuro para máxima concentración en el botón
+            let p = (progress - 0.75) / 0.25; 
             document.querySelectorAll('.sc-bg-fade').forEach(bg => bg.style.opacity = '0');
 
             masterCard.style.opacity = '0';
             masterCard.style.transform = `scale(${1 - p})`;
             
-            // Emerge el candado dorado con aceleración suave
             ctaLock.style.opacity = `${p}`;
             ctaLock.style.transform = `scale(${0.92 + (p * 0.08)})`;
             
             if (p > 0.8) {
-                ctaLock.style.pointerEvents = 'auto'; // Habilitar clics al botón
+                ctaLock.style.pointerEvents = 'auto'; 
             } else {
                 ctaLock.style.pointerEvents = 'none';
             }
