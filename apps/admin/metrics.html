@@ -12,13 +12,14 @@
 </head>
 <body class="selection:bg-[#FFC300] selection:text-black overflow-x-hidden min-h-screen flex flex-col bg-[#030305]">
 
+    <!-- Notificaciones flotantes del ecosistema -->
     <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none text-center w-11/12 max-w-[360px] border border-white/10"></div>
 
     <div class="fixed inset-0 bg-[url('/static/img/backgrounds/FONDO.png')] bg-cover bg-center opacity-5 -z-10 mix-blend-screen grayscale"></div>
     <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/50 via-[#030305]/95 to-[#030305] -z-10"></div>
 
     <header class="w-full border-b border-white/5 bg-black/30 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
+        <div class="max-w-6xl mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
             <h1 class="text-xl font-black uppercase tracking-tighter text-white">
                 <span class="text-[#FFC300]">GYM</span>ENEZ BIOLAB
             </h1>
@@ -28,184 +29,200 @@
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto w-full px-4 md:px-6 py-8 flex-grow fade-in-up">
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <main class="max-w-6xl mx-auto w-full px-4 md:px-6 py-8 flex-grow fade-in-up">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            <div class="lg:col-span-1 flex flex-col space-y-4">
-                <div class="glass-panel p-4 rounded-2xl border border-white/5 bg-black/20">
+            <!-- PANEL IZQUIERDO: BUSCADOR CRÍTICO Y POOL DE ATLETAS (3 COLUMNAS DE 12) -->
+            <div class="lg:col-span-4 xl:col-span-3 flex flex-col space-y-4 w-full">
+                <div class="glass-panel p-4 rounded-2xl border border-white/5 bg-black/40">
                     <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Filtrar Atleta</label>
-                    <input type="text" id="user-search-input" placeholder="Escribe nombre o correo..." class="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-xs font-bold text-white uppercase placeholder-gray-600 focus:border-[#FFC300] outline-none transition">
+                    <input type="text" id="user-search-input" placeholder="Buscar nombre o correo..." class="w-full bg-black/80 border border-white/10 rounded-xl p-3 text-xs font-bold text-white uppercase placeholder-gray-600 focus:border-[#FFC300] focus:ring-1 focus:ring-[#FFC300] outline-none transition">
                 </div>
                 
-                <div class="glass-panel p-4 rounded-2xl border border-white/5 bg-black/20 flex-grow flex flex-col max-h-[70vh] lg:max-h-[75vh]">
+                <div class="glass-panel p-4 rounded-2xl border border-white/5 bg-black/40 flex flex-col h-[400px] lg:h-[580px]">
                     <div class="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
-                        <span class="text-[9px] font-black uppercase tracking-widest text-gray-400">Atletas Recientes</span>
-                        <span id="users-count-badge" class="text-[9px] font-mono font-bold bg-white/10 text-white px-2 py-0.5 rounded">0</span>
+                        <span class="text-[9px] font-black uppercase tracking-widest text-gray-400">Atletas Activos</span>
+                        <span id="users-count-badge" class="text-[9px] font-mono font-bold bg-white/10 text-gray-300 px-2 py-0.5 rounded">0</span>
                     </div>
-                    <div id="athletes-list-container" class="space-y-1.5 overflow-y-auto custom-scrollbar flex-grow pr-1 text-xs">
+                    
+                    <!-- Contenedor scrollable -->
+                    <div id="athletes-list-container" class="space-y-2 overflow-y-auto custom-scrollbar flex-grow pr-1">
                         <p class="text-center py-4 text-gray-600 text-[10px] font-bold uppercase tracking-wider">Cargando base...</p>
                     </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-3 flex flex-col">
+            <!-- PANEL DERECHO: WORKSPACE CONTROLADO (9 COLUMNAS DE 12) -->
+            <div class="lg:col-span-8 xl:col-span-9 flex flex-col w-full">
                 
-                <div id="no-athlete-selected-view" class="glass-panel p-8 rounded-[24px] min-h-[55vh] flex flex-col justify-center items-center border border-white/5 text-center">
-                    <div class="w-12 h-12 rounded-full bg-white/5 flex justify-center items-center mb-4 text-lg border border-white/10">👤</div>
-                    <h3 class="text-xs font-black text-white uppercase tracking-wider">Sin Selección Activa</h3>
-                    <p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-2 max-w-xs leading-relaxed">Selecciona un atleta a la izquierda para calibrar sus perímetros corporales de perfil.</p>
+                <!-- Estado Vacío Informativo -->
+                <div id="no-athlete-selected-view" class="glass-panel p-12 rounded-[24px] min-h-[50vh] flex flex-col justify-center items-center border border-white/5 text-center bg-black/20">
+                    <div class="w-12 h-12 rounded-full bg-white/5 flex justify-center items-center mb-4 text-base border border-white/10 text-gray-400">👤</div>
+                    <h3 class="text-xs font-black text-white uppercase tracking-wider">Esperando Selección</h3>
+                    <p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-2 max-w-xs leading-relaxed">Elige un atleta del panel lateral izquierdo para desplegar su expediente físico integrado.</p>
                 </div>
 
-                <div id="workspace-container" class="hidden flex flex-col">
-                    <div class="flex gap-4 border-b border-white/10 mb-6 overflow-x-auto no-scrollbar">
-                        <button id="tab-btn-metrics" class="px-6 py-3 border-b-2 border-[#FFC300] text-[#FFC300] font-black uppercase tracking-widest text-[10px] transition-colors whitespace-nowrap">📊 Telemetría Corporal</button>
-                        <button id="tab-btn-goals" class="px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-colors whitespace-nowrap">🎯 Objetivos SMART</button>
+                <!-- Formulario Clínico Unificado -->
+                <div id="workspace-container" class="hidden flex flex-col animate-fade-in">
+                    <!-- Pestañas de Navegación Compactas -->
+                    <div class="flex gap-2 border-b border-white/10 mb-6 overflow-x-auto no-scrollbar">
+                        <button id="tab-btn-metrics" class="px-5 py-3 border-b-2 border-[#FFC300] text-[#FFC300] font-black uppercase tracking-widest text-[10px] transition-all">📊 Telemetría Corporal</button>
+                        <button id="tab-btn-goals" class="px-5 py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-all">🎯 Objetivos SMART</button>
                     </div>
 
+                    <!-- TAB 1: BIOMETRÍA Y TELEMETRÍA -->
                     <div id="panel-metrics" class="block">
                         <form id="metrics-form" class="space-y-6">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            <!-- SECCIÓN: ANÁLISIS CORPORAL -->
+                            <div class="bg-black/30 border border-white/5 rounded-2xl p-5 md:p-6 space-y-6">
                                 
-                                <div class="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-4">
-                                    <h3 class="text-xs font-black uppercase text-[#FFC300] tracking-wider border-b border-white/5 pb-2">Métricas Base</h3>
-                                    <div class="grid grid-cols-3 gap-3">
-                                        <div>
-                                            <label class="block text-[8px] font-bold text-gray-500 uppercase">Peso (KG)</label>
-                                            <input type="number" step="0.1" id="m-weight" class="w-full glass-input p-2.5 rounded-lg text-xs font-bold">
+                                <!-- Sub-Bloque: Métricas Base -->
+                                <div class="space-y-3">
+                                    <h3 class="text-[10px] font-black uppercase text-[#FFC300] tracking-widest border-b border-white/5 pb-2">Métricas Base</h3>
+                                    <div class="flex flex-wrap gap-4">
+                                        <div class="flex-1 min-w-[110px] max-w-[160px]">
+                                            <label class="block text-[8px] font-black text-gray-500 uppercase tracking-wider mb-1">Peso (KG)</label>
+                                            <input type="number" step="0.1" id="m-weight" class="w-full bg-black border border-white/10 rounded-xl p-2.5 text-xs font-bold text-white text-center focus:border-[#FFC300] outline-none">
                                         </div>
-                                        <div>
-                                            <label class="block text-[8px] font-bold text-gray-500 uppercase">Altura (CM)</label>
-                                            <input type="number" step="0.1" id="m-height" class="w-full glass-input p-2.5 rounded-lg text-xs font-bold">
+                                        <div class="flex-1 min-w-[110px] max-w-[160px]">
+                                            <label class="block text-[8px] font-black text-gray-500 uppercase tracking-wider mb-1">Altura (CM)</label>
+                                            <input type="number" step="0.1" id="m-height" class="w-full bg-black border border-white/10 rounded-xl p-2.5 text-xs font-bold text-white text-center focus:border-[#FFC300] outline-none">
                                         </div>
-                                        <div>
-                                            <label class="block text-[8px] font-bold text-gray-500 uppercase">Edad</label>
-                                            <input type="number" id="m-age" class="w-full glass-input p-2.5 rounded-lg text-xs font-bold">
+                                        <div class="flex-1 min-w-[110px] max-w-[160px]">
+                                            <label class="block text-[8px] font-black text-gray-500 uppercase tracking-wider mb-1">Edad</label>
+                                            <input type="number" id="m-age" class="w-full bg-black border border-white/10 rounded-xl p-2.5 text-xs font-bold text-white text-center focus:border-[#FFC300] outline-none">
                                         </div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-3 pt-2">
-                                        <div>
-                                            <label class="block text-[8px] font-bold text-gray-500 uppercase">% Grasa Estimado</label>
-                                            <input type="number" step="0.1" id="m-fat" class="w-full glass-input p-2.5 rounded-lg text-xs font-bold text-amber-500">
+                                        <div class="flex-1 min-w-[110px] max-w-[160px]">
+                                            <label class="block text-[8px] font-black text-amber-500 uppercase tracking-wider mb-1">% Grasa Est.</label>
+                                            <input type="number" step="0.1" id="m-fat" class="w-full bg-black/60 border border-white/10 rounded-xl p-2.5 text-xs font-black text-amber-400 text-center focus:border-amber-500 outline-none">
                                         </div>
-                                        <div>
-                                            <label class="block text-[8px] font-bold text-gray-500 uppercase">% Músculo Estimado</label>
-                                            <input type="number" step="0.1" id="m-muscle" class="w-full glass-input p-2.5 rounded-lg text-xs font-bold text-emerald-500">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-3">
-                                    <h3 class="text-xs font-black uppercase text-white tracking-wider border-b border-white/5 pb-2">Tren Superior</h3>
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label class="block text-[8px] font-bold text-gray-500 uppercase">Cuello</label>
-                                            <input type="number" step="0.1" id="m-neck" class="w-full glass-input p-2 rounded-lg text-xs">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[8px] font-bold text-gray-500 uppercase">Espalda</label>
-                                            <input type="number" step="0.1" id="m-back" class="w-full glass-input p-2 rounded-lg text-xs">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[8px] font-bold text-gray-500 uppercase">Tórax</label>
-                                            <input type="number" step="0.1" id="m-thorax" class="w-full glass-input p-2 rounded-lg text-xs">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[8px] font-bold text-gray-500 uppercase">Abdomen</label>
-                                            <input type="number" step="0.1" id="m-abdomen" class="w-full glass-input p-2 rounded-lg text-xs">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[8px] font-bold text-gray-500 uppercase">Brazo Izq</label>
-                                            <input type="number" step="0.1" id="m-bicep-l" class="w-full glass-input p-2 rounded-lg text-xs">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[8px] font-bold text-gray-500 uppercase">Brazo Der</label>
-                                            <input type="number" step="0.1" id="m-bicep-r" class="w-full glass-input p-2 rounded-lg text-xs">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[8px] font-bold text-gray-500 uppercase">Antebrazo Izq</label>
-                                            <input type="number" step="0.1" id="m-forearm-l" class="w-full glass-input p-2 rounded-lg text-xs">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[8px] font-bold text-gray-500 uppercase">Antebrazo Der</label>
-                                            <input type="number" step="0.1" id="m-forearm-r" class="w-full glass-input p-2 rounded-lg text-xs">
+                                        <div class="flex-1 min-w-[110px] max-w-[160px]">
+                                            <label class="block text-[8px] font-black text-emerald-500 uppercase tracking-wider mb-1">% Músculo Est.</label>
+                                            <input type="number" step="0.1" id="m-muscle" class="w-full bg-black/60 border border-white/10 rounded-xl p-2.5 text-xs font-black text-emerald-400 text-center focus:border-emerald-500 outline-none">
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-3 flex flex-col justify-between">
-                                    <div>
-                                        <h3 class="text-xs font-black uppercase text-white tracking-wider border-b border-white/5 pb-2">Tren Inferior</h3>
-                                        <div class="grid grid-cols-2 gap-3 mt-3">
-                                            <div class="col-span-2">
-                                                <label class="block text-[8px] font-bold text-gray-500 uppercase">Cintura</label>
-                                                <input type="number" step="0.1" id="m-waist" class="w-full glass-input p-2 rounded-lg text-xs text-[#FFC300]">
-                                            </div>
-                                            <div>
-                                                <label class="block text-[8px] font-bold text-gray-500 uppercase">Fémur Izq</label>
-                                                <input type="number" step="0.1" id="m-femur-l" class="w-full glass-input p-2 rounded-lg text-xs">
-                                            </div>
-                                            <div>
-                                                <label class="block text-[8px] font-bold text-gray-500 uppercase">Fémur Der</label>
-                                                <input type="number" step="0.1" id="m-femur-r" class="w-full glass-input p-2 rounded-lg text-xs">
-                                            </div>
-                                            <div>
-                                                <label class="block text-[8px] font-bold text-gray-500 uppercase">Tibia Izq</label>
-                                                <input type="number" step="0.1" id="m-tibia-l" class="w-full glass-input p-2 rounded-lg text-xs">
-                                            </div>
-                                            <div>
-                                                <label class="block text-[8px] font-bold text-gray-500 uppercase">Tibia Der</label>
-                                                <input type="number" step="0.1" id="m-tibia-r" class="w-full glass-input p-2 rounded-lg text-xs">
-                                            </div>
+                                <!-- Sub-Bloque: Tren Superior -->
+                                <div class="space-y-3 pt-2">
+                                    <h3 class="text-[10px] font-black uppercase text-white tracking-widest border-b border-white/5 pb-2">Tren Superior (Perímetros en cm)</h3>
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                        <div>
+                                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Cuello</label>
+                                            <input type="number" step="0.1" id="m-neck" class="w-full bg-black border border-white/5 rounded-lg p-2 text-xs text-center text-gray-200 outline-none focus:border-white/20">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Espalda</label>
+                                            <input type="number" step="0.1" id="m-back" class="w-full bg-black border border-white/5 rounded-lg p-2 text-xs text-center text-gray-200 outline-none focus:border-white/20">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Tórax</label>
+                                            <input type="number" step="0.1" id="m-thorax" class="w-full bg-black border border-white/5 rounded-lg p-2 text-xs text-center text-gray-200 outline-none focus:border-white/20">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Abdomen</label>
+                                            <input type="number" step="0.1" id="m-abdomen" class="w-full bg-black border border-white/5 rounded-lg p-2 text-xs text-center text-gray-200 outline-none focus:border-white/20">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-bold text-gray-400 uppercase mb-1">Brazo Izq</label>
+                                            <input type="number" step="0.1" id="m-bicep-l" class="w-full bg-black border border-white/5 rounded-lg p-2 text-xs text-center text-white outline-none focus:border-white/20">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-bold text-gray-400 uppercase mb-1">Brazo Der</label>
+                                            <input type="number" step="0.1" id="m-bicep-r" class="w-full bg-black border border-white/5 rounded-lg p-2 text-xs text-center text-white outline-none focus:border-white/20">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-bold text-gray-400 uppercase mb-1">Antebrazo Izq</label>
+                                            <input type="number" step="0.1" id="m-forearm-l" class="w-full bg-black border border-white/5 rounded-lg p-2 text-xs text-center text-white outline-none focus:border-white/20">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-bold text-gray-400 uppercase mb-1">Antebrazo Der</label>
+                                            <input type="number" step="0.1" id="m-forearm-r" class="w-full bg-black border border-white/5 rounded-lg p-2 text-xs text-center text-white outline-none focus:border-white/20">
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-4">
-                                    <h3 class="text-xs font-black uppercase text-sky-400 tracking-wider border-b border-white/5 pb-2">Capacidad Mecánica (1RM Est.)</h3>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Vector Empuje (kg)</label>
-                                        <input type="number" step="0.5" id="m-push" class="w-full glass-input p-3 rounded-xl text-xs font-bold text-sky-400" placeholder="Ej: Press de Banca">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Vector Tracción (kg)</label>
-                                        <input type="number" step="0.5" id="m-pull" class="w-full glass-input p-3 rounded-xl text-xs font-bold text-sky-400" placeholder="Ej: Peso Muerto">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Vector Dominante Pierna (kg)</label>
-                                        <input type="number" step="0.5" id="m-legs" class="w-full glass-input p-3 rounded-xl text-xs font-bold text-sky-400" placeholder="Ej: Sentadilla">
+                                <!-- Sub-Bloque: Tren Inferior -->
+                                <div class="space-y-3 pt-2">
+                                    <h3 class="text-[10px] font-black uppercase text-white tracking-widest border-b border-white/5 pb-2">Tren Inferior (Perímetros en cm)</h3>
+                                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                                        <div class="col-span-2 sm:col-span-1">
+                                            <label class="block text-[8px] font-black text-[#FFC300] uppercase mb-1">Cintura</label>
+                                            <input type="number" step="0.1" id="m-waist" class="w-full bg-black border border-[#FFC300]/20 rounded-lg p-2 text-xs text-center text-[#FFC300] font-bold outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Fémur Izq</label>
+                                            <input type="number" step="0.1" id="m-femur-l" class="w-full bg-black border border-white/5 rounded-lg p-2 text-xs text-center text-gray-200 outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Fémur Der</label>
+                                            <input type="number" step="0.1" id="m-femur-r" class="w-full bg-black border border-white/5 rounded-lg p-2 text-xs text-center text-gray-200 outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Tibia Izq</label>
+                                            <input type="number" step="0.1" id="m-tibia-l" class="w-full bg-black border border-white/5 rounded-lg p-2 text-xs text-center text-gray-200 outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Tibia Der</label>
+                                            <input type="number" step="0.1" id="m-tibia-r" class="w-full bg-black border border-white/5 rounded-lg p-2 text-xs text-center text-gray-200 outline-none">
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="bg-black/30 border border-white/5 rounded-2xl p-5 space-y-4 md:col-span-2">
-                                    <h3 class="text-xs font-black uppercase text-red-400 tracking-wider border-b border-white/5 pb-2">Ficha Médica & Observaciones Críticas</h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Sub-Bloque: Capacidad Mecánica (1RM) -->
+                                <div class="space-y-3 pt-2">
+                                    <h3 class="text-[10px] font-black uppercase text-sky-400 tracking-widest border-b border-white/5 pb-2">Capacidad Mecánica (1RM Estimado)</h3>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         <div>
-                                            <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Alergias</label>
-                                            <input type="text" id="m-allergies" class="w-full glass-input p-3 rounded-xl text-xs text-white" placeholder="Ninguna registrada.">
+                                            <label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Vector Empuje (kg)</label>
+                                            <input type="number" step="0.5" id="m-push" class="w-full bg-black border border-white/10 rounded-xl p-2.5 text-xs font-bold text-sky-400 text-center outline-none focus:border-sky-500" placeholder="Press de Banca">
                                         </div>
                                         <div>
-                                            <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Enfermedades Crónicas</label>
-                                            <input type="text" id="m-diseases" class="w-full glass-input p-3 rounded-xl text-xs text-white" placeholder="Ninguna registrada.">
+                                            <label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Vector Tracción (kg)</label>
+                                            <input type="number" step="0.5" id="m-pull" class="w-full bg-black border border-white/10 rounded-xl p-2.5 text-xs font-bold text-sky-400 text-center outline-none focus:border-sky-500" placeholder="Peso Muerto">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Vector Dominante Pierna (kg)</label>
+                                            <input type="number" step="0.5" id="m-legs" class="w-full bg-black border border-white/10 rounded-xl p-2.5 text-xs font-bold text-sky-400 text-center outline-none focus:border-sky-500" placeholder="Sentadilla">
                                         </div>
                                     </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Otras Notas / Historial Clínico</label>
-                                        <textarea id="m-medical-notes" rows="2" class="w-full glass-input p-3 rounded-xl text-xs text-gray-300 leading-relaxed" placeholder="Sin observaciones."></textarea>
+                                </div>
+
+                                <!-- Sub-Bloque: Ficha Médica y Notas -->
+                                <div class="space-y-3 pt-2">
+                                    <h3 class="text-[10px] font-black uppercase text-red-400 tracking-widest border-b border-white/5 pb-2">Ficha Médica & Observaciones Críticas</h3>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Alergias</label>
+                                            <input type="text" id="m-allergies" class="w-full bg-black border border-white/5 rounded-xl p-3 text-xs font-medium text-white placeholder-gray-700 outline-none" placeholder="Ninguna registrada.">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Enfermedades Crónicas</label>
+                                            <input type="text" id="m-diseases" class="w-full bg-black border border-white/5 rounded-xl p-3 text-xs font-medium text-white placeholder-gray-700 outline-none" placeholder="Ninguna registrada.">
+                                        </div>
+                                        <div class="sm:col-span-2">
+                                            <label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Otras Notas / Historial Clínico</label>
+                                            <textarea id="m-medical-notes" rows="2" class="w-full bg-black border border-white/5 rounded-xl p-3 text-xs font-medium text-gray-300 leading-relaxed placeholder-gray-700 outline-none" placeholder="Sin observaciones."></textarea>
+                                        </div>
                                     </div>
                                 </div>
 
                             </div>
-                            <div class="flex justify-end border-t border-white/5 pt-4">
-                                <button type="submit" id="btn-submit-metrics" class="btn-gold px-8 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest">Asentar Registro Biométrico</button>
+                            
+                            <div class="flex justify-end pt-2">
+                                <button type="submit" id="btn-submit-metrics" class="btn-gold w-full sm:w-auto px-8 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl">Asentar Registro Biométrico</button>
                             </div>
                         </form>
                     </div>
 
+                    <!-- TAB 2: MAPA DE OBJETIVOS (GOALS) -->
                     <div id="panel-goals" class="hidden">
                         <form id="goals-form" class="space-y-6">
+                            
                             <div class="bg-black/40 border border-white/5 p-4 rounded-xl flex items-center gap-4">
                                 <label class="text-[10px] font-black uppercase tracking-widest text-[#FFC300]">Foco Primario del Bot:</label>
-                                <select id="g-focus" class="bg-black border border-white/10 rounded-lg p-2 text-xs font-bold text-white">
+                                <select id="g-focus" class="bg-black border border-white/10 rounded-lg p-2 text-xs font-bold text-white accent-[#FFC300]">
                                     <option value="Pérdida de Grasa">Pérdida de Grasa</option>
                                     <option value="Masa Muscular">Masa Muscular</option>
                                     <option value="Rendimiento / Calistenia">Rendimiento / Calistenia</option>
@@ -213,61 +230,64 @@
                                 </select>
                             </div>
 
-                            <div class="space-y-6">
-                                <div class="bg-black/30 border border-white/5 p-5 rounded-2xl relative">
+                            <div class="space-y-4">
+                                <!-- Corto Plazo (3 Meses) -->
+                                <div class="bg-black/30 border border-white/5 p-5 rounded-2xl">
                                     <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                                        <h4 class="text-xs font-black uppercase tracking-wider text-white">Corto Plazo <span class="text-gray-500">(Adaptación - 3 Meses)</span></h4>
-                                        <select id="g-st-status" class="bg-black/80 border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300]"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
+                                        <h4 class="text-xs font-black uppercase tracking-wider text-white">Corto Plazo <span class="text-gray-500 text-[10px] font-bold">(Adaptación - 3 Meses)</span></h4>
+                                        <select id="g-st-status" class="bg-black border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300]"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
                                     </div>
                                     <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                                         <div class="lg:col-span-3">
                                             <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción SMART</label>
-                                            <textarea id="g-st-desc" rows="2" class="w-full glass-input p-3 rounded-xl text-xs font-medium"></textarea>
+                                            <textarea id="g-st-desc" rows="2" class="w-full bg-black border border-white/5 rounded-xl p-3 text-xs text-gray-200 leading-normal focus:border-white/20 outline-none"></textarea>
                                         </div>
                                         <div>
                                             <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Valor Meta</label>
-                                            <input type="text" id="g-st-target" class="w-full glass-input p-3 rounded-xl text-xs font-bold text-white" placeholder="Ej: 75.0 kg">
+                                            <input type="text" id="g-st-target" class="w-full bg-black border border-white/5 rounded-xl p-3 text-xs font-bold text-white text-center" placeholder="Ej: 75.0 kg">
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="bg-black/30 border border-white/5 p-5 rounded-2xl relative">
+                                <!-- Mediano Plazo (7 Meses) -->
+                                <div class="bg-black/30 border border-white/5 p-5 rounded-2xl">
                                     <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                                        <h4 class="text-xs font-black uppercase tracking-wider text-white">Mediano Plazo <span class="text-gray-500">(Recomposición - 7 Meses)</span></h4>
-                                        <select id="g-mt-status" class="bg-black/80 border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300]"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
+                                        <h4 class="text-xs font-black uppercase tracking-wider text-white">Mediano Plazo <span class="text-gray-500 text-[10px] font-bold">(Recomposición - 7 Meses)</span></h4>
+                                        <select id="g-mt-status" class="bg-black border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300]"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
                                     </div>
                                     <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                                         <div class="lg:col-span-3">
                                             <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción SMART</label>
-                                            <textarea id="g-mt-desc" rows="2" class="w-full glass-input p-3 rounded-xl text-xs font-medium"></textarea>
+                                            <textarea id="g-mt-desc" rows="2" class="w-full bg-black border border-white/5 rounded-xl p-3 text-xs text-gray-200 leading-normal focus:border-white/20 outline-none"></textarea>
                                         </div>
                                         <div>
                                             <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Valor Meta</label>
-                                            <input type="text" id="g-mt-target" class="w-full glass-input p-3 rounded-xl text-xs font-bold text-white" placeholder="Ej: 14% Grasa">
+                                            <input type="text" id="g-mt-target" class="w-full bg-black border border-white/5 rounded-xl p-3 text-xs font-bold text-white text-center" placeholder="Ej: 14% Grasa">
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="bg-black/30 border border-white/5 p-5 rounded-2xl relative">
+                                <!-- Largo Plazo (1 Año) -->
+                                <div class="bg-black/30 border border-white/5 p-5 rounded-2xl">
                                     <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                                        <h4 class="text-xs font-black uppercase tracking-wider text-white">Largo Plazo <span class="text-gray-500">(Consolidación - 1 Año)</span></h4>
-                                        <select id="g-lt-status" class="bg-black/80 border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300]"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
+                                        <h4 class="text-xs font-black uppercase tracking-wider text-white">Largo Plazo <span class="text-gray-500 text-[10px] font-bold">(Consolidación - 1 Año)</span></h4>
+                                        <select id="g-lt-status" class="bg-black border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300]"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
                                     </div>
                                     <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                                         <div class="lg:col-span-3">
                                             <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción SMART</label>
-                                            <textarea id="g-lt-desc" rows="2" class="w-full glass-input p-3 rounded-xl text-xs font-medium"></textarea>
+                                            <textarea id="g-lt-desc" rows="2" class="w-full bg-black border border-white/5 rounded-xl p-3 text-xs text-gray-200 leading-normal focus:border-white/20 outline-none"></textarea>
                                         </div>
                                         <div>
                                             <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Valor Meta</label>
-                                            <input type="text" id="g-lt-target" class="w-full glass-input p-3 rounded-xl text-xs font-bold text-white" placeholder="Ej: Mantener Récord">
+                                            <input type="text" id="g-lt-target" class="w-full bg-black border border-white/5 rounded-xl p-3 text-xs font-bold text-white text-center" placeholder="Ej: Récord Sostenido">
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="flex justify-end border-t border-white/5 pt-4">
-                                <button type="submit" id="btn-submit-goals" class="bg-white text-black font-black px-8 py-3.5 rounded-xl text-[10px] uppercase tracking-widest hover:bg-gray-200 transition">Fijar Objetivos Estratégicos</button>
+                            <div class="flex justify-end pt-2">
+                                <button type="submit" id="btn-submit-goals" class="bg-white text-black font-black w-full sm:w-auto px-8 py-3.5 rounded-xl text-[10px] uppercase tracking-widest hover:bg-gray-200 transition shadow-xl">Fijar Objetivos Estratégicos</button>
                             </div>
                         </form>
                     </div>
