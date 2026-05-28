@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GYMENEZ CORE | Gestión Física</title>
+    <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/auth.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="selection:bg-[#FFC300] selection:text-black overflow-x-hidden min-h-screen flex flex-col bg-[#030305]">
+
+    <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-4 md:px-6 py-2 md:py-3 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none text-center w-11/12 max-w-[350px] border border-white/10"></div>
+
+    <div class="fixed inset-0 bg-[url('/static/img/backgrounds/FONDO.png')] bg-cover bg-center opacity-5 -z-10 mix-blend-screen grayscale"></div>
+    <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/50 via-[#030305]/95 to-[#030305] -z-10"></div>
+
+    <header class="w-full border-b border-white/5 bg-black/30 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-black uppercase tracking-tighter text-white">
+                <span class="text-[#FFC300]">GYM</span>ENEZ CORE
+            </h1>
+            <a href="/apps/admin/dashboard.html" class="px-5 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition">
+                ← Volver al Panel
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto w-full px-4 md:px-6 py-8 flex-grow fade-in-up">
+        <div class="glass-panel p-6 md:p-8 rounded-[24px] min-h-[70vh]">
+            
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-white uppercase tracking-tighter">Comando de Entrenamiento</h2>
+                    <p class="text-xs text-gray-500 font-bold tracking-widest uppercase mt-1">Biblioteca física y táctica</p>
+                </div>
+            </div>
+
+            <div class="flex gap-4 border-b border-white/10 mb-8">
+                <button id="tab-btn-routines" class="px-6 py-3 border-b-2 border-[#FFC300] text-[#FFC300] font-black uppercase tracking-widest text-[10px] transition-colors">Programas (Rutinas)</button>
+                <button id="tab-btn-exercises" class="px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-colors">Base de Ejercicios</button>
+            </div>
+            
+            <div id="panel-routines" class="block">
+                <div class="flex justify-between items-center mb-6">
+                    <input type="text" id="routine-search" placeholder="Buscar rutina por nombre..." class="w-2/3 md:w-1/2 glass-input p-3.5 rounded-xl text-sm font-medium">
+                    <button id="add-routine-btn" class="btn-gold px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(255,195,0,0.2)]">
+                        + Nueva Rutina
+                    </button>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-white/5 bg-black/20">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th class="rounded-tl-xl">Nombre de la Rutina</th>
+                                <th>Días Operativos</th>
+                                <th>Volumen (Ejercicios)</th>
+                                <th>Atletas Activos</th>
+                                <th class="rounded-tr-xl text-right">Controles</th>
+                            </tr>
+                        </thead>
+                        <tbody id="routines-tbody" class="text-xs text-gray-300 font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="panel-exercises" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <input type="text" id="exercise-search" placeholder="Buscar ejercicio por nombre..." class="w-2/3 md:w-1/2 glass-input p-3.5 rounded-xl text-sm font-medium">
+                    <button id="add-exercise-btn" class="bg-white text-black hover:bg-gray-200 px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(255,255,255,0.2)] transition">
+                        + Crear Ejercicio
+                    </button>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-white/5 bg-black/20">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th class="rounded-tl-xl">Nombre Técnico</th>
+                                <th>Descripción</th>
+                                <th>Cinemática (Video)</th>
+                                <th class="rounded-tr-xl text-right">Controles</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exercises-tbody" class="text-xs text-gray-300 font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="exercise-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-[1010] flex justify-center items-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="modal-content w-full max-w-lg p-6 md:p-8 rounded-[24px] transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
+                <h3 id="ex-modal-title" class="text-xl font-black text-white uppercase tracking-tighter">Inyectar Ejercicio</h3>
+                <button type="button" onclick="toggleModal('exercise-modal', false)" class="text-gray-500 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <form id="exercise-form" class="space-y-5">
+                <input type="hidden" id="ex-id" name="id">
+                <input type="hidden" id="ex-is-edit" value="false">
+                
+                <div>
+                    <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Nombre Técnico <span class="text-red-500">*</span></label>
+                    <input type="text" id="ex-name" required class="w-full glass-input p-3 rounded-xl text-xs font-bold uppercase">
+                </div>
+                <div>
+                    <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Enlace a Cinemática (YouTube/Drive)</label>
+                    <input type="url" id="ex-link" class="w-full glass-input p-3 rounded-xl text-xs font-medium text-sky-400" placeholder="https://...">
+                </div>
+                <div>
+                    <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Descripción / Foco Muscular <span class="text-red-500">*</span></label>
+                    <textarea id="ex-desc" rows="3" required class="w-full glass-input p-3 rounded-xl text-xs font-medium leading-relaxed"></textarea>
+                </div>
+                
+                <div class="pt-6 flex justify-end gap-3 border-t border-white/10">
+                    <button type="button" onclick="toggleModal('exercise-modal', false)" class="px-6 py-3 rounded-xl bg-white/5 text-gray-400 font-bold text-[10px] uppercase tracking-widest hover:text-white transition">Cancelar</button>
+                    <button type="submit" id="ex-submit-btn" class="bg-white text-black px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-gray-200">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="routine-modal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-md z-[1000] flex justify-center items-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="modal-content w-full max-w-5xl p-6 md:p-8 rounded-[24px] transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
+                <h3 id="rt-modal-title" class="text-xl font-black text-[#FFC300] uppercase tracking-tighter">Ensamblar Rutina Base</h3>
+                <button type="button" onclick="toggleModal('routine-modal', false)" class="text-gray-500 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            
+            <form id="routine-form" class="space-y-6">
+                <input type="hidden" id="rt-id">
+                <input type="hidden" id="rt-is-edit" value="false">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 space-y-4">
+                        <div>
+                            <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Nombre del Bloque <span class="text-red-500">*</span></label>
+                            <input type="text" id="rt-name" required class="w-full glass-input p-3 rounded-xl text-xs font-bold uppercase">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Descripción / Notas <span class="text-red-500">*</span></label>
+                            <textarea id="rt-desc" rows="3" required class="w-full glass-input p-3 rounded-xl text-xs font-medium"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Días Operativos</label>
+                            <div class="grid grid-cols-2 gap-2 bg-black/30 p-4 rounded-xl border border-white/5">
+                                <label class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="rt_days" value="Lunes" class="accent-[#FFC300] w-3 h-3"> Lunes</label>
+                                <label class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="rt_days" value="Martes" class="accent-[#FFC300] w-3 h-3"> Martes</label>
+                                <label class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="rt_days" value="Miércoles" class="accent-[#FFC300] w-3 h-3"> Miércoles</label>
+                                <label class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="rt_days" value="Jueves" class="accent-[#FFC300] w-3 h-3"> Jueves</label>
+                                <label class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="rt_days" value="Viernes" class="accent-[#FFC300] w-3 h-3"> Viernes</label>
+                                <label class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="rt_days" value="Sábado" class="accent-[#FFC300] w-3 h-3"> Sábado</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-black/30 border border-white/5 rounded-xl p-4 flex flex-col h-[350px]">
+                            <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2">Catálogo Disponible</label>
+                            <input type="text" id="rt-search-ex" placeholder="Buscar ejercicio..." class="w-full glass-input p-2 rounded-lg text-[10px] mb-3">
+                            <div id="rt-available-ex" class="flex-grow overflow-y-auto space-y-1 pr-1 custom-scrollbar"></div>
+                        </div>
+                        <div class="bg-black/30 border border-white/5 rounded-xl p-4 flex flex-col h-[350px]">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-[9px] font-bold text-[#FFC300] uppercase tracking-widest">Ejercicios Asignados</label>
+                                <span id="rt-count-ex" class="text-[9px] font-black text-white bg-white/10 px-2 py-0.5 rounded">0</span>
+                            </div>
+                            <div id="rt-selected-ex" class="flex-grow overflow-y-auto space-y-2 pr-1 custom-scrollbar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-white/5 pt-5 mt-4">
+                    <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2">Atletas Asignados (Auto-Desasignación Preventiva Activa)</label>
+                    <div class="bg-black/30 border border-white/5 rounded-xl p-4 max-h-[150px] overflow-y-auto">
+                        <div id="rt-users-list" class="grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
+                    </div>
+                </div>
+
+                <div class="pt-6 flex justify-end gap-3 border-t border-white/10">
+                    <button type="button" onclick="toggleModal('routine-modal', false)" class="px-6 py-3 rounded-xl bg-white/5 text-gray-400 font-bold text-[10px] uppercase tracking-widest hover:text-white transition">Cancelar</button>
+                    <button type="submit" id="rt-submit-btn" class="btn-gold px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em]">Ensamblar Rutina</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/admin/admin_middleware.js"></script>
+    <script src="/static/js/admin/routines.js"></script>
+</body>
+</html>
