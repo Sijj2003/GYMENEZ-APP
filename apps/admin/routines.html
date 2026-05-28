@@ -114,30 +114,165 @@
         </div>
     </main>
 
-    <div id="exercise-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-[1010] flex justify-center items-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="modal-content w-full max-w-lg p-6 md:p-8 rounded-[24px] transform scale-95 transition-transform duration-300">
+    <div id="exercise-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-[1010] flex justify-center items-center p-4 opacity-0 transition-opacity duration-300 overflow-y-auto">
+        <div class="modal-content w-full max-w-4xl p-6 md:p-8 rounded-[24px] transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar my-8">
             <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
-                <h3 id="ex-modal-title" class="text-xl font-black text-white uppercase tracking-tighter">Inyectar Ejercicio</h3>
+                <h3 id="ex-modal-title" class="text-xl font-black text-white uppercase tracking-tighter">Inyectar Ejercicio Científico</h3>
                 <button type="button" onclick="toggleModal('exercise-modal', false)" class="text-gray-500 hover:text-white text-3xl leading-none">&times;</button>
             </div>
+            
             <form id="exercise-form" class="space-y-5">
                 <input type="hidden" id="ex-id" name="id">
                 <input type="hidden" id="ex-is-edit" value="false">
-                <div>
-                    <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Nombre Técnico <span class="text-red-500">*</span></label>
-                    <input type="text" id="ex-name" required class="w-full glass-input p-3 rounded-xl text-xs font-bold uppercase">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Nombre Técnico <span class="text-red-500">*</span></label>
+                        <input type="text" id="ex-name" required class="w-full glass-input p-3 rounded-xl text-xs font-bold uppercase">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Enlace a Cinemática (YouTube/Drive)</label>
+                        <input type="url" id="ex-link" class="w-full glass-input p-3 rounded-xl text-xs font-medium text-sky-400" placeholder="https://...">
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Enlace a Cinemática (YouTube/Drive)</label>
-                    <input type="url" id="ex-link" class="w-full glass-input p-3 rounded-xl text-xs font-medium text-sky-400" placeholder="https://...">
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/5 pt-4">
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Patrón de Movimiento</label>
+                        <select id="ex-pattern" class="w-full glass-input p-3 rounded-xl text-xs font-bold text-[#FFC300]">
+                            <option value="Empuje horizontal">Empuje horizontal</option>
+                            <option value="Empuje vertical">Empuje vertical</option>
+                            <option value="Tracción horizontal">Tracción horizontal</option>
+                            <option value="Tracción vertical">Tracción vertical</option>
+                            <option value="Dominante de rodilla">Dominante de rodilla</option>
+                            <option value="Dominante de cadera">Dominante de cadera</option>
+                            <option value="Core">Core</option>
+                            <option value="Aislamiento">Aislamiento</option>
+                            <option value="Cardio/Metabólico">Cardio/Metabólico</option>
+                            <option value="Movilidad/Calentamiento">Movilidad/Calentamiento</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Músculo Primario</label>
+                        <select id="ex-main-muscle" class="w-full glass-input p-3 rounded-xl text-xs font-bold">
+                            <option value="Pectoral">Pectoral</option>
+                            <option value="Dorsal">Dorsal</option>
+                            <option value="Cuádriceps">Cuádriceps</option>
+                            <option value="Isquiotibiales">Isquiotibiales</option>
+                            <option value="Glúteos">Glúteos</option>
+                            <option value="Deltoides">Deltoides</option>
+                            <option value="Bíceps">Bíceps</option>
+                            <option value="Tríceps">Tríceps</option>
+                            <option value="Core">Core</option>
+                            <option value="Pantorrillas">Pantorrillas</option>
+                            <option value="Fullbody">Fullbody</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Cinemática</label>
+                        <select id="ex-type" class="w-full glass-input p-3 rounded-xl text-xs font-bold">
+                            <option value="Compuesto">Compuesto</option>
+                            <option value="Aislamiento">Aislamiento</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Equipamiento</label>
+                        <select id="ex-equipment" class="w-full glass-input p-3 rounded-xl text-xs font-bold">
+                            <option value="Peso corporal">Peso corporal</option>
+                            <option value="Mancuernas">Mancuernas</option>
+                            <option value="Barra">Barra</option>
+                            <option value="Poleas">Poleas</option>
+                            <option value="Máquina">Máquina</option>
+                            <option value="Bandas de resistencia">Bandas de resistencia</option>
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Descripción / Foco Muscular <span class="text-red-500">*</span></label>
-                    <textarea id="ex-desc" rows="3" required class="w-full glass-input p-3 rounded-xl text-xs font-medium leading-relaxed"></textarea>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Dificultad</label>
+                        <select id="ex-difficulty" class="w-full glass-input p-3 rounded-xl text-xs font-bold">
+                            <option value="Principiante">Principiante</option>
+                            <option value="Intermedio">Intermedio</option>
+                            <option value="Avanzado">Avanzado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Paywall (Acceso Atleta)</label>
+                        <select id="ex-tier" class="w-full glass-input p-3 rounded-xl text-xs font-bold text-emerald-400">
+                            <option value="Básico">Básico</option>
+                            <option value="Plus">Plus</option>
+                            <option value="Ultra">Ultra</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Fatiga del SNC</label>
+                        <select id="ex-fatigue" class="w-full glass-input p-3 rounded-xl text-xs font-bold text-red-400">
+                            <option value="Baja">Baja</option>
+                            <option value="Media">Media</option>
+                            <option value="Alta">Alta</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Intensidad Energética</label>
+                        <select id="ex-metabolic" class="w-full glass-input p-3 rounded-xl text-xs font-bold">
+                            <option value="Baja">Baja</option>
+                            <option value="Media">Media</option>
+                            <option value="Alta">Alta</option>
+                        </select>
+                    </div>
                 </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/5 pt-4">
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Alternativa de Regresión (Más Fácil)</label>
+                        <input type="text" id="ex-regression" class="w-full glass-input p-3 rounded-xl text-xs font-medium" placeholder="Nombre exacto del ejercicio alternativo">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Alternativa de Progresión (Más Difícil)</label>
+                        <input type="text" id="ex-progression" class="w-full glass-input p-3 rounded-xl text-xs font-medium" placeholder="Nombre exacto del ejercicio avanzado">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-black/40 p-4 rounded-2xl border border-white/5">
+                    <div class="space-y-3">
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest">Estrés Articular Relacionado (Escudo Lesiones)</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="ex_joint" value="Hombro" class="accent-sky-500"> Hombro</label>
+                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="ex_joint" value="Codo" class="accent-sky-500"> Codo</label>
+                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="ex_joint" value="Muñeca" class="accent-sky-500"> Muñeca</label>
+                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="ex_joint" value="Columna" class="accent-sky-500"> Columna</label>
+                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="ex_joint" value="Cadera" class="accent-sky-500"> Cadera</label>
+                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="ex_joint" value="Rodilla" class="accent-sky-500"> Rodilla</label>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 flex-row items-center pt-2">
+                        <label class="flex flex-col gap-1 cursor-pointer bg-white/5 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
+                            <span class="text-[9px] font-black uppercase text-gray-400 tracking-wider">¿Carga Axial?</span>
+                            <div class="flex items-center gap-2 mt-1">
+                                <input type="checkbox" id="ex-axial" class="w-4 h-4 accent-[#FFC300]">
+                                <span class="text-[9px] text-gray-500 font-bold uppercase">Compresión</span>
+                            </div>
+                        </label>
+                        <label class="flex flex-col gap-1 cursor-pointer bg-white/5 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
+                            <span class="text-[9px] font-black uppercase text-gray-400 tracking-wider">¿Es Unilateral?</span>
+                            <div class="flex items-center gap-2 mt-1">
+                                <input type="checkbox" id="ex-unilateral" class="w-4 h-4 accent-[#FFC300]">
+                                <span class="text-[9px] text-gray-500 font-bold uppercase">Por Lados</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Instrucciones / Foco de Estímulo <span class="text-red-500">*</span></label>
+                    <textarea id="ex-desc" rows="3" required class="w-full glass-input p-3 rounded-xl text-xs font-medium leading-relaxed" placeholder="Instrucciones biomecánicas estrictas para el atleta..."></textarea>
+                </div>
+                
                 <div class="pt-6 flex justify-end gap-3 border-t border-white/10">
                     <button type="button" onclick="toggleModal('exercise-modal', false)" class="px-6 py-3 rounded-xl bg-white/5 text-gray-400 font-bold text-[10px] uppercase tracking-widest hover:text-white transition">Cancelar</button>
-                    <button type="submit" id="ex-submit-btn" class="bg-white text-black px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-gray-200">Guardar</button>
+                    <button type="submit" id="ex-submit-btn" class="bg-white text-black px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-gray-200">Guardar Ficha Ejercicio</button>
                 </div>
             </form>
         </div>
