@@ -110,6 +110,7 @@ async function loadAthleteBiometricsDashboard() {
             content.classList.remove('hidden');
             content.classList.add('flex');
         }
+        document.body.classList.add('loaded');
     }
 }
 
