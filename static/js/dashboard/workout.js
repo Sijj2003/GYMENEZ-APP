@@ -2,11 +2,12 @@ const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || windo
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
 let currentWeekData = {};
+let todayProgressData = {}; // 🧠 Almacén de persistencia del servidor
 let selectedDay = 1;
 let completedExercises = new Set();
 let exerciseStates = {}; 
 let sessionId = "";
-let isRoutineLocked = false; // Candado de 24 horas
+let isRoutineLocked = false;
 
 const DAYS = [
     { id: 1, label: "LUN" }, { id: 2, label: "MAR" }, 
@@ -23,44 +24,9 @@ function showFeedback(msg, type='success') {
 }
 
 function getTodayDateString() {
-    return new Date().toISOString().split('T')[0]; // Ej: "2026-05-28"
+    return new Date().toISOString().split('T')[0];
 }
 
-// ==========================================
-// 🛡️ SISTEMA DE BLOQUEO (COOLDOWN FRONTEND)
-// ==========================================
-function checkRoutineLock(dayId) {
-    const todayStr = getTodayDateString();
-    const lockedDate = localStorage.getItem(`locked_routine_day_${dayId}`);
-    
-    // Si la fecha guardada es hoy, bloqueamos la rutina. Si es ayer, el candado caducó.
-    isRoutineLocked = (lockedDate === todayStr);
-    
-    const badge = document.getElementById('cooldown-badge');
-    if (isRoutineLocked) {
-        badge.classList.remove('hidden');
-        // Recuperamos lo que hizo hoy para que pueda verlo
-        const savedMemory = localStorage.getItem(`journal_memory_${dayId}_${todayStr}`);
-        if (savedMemory) {
-            exerciseStates = JSON.parse(savedMemory);
-            Object.keys(exerciseStates).forEach(k => completedExercises.add(k));
-        }
-    } else {
-        badge.classList.add('hidden');
-    }
-}
-
-function lockRoutineForToday() {
-    const todayStr = getTodayDateString();
-    localStorage.setItem(`locked_routine_day_${selectedDay}`, todayStr);
-    localStorage.setItem(`journal_memory_${selectedDay}_${todayStr}`, JSON.stringify(exerciseStates));
-    isRoutineLocked = true;
-    document.getElementById('cooldown-badge').classList.remove('hidden');
-}
-
-// ==========================================
-// 🕹️ MECÁNICAS DE INTERFAZ
-// ==========================================
 function renderDaySelector() {
     const container = document.getElementById('day-selector');
     container.innerHTML = '';
@@ -91,7 +57,7 @@ function toggleAccordion(exId) {
 }
 
 function toggleSetComplete(exId, setIndex) {
-    if (isRoutineLocked) return; // Si está bloqueado, no hace nada
+    if (isRoutineLocked) return;
 
     const btn = document.getElementById(`btn-set-${exId}-${setIndex}`);
     const repInput = document.getElementById(`reps-${exId}-${setIndex}`);
@@ -153,7 +119,7 @@ function selectRPE(exId, value) {
 }
 
 // ==========================================
-// 📦 ENVÍO DE DATOS Y MODAL DE VICTORIA
+// 📦 ENVÍO E INDELEXACIÓN DE DOCUMENTO UNIFICADO
 // ==========================================
 async function saveToJournal(exId) {
     if(isRoutineLocked || !exerciseStates[exId].rpe) return;
@@ -161,17 +127,20 @@ async function saveToJournal(exId) {
     const submitBtn = document.getElementById(`submit-journal-${exId}`);
     submitBtn.innerHTML = '<div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
 
-    // Empaquetado Inteligente con ID de Sesión
+    const totalExercises = currentWeekData[selectedDay].ejercicios.length;
+    // Evaluamos en tiempo real si este es el último bloque de la rutina
+    const isLastExercise = (completedExercises.size + 1 === totalExercises);
+
     const journalData = {
         session_id: sessionId,
         exercise_id: exId,
         date: new Date().toISOString(),
         rpe: exerciseStates[exId].rpe,
-        sets_execution: exerciseStates[exId].sets
+        sets_execution: exerciseStates[exId].sets.map(s => ({ done: s.done, reps: s.reps, weight: s.weight })),
+        status: isLastExercise ? 'Finalizado' : 'En progreso' // Cambia el estatus maestro del documento
     };
 
     try {
-        // 🚀 ¡CORRECCIÓN DE RUTA! Apuntamos al recurso unificado usando POST
         const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token') || localStorage.getItem('token');
         const res = await fetch(`${API_BASE_URL}/api/client/routines`, {
             method: 'POST', 
@@ -182,13 +151,20 @@ async function saveToJournal(exId) {
             body: JSON.stringify(journalData)
         });
 
-        if (!res.ok) throw new Error("Fallo al guardar en BD");
+        if (!res.ok) throw new Error("Fallo al actualizar sesión.");
 
-        showFeedback('Sobrecarga registrada en el Journal.');
+        showFeedback('Sobrecarga registrada en el Journal Unificado.');
         
+        // Sincronizar memoria en memoria local del cliente para evitar pérdidas si cambia de pestaña
+        if (!todayProgressData[selectedDay]) {
+            todayProgressData[selectedDay] = { status: journalData.status, exercises: {} };
+        }
+        todayProgressData[selectedDay].exercises[exId] = { rpe: journalData.rpe, sets_execution: journalData.sets_execution };
+        todayProgressData[selectedDay].status = journalData.status;
+
         completedExercises.add(exId);
         updateProgressBar();
-        toggleAccordion(exId); // Cerrar y marcar verde
+        toggleAccordion(exId);
         
         const card = document.getElementById(`ex-card-${exId}`);
         card.classList.add('exercise-done');
@@ -197,15 +173,15 @@ async function saveToJournal(exId) {
         statusBadge.textContent = 'ASENTADO';
         statusBadge.className = 'px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded text-[8px] font-black uppercase tracking-widest';
 
-        // 🏆 VERIFICAR SI TERMINÓ TODA LA RUTINA
-        const totalExercises = currentWeekData[selectedDay].ejercicios.length;
-        if (completedExercises.size === totalExercises) {
-            lockRoutineForToday();
+        if (isLastExercise) {
+            isRoutineLocked = true;
+            document.getElementById('cooldown-badge').classList.remove('hidden');
             setTimeout(showVictoryModal, 800);
         }
 
     } catch(e) {
-        showFeedback('Error de conexión.', 'error');
+        console.error(e);
+        showFeedback('Error de conexión al asentar ejercicio.', 'error');
         submitBtn.innerHTML = 'Reintentar Guardado';
     }
 }
@@ -213,38 +189,38 @@ async function saveToJournal(exId) {
 function showVictoryModal() {
     const modal = document.getElementById('victory-modal');
     const content = document.getElementById('victory-modal-content');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    setTimeout(() => {
-        content.classList.remove('scale-95', 'opacity-0');
-        content.classList.add('scale-100', 'opacity-100');
-    }, 10);
+    modal.classList.remove('hidden'); modal.classList.add('flex');
+    setTimeout(() => { content.classList.remove('scale-95', 'opacity-0'); content.classList.add('scale-100', 'opacity-100'); }, 10);
 }
 
 function closeVictoryModal() {
     const modal = document.getElementById('victory-modal');
     const content = document.getElementById('victory-modal-content');
-    content.classList.remove('scale-100', 'opacity-100');
-    content.classList.add('scale-95', 'opacity-0');
-    setTimeout(() => {
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
-    }, 500);
+    content.classList.remove('scale-100', 'opacity-100'); content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => { modal.classList.remove('flex'); modal.classList.add('hidden'); }, 500);
 }
 
-function exitToHub() {
-    window.location.href = '/apps/start/inicio.html';
-}
+function exitToHub() { window.location.href = '/apps/start/inicio.html'; }
 
 // ==========================================
-// 🏗️ RENDERIZADOR PRINCIPAL
+// 🏗️ RENDERIZADOR DATA-DRIVEN RECONSTRUCTOR
 // ==========================================
 function renderRoutineForSelectedDay() {
     completedExercises.clear();
     exerciseStates = {};
     sessionId = `session_${selectedDay}_${getTodayDateString()}`;
     
-    checkRoutineLock(selectedDay);
+    // 🧠 Recuperamos el estado enviado por el servidor (Protección anticuelgues)
+    const currentProgress = todayProgressData[selectedDay];
+    if (currentProgress) {
+        isRoutineLocked = (currentProgress.status === 'Finalizado');
+        const badge = document.getElementById('cooldown-badge');
+        if (isRoutineLocked) badge.classList.remove('hidden');
+        else badge.classList.add('hidden');
+    } else {
+        isRoutineLocked = false;
+        document.getElementById('cooldown-badge').classList.add('hidden');
+    }
     
     const titleEl = document.getElementById('routine-title'), descEl = document.getElementById('routine-desc');
     const listEl = document.getElementById('exercises-list'), restState = document.getElementById('rest-day-state');
@@ -268,9 +244,16 @@ function renderRoutineForSelectedDay() {
         const exId = ex.id || `temp-${index}`;
         const numSets = parseInt(ex.series) || 3;
         
-        // Si no está bloqueado, inicializamos la memoria limpia
-        if (!isRoutineLocked || !exerciseStates[exId]) {
-            exerciseStates[exId] = { rpe: null, sets: Array(numSets).fill({done: false, reps: '', weight: ''}) };
+        // 🧠 RECONSTRUCCIÓN DE VALORES: ¿Este ejercicio ya se guardó antes de la recarga?
+        let hasSavedData = false;
+        if (currentProgress && currentProgress.exercises && currentProgress.exercises[exId]) {
+            const savedEx = currentProgress.exercises[exId];
+            exerciseStates[exId] = { rpe: savedEx.rpe, sets: savedEx.sets_execution.map(s => ({ done: true, reps: s.reps, weight: s.weight })) };
+            completedExercises.add(exId);
+            hasSavedData = true;
+        } else {
+            // Si está limpio, inicializamos vacío
+            exerciseStates[exId] = { rpe: null, sets: Array(numSets).fill(null).map(() => ({ done: false, reps: '', weight: '' })) };
         }
         
         const memState = exerciseStates[exId];
@@ -278,7 +261,7 @@ function renderRoutineForSelectedDay() {
 
         let setsHtml = '';
         for(let i=0; i<numSets; i++) {
-            const setMem = memState.sets[i] || {done: false, reps: '', weight: ''};
+            const setMem = memState.sets[i];
             
             setsHtml += `
             <div class="flex items-center gap-2 mb-2 p-2 rounded-lg bg-black/40 border border-white/5">
@@ -286,14 +269,14 @@ function renderRoutineForSelectedDay() {
                 <div class="flex-1 flex gap-2">
                     <div class="relative w-full">
                         <span class="absolute -top-2 left-2 text-[7px] font-black text-gray-500 uppercase bg-black px-1">Reps (${ex.repeticiones})</span>
-                        <input type="number" id="reps-${exId}-${i}" value="${setMem.reps}" ${isRoutineLocked ? 'disabled' : ''} class="w-full telemetry-input p-2.5 rounded-lg text-sm" placeholder="-" />
+                        <input type="number" id="reps-${exId}-${i}" value="${setMem.reps}" ${hasSavedData || isRoutineLocked ? 'disabled' : ''} class="w-full telemetry-input p-2.5 rounded-lg text-sm" placeholder="-" />
                     </div>
                     <div class="relative w-full">
                         <span class="absolute -top-2 left-2 text-[7px] font-black text-gray-500 uppercase bg-black px-1">KG</span>
-                        <input type="number" id="weight-${exId}-${i}" value="${setMem.weight}" ${isRoutineLocked ? 'disabled' : ''} class="w-full telemetry-input p-2.5 rounded-lg text-sm" placeholder="0" />
+                        <input type="number" id="weight-${exId}-${i}" value="${setMem.weight}" ${hasSavedData || isRoutineLocked ? 'disabled' : ''} class="w-full telemetry-input p-2.5 rounded-lg text-sm" placeholder="0" />
                     </div>
                 </div>
-                ${isRoutineLocked 
+                ${hasSavedData || isRoutineLocked 
                   ? `<div class="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 flex items-center justify-center text-xs">✅</div>`
                   : `<button id="btn-set-${exId}-${i}" onclick="toggleSetComplete('${exId}', ${i})" class="w-10 h-10 rounded-lg ${setMem.done ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'bg-white/5 border-white/10 text-gray-400'} font-bold text-xs flex items-center justify-center transition-colors">${setMem.done ? '✅' : '⬜'}</button>`
                 }
@@ -333,9 +316,9 @@ function renderRoutineForSelectedDay() {
 
                     <div class="mb-6">${setsHtml}</div>
                     
-                    ${!isRoutineLocked ? `
+                    ${!hasSavedData && !isRoutineLocked ? `
                     <div id="rpe-section-${exId}" class="hidden opacity-0 transform translate-y-2 transition-all duration-500 border-t border-white/10 pt-5">
-                        <p class="text-center text-[10px] font-black uppercase tracking-widest text-[#FFC300] mb-3">¿RPE - Dificultad Percibida?</p>
+                        <p class="text-center text-[10px] font-black uppercase tracking-widest text-[#FFC300] mb-3">¿RPE - Dificultad?</p>
                         <div class="flex justify-between gap-2 mb-6">
                             ${[1,2,3,4,5].map(i => `<button id="rpe-btn-${exId}-${i}" onclick="selectRPE('${exId}', ${i})" class="flex-1 py-3 rounded-lg border text-xs font-black transition-all ${i===1?'bg-emerald-500/20 text-emerald-400 border-emerald-500/30':i===2?'bg-lime-500/20 text-lime-400 border-lime-500/30':i===3?'bg-yellow-500/20 text-yellow-400 border-yellow-500/30':i===4?'bg-orange-500/20 text-orange-400 border-orange-500/30':'bg-red-500/20 text-red-400 border-red-500/30'}">${i}</button>`).join('')}
                         </div>
@@ -378,19 +361,8 @@ function updateProgressBar() {
 }
 
 // ==========================================
-// SIMULADOR
+// 🎬 INICIALIZADOR CORE SINCRO
 // ==========================================
-const MOCK_ROUTINE_DATA = {
-    1: {
-        titulo: "Día 1: Empuje Vectorial", enfoque: "Pecho, Hombros y Tríceps",
-        ejercicios: [
-            { id: 'e1', nombre: "Press de Banca Plano", grupo_muscular: "Pecho", series: 4, repeticiones: "8-10", link_tutorial: "https://youtube.com" },
-            { id: 'e2', nombre: "Press Militar c/ Mancuernas", grupo_muscular: "Hombros", series: 3, repeticiones: "10-12", link_tutorial: "https://youtube.com" },
-            { id: 'e3', nombre: "Extensiones de Tríceps en Polea", grupo_muscular: "Tríceps", series: 3, repeticiones: "12-15" }
-        ]
-    }
-};
-
 window.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token') || localStorage.getItem('token');
     if (!token) { window.location.href = '/apps/start/login.html'; return; }
@@ -399,15 +371,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     selectedDay = today === 0 ? 7 : today; 
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/client/routines`);
+        const response = await fetch(`${API_BASE_URL}/api/client/routines`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (response.ok) {
             const data = await response.json();
-            currentWeekData = (data.rutinas && Object.keys(data.rutinas).length > 0) ? data.rutinas : MOCK_ROUTINE_DATA;
-        } else {
-            throw new Error("Sin endpoint");
+            currentWeekData = data.rutinas || {};
+            todayProgressData = data.today_progress || {}; // 🧠 Sincronización inyectada
         }
     } catch (e) {
-        currentWeekData = MOCK_ROUTINE_DATA;
+        console.error("Error cargando sincronización táctica:", e);
     }
 
     document.getElementById('loading-spinner').classList.add('hidden');
