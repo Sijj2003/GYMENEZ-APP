@@ -33,7 +33,7 @@ function renderPremiumDashboard(goals, metrics) {
     const mtGoals = normalizeToArray(goals.medium_term);
     const ltGoals = normalizeToArray(goals.long_term);
 
-    // FÁBRICA INTELIGENTE: Cruza la meta (goals) con la realidad (metrics)
+    // FÁBRICA INTELIGENTE: Matemática de Progreso Absoluto
     const createGoalHTML = (goal) => {
         const isDone = goal.status === 'Cumplido';
         const badgeClass = isDone ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-white/10 text-white border-white/20';
@@ -41,43 +41,60 @@ function renderPremiumDashboard(goals, metrics) {
 
         let dynamicProgressHtml = '';
 
-        // 🧠 MOTOR ALGÓRITMICO: Si el objetivo tiene una clave métrica que no sea 'custom' y el usuario tiene ese dato registrado
-        if (goal.metric_key && goal.metric_key !== 'custom' && metrics[goal.metric_key]) {
-            const currentVal = parseFloat(metrics[goal.metric_key]);
-            const targetVal = parseFloat(goal.target_value);
+        if (goal.metric_key && goal.metric_key !== 'custom') {
+            
+            if (metrics[goal.metric_key] !== undefined && metrics[goal.metric_key] !== null && metrics[goal.metric_key] !== '') {
+                const currentVal = parseFloat(metrics[goal.metric_key]);
+                const targetVal = parseFloat(goal.target_value);
+                const startVal = parseFloat(goal.start_value);
 
-            if (!isNaN(currentVal) && !isNaN(targetVal) && targetVal !== 0) {
-                let percent = 0;
-                
-                // Si la meta es MAYOR (Ej: Aumentar Potencia o Músculo)
-                if (currentVal <= targetVal) {
-                    percent = (currentVal / targetVal) * 100;
+                // 🧠 SI TENEMOS LOS 3 DATOS: FÓRMULA DE PROGRESO REAL
+                if (!isNaN(currentVal) && !isNaN(targetVal) && !isNaN(startVal) && targetVal !== startVal) {
+                    
+                    // Fórmula Maestra: Absorbe reducciones y aumentos por igual
+                    let percent = ((currentVal - startVal) / (targetVal - startVal)) * 100;
+                    
+                    // Control de límites (Si el usuario empeoró, la barra no se sale por la izquierda; si llegó, no pasa de 100)
+                    if (percent < 0) percent = 0; 
+                    if (percent > 100 || isDone) percent = 100;
+
+                    dynamicProgressHtml = `
+                    <div class="mt-4 pt-3 border-t border-white/5">
+                        <div class="flex justify-between items-end mb-2">
+                            <span class="text-[7px] text-gray-500 font-black uppercase tracking-widest">Progreso Táctico (${Math.round(percent)}%)</span>
+                            <span class="text-[10px] font-mono font-bold ${isDone ? 'text-emerald-400' : 'text-white'}">
+                                ${currentVal} <span class="text-gray-500">/ ${targetVal}</span>
+                            </span>
+                        </div>
+                        <div class="w-full bg-black/50 h-1.5 rounded-full overflow-hidden border border-white/5">
+                            <div class="h-full rounded-full ${isDone ? 'bg-emerald-400' : 'bg-[#FFC300]'} transition-all duration-1000" style="width: ${percent}%;"></div>
+                        </div>
+                    </div>
+                    `;
                 } 
-                // Si la meta es MENOR (Ej: Bajar Peso o Grasa)
-                else {
-                    percent = (targetVal / currentVal) * 100;
+                // FALLBACK: Si el Admin olvidó colocar un Valor Inicial
+                else if (!isNaN(currentVal) && !isNaN(targetVal)) {
+                    dynamicProgressHtml = `
+                    <div class="mt-4 pt-3 border-t border-white/5 flex flex-col">
+                        <span class="text-[7px] text-gray-500 font-black uppercase tracking-widest mb-1">Estado Actual vs Meta</span>
+                        <span class="text-sm font-black tracking-tighter ${isDone ? 'text-emerald-400' : 'text-white'}">
+                            ${currentVal} <span class="text-gray-600 text-xs">➡️ ${targetVal}</span>
+                        </span>
+                        <span class="text-[8px] text-amber-500/70 uppercase font-bold mt-1">Falta registrar "Valor Inicial" en Admin para ver barra de progreso.</span>
+                    </div>
+                    `;
                 }
-                
-                // Topamos el progreso visual al 100%
-                if (percent > 100 || isDone) percent = 100;
-
+            } else {
                 dynamicProgressHtml = `
                 <div class="mt-4 pt-3 border-t border-white/5">
-                    <div class="flex justify-between items-end mb-2">
-                        <span class="text-[7px] text-gray-500 font-black uppercase tracking-widest">Progreso Realizado</span>
-                        <span class="text-[10px] font-mono font-bold ${isDone ? 'text-emerald-400' : 'text-white'}">
-                            ${currentVal} <span class="text-gray-500">/ ${targetVal}</span>
-                        </span>
+                    <div class="p-2 rounded bg-red-500/10 border border-red-500/20 text-center">
+                        <span class="text-[7px] text-red-400 font-black uppercase tracking-widest">⚠️ Requiere Telemetría Base</span>
+                        <p class="text-[9px] text-gray-400 mt-1 font-medium">Asienta esta variable en el perfil para habilitar métricas.</p>
                     </div>
-                    <div class="w-full bg-black/50 h-1.5 rounded-full overflow-hidden border border-white/5">
-                        <div class="h-full rounded-full ${isDone ? 'bg-emerald-400' : 'bg-[#FFC300]'} transition-all duration-1000" style="width: ${percent}%;"></div>
-                    </div>
-                </div>
-                `;
+                </div>`;
             }
         } 
         
-        // Si es un objetivo Cualitativo (Custom) o el atleta aún no se ha medido ese campo
         if (!dynamicProgressHtml) {
             dynamicProgressHtml = `
             <div class="mt-4 border-t border-white/5 pt-3 flex flex-col">
@@ -98,7 +115,7 @@ function renderPremiumDashboard(goals, metrics) {
         </div>
         `;
     };
-
+    
     const stContainer = document.getElementById('g-st-container');
     const mtContainer = document.getElementById('g-mt-container');
     const ltContainer = document.getElementById('g-lt-container');
