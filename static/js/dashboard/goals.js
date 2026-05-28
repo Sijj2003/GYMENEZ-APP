@@ -201,27 +201,26 @@ function initCinematicScroll3D() {
 }
 
 // ==========================================
-// 🚀 INICIALIZADOR CENTRAL
+// 🚀 INICIALIZADOR CENTRAL BLINDADO
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
-    const token = localStorage.getItem('user_token') || localStorage.getItem('token');
+    // 1. Buscamos el token general
+    const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token') || localStorage.getItem('token') || localStorage.getItem('admin_token');
+    
     if (!token) {
-        window.location.href = '/apps/start/login.html';
+        console.warn("Llave de token no detectada en LocalStorage.");
+        document.getElementById('loading-spinner').innerHTML = '<p class="text-red-400 font-bold uppercase tracking-widest text-[10px]">No hay sesión activa.</p>';
+        document.body.classList.add('loaded'); // Aseguramos remover el blur
         return;
     }
 
     try {
-        const metricsRes = await fetch(`${API_BASE_URL}/api/client/metrics`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
+        // 2. Fetch limpio sin Headers, tu `auth_middleware.js` hace el trabajo pesado
+        const res = await fetch(`${API_BASE_URL}/api/client/metrics`);
         
-        if (!metricsRes.ok) throw new Error("Fallo en la sincronización.");
+        if (!res.ok) throw new Error("El middleware o el servidor denegó el acceso.");
         
-        const data = await metricsRes.json();
+        const data = await res.json();
         const level = data.profile?.subscription_level || 'BASICO';
 
         document.getElementById('loading-spinner').classList.add('hidden');
@@ -241,7 +240,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
 
     } catch (error) {
-        console.error(error);
+        console.error("Fallo del sistema:", error);
         document.getElementById('loading-spinner').innerHTML = '<p class="text-red-400 font-bold uppercase tracking-widest text-[10px]">❌ Error de conexión al Biolab.</p>';
     } finally {
         document.body.classList.add('loaded');
