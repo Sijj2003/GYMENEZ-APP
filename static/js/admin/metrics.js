@@ -53,9 +53,7 @@ function switchTab(tab) {
     }
 }
 
-// ==========================================
-// 🏗️ FÁBRICA DE OBJETIVOS DINÁMICOS
-// ==========================================
+// 🏗️ FÁBRICA DE OBJETIVOS DINÁMICOS (ACTUALIZADA)
 function addGoalRow(containerId, data = null) {
     const container = document.getElementById(containerId);
     const rowId = `goal-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -71,21 +69,25 @@ function addGoalRow(containerId, data = null) {
     row.id = rowId;
 
     row.innerHTML = `
-        <div class="w-full xl:w-1/5">
+        <div class="w-full xl:w-1/6">
             <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Variable Base</label>
             <select class="goal-metric-key bg-black border border-white/10 rounded-lg p-2 text-[10px] font-bold text-white outline-none w-full">
                 ${metricOptions}
             </select>
         </div>
-        <div class="w-full xl:w-[15%]">
-            <label class="block text-[8px] text-[#FFC300] uppercase font-black mb-1 xl:text-center">Valor Target</label>
-            <input type="text" class="goal-target gymenez-input !p-2 xl:!text-center !text-[#FFC300]" placeholder="Ej: 75.5" value="${data ? (data.target_value || '') : ''}">
+        <div class="w-full xl:w-[12%]">
+            <label class="block text-[8px] text-gray-400 uppercase font-black mb-1 xl:text-center">V. Inicial</label>
+            <input type="text" class="goal-start gymenez-input !p-2 xl:!text-center !text-gray-300" placeholder="Base" value="${data ? (data.start_value || '') : ''}">
+        </div>
+        <div class="w-full xl:w-[12%]">
+            <label class="block text-[8px] text-[#FFC300] uppercase font-black mb-1 xl:text-center">Target</label>
+            <input type="text" class="goal-target gymenez-input !p-2 xl:!text-center !text-[#FFC300]" placeholder="Meta" value="${data ? (data.target_value || '') : ''}">
         </div>
         <div class="w-full xl:flex-grow">
             <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción / Directiva SMART</label>
-            <input type="text" class="goal-desc gymenez-input !p-2 !text-xs" placeholder="Describe la meta de forma medible..." value="${data ? (data.description || '') : ''}">
+            <input type="text" class="goal-desc gymenez-input !p-2 !text-xs" placeholder="Describe la meta..." value="${data ? (data.description || '') : ''}">
         </div>
-        <div class="w-full xl:w-1/6">
+        <div class="w-full xl:w-[12%]">
             <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Estatus</label>
             <select class="goal-status bg-black border border-white/10 rounded-lg p-2 text-[10px] font-black uppercase ${isDone ? 'text-emerald-400' : 'text-gray-300'} outline-none w-full">
                 <option value="En progreso" ${!isDone ? 'selected' : ''}>En progreso</option>
@@ -99,8 +101,8 @@ function addGoalRow(containerId, data = null) {
 
     container.appendChild(row);
 
-    // Automatización de Descripciones al seleccionar variables
     const selectEl = row.querySelector('.goal-metric-key');
+    const startEl = row.querySelector('.goal-start');
     const targetEl = row.querySelector('.goal-target');
     const descEl = row.querySelector('.goal-desc');
     const statusEl = row.querySelector('.goal-status');
@@ -109,7 +111,8 @@ function addGoalRow(containerId, data = null) {
         const metricKey = selectEl.value;
         const metricObj = MEASURABLE_METRICS.find(m => m.id === metricKey);
         if (metricKey !== 'custom' && targetEl.value.trim() !== '') {
-            descEl.value = `Establecer ${metricObj.label.toLowerCase()} en ${targetEl.value} ${metricObj.unit}`.trim();
+            let startText = startEl.value.trim() !== '' ? ` (desde ${startEl.value})` : '';
+            descEl.value = `Establecer ${metricObj.label.toLowerCase()} en ${targetEl.value} ${metricObj.unit}${startText}`.trim();
         }
     };
 
@@ -118,14 +121,16 @@ function addGoalRow(containerId, data = null) {
     });
 
     selectEl.addEventListener('change', updateDescription);
+    startEl.addEventListener('input', updateDescription);
     targetEl.addEventListener('input', updateDescription);
 }
 
-// Extractor de arreglos para empaquetar JSON
+// EXTRACTOR ACTUALIZADO PARA ENVIAR A LA BD
 function extractGoalsArray(containerId) {
     const rows = document.querySelectorAll(`#${containerId} .goal-row`);
     return Array.from(rows).map(row => ({
         metric_key: row.querySelector('.goal-metric-key').value,
+        start_value: row.querySelector('.goal-start').value,
         target_value: row.querySelector('.goal-target').value,
         description: row.querySelector('.goal-desc').value,
         status: row.querySelector('.goal-status').value
