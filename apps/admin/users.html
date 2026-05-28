@@ -118,10 +118,10 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="md:col-span-2">
+                    <div>
                         <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label>
                         <div class="flex gap-2">
-                            <select id="phone_prefix" name="phone_prefix" class="glass-input p-3 rounded-xl text-xs font-bold w-24">
+                            <select id="phone_prefix" name="phone_prefix" class="glass-input p-3 rounded-xl text-xs font-bold w-20">
                                 <option value="0414">0414</option><option value="0424">0424</option>
                                 <option value="0412">0412</option><option value="0422">0422</option>
                                 <option value="0416">0416</option><option value="0426">0426</option>
@@ -134,6 +134,11 @@
                         <select id="sex" name="sex" class="w-full glass-input p-3 rounded-xl text-xs font-bold">
                             <option value="Hombre">Hombre</option><option value="Mujer">Mujer</option><option value="Otro">Otro</option>
                         </select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Nacimiento</label>
+                        <!-- AQUÍ ESTÁ INCLUIDO EL CAMPO DE NACIMIENTO (dob) -->
+                        <input type="date" id="dob" name="dob" class="w-full glass-input p-3 rounded-xl text-xs font-mono text-gray-400">
                     </div>
                 </div>
 
