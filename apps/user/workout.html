@@ -13,7 +13,6 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Animación fluida para el acordeón */
         .accordion-content {
             max-height: 0;
             overflow: hidden;
@@ -21,18 +20,16 @@
             opacity: 0;
         }
         .accordion-content.expanded {
-            max-height: 1500px; /* Suficiente para acomodar muchas series */
+            max-height: 1500px;
             opacity: 1;
         }
         
-        /* Estado completado del ejercicio */
         .exercise-done {
             border-color: rgba(52, 211, 153, 0.4) !important;
             background: rgba(52, 211, 153, 0.05) !important;
         }
         .exercise-done .ex-header-title { color: #34d399 !important; }
 
-        /* Estilo para inputs de telemetría */
         .telemetry-input {
             background: rgba(0, 0, 0, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -45,6 +42,11 @@
         .telemetry-input:focus {
             border-color: #FFC300;
             box-shadow: 0 0 10px rgba(255, 195, 0, 0.2);
+        }
+        .telemetry-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            color: #9ca3af;
         }
     </style>
 </head>
@@ -84,7 +86,11 @@
                 <div class="flex gap-3 min-w-max" id="day-selector"></div>
             </div>
 
-            <div class="glass-panel rounded-2xl p-5 md:p-6 border-l-4 border-l-[#FFC300] bg-gradient-to-r from-[#FFC300]/5 to-transparent flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <!-- Cabecera y Barra de Progreso -->
+            <div class="glass-panel rounded-2xl p-5 md:p-6 border-l-4 border-l-[#FFC300] bg-gradient-to-r from-[#FFC300]/5 to-transparent flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
+                <div id="cooldown-badge" class="hidden absolute top-0 right-0 bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-bl-xl text-[8px] font-black uppercase tracking-widest border-b border-l border-emerald-500/30">
+                    Completado Hoy
+                </div>
                 <div>
                     <h3 id="routine-title" class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">Cargando Rutina...</h3>
                     <p id="routine-desc" class="text-gray-400 text-[11px] md:text-xs font-medium uppercase tracking-widest mt-1">--</p>
@@ -101,6 +107,7 @@
                 </div>
             </div>
 
+            <!-- Estado de Descanso -->
             <div id="rest-day-state" class="hidden flex-col items-center justify-center py-16 px-4 bg-white/[0.01] border border-white/5 rounded-3xl text-center">
                 <div class="w-14 h-14 bg-white/5 rounded-full flex items-center justify-center border border-white/10 text-gray-500 mb-4">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4m16 0a8 8 0 11-16 0 8 8 0 0116 0z"></path></svg>
@@ -109,12 +116,32 @@
                 <p class="text-gray-500 text-xs font-bold uppercase tracking-wide mt-2 max-w-xs">El crecimiento ocurre fuera del gimnasio. Optimiza tu nutrición y descanso celular.</p>
             </div>
 
-            <div id="exercises-list" class="flex flex-col gap-4">
-                <!-- Tarjetas dinámicas inyectadas por JS -->
-            </div>
+            <!-- Lista Dinámica de Ejercicios -->
+            <div id="exercises-list" class="flex flex-col gap-4"></div>
 
         </div>
     </main>
+
+    <!-- 🏆 MODAL DE VICTORIA -->
+    <div id="victory-modal" class="fixed inset-0 z-[100] hidden items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="closeVictoryModal()"></div>
+        <div class="glass-panel relative w-full max-w-md bg-black/90 border border-[#FFC300]/30 rounded-[32px] p-8 text-center shadow-[0_0_50px_rgba(255,195,0,0.15)] transform scale-95 opacity-0 transition-all duration-500" id="victory-modal-content">
+            <div class="w-20 h-20 mx-auto bg-emerald-500/20 rounded-full flex items-center justify-center border border-emerald-500/30 mb-6 shadow-[0_0_30px_rgba(52,211,153,0.3)]">
+                <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h3 class="text-3xl font-black uppercase tracking-tighter text-white mb-2">¡Misión Cumplida!</h3>
+            <p class="text-gray-400 text-xs font-medium leading-relaxed mb-8">Has completado todos los bloques tácticos de hoy. Tu telemetría de esfuerzo y pesos ha sido indexada en tu Journal. El sistema entrará en reposo hasta tu próxima sesión.</p>
+            
+            <div class="flex flex-col gap-3">
+                <button onclick="exitToHub()" class="btn-gold w-full py-4 rounded-xl text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(255,195,0,0.2)] hover:scale-105 transition-all">
+                    Volver al Hub Principal
+                </button>
+                <button onclick="closeVictoryModal()" class="w-full py-4 rounded-xl bg-white/5 text-gray-400 border border-white/10 text-xs font-black uppercase tracking-widest hover:text-white hover:bg-white/10 transition-all">
+                    Revisar Métricas de Hoy
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script src="/static/js/auth/auth_middleware.js"></script>
     <script src="/static/js/dashboard/workout.js"></script>
