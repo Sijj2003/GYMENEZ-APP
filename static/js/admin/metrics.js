@@ -133,14 +133,14 @@ async function fetchUserProfile(userId) {
             workspace.classList.remove('hidden');
 
             const m = data.metrics || {};
-            // Mapeo Métricas Base
+            // Mapeo Base con edad calculada
             document.getElementById('m-weight').value = m.weight || '';
             document.getElementById('m-height').value = m.height || '';
-            document.getElementById('m-age').value = m.age || '';
+            document.getElementById('m-age').value = m.age || '--';
             document.getElementById('m-fat').value = m.fat_percent || '';
             document.getElementById('m-muscle').value = m.muscle_percent || '';
             
-            // Mapeo Tren Superior
+            // Mapeo Superior
             document.getElementById('m-neck').value = m.neck || '';
             document.getElementById('m-back').value = m.back || '';
             document.getElementById('m-thorax').value = m.thorax || '';
@@ -150,7 +150,7 @@ async function fetchUserProfile(userId) {
             document.getElementById('m-forearm-l').value = m.forearm_left || '';
             document.getElementById('m-forearm-r').value = m.forearm_right || '';
             
-            // Mapeo Tren Inferior
+            // Mapeo Inferior
             document.getElementById('m-waist').value = m.waist || '';
             document.getElementById('m-femur-l').value = m.femur_left || '';
             document.getElementById('m-femur-r').value = m.femur_right || '';
@@ -186,7 +186,7 @@ async function fetchUserProfile(userId) {
             autoFillGlossaryTemplates();
         }
     } catch (e) { 
-        showUIFeedback("Error de lectura o sesión expirada.", "error"); 
+        showUIFeedback("Error de lectura.", "error"); 
     }
 }
 
@@ -198,7 +198,7 @@ document.getElementById('metrics-form').addEventListener('submit', async (e) => 
     const payload = {
         weight: document.getElementById('m-weight').value,
         height: document.getElementById('m-height').value,
-        age: document.getElementById('m-age').value,
+        // Omitimos enviar "age" ya que el backend la calcula y no debe ser sobreescrita manualmente
         fat_percent: document.getElementById('m-fat').value,
         muscle_percent: document.getElementById('m-muscle').value,
         neck: document.getElementById('m-neck').value,
