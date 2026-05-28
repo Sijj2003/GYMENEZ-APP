@@ -5,122 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GYMENEZ CORE | Laboratorio Biométrico</title>
     <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
-        * {
-            box-sizing: border-box !important;
-        }
-        
+        * { box-sizing: border-box !important; }
         body {
             background-color: #030305 !important;
             color: #ffffff !important;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            min-h: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
+            margin: 0 !important; padding: 0 !important;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
         }
-
-        /* Contenedores Autocentrados */
+        /* El contenedor ahora se expande de forma fluida adaptándose al monitor */
         .gymenez-container {
             width: 100% !important;
-            max-width: 1200px !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
+            max-width: 1550px !important;
+            margin-left: auto !important; margin-right: auto !important;
+            padding-left: 1.5rem !important; padding-right: 1.5rem !important;
         }
-
-        /* Tarjetas de Cristal Ahumado (Glassmorphism) */
         .gymenez-glass {
-            background: rgba(10, 10, 15, 0.7) !important;
-            backdrop-filter: blur(12px) !important;
-            -webkit-backdrop-filter: blur(12px) !important;
+            background: rgba(10, 10, 15, 0.75) !important;
+            backdrop-filter: blur(14px) !important;
+            -webkit-backdrop-filter: blur(14px) !important;
             border: 1px solid rgba(255, 255, 255, 0.05) !important;
-            border-radius: 20px !important;
+            border-radius: 24px !important;
         }
-
-        /* Inputs Numéricos Controlados Ergonómicamente */
         .gymenez-input {
-            background: rgba(0, 0, 0, 0.8) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            background: rgba(0, 0, 0, 0.7) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
             color: #ffffff !important;
-            border-radius: 12px !important;
-            padding: 10px 14px !important;
+            border-radius: 14px !important;
+            padding: 12px 16px !important;
             font-size: 14px !important;
             font-weight: 700 !important;
-            text-align: center !important;
             outline: none !important;
             transition: all 0.2s ease-in-out !important;
             width: 100% !important;
         }
-        
         .gymenez-input:focus {
             border-color: #FFC300 !important;
-            box-shadow: 0 0 12px rgba(255, 195, 0, 0.15) !important;
+            box-shadow: 0 0 14px rgba(255, 195, 0, 0.2) !important;
         }
-
-        /* Textareas y inputs de texto largo */
         .gymenez-textarea {
-            background: rgba(0, 0, 0, 0.8) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            color: #e2e8f0 !important;
-            border-radius: 12px !important;
-            padding: 12px !important;
+            background: rgba(0, 0, 0, 0.7) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #f1f5f9 !important;
+            border-radius: 14px !important;
+            padding: 14px !important;
             font-size: 13px !important;
-            outline: none !important;
-            width: 100% !important;
-            resize: none;
+            outline: none !important; width: 100% !important; resize: none;
         }
-        .gymenez-textarea:focus {
-            border-color: #FFC300 !important;
-        }
-
-        /* Botón Dorado GYMENEZ */
+        .gymenez-textarea:focus { border-color: #FFC300 !important; }
         .gymenez-btn-gold {
-            background: #FFC300 !important;
-            color: #000000 !important;
-            font-weight: 900 !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.15em !important;
-            transition: all 0.3s ease !important;
+            background: #FFC300 !important; color: #000000 !important;
+            font-weight: 900 !important; text-transform: uppercase !important;
+            letter-spacing: 0.15em !important; transition: all 0.2s ease !important;
         }
         .gymenez-btn-gold:hover {
             background: #ffe066 !important;
-            box-shadow: 0 0 20px rgba(255, 195, 0, 0.3) !important;
-            transform: translateY(-1px);
+            box-shadow: 0 0 25px rgba(255, 195, 0, 0.35) !important;
         }
-
-        /* Custom Scrollbar Escondido/Fino */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
     </style>
 </head>
-<body class="overflow-x-hidden flex flex-col items-center">
+<body class="overflow-x-hidden">
 
-    <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none text-center w-11/12 max-w-[360px] bg-black/80 border border-white/10 backdrop-blur-md"></div>
-
-    <div class="fixed inset-0 bg-gradient-to-b from-[#050508] via-[#030305] to-[#010102] -z-20"></div>
+    <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none text-center w-11/12 max-w-[360px] bg-black/90 border border-white/10 backdrop-blur-md"></div>
 
     <header class="w-full border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-50">
         <div class="gymenez-container py-4 flex justify-between items-center w-full">
-            <h1 class="text-lg md:text-xl class-font font-black uppercase tracking-tighter text-white">
+            <h1 class="text-xl font-black uppercase tracking-tighter text-white">
                 <span class="text-[#FFC300]">GYM</span>ENEZ BIOLAB
             </h1>
-            <a href="/apps/admin/dashboard.html" class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition duration-300">
-                ← Volver
+            <a href="/apps/admin/dashboard.html" class="px-5 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition duration-300">
+                ← Volver al Panel
             </a>
         </div>
     </header>
@@ -128,210 +88,190 @@
     <main class="gymenez-container py-8 flex-grow w-full">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
             
+            <!-- PANEL LATERAL: SELECCIÓN -->
             <div class="lg:col-span-4 xl:col-span-3 flex flex-col space-y-4 w-full">
                 <div class="gymenez-glass p-4">
-                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5">Filtrar Atleta</label>
-                    <input type="text" id="user-search-input" placeholder="Nombre o correo..." class="gymenez-input !text-left">
+                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Filtrar Atleta</label>
+                    <input type="text" id="user-search-input" placeholder="Nombre o correo..." class="gymenez-input text-left">
                 </div>
                 
-                <div class="gymenez-glass p-4 flex flex-col h-[280px] lg:h-[620px]">
+                <div class="gymenez-glass p-4 flex flex-col h-[300px] lg:h-[700px]">
                     <div class="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
-                        <span class="text-[9px] font-black uppercase tracking-widest text-gray-400">Atletas Activos</span>
+                        <span class="text-[9px] font-black uppercase tracking-widest text-gray-400">Atletas del Sistema</span>
                         <span id="users-count-badge" class="text-[9px] font-mono font-bold bg-white/10 text-gray-300 px-2 py-0.5 rounded">0</span>
                     </div>
                     <div id="athletes-list-container" class="space-y-2 overflow-y-auto custom-scrollbar flex-grow pr-1">
-                        <p class="text-center py-4 text-gray-600 text-[10px] font-bold uppercase tracking-wider">Sincronizando base...</p>
+                        <p class="text-center py-4 text-gray-600 text-[10px] font-bold uppercase tracking-wider">Cargando base...</p>
                     </div>
                 </div>
             </div>
 
+            <!-- PANEL DE TRABAJO AMPLIO EXPANSIBLE -->
             <div class="lg:col-span-8 xl:col-span-9 flex flex-col w-full">
                 
-                <div id="no-athlete-selected-view" class="gymenez-glass p-12 min-h-[450px] flex flex-col justify-center items-center text-center w-full">
-                    <div class="w-12 h-12 rounded-full bg-white/5 flex justify-center items-center mb-4 text-sm border border-white/10 text-gray-400">👤</div>
-                    <h3 class="text-xs font-black text-white uppercase tracking-wider">Esperando Selección</h3>
-                    <p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-2 max-w-xs leading-relaxed">Elige un atleta del panel izquierdo para desplegar y editar sus métricas corporales.</p>
+                <div id="no-athlete-selected-view" class="gymenez-glass p-12 min-h-[500px] flex flex-col justify-center items-center text-center w-full">
+                    <div class="w-12 h-12 rounded-full bg-white/5 flex justify-center items-center mb-4 border border-white/10 text-gray-400">👤</div>
+                    <h3 class="text-xs font-black text-white uppercase tracking-wider">Falta Selección</h3>
+                    <p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-2 max-w-xs leading-relaxed">Elige un atleta de la barra lateral para procesar e imprimir su dossier de métricas.</p>
                 </div>
 
                 <div id="workspace-container" class="hidden flex flex-col w-full">
-                    
                     <div class="flex gap-2 border-b border-white/10 mb-6 overflow-x-auto no-scrollbar">
-                        <button id="tab-btn-metrics" class="px-5 py-2.5 border-b-2 border-[#FFC300] text-[#FFC300] font-black uppercase tracking-widest text-[10px] transition-all">📊 Telemetría Corporal</button>
-                        <button id="tab-btn-goals" class="px-5 py-2.5 border-b-2 border-transparent text-gray-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-all">🎯 Objetivos SMART</button>
+                        <button id="tab-btn-metrics" class="px-6 py-3 border-b-2 border-[#FFC300] text-[#FFC300] font-black uppercase tracking-widest text-[10px] transition-all">📊 Telemetría Corporal</button>
+                        <button id="tab-btn-goals" class="px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-all">🎯 Objetivos SMART</button>
                     </div>
 
-                    <div id="panel-metrics" class="block w-full">
-                        <form id="metrics-form" class="space-y-6">
-                            
-                            <div class="gymenez-glass p-5 space-y-4">
-                                <h3 class="text-[10px] font-black uppercase text-[#FFC300] tracking-widest border-b border-white/5 pb-2">Métricas Base</h3>
-                                <div class="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                                    <div>
-                                        <label class="block text-[8px] font-black text-gray-500 uppercase mb-1 text-center">Peso (KG)</label>
-                                        <input type="number" step="0.1" id="m-weight" class="gymenez-input">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[8px] font-black text-gray-500 uppercase mb-1 text-center">Altura (CM)</label>
-                                        <input type="number" step="0.1" id="m-height" class="gymenez-input">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[8px] font-black text-gray-500 uppercase mb-1 text-center">Edad</label>
-                                        <input type="number" id="m-age" class="gymenez-input">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[8px] font-black text-amber-500 uppercase mb-1 text-center">% Grasa</label>
-                                        <input type="number" step="0.1" id="m-fat" class="gymenez-input !text-amber-400 !border-amber-500/20">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[8px] font-black text-emerald-500 uppercase mb-1 text-center">% Músculo</label>
-                                        <input type="number" step="0.1" id="m-muscle" class="gymenez-input !text-emerald-400 !border-emerald-500/20">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="gymenez-glass p-5 space-y-3">
-                                    <h3 class="text-[10px] font-black uppercase text-white tracking-widest border-b border-white/5 pb-2">Tren Superior (cm)</h3>
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <div><label class="block text-[8px] text-gray-500 uppercase mb-1 text-center">Cuello</label><input type="number" step="0.1" id="m-neck" class="gymenez-input"></div>
-                                        <div><label class="block text-[8px] text-gray-500 uppercase mb-1 text-center">Espalda</label><input type="number" step="0.1" id="m-back" class="gymenez-input"></div>
-                                        <div><label class="block text-[8px] text-gray-500 uppercase mb-1 text-center">Tórax</label><input type="number" step="0.1" id="m-thorax" class="gymenez-input"></div>
-                                        <div><label class="block text-[8px] text-gray-500 uppercase mb-1 text-center">Abdomen</label><input type="number" step="0.1" id="m-abdomen" class="gymenez-input"></div>
-                                        <div><label class="block text-[8px] text-gray-400 uppercase mb-1 text-center">Brazo Izq</label><input type="number" step="0.1" id="m-bicep-l" class="gymenez-input"></div>
-                                        <div><label class="block text-[8px] text-gray-400 uppercase mb-1 text-center">Brazo Der</label><input type="number" step="0.1" id="m-bicep-r" class="gymenez-input"></div>
-                                        <div><label class="block text-[8px] text-gray-400 uppercase mb-1 text-center">Antebrazo I.</label><input type="number" step="0.1" id="m-forearm-l" class="gymenez-input"></div>
-                                        <div><label class="block text-[8px] text-gray-400 uppercase mb-1 text-center">Antebrazo D.</label><input type="number" step="0.1" id="m-forearm-r" class="gymenez-input"></div>
+                    <div class="w-full">
+                        <!-- PESTAÑA 1: TELEMETRÍA -->
+                        <div id="panel-metrics" class="block w-full">
+                            <form id="metrics-form" class="space-y-6">
+                                
+                                <!-- CARD 1: MÉTRICAS BASE -->
+                                <div class="gymenez-glass p-6 space-y-4">
+                                    <h3 class="text-[10px] font-black uppercase text-[#FFC300] tracking-widest border-b border-white/5 pb-2">Métricas Base</h3>
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                                        <div>
+                                            <label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Peso (KG)</label>
+                                            <input type="number" step="0.1" id="m-weight" class="gymenez-input">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Altura (CM)</label>
+                                            <input type="number" step="0.1" id="m-height" class="gymenez-input">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-black text-cyan-400 uppercase mb-1">Edad (Auto)</label>
+                                            <input type="text" id="m-age" readonly class="gymenez-input !bg-cyan-950/20 !border-cyan-500/20 !text-cyan-400 font-mono cursor-not-allowed" placeholder="--">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-black text-amber-500 uppercase mb-1">% Grasa Est.</label>
+                                            <input type="number" step="0.1" id="m-fat" class="gymenez-input !text-amber-400 !border-amber-500/20">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-black text-emerald-500 uppercase mb-1">% Músculo Est.</label>
+                                            <input type="number" step="0.1" id="m-muscle" class="gymenez-input !text-emerald-400 !border-emerald-500/20">
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="gymenez-glass p-5 space-y-3 flex flex-col justify-between">
-                                    <div class="space-y-3">
-                                        <h3 class="text-[10px] font-black uppercase text-white tracking-widest border-b border-white/5 pb-2">Tren Inferior (cm)</h3>
-                                        <div class="grid grid-cols-2 gap-3">
-                                            <div class="col-span-2">
-                                                <label class="block text-[8px] font-black text-[#FFC300] uppercase mb-1 text-center">Cintura</label>
+                                <!-- CARD 2: REJILLA ANATÓMICA (TREN SUPERIOR E INFERIOR INTEGRADOS EN PARALELO AMPLIO) -->
+                                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                                    
+                                    <!-- TREN SUPERIOR -->
+                                    <div class="gymenez-glass p-6 space-y-4">
+                                        <h3 class="text-[10px] font-black uppercase text-white tracking-widest border-b border-white/5 pb-2">Tren Superior</h3>
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                            <div><label class="block text-[8px] text-gray-500 uppercase mb-1">Cuello</label><input type="number" step="0.1" id="m-neck" class="gymenez-input"></div>
+                                            <div><label class="block text-[8px] text-gray-500 uppercase mb-1">Espalda</label><input type="number" step="0.1" id="m-back" class="gymenez-input"></div>
+                                            <div><label class="block text-[8px] text-gray-500 uppercase mb-1">Tórax</label><input type="number" step="0.1" id="m-thorax" class="gymenez-input"></div>
+                                            <div><label class="block text-[8px] text-gray-500 uppercase mb-1">Abdomen</label><input type="number" step="0.1" id="m-abdomen" class="gymenez-input"></div>
+                                            <div><label class="block text-[8px] text-gray-400 uppercase mb-1">Brazo I.</label><input type="number" step="0.1" id="m-bicep-l" class="gymenez-input"></div>
+                                            <div><label class="block text-[8px] text-gray-400 uppercase mb-1">Brazo D.</label><input type="number" step="0.1" id="m-bicep-r" class="gymenez-input"></div>
+                                            <div><label class="block text-[8px] text-gray-400 uppercase mb-1">Antebrazo I.</label><input type="number" step="0.1" id="m-forearm-l" class="gymenez-input"></div>
+                                            <div><label class="block text-[8px] text-gray-400 uppercase mb-1">Antebrazo D.</label><input type="number" step="0.1" id="m-forearm-r" class="gymenez-input"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- TREN INFERIOR -->
+                                    <div class="gymenez-glass p-6 space-y-4">
+                                        <h3 class="text-[10px] font-black uppercase text-white tracking-widest border-b border-white/5 pb-2">Tren Inferior</h3>
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                            <div class="col-span-2 sm:col-span-4">
+                                                <label class="block text-[8px] font-black text-[#FFC300] uppercase mb-1">Cintura</label>
                                                 <input type="number" step="0.1" id="m-waist" class="gymenez-input !text-[#FFC300] !border-[#FFC300]/30">
                                             </div>
-                                            <div><label class="block text-[8px] text-gray-500 uppercase mb-1 text-center">Fémur Izq</label><input type="number" step="0.1" id="m-femur-l" class="gymenez-input"></div>
-                                            <div><label class="block text-[8px] text-gray-500 uppercase mb-1 text-center">Fémur Der</label><input type="number" step="0.1" id="m-femur-r" class="gymenez-input"></div>
-                                            <div><label class="block text-[8px] text-gray-500 uppercase mb-1 text-center">Tibia Izq</label><input type="number" step="0.1" id="m-tibia-l" class="gymenez-input"></div>
-                                            <div><label class="block text-[8px] text-gray-500 uppercase mb-1 text-center">Tibia Der</label><input type="number" step="0.1" id="m-tibia-r" class="gymenez-input"></div>
+                                            <div><label class="block text-[8px] text-gray-500 uppercase mb-1">Fémur I.</label><input type="number" step="0.1" id="m-femur-l" class="gymenez-input"></div>
+                                            <div><label class="block text-[8px] text-gray-500 uppercase mb-1">Fémur D.</label><input type="number" step="0.1" id="m-femur-r" class="gymenez-input"></div>
+                                            <div><label class="block text-[8px] text-gray-500 uppercase mb-1">Tibia I.</label><input type="number" step="0.1" id="m-tibia-l" class="gymenez-input"></div>
+                                            <div><label class="block text-[8px] text-gray-500 uppercase mb-1">Tibia D.</label><input type="number" step="0.1" id="m-tibia-r" class="gymenez-input"></div>
                                         </div>
                                     </div>
+
                                 </div>
-                            </div>
 
-                            <div class="gymenez-glass p-5 space-y-4">
-                                <h3 class="text-[10px] font-black uppercase text-sky-400 tracking-widest border-b border-white/5 pb-2">Capacidad Mecánica (1RM Estimado)</h3>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div>
-                                        <label class="block text-[8px] font-black text-gray-500 uppercase mb-1 text-center">Vector Empuje (kg)</label>
-                                        <input type="number" step="0.5" id="m-push" class="gymenez-input !text-sky-400 !border-sky-500/20" placeholder="Press de Banca">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[8px] font-black text-gray-500 uppercase mb-1 text-center">Vector Tracción (kg)</label>
-                                        <input type="number" step="0.5" id="m-pull" class="gymenez-input !text-sky-400 !border-sky-500/20" placeholder="Peso Muerto">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[8px] font-black text-gray-500 uppercase mb-1 text-center">Vector Pierna (kg)</label>
-                                        <input type="number" step="0.5" id="m-legs" class="gymenez-input !text-sky-400 !border-sky-500/20" placeholder="Sentadilla">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="gymenez-glass p-5 space-y-4">
-                                <h3 class="text-[10px] font-black uppercase text-red-400 tracking-widest border-b border-white/5 pb-2">Ficha Médica & Observaciones Críticas</h3>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Alergias</label>
-                                        <input type="text" id="m-allergies" class="gymenez-textarea !py-2.5 font-bold" placeholder="Ninguna registrada.">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Enfermedades Crónicas</label>
-                                        <input type="text" id="m-diseases" class="gymenez-textarea !py-2.5 font-bold" placeholder="Ninguna registrada.">
-                                    </div>
-                                    <div class="sm:col-span-2">
-                                        <label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Otras Notas Clínicas / Historial Corto</label>
-                                        <textarea id="m-medical-notes" rows="2" class="gymenez-textarea leading-relaxed" placeholder="Sin observaciones."></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex justify-end w-full">
-                                <button type="submit" id="btn-submit-metrics" class="gymenez-btn-gold w-full sm:w-auto px-8 py-3.5 rounded-xl text-[10px] shadow-xl">Asentar Registro Biométrico</button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div id="panel-goals" class="hidden w-full">
-                        <form id="goals-form" class="space-y-4">
-                            <div class="gymenez-glass p-4 flex items-center gap-4">
-                                <label class="text-[10px] font-black uppercase tracking-widest text-[#FFC300]">Foco Primario del Bot:</label>
-                                <select id="g-focus" class="bg-black border border-white/10 rounded-lg p-2 text-xs font-bold text-white outline-none">
-                                    <option value="Pérdida de Grasa">Pérdida de Grasa</option>
-                                    <option value="Masa Muscular">Masa Muscular</option>
-                                    <option value="Rendimiento / Calistenia">Rendimiento / Calistenia</option>
-                                    <option value="Salud / Cardio">Salud / Cardio</option>
-                                </select>
-                            </div>
-
-                            <div class="space-y-4">
-                                <div class="gymenez-glass p-5">
-                                    <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                                        <h4 class="text-xs font-black uppercase tracking-wider text-white">Corto Plazo <span class="text-gray-500 text-[10px] font-bold">(3 Meses)</span></h4>
-                                        <select id="g-st-status" class="bg-black border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300] outline-none"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
-                                    </div>
-                                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                                        <div class="lg:col-span-3">
-                                            <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción SMART</label>
-                                            <textarea id="g-st-desc" rows="2" class="gymenez-textarea"></textarea>
-                                        </div>
-                                        <div class="flex flex-col justify-end">
-                                            <label class="block text-[8px] text-gray-500 uppercase font-black mb-1 text-center">Valor Meta</label>
-                                            <input type="text" id="g-st-target" class="gymenez-input font-bold" placeholder="Ej: 75.0 kg">
+                                <!-- CARD 3: RENDIMIENTO MECÁNICO Y SALUD DE ANCHO COMPLETO -->
+                                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                                    
+                                    <!-- POTENCIA 1RM (A LA IZQUIERDA) -->
+                                    <div class="gymenez-glass p-6 space-y-4 xl:col-span-1">
+                                        <h3 class="text-[10px] font-black uppercase text-sky-400 tracking-widest border-b border-white/5 pb-2">Capacidad Mecánica (1RM Est.)</h3>
+                                        <div class="space-y-3">
+                                            <div><label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Vector Empuje</label><input type="number" step="0.5" id="m-push" class="gymenez-input !text-sky-400 !border-sky-500/20" placeholder="Bench Press (kg)"></div>
+                                            <div><label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Vector Tracción</label><input type="number" step="0.5" id="m-pull" class="gymenez-input !text-sky-400 !border-sky-500/20" placeholder="Deadlift (kg)"></div>
+                                            <div><label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Vector Pierna</label><input type="number" step="0.5" id="m-legs" class="gymenez-input !text-sky-400 !border-sky-500/20" placeholder="Squat (kg)"></div>
                                         </div>
                                     </div>
+
+                                    <!-- FICHA MEDICA (SPAN DE 2 COLUMNAS) -->
+                                    <div class="gymenez-glass p-6 space-y-4 xl:col-span-2">
+                                        <h3 class="text-[10px] font-black uppercase text-red-400 tracking-widest border-b border-white/5 pb-2">Ficha Médica & Restricciones Críticas</h3>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div><label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Alergias</label><input type="text" id="m-allergies" class="gymenez-input !text-left" placeholder="Ninguna registrada."></div>
+                                            <div><label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Patologías Crónicas</label><input type="text" id="m-diseases" class="gymenez-input !text-left" placeholder="Ninguna registrada."></div>
+                                            <div class="sm:col-span-2"><label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Notas Clínicas del Preparador</label><textarea id="m-medical-notes" rows="3" class="gymenez-textarea" placeholder="Sin observaciones físicas singulares..."></textarea></div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                
+                                <div class="flex justify-end w-full">
+                                    <button type="submit" id="btn-submit-metrics" class="gymenez-btn-gold px-12 py-4 rounded-xl text-[10px] font-black tracking-widest shadow-2xl">Asentar Registro Biométrico</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- PESTAÑA 2: GOALS -->
+                        <div id="panel-goals" class="hidden w-full">
+                            <form id="goals-form" class="space-y-4">
+                                <div class="gymenez-glass p-4 flex items-center gap-4">
+                                    <label class="text-[10px] font-black uppercase tracking-widest text-[#FFC300]">Foco Central del Macrociclo:</label>
+                                    <select id="g-focus" class="bg-black border border-white/10 rounded-lg p-2 text-xs font-bold text-white outline-none">
+                                        <option value="Pérdida de Grasa">Pérdida de Grasa</option>
+                                        <option value="Masa Muscular">Masa Muscular</option>
+                                        <option value="Rendimiento / Calistenia">Rendimiento / Calistenia</option>
+                                        <option value="Salud / Cardio">Salud / Cardio</option>
+                                    </select>
                                 </div>
 
-                                <div class="gymenez-glass p-5">
-                                    <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                                        <h4 class="text-xs font-black uppercase tracking-wider text-white">Mediano Plazo <span class="text-gray-500 text-[10px] font-bold">(7 Meses)</span></h4>
-                                        <select id="g-mt-status" class="bg-black border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300] outline-none"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
-                                    </div>
-                                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                                        <div class="lg:col-span-3">
-                                            <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción SMART</label>
-                                            <textarea id="g-mt-desc" rows="2" class="gymenez-textarea"></textarea>
+                                <div class="space-y-4">
+                                    <div class="gymenez-glass p-5">
+                                        <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
+                                            <h4 class="text-xs font-black uppercase tracking-wider text-white">Corto Plazo <span class="text-gray-500 text-[10px] font-bold">(3 Meses)</span></h4>
+                                            <select id="g-st-status" class="bg-black border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300]"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
                                         </div>
-                                        <div class="flex flex-col justify-end">
-                                            <label class="block text-[8px] text-gray-500 uppercase font-black mb-1 text-center">Valor Meta</label>
-                                            <input type="text" id="g-mt-target" class="gymenez-input font-bold" placeholder="Ej: 14% Grasa">
+                                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                                            <div class="lg:col-span-3"><label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción SMART</label><textarea id="g-st-desc" rows="2" class="gymenez-textarea"></textarea></div>
+                                            <div class="flex flex-col justify-end"><label class="block text-[8px] text-gray-500 uppercase font-black mb-1 text-center">Valor Meta</label><input type="text" id="g-st-target" class="gymenez-input font-bold" placeholder="Ej: 75.0 kg"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="gymenez-glass p-5">
+                                        <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
+                                            <h4 class="text-xs font-black uppercase tracking-wider text-white">Mediano Plazo <span class="text-gray-500 text-[10px] font-bold">(7 Meses)</span></h4>
+                                            <select id="g-mt-status" class="bg-black border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300]"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
+                                        </div>
+                                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                                            <div class="lg:col-span-3"><label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción SMART</label><textarea id="g-mt-desc" rows="2" class="gymenez-textarea"></textarea></div>
+                                            <div class="flex flex-col justify-end"><label class="block text-[8px] text-gray-500 uppercase font-black mb-1 text-center">Valor Meta</label><input type="text" id="g-mt-target" class="gymenez-input font-bold" placeholder="Ej: 14% Grasa"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="gymenez-glass p-5">
+                                        <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
+                                            <h4 class="text-xs font-black uppercase tracking-wider text-white">Largo Plazo <span class="text-gray-500 text-[10px] font-bold">(1 Año)</span></h4>
+                                            <select id="g-lt-status" class="bg-black border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300]"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
+                                        </div>
+                                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                                            <div class="lg:col-span-3"><label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción SMART</label><textarea id="g-lt-desc" rows="2" class="gymenez-textarea"></textarea></div>
+                                            <div class="flex flex-col justify-end"><label class="block text-[8px] text-gray-500 uppercase font-black mb-1 text-center">Valor Meta</label><input type="text" id="g-lt-target" class="gymenez-input font-bold" placeholder="Ej: Mantener Cargas"></div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="gymenez-glass p-5">
-                                    <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                                        <h4 class="text-xs font-black uppercase tracking-wider text-white">Largo Plazo <span class="text-gray-500 text-[10px] font-bold">(1 Año)</span></h4>
-                                        <select id="g-lt-status" class="bg-black border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300] outline-none"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
-                                    </div>
-                                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                                        <div class="lg:col-span-3">
-                                            <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción SMART</label>
-                                            <textarea id="g-lt-desc" rows="2" class="gymenez-textarea"></textarea>
-                                        </div>
-                                        <div class="flex flex-col justify-end">
-                                            <label class="block text-[8px] text-gray-500 uppercase font-black mb-1 text-center">Valor Meta</label>
-                                            <input type="text" id="g-lt-target" class="gymenez-input font-bold" placeholder="Ej: Mantener RM">
-                                        </div>
-                                    </div>
+                                <div class="flex justify-end w-full">
+                                    <button type="submit" id="btn-submit-goals" class="bg-white text-black font-black w-full sm:w-auto px-10 py-4 rounded-xl text-[10px] uppercase tracking-widest hover:bg-gray-200 transition shadow-xl">Fijar Objetivos Estratégicos</button>
                                 </div>
-                            </div>
-
-                            <div class="flex justify-end w-full">
-                                <button type="submit" id="btn-submit-goals" class="bg-white text-black font-black w-full sm:w-auto px-10 py-4 rounded-xl text-[10px] uppercase tracking-widest hover:bg-gray-200 transition shadow-xl">Fijar Objetivos Estratégicos</button>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
