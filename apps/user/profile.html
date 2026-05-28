@@ -57,9 +57,10 @@
                 </a>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-auto">
+                
                 <!-- 1. IDENTIDAD BASE -->
-                <div class="md:col-span-2 lg:col-span-2 glass-panel bento-card rounded-[24px] md:rounded-[32px] p-6 md:p-8 flex flex-col justify-between relative overflow-hidden fade-in-up" style="animation-delay: 0.2s;">
+                <div class="md:col-span-2 glass-panel bento-card rounded-[24px] md:rounded-[32px] p-6 md:p-8 flex flex-col justify-between relative overflow-hidden fade-in-up" style="animation-delay: 0.2s;">
                     <div class="absolute top-0 right-0 p-6 md:p-8 opacity-5 pointer-events-none">
                         <svg class="w-40 h-40 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                     </div>
@@ -86,29 +87,37 @@
                     </div>
                 </div>
 
-                <!-- 2. MÉTRICAS BASE -->
-                <div id="card-metrics-base" class="md:col-span-1 lg:col-span-2 glass-panel bento-card rounded-[24px] md:rounded-[32px] p-6 md:p-8 flex flex-col justify-center relative overflow-hidden bg-gradient-to-br from-white/5 to-transparent fade-in-up" style="animation-delay: 0.3s;">
+                <!-- 2. MÉTRICAS BASE EXPANDIDAS SIMÉTRICAMENTE -->
+                <div id="card-metrics-base" class="md:col-span-2 glass-panel bento-card rounded-[24px] md:rounded-[32px] p-6 md:p-8 flex flex-col justify-center relative overflow-hidden bg-gradient-to-br from-white/5 to-transparent fade-in-up" style="animation-delay: 0.3s;">
                     <h3 class="text-[9px] md:text-[10px] text-gray-500 font-black uppercase tracking-widest mb-6 text-center sm:text-left flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-white"></span> Métricas Base
                     </h3>
-                    <div class="grid grid-cols-3 gap-2 md:gap-4 text-center relative z-10">
+                    <div class="grid grid-cols-5 gap-1 md:gap-2 text-center relative z-10">
                         <div>
-                            <p id="m-peso" class="data-value text-3xl lg:text-5xl font-black text-[#FFC300] tracking-tighter">--</p>
-                            <p class="text-[8px] md:text-[9px] text-gray-400 uppercase font-bold tracking-widest mt-2">Peso (KG)</p>
+                            <p id="m-peso" class="data-value text-xl sm:text-2xl lg:text-4xl font-black text-[#FFC300] tracking-tighter">--</p>
+                            <p class="text-[7px] md:text-[8px] text-gray-400 uppercase font-bold tracking-widest mt-2">Peso (KG)</p>
                         </div>
-                        <div class="border-l border-r border-white/10">
-                            <p id="m-estatura" class="data-value text-3xl lg:text-5xl font-black text-white tracking-tighter">--</p>
-                            <p class="text-[8px] md:text-[9px] text-gray-400 uppercase font-bold tracking-widest mt-2">Altura (CM)</p>
+                        <div class="border-l border-white/10">
+                            <p id="m-estatura" class="data-value text-xl sm:text-2xl lg:text-4xl font-black text-white tracking-tighter">--</p>
+                            <p class="text-[7px] md:text-[8px] text-gray-400 uppercase font-bold tracking-widest mt-2">Altura (CM)</p>
                         </div>
-                        <div>
-                            <p id="m-edad" class="data-value text-3xl lg:text-5xl font-black text-white tracking-tighter">--</p>
-                            <p class="text-[8px] md:text-[9px] text-gray-400 uppercase font-bold tracking-widest mt-2">Edad</p>
+                        <div class="border-l border-white/10">
+                            <p id="m-edad" class="data-value text-xl sm:text-2xl lg:text-4xl font-black text-cyan-400 tracking-tighter">--</p>
+                            <p class="text-[7px] md:text-[8px] text-cyan-500/70 uppercase font-bold tracking-widest mt-2">Edad</p>
+                        </div>
+                        <div class="border-l border-white/10">
+                            <p id="m-grasa" class="data-value text-xl sm:text-2xl lg:text-4xl font-black text-amber-500 tracking-tighter">--</p>
+                            <p class="text-[7px] md:text-[8px] text-amber-500/70 uppercase font-bold tracking-widest mt-2">% Grasa</p>
+                        </div>
+                        <div class="border-l border-white/10">
+                            <p id="m-musculo" class="data-value text-xl sm:text-2xl lg:text-4xl font-black text-emerald-400 tracking-tighter">--</p>
+                            <p class="text-[7px] md:text-[8px] text-emerald-500/70 uppercase font-bold tracking-widest mt-2">% Músculo</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- 3. TREN SUPERIOR -->
-                <div id="card-upper-body" class="md:col-span-1 lg:col-span-2 glass-panel bento-card rounded-[24px] md:rounded-[32px] p-6 md:p-8 fade-in-up relative overflow-hidden" style="animation-delay: 0.4s;">
+                <div id="card-upper-body" class="md:col-span-2 glass-panel bento-card rounded-[24px] md:rounded-[32px] p-6 md:p-8 fade-in-up relative overflow-hidden" style="animation-delay: 0.4s;">
                     <h3 class="text-base md:text-lg font-black uppercase tracking-tighter text-white mb-6 flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8]"></span> Tren Superior
                     </h3>
@@ -123,20 +132,41 @@
                 </div>
 
                 <!-- 4. TREN INFERIOR -->
-                <div id="card-lower-body" class="md:col-span-1 lg:col-span-2 glass-panel bento-card rounded-[24px] md:rounded-[32px] p-6 md:p-8 fade-in-up relative overflow-hidden" style="animation-delay: 0.5s;">
+                <div id="card-lower-body" class="md:col-span-2 glass-panel bento-card rounded-[24px] md:rounded-[32px] p-6 md:p-8 fade-in-up relative overflow-hidden" style="animation-delay: 0.5s;">
                     <h3 class="text-base md:text-lg font-black uppercase tracking-tighter text-white mb-6 flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]"></span> Tren Inferior
                     </h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 relative z-10">
-                        <div class="metric-row"><span class="label">Cintura</span><span id="m-cintura" class="data-value value">--</span></div>
+                        <div class="metric-row"><span class="label text-[#FFC300] font-bold">Cintura</span><span id="m-cintura" class="data-value value text-[#FFC300] font-bold">--</span></div>
                         <div class="hidden sm:block"></div> 
                         <div class="metric-row"><span class="label">Fémur (D/I)</span><span class="value"><span id="m-femur_der" class="data-value">--</span> / <span id="m-femur_izq" class="data-value">--</span></span></div>
                         <div class="metric-row"><span class="label">Tibia (D/I)</span><span class="value"><span id="m-tibia_der" class="data-value">--</span> / <span id="m-tibia_izq" class="data-value">--</span></span></div>
                     </div>
                 </div>
 
-                <!-- 5. FICHA MÉDICA -->
-                <div id="card-medical" class="md:col-span-3 lg:col-span-4 glass-panel bento-card border-red-500/20 rounded-[24px] md:rounded-[32px] p-6 md:p-8 fade-in-up relative overflow-hidden" style="animation-delay: 0.6s;">
+                <!-- 🌟 5. CAPACIDAD MECÁNICA (1RM) ASENTADO DEBAJO DEL TREN INFERIOR -->
+                <div id="card-performance-1rm" class="md:col-span-2 glass-panel bento-card rounded-[24px] md:rounded-[32px] p-6 md:p-8 fade-in-up relative overflow-hidden" style="animation-delay: 0.55s;">
+                    <h3 class="text-base md:text-lg font-black uppercase tracking-tighter text-sky-400 mb-6 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8]"></span> Capacidad Mecánica (1RM Est.)
+                    </h3>
+                    <div class="grid grid-cols-3 gap-2 text-center relative z-10">
+                        <div class="bg-black/40 p-3 rounded-xl border border-white/5">
+                            <p class="text-[7px] md:text-[8px] text-gray-500 uppercase font-black tracking-wider mb-1">Empuje</p>
+                            <span id="m-push" class="text-sm md:text-lg font-mono font-black text-sky-400">--</span>
+                        </div>
+                        <div class="bg-black/40 p-3 rounded-xl border border-white/5">
+                            <p class="text-[7px] md:text-[8px] text-gray-500 uppercase font-black tracking-wider mb-1">Tracción</p>
+                            <span id="m-pull" class="text-sm md:text-lg font-mono font-black text-sky-400">--</span>
+                        </div>
+                        <div class="bg-black/40 p-3 rounded-xl border border-white/5">
+                            <p class="text-[7px] md:text-[8px] text-gray-500 uppercase font-black tracking-wider mb-1">Pierna</p>
+                            <span id="m-legs" class="text-sm md:text-lg font-mono font-black text-sky-400">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. FICHA MÉDICA -->
+                <div id="card-medical" class="md:col-span-2 lg:col-span-4 glass-panel bento-card border-red-500/20 rounded-[24px] md:rounded-[32px] p-6 md:p-8 fade-in-up relative overflow-hidden" style="animation-delay: 0.6s;">
                     <h3 class="text-base md:text-lg font-black uppercase tracking-tighter text-red-400 mb-6 flex items-center gap-2">
                         <svg class="w-5 h-5 drop-shadow-[0_0_10px_rgba(248,113,113,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                         Ficha Médica & Observaciones Críticas
