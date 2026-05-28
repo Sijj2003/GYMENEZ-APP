@@ -1,10 +1,21 @@
-async function loadAthleteBiometricsProfile() {
-    // Reemplaza 'user_token' por la llave exacta que uses en el login de tus atletas
-    const token = localStorage.getItem('user_token'); 
-    if (!token) return;
+const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
+
+async function loadAthleteBiometricsDashboard() {
+    // Busca el token bajo los nombres estándar de tu ecosistema de autenticación
+    const token = localStorage.getItem('user_token') || localStorage.getItem('token') || localStorage.getItem('admin_token');
+    
+    const spinner = document.getElementById('loading-spinner');
+    const content = document.getElementById('profile-content');
+    const requestContainer = document.getElementById('request-metrics-container');
+
+    if (!token) {
+        if (spinner) spinner.innerHTML = `<p class="text-red-400 text-[10px] font-black uppercase tracking-widest">Sesión Inexistente o Expirada</p>`;
+        return;
+    }
 
     try {
-        const res = await fetch('https://sijj2003.pythonanywhere.com/api/profile/fitness-data', {
+        const res = await fetch(`${API_BASE_URL}/api/client/metrics`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -13,47 +24,94 @@ async function loadAthleteBiometricsProfile() {
         });
         const data = await res.json();
 
-        if (data.success && data.metrics) {
-            const m = data.metrics;
+        if (data.success) {
+            const m = data.metrics || {};
+            const p = data.profile || {};
 
-            // Inyección de Métricas Base
-            document.getElementById('view-weight').textContent = m.weight ? `${m.weight}` : '--';
-            document.getElementById('view-height').textContent = m.height ? `${m.height}` : '--';
-            document.getElementById('view-age').textContent = m.age || '--';
+            // Si el atleta no tiene registros de composición corporal, activamos el botón de solicitud
+            if (!m.weight && !m.height && requestContainer) {
+                requestContainer.classList.remove('hidden');
+            }
 
-            // Inyección de Tren Superior
-            document.getElementById('view-neck').textContent = m.neck ? `${m.neck} cm` : '--';
-            document.getElementById('view-back').textContent = m.back ? `${m.back} cm` : '--';
-            document.getElementById('view-thorax').textContent = m.thorax ? `${m.thorax} cm` : '--';
-            document.getElementById('view-abdomen').textContent = m.abdomen ? `${m.abdomen} cm` : '--';
-            document.getElementById('view-bicep-r').textContent = m.bicep_right || '--';
-            document.getElementById('view-bicep-l').textContent = m.bicep_left || '--';
-            document.getElementById('view-forearm-r').textContent = m.forearm_right || '--';
-            document.getElementById('view-forearm-l').textContent = m.forearm_left || '--';
+            // Inyector Defensivo: Evita bloqueos fatales si un ID cambia en el HTML
+            const safeInject = (elementId, value, fallback = '--') => {
+                const target = document.getElementById(elementId);
+                if (target) {
+                    target.textContent = (value !== undefined && value !== null && value !== '') ? value : fallback;
+                }
+            };
 
-            // Inyección de Tren Inferior
-            document.getElementById('view-waist').textContent = m.waist ? `${m.waist} cm` : '--';
-            document.getElementById('view-femur-r').textContent = m.femur_right || '--';
-            document.getElementById('view-femur-l').textContent = m.femur_left || '--';
-            document.getElementById('view-tibia-r').textContent = m.tibia_right || '--';
-            document.getElementById('view-tibia-l').textContent = m.tibia_left || '--';
+            // 1. ACOPLAMIENTO DE TARJETA DE IDENTIDAD
+            if (p) {
+                safeInject('p-fullname', `${p.name || ''} ${p.last_name || ''}`.trim());
+                safeInject('p-email', p.email);
+                safeInject('p-dob', p.dob);
+                safeInject('p-sex', p.sex);
+                safeInject('p-active-since', p.activo_desde);
+                
+                const subBadge = document.getElementById('p-subscription');
+                if (subBadge && p.subscription_level) {
+                    subBadge.textContent = p.subscription_level;
+                    // Cambios estéticos de la Bento-Card según nivel
+                    if (p.subscription_level === 'ULTRA') {
+                        subBadge.className = "px-3 py-1 bg-cyan-500/10 text-cyan-400 text-[8px] md:text-[9px] font-black rounded border border-cyan-500/20 uppercase tracking-widest inline-block mb-4 shadow-sm";
+                    } else if (p.subscription_level === 'PLUS') {
+                        subBadge.className = "px-3 py-1 bg-purple-500/10 text-purple-400 text-[8px] md:text-[9px] font-black rounded border border-purple-500/20 uppercase tracking-widest inline-block mb-4 shadow-sm";
+                    } else {
+                        subBadge.className = "px-3 py-1 bg-gray-500/10 text-gray-400 text-[8px] md:text-[9px] font-black rounded border border-gray-500/20 uppercase tracking-widest inline-block mb-4 shadow-sm";
+                    }
+                }
+            }
 
-            // Inyección de Capacidad Mecánica (1RM)
-            document.getElementById('view-push').textContent = m.rm_push ? `${m.rm_push} kg` : '--';
-            document.getElementById('view-pull').textContent = m.rm_pull ? `${m.rm_pull} kg` : '--';
-            document.getElementById('view-legs').textContent = m.rm_legs ? `${m.rm_legs} kg` : '--';
+            // 2. ACOPLAMIENTO DE MÉTRICAS BASE
+            safeInject('m-peso', m.weight);
+            safeInject('m-estatura', m.height);
+            safeInject('m-edad', m.age);
+            safeInject('m-grasa', m.fat_percent ? `${m.fat_percent}%` : '--');
+            safeInject('m-musculo', m.muscle_percent ? `${m.muscle_percent}%` : '--');
 
-            // Inyección de Ficha Médica
-            document.getElementById('view-allergies').textContent = m.allergies || 'Ninguna registrada.';
-            document.getElementById('view-diseases').textContent = m.chronic_diseases || 'Ninguna registrada.';
-            document.getElementById('view-medical-notes').textContent = m.medical_notes || 'Sin observaciones.';
+            // 3. ACOPLAMIENTO DE TREN SUPERIOR
+            safeInject('m-cuello', m.neck ? `${m.neck} cm` : '--');
+            safeInject('m-espalda', m.back ? `${m.back} cm` : '--');
+            safeInject('m-torax', m.thorax ? `${m.thorax} cm` : '--');
+            safeInject('m-abdomen', m.abdomen ? `${m.abdomen} cm` : '--');
+            safeInject('m-brazo_der', m.bicep_right ? `${m.bicep_right} cm` : '--');
+            safeInject('m-brazo_izq', m.bicep_left ? `${m.bicep_left} cm` : '--');
+            safeInject('m-antebrazo_der', m.forearm_right ? `${m.forearm_right} cm` : '--');
+            safeInject('m-antebrazo_izq', m.forearm_left ? `${m.forearm_left} cm` : '--');
+
+            // 4. ACOPLAMIENTO DE TREN INFERIOR
+            safeInject('m-cintura', m.waist ? `${m.waist} cm` : '--');
+            safeInject('m-femur_der', m.femur_right ? `${m.femur_right} cm` : '--');
+            safeInject('m-femur_izq', m.femur_left ? `${m.femur_left} cm` : '--');
+            safeInject('m-tibia_der', m.tibia_right ? `${m.tibia_right} cm` : '--');
+            safeInject('m-tibia_izq', m.tibia_left ? `${m.tibia_left} cm` : '--');
+
+            // 5. ACOPLAMIENTO DE CAPACIDAD MECÁNICA (1RM)
+            safeInject('m-push', m.rm_push ? `${m.rm_push} kg` : '--');
+            safeInject('m-pull', m.rm_pull ? `${m.rm_pull} kg` : '--');
+            safeInject('m-legs', m.rm_legs ? `${m.rm_legs} kg` : '--');
+
+            // 6. ACOPLAMIENTO DE FICHA MÉDICA
+            safeInject('m-alergias', m.allergies, 'Ninguna registrada.');
+            safeInject('m-enfermedades', m.chronic_diseases, 'Ninguna registrada.');
+            safeInject('m-otros', m.medical_notes, 'Sin observaciones.');
+            
+        } else {
+            if (spinner) spinner.innerHTML = `<p class="text-red-400 text-[10px] font-black uppercase tracking-widest">Error del Servidor Central</p>`;
         }
-    } catch (e) {
-        console.error("Error al sincronizar la telemetría biológica del atleta.");
+    } catch (error) {
+        console.error("Fallo crítico de red:", error);
+        if (spinner) spinner.innerHTML = `<p class="text-red-400 text-[10px] font-black uppercase tracking-widest">Error en la línea de comunicación</p>`;
+    } finally {
+        // 🔒 BLOQUEO REMATE DE SEGURIDAD: Ocurra o no un error, se esconde el spinner y se revela la Grid
+        if (spinner) spinner.classList.add('hidden');
+        if (content) {
+            content.classList.remove('hidden');
+            content.classList.add('flex');
+        }
     }
 }
 
-// Aseguramos que la función se dispare automáticamente al cargar la pantalla del perfil
-window.addEventListener('DOMContentLoaded', () => {
-    loadAthleteBiometricsProfile();
-});
+// Inicialización automática al cargar el DOM
+window.addEventListener('DOMContentLoaded', loadAthleteBiometricsDashboard);
