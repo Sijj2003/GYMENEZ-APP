@@ -6,24 +6,29 @@
     <title>GYMENEZ | Recovery Center</title>
     
     <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Estilos modulares core -->
     <link rel="stylesheet" href="/static/css/auth.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
+    <style>
+        /* Desactivar rastro visual o clicks accidentales en los bordes superiores de YouTube */
+        .video-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 50px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            pointer-events: auto; /* Bloquea interacción con el título nativo de YT */
+            z-index: 10;
+        }
+    </style>
 </head>
 <body class="selection:bg-sky-500 selection:text-white overflow-x-hidden min-h-screen flex flex-col bg-[#030305]">
 
-    <!-- Notificaciones flotantes UI -->
     <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-4 md:px-6 py-2 md:py-3 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none text-center w-11/12 max-w-[350px] border border-white/10"></div>
 
-    <!-- Fondos Parallax Desenfocados (Acento frío para recuperación) -->
     <div class="fixed inset-0 bg-[url('https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1800')] bg-cover bg-center opacity-5 -z-20 mix-blend-screen grayscale"></div>
     <div class="fixed inset-0 bg-gradient-to-b from-[#030308]/80 via-[#030308]/95 to-[#030305] -z-10"></div>
-    <!-- Orbe azul sutil de fondo -->
     <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-sky-900/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
 
-    <!-- Header Universal -->
     <header class="w-full border-b border-white/5 bg-black/30 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
             <div class="flex items-center gap-2 md:gap-3">
@@ -39,7 +44,6 @@
 
     <main class="max-w-7xl mx-auto w-full px-4 md:px-6 py-8 md:py-12 flex-grow flex flex-col">
         
-        <!-- Encabezado del Módulo -->
         <div class="mb-10 md:mb-14 fade-in-up" style="animation-delay: 0.1s;">
             <p class="text-sky-400 text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] mb-2">Optimización Neuromuscular</p>
             <h2 class="text-4xl md:text-6xl font-[900] uppercase tracking-tighter leading-none break-words text-white">
@@ -50,93 +54,18 @@
             </p>
         </div>
 
-        <!-- Bento Grid de Protocolos -->
         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-auto">
 
-            <!-- Columna Principal: 6 Protocolos de Recuperación -->
-            <div class="md:col-span-3 lg:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                
-                <!-- Protocolo 01 -->
-                <a href="/apps/user/recovery_session.html?protocol=upper" class="glass-panel group relative overflow-hidden rounded-[28px] min-h-[160px] md:min-h-[200px] flex flex-col justify-end p-6 border border-white/5 hover:border-sky-500/50 transition-all duration-500 fade-in-up" style="animation-delay: 0.2s;">
-                    <div class="absolute inset-0 z-0">
-                        <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=600" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-30 grayscale group-hover:grayscale-0 group-hover:opacity-50" alt="Estiramiento Torso">
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/60 to-transparent"></div>
-                    </div>
-                    <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                        <span class="text-[9px] text-gray-400 font-black uppercase tracking-[0.3em] mb-1 block group-hover:text-sky-400 transition-colors">Protocolo 01</span>
-                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">Tren Superior</h3>
-                    </div>
-                </a>
-                
-                <!-- Protocolo 02 -->
-                <a href="/apps/user/recovery_session.html?protocol=lower" class="glass-panel group relative overflow-hidden rounded-[28px] min-h-[160px] md:min-h-[200px] flex flex-col justify-end p-6 border border-white/5 hover:border-sky-500/50 transition-all duration-500 fade-in-up" style="animation-delay: 0.3s;">
-                    <div class="absolute inset-0 z-0">
-                        <img src="https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=600" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-30 grayscale group-hover:grayscale-0 group-hover:opacity-50" alt="Estiramiento Piernas">
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/60 to-transparent"></div>
-                    </div>
-                    <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                        <span class="text-[9px] text-gray-400 font-black uppercase tracking-[0.3em] mb-1 block group-hover:text-sky-400 transition-colors">Protocolo 02</span>
-                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">Tren Inferior</h3>
-                    </div>
-                </a>
-
-                <!-- Protocolo 03 -->
-                <a href="/apps/user/recovery_session.html?protocol=fullbody" class="glass-panel group relative overflow-hidden rounded-[28px] min-h-[160px] md:min-h-[200px] flex flex-col justify-end p-6 border border-white/5 hover:border-sky-500/50 transition-all duration-500 fade-in-up" style="animation-delay: 0.4s;">
-                    <div class="absolute inset-0 z-0">
-                        <img src="https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?q=80&w=600" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-30 grayscale group-hover:grayscale-0 group-hover:opacity-50" alt="Yoga Flow">
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/60 to-transparent"></div>
-                    </div>
-                    <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                        <span class="text-[9px] text-gray-400 font-black uppercase tracking-[0.3em] mb-1 block group-hover:text-sky-400 transition-colors">Protocolo 03</span>
-                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">Full Body Flow</h3>
-                    </div>
-                </a>
-
-                <!-- Protocolo 04 -->
-                <a href="/apps/user/recovery_session.html?protocol=lumbar" class="glass-panel group relative overflow-hidden rounded-[28px] min-h-[160px] md:min-h-[200px] flex flex-col justify-end p-6 border border-white/5 hover:border-sky-500/50 transition-all duration-500 fade-in-up" style="animation-delay: 0.5s;">
-                    <div class="absolute inset-0 z-0">
-                        <img src="https://images.unsplash.com/photo-1552196563-552592596440?q=80&w=600" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-30 grayscale group-hover:grayscale-0 group-hover:opacity-50" alt="Espalda Lumbar">
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/60 to-transparent"></div>
-                    </div>
-                    <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                        <span class="text-[9px] text-gray-400 font-black uppercase tracking-[0.3em] mb-1 block group-hover:text-sky-400 transition-colors">Protocolo 04</span>
-                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">Alivio Lumbar</h3>
-                    </div>
-                </a>
-                
-                <!-- Protocolo 05 -->
-                <a href="/apps/user/recovery_session.html?protocol=roller" class="glass-panel group relative overflow-hidden rounded-[28px] min-h-[160px] md:min-h-[200px] flex flex-col justify-end p-6 border border-white/5 hover:border-sky-500/50 transition-all duration-500 fade-in-up" style="animation-delay: 0.6s;">
-                    <div class="absolute inset-0 z-0">
-                        <img src="https://images.unsplash.com/photo-1593810450967-f9c42734e326?q=80&w=600" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-30 grayscale group-hover:grayscale-0 group-hover:opacity-50" alt="Foam Roller">
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/60 to-transparent"></div>
-                    </div>
-                    <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                        <span class="text-[9px] text-gray-400 font-black uppercase tracking-[0.3em] mb-1 block group-hover:text-sky-400 transition-colors">Protocolo 05</span>
-                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">Foam Roller</h3>
-                    </div>
-                </a>
-                
-                <!-- Protocolo 06 -->
-                <a href="/apps/user/recovery_session.html?protocol=sleep" class="glass-panel group relative overflow-hidden rounded-[28px] min-h-[160px] md:min-h-[200px] flex flex-col justify-end p-6 border border-white/5 hover:border-sky-500/50 transition-all duration-500 fade-in-up" style="animation-delay: 0.7s;">
-                    <div class="absolute inset-0 z-0">
-                        <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=600" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-30 grayscale group-hover:grayscale-0 group-hover:opacity-50" alt="Relajación y Sueño">
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/60 to-transparent"></div>
-                    </div>
-                    <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                        <span class="text-[9px] text-gray-400 font-black uppercase tracking-[0.3em] mb-1 block group-hover:text-sky-400 transition-colors">Protocolo 06</span>
-                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">Protocolo Sueño</h3>
-                    </div>
-                </a>
+            <div id="recovery-pool" class="md:col-span-3 lg:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                <div class="col-span-full text-center py-12 text-gray-500 font-bold uppercase tracking-widest text-[10px] animate-pulse">
+                    Sincronizando frecuencias de recuperación...
+                </div>
             </div>
 
-            <!-- Columna Lateral: Cross-Selling Ecosistema -->
-            <div class="md:col-span-3 lg:col-span-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 md:gap-6 fade-in-up" style="animation-delay: 0.8s;">
-                
-                <!-- Cross-sell: EATS -->
+            <div class="md:col-span-3 lg:col-span-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 md:gap-6 fade-in-up" style="animation-delay: 0.4s;">
                 <a href="/apps/user/eats.html" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-[#34d399]/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px]">
                     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=600')] bg-cover bg-center opacity-20 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-30 group-hover:scale-105"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                    
                     <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
                         <span class="text-[8px] md:text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-1 block">Sinergia Activa</span>
                         <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">GYMENEZ <span class="text-[#34d399]">EATS</span></h3>
@@ -144,29 +73,43 @@
                     </div>
                 </a>
 
-                <!-- Cross-sell: ON -->
                 <a href="/apps/user/on.html" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-red-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px]">
                     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=600')] bg-cover bg-center opacity-20 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-30 group-hover:scale-105"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                    
                     <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
                         <span class="text-[8px] md:text-[9px] font-black text-red-500 uppercase tracking-[0.2em] mb-1 block">Educación Biomecánica</span>
                         <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">GYMENEZ <span class="text-red-500">ON</span></h3>
                         <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">Aprende la ciencia detrás del descanso y la movilidad →</p>
                     </div>
                 </a>
-
             </div>
 
         </div>
     </main>
 
-    <!-- Footer -->
+    <div id="video-overlay" class="hidden fixed inset-0 bg-black/95 backdrop-blur-md z-[9999] flex flex-col items-center justify-center p-4 opacity-0 transition-all duration-500">
+        
+        <div class="absolute top-6 right-6 z-50">
+            <button onclick="closeRecoveryOverlay()" class="w-12 h-12 bg-white/5 border border-white/10 text-gray-400 hover:text-white rounded-full flex items-center justify-center text-xl font-black transition-all transform hover:scale-105">
+                ✕
+            </button>
+        </div>
+
+        <div class="w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden border border-white/10 shadow-[0_30px_70px_rgba(0,0,0,0.9)] relative video-wrapper">
+            <iframe id="overlay-iframe-player" class="w-full h-full relative z-0" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+
+        <div class="w-full max-w-4xl mt-6 text-left px-2">
+            <span class="text-[8px] md:text-[9px] font-black text-sky-400 uppercase tracking-[0.3em] block mb-1">Frecuencia de Alivio Muscular</span>
+            <h3 id="overlay-title" class="text-xl md:text-3xl font-black uppercase text-white tracking-tighter">--</h3>
+            <p id="overlay-desc" class="text-gray-400 text-xs md:text-sm mt-3 font-medium leading-relaxed max-w-3xl border-l-2 border-white/10 pl-3"></p>
+        </div>
+    </div>
+
     <footer class="text-center py-6 border-t border-white/5 bg-[#030305]/80 backdrop-blur-md mt-auto">
         <p class="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • RECOVERY CORE</p>
     </footer>
 
-    <!-- Lógica JS Modular -->
     <script src="/static/js/auth/auth_middleware.js"></script>
     <script src="/static/js/dashboard/recovery.js"></script>
 </body>
