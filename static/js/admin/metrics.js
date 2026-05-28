@@ -1,12 +1,8 @@
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
-// ID del atleta seleccionado activamente en el espacio de trabajo
 let activeSelectedUserId = null;
 
-// ==========================================
-// 📚 GLOSARIO CIENTÍFICO DE PLANTILLAS SMART
-// ==========================================
 const GOALS_GLOSSARY = {
     "Pérdida de Grasa": {
         st: "Reducir el porcentaje de grasa corporal mediante un déficit calórico controlado y asentar el hábito de registro diario alimentario.",
@@ -30,9 +26,6 @@ const GOALS_GLOSSARY = {
     }
 };
 
-// ==========================================
-// 🛡️ CAPA DE SEGURIDAD (TOKEN BLINDADO)
-// ==========================================
 function getSecureHeaders() {
     const token = localStorage.getItem('admin_token'); 
     return {
@@ -41,9 +34,6 @@ function getSecureHeaders() {
     };
 }
 
-// ==========================================
-// 🛠️ CONTROLADORES VISUALES CORE
-// ==========================================
 function showUIFeedback(message, type = 'success') {
     const box = document.getElementById('message-box');
     box.textContent = message;
@@ -81,17 +71,12 @@ function autoFillGlossaryTemplates() {
     if(!document.getElementById('g-lt-desc').value.trim()) document.getElementById('g-lt-desc').value = template.lt;
 }
 
-// ==========================================
-// 📡 ENLACE DE DATOS PROTEGIDO (ENDPOINTS)
-// ==========================================
 async function loadAthletesSidebar(filterText = '') {
     const container = document.getElementById('athletes-list-container');
     const badge = document.getElementById('users-count-badge');
     
     try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/users`, {
-            headers: getSecureHeaders()
-        });
+        const res = await fetch(`${API_BASE_URL}/api/admin/users`, { headers: getSecureHeaders() });
         const data = await res.json();
         
         if (data.success) {
@@ -115,7 +100,7 @@ async function loadAthletesSidebar(filterText = '') {
                 const item = document.createElement('div');
                 const isActive = u.id === activeSelectedUserId;
                 
-                item.className = `p-3 rounded-xl border transition {{hardware-acceleration}} duration-300 cursor-pointer flex flex-col gap-0.5 select-none ${isActive ? 'bg-[#FFC300]/10 border-[#FFC300]' : 'bg-black/30 border-white/5 hover:border-white/10'}`;
+                item.className = `p-3 rounded-xl border transition duration-300 cursor-pointer flex flex-col gap-0.5 select-none ${isActive ? 'bg-[#FFC300]/10 border-[#FFC300]' : 'bg-black/30 border-white/5 hover:border-white/10'}`;
                 item.innerHTML = `
                     <span class="font-black text-white uppercase text-[10px] tracking-tight truncate">${u.name} ${u.last_name || ''}</span>
                     <span class="text-[8px] font-mono text-gray-500 truncate">${u.email}</span>
@@ -131,7 +116,7 @@ async function loadAthletesSidebar(filterText = '') {
             });
         }
     } catch (e) {
-        container.innerHTML = `<p class="text-center text-red-400 font-bold uppercase text-[9px] py-4">Sesión Expirada / Error Central</p>`;
+        container.innerHTML = `<p class="text-center text-red-400 font-bold uppercase text-[9px] py-4">Error Central de Red</p>`;
     }
 }
 
@@ -140,32 +125,49 @@ async function fetchUserProfile(userId) {
     const emptyView = document.getElementById('no-athlete-selected-view');
     
     try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/fitness-profile/${userId}`, {
-            headers: getSecureHeaders()
-        });
+        const res = await fetch(`${API_BASE_URL}/api/admin/fitness-profile/${userId}`, { headers: getSecureHeaders() });
         const data = await res.json();
         
         if (data.success) {
             emptyView.classList.add('hidden');
             workspace.classList.remove('hidden');
 
-            // Rellenar métricas antropométricas y mecánicas
             const m = data.metrics || {};
+            // Mapeo Métricas Base
             document.getElementById('m-weight').value = m.weight || '';
+            document.getElementById('m-height').value = m.height || '';
+            document.getElementById('m-age').value = m.age || '';
             document.getElementById('m-fat').value = m.fat_percent || '';
             document.getElementById('m-muscle').value = m.muscle_percent || '';
-            document.getElementById('m-chest').value = m.chest || '';
-            document.getElementById('m-waist').value = m.waist || '';
+            
+            // Mapeo Tren Superior
+            document.getElementById('m-neck').value = m.neck || '';
+            document.getElementById('m-back').value = m.back || '';
+            document.getElementById('m-thorax').value = m.thorax || '';
+            document.getElementById('m-abdomen').value = m.abdomen || '';
             document.getElementById('m-bicep-l').value = m.bicep_left || '';
             document.getElementById('m-bicep-r').value = m.bicep_right || '';
-            document.getElementById('m-hip').value = m.hip || '';
-            document.getElementById('m-thigh-l').value = m.thigh_left || '';
-            document.getElementById('m-thigh-r').value = m.thigh_right || '';
+            document.getElementById('m-forearm-l').value = m.forearm_left || '';
+            document.getElementById('m-forearm-r').value = m.forearm_right || '';
+            
+            // Mapeo Tren Inferior
+            document.getElementById('m-waist').value = m.waist || '';
+            document.getElementById('m-femur-l').value = m.femur_left || '';
+            document.getElementById('m-femur-r').value = m.femur_right || '';
+            document.getElementById('m-tibia-l').value = m.tibia_left || '';
+            document.getElementById('m-tibia-r').value = m.tibia_right || '';
+            
+            // Mecánicas (1RM)
             document.getElementById('m-push').value = m.rm_push || '';
             document.getElementById('m-pull').value = m.rm_pull || '';
             document.getElementById('m-legs').value = m.rm_legs || '';
 
-            // Rellenar objetivos de macrociclo
+            // Ficha Médica
+            document.getElementById('m-allergies').value = m.allergies || '';
+            document.getElementById('m-diseases').value = m.chronic_diseases || '';
+            document.getElementById('m-medical-notes').value = m.medical_notes || '';
+
+            // Objetivos
             const g = data.goals || {};
             document.getElementById('g-focus').value = g.focus || 'Masa Muscular';
             
@@ -184,26 +186,40 @@ async function fetchUserProfile(userId) {
             autoFillGlossaryTemplates();
         }
     } catch (e) { 
-        showUIFeedback("Fallo de autenticación o lectura.", "error"); 
+        showUIFeedback("Error de lectura o sesión expirada.", "error"); 
     }
 }
 
-// ==========================================
-// 🚀 PROCESAMIENTO DE FORMULARIOS SECURE
-// ==========================================
 document.getElementById('metrics-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     if(!activeSelectedUserId) return;
     const btn = document.getElementById('btn-submit-metrics');
     
     const payload = {
-        weight: document.getElementById('m-weight').value, fat_percent: document.getElementById('m-fat').value,
-        muscle_percent: document.getElementById('m-muscle').value, chest: document.getElementById('m-chest').value,
-        waist: document.getElementById('m-waist').value, bicep_left: document.getElementById('m-bicep-l').value,
-        bicep_right: document.getElementById('m-bicep-r').value, hip: document.getElementById('m-hip').value,
-        thigh_left: document.getElementById('m-thigh-l').value, thigh_right: document.getElementById('m-thigh-r').value,
-        rm_push: document.getElementById('m-push').value, rm_pull: document.getElementById('m-pull').value,
-        rm_legs: document.getElementById('m-legs').value
+        weight: document.getElementById('m-weight').value,
+        height: document.getElementById('m-height').value,
+        age: document.getElementById('m-age').value,
+        fat_percent: document.getElementById('m-fat').value,
+        muscle_percent: document.getElementById('m-muscle').value,
+        neck: document.getElementById('m-neck').value,
+        back: document.getElementById('m-back').value,
+        thorax: document.getElementById('m-thorax').value,
+        abdomen: document.getElementById('m-abdomen').value,
+        bicep_left: document.getElementById('m-bicep-l').value,
+        bicep_right: document.getElementById('m-bicep-r').value,
+        forearm_left: document.getElementById('m-forearm-l').value,
+        forearm_right: document.getElementById('m-forearm-r').value,
+        waist: document.getElementById('m-waist').value,
+        femur_left: document.getElementById('m-femur-l').value,
+        femur_right: document.getElementById('m-femur-r').value,
+        tibia_left: document.getElementById('m-tibia-l').value,
+        tibia_right: document.getElementById('m-tibia-r').value,
+        rm_push: document.getElementById('m-push').value,
+        rm_pull: document.getElementById('m-pull').value,
+        rm_legs: document.getElementById('m-legs').value,
+        allergies: document.getElementById('m-allergies').value,
+        chronic_diseases: document.getElementById('m-diseases').value,
+        medical_notes: document.getElementById('m-medical-notes').value
     };
 
     btn.disabled = true; btn.textContent = 'ASENTANDO EN LA NUBE...';
@@ -244,22 +260,16 @@ document.getElementById('goals-form').addEventListener('submit', async (e) => {
     btn.disabled = false; btn.textContent = 'Fijar Objetivos Estratégicos';
 });
 
-// ==========================================
-// 🏎️ ORQUESTRADOR DE INICIALIZACIÓN (DOM)
-// ==========================================
 window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('loaded');
     
-    // Enlace de navegadores de pestañas duales
     document.getElementById('tab-btn-metrics').addEventListener('click', () => switchTab('metrics'));
     document.getElementById('tab-btn-goals').addEventListener('click', () => switchTab('goals'));
     
-    // Escucha del filtro del buscador rápido lateral
     document.getElementById('user-search-input').addEventListener('input', (e) => {
         loadAthletesSidebar(e.target.value);
     });
 
-    // Reset estructural automático de foco SMART
     document.getElementById('g-focus').addEventListener('change', () => {
         document.getElementById('g-st-desc').value = '';
         document.getElementById('g-mt-desc').value = '';
@@ -267,6 +277,5 @@ window.addEventListener('DOMContentLoaded', () => {
         autoFillGlossaryTemplates();
     });
     
-    // Ejecución de la primera consulta controlada
     loadAthletesSidebar();
 });
