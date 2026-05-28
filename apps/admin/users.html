@@ -8,8 +8,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/static/css/auth.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
-    <link rel="stylesheet" href="/static/css/admin.css"> </head>
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
 <body class="selection:bg-[#FFC300] selection:text-black overflow-x-hidden min-h-screen flex flex-col bg-[#030305]">
+
+    <!-- Notificaciones Flotantes -->
+    <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-4 md:px-6 py-2 md:py-3 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none text-center w-11/12 max-w-[350px] border border-white/10"></div>
 
     <div class="fixed inset-0 bg-[url('/static/img/backgrounds/FONDO.png')] bg-cover bg-center opacity-5 -z-10 mix-blend-screen grayscale"></div>
     <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/50 via-[#030305]/95 to-[#030305] -z-10"></div>
@@ -39,7 +43,7 @@
             </div>
             
             <div class="mb-6">
-                <input type="text" id="user-search-input" placeholder="Buscar por Nombre, Email o Cédula..." 
+                <input type="text" id="user-search-input" placeholder="Buscar por Nombre o Email..." 
                        class="w-full glass-input p-4 rounded-xl text-sm font-medium">
             </div>
 
@@ -49,21 +53,22 @@
                         <tr>
                             <th class="rounded-tl-xl">Nombre Completo</th>
                             <th>Email</th>
-                            <th>Cédula</th>
                             <th>Teléfono</th>
                             <th>Suscripción</th>
-                            <th>Ingreso</th>
-                            <th class="rounded-tr-xl">Controles Tácticos</th>
+                            <th>Vencimiento</th>
+                            <th class="rounded-tr-xl text-right">Controles Tácticos</th>
                         </tr>
                     </thead>
                     <tbody id="users-table-body" class="text-xs text-gray-300 font-medium">
-                        </tbody>
+                        <!-- El JS inyecta la data aquí -->
+                    </tbody>
                 </table>
             </div>
         </div>
     </main>
 
-    <div id="user-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-[1010] flex justify-center items-center p-4 opacity-0 transition-opacity duration-300">
+    <!-- MODAL DE EDICIÓN/CREACIÓN -->
+    <div id="user-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-[1000] flex justify-center items-center p-4 opacity-0 transition-opacity duration-300">
         <div class="modal-content w-full max-w-2xl p-6 md:p-8 rounded-[24px] transform scale-95 transition-transform duration-300">
             
             <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
@@ -92,35 +97,12 @@
                         <input type="email" id="email" name="email" required class="w-full glass-input p-3 rounded-xl text-xs font-medium">
                     </div>
                     <div>
-                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Contraseña <span id="password-req" class="text-red-500">*</span></label>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Contraseña Inicial <span id="password-req" class="text-red-500">*</span></label>
                         <input type="password" id="password" name="password" class="w-full glass-input p-3 rounded-xl text-xs font-mono" required placeholder="Mínimo 6 caracteres">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Cédula</label>
-                        <div class="flex gap-2">
-                            <select id="id_number_prefix" name="id_number_prefix" class="glass-input p-3 rounded-xl text-xs font-bold w-20">
-                                <option value="V">V</option><option value="E">E</option>
-                            </select>
-                            <input type="text" id="id_number" name="id_number" required class="flex-1 glass-input p-3 rounded-xl text-xs font-mono">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label>
-                        <div class="flex gap-2">
-                            <select id="phone_prefix" name="phone_prefix" class="glass-input p-3 rounded-xl text-xs font-bold w-24">
-                                <option value="0414">0414</option><option value="0424">0424</option>
-                                <option value="0412">0412</option><option value="0422">0422</option>
-                                <option value="0416">0416</option><option value="0426">0426</option>
-                            </select>
-                            <input type="tel" id="phone_number_body" name="phone_number_body" required class="flex-1 glass-input p-3 rounded-xl text-xs font-mono">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-white/5 pt-5">
                     <div>
                         <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Suscripción</label>
                         <select id="subscription_level" name="subscription_level" class="w-full glass-input p-3 rounded-xl text-xs font-bold text-[#FFC300]">
@@ -129,15 +111,29 @@
                             <option value="ULTRA" class="text-white">ULTRA</option>
                         </select>
                     </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1 text-[#FFC300]">Vencimiento del Plan</label>
+                        <input type="date" id="subscription_expires_at" name="subscription_expires_at" required class="w-full glass-input p-3 rounded-xl text-xs font-mono text-white border-[#FFC300]/30 bg-[#FFC300]/5 focus:border-[#FFC300]">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label>
+                        <div class="flex gap-2">
+                            <select id="phone_prefix" name="phone_prefix" class="glass-input p-3 rounded-xl text-xs font-bold w-24">
+                                <option value="0414">0414</option><option value="0424">0424</option>
+                                <option value="0412">0412</option><option value="0422">0422</option>
+                                <option value="0416">0416</option><option value="0426">0426</option>
+                            </select>
+                            <input type="tel" id="phone_number_body" name="phone_number_body" required class="flex-1 glass-input p-3 rounded-xl text-xs font-mono" placeholder="1234567">
+                        </div>
+                    </div>
                     <div>
                         <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Sexo</label>
                         <select id="sex" name="sex" class="w-full glass-input p-3 rounded-xl text-xs font-bold">
                             <option value="Hombre">Hombre</option><option value="Mujer">Mujer</option><option value="Otro">Otro</option>
                         </select>
-                    </div>
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Nacimiento</label>
-                        <input type="date" id="dob" name="dob" class="w-full glass-input p-3 rounded-xl text-xs font-mono text-gray-400">
                     </div>
                 </div>
 
@@ -149,6 +145,33 @@
         </div>
     </div>
 
+    <!-- MODAL DE CERTIFICACIÓN OTP (Alta Seguridad) -->
+    <div id="certify-modal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-md z-[1020] flex justify-center items-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="modal-content w-full max-w-sm p-8 rounded-[28px] border-[#FFC300]/30 bg-gradient-to-b from-[#030305] to-[#111] transform scale-95 transition-transform duration-300 text-center">
+            
+            <div class="w-14 h-14 mx-auto bg-sky-500/10 rounded-full flex items-center justify-center border border-sky-500/20 mb-4 shadow-[0_0_20px_rgba(14,165,233,0.2)]">
+                <svg class="w-6 h-6 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            </div>
+            
+            <h3 class="text-xl font-black text-white uppercase tracking-tighter mb-2">Protocolo de Identidad</h3>
+            <p class="text-xs text-gray-400 mb-6 leading-relaxed">Pide al atleta el código de 6 dígitos que acaba de ser enviado a su correo para autorizar el cambio de clave.</p>
+
+            <div id="certify-step-1">
+                <input type="text" id="otp-input" maxlength="6" class="w-full bg-black/50 border border-sky-500/30 rounded-xl p-4 text-center text-2xl font-mono text-white tracking-[0.5em] mb-4 focus:border-sky-400 outline-none" placeholder="------">
+                <button onclick="verifyUserCode()" class="w-full py-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-black text-[10px] uppercase tracking-widest transition shadow-lg">Verificar Identidad</button>
+                <button onclick="closeCertifyModal()" class="mt-4 text-[9px] font-bold text-gray-500 hover:text-white uppercase tracking-widest">Cancelar Operación</button>
+            </div>
+
+            <div id="certify-step-2" class="hidden">
+                <div class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-[10px] font-black uppercase tracking-widest mb-6">✅ Identidad Confirmada</div>
+                <input type="password" id="new-password-input" class="w-full glass-input p-4 rounded-xl text-center text-sm font-mono text-white mb-4" placeholder="Escriba la nueva contraseña">
+                <button onclick="forcePasswordReset()" class="w-full py-4 rounded-xl btn-gold font-black text-[10px] uppercase tracking-widest shadow-lg">Asignar Nueva Clave</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts Modulares -->
     <script src="/static/js/admin/admin_middleware.js"></script>
     <script src="/static/js/admin/users.js"></script>
 </body>
