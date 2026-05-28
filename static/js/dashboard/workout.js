@@ -4,7 +4,9 @@ const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https:/
 let currentWeekData = {};
 let selectedDay = 1;
 let completedExercises = new Set();
-let exerciseStates = {}; // 🧠 ESTADO EN TIEMPO REAL PARA EL JOURNAL
+let exerciseStates = {}; 
+let sessionId = "";
+let isRoutineLocked = false; // Candado de 24 horas
 
 const DAYS = [
     { id: 1, label: "LUN" }, { id: 2, label: "MAR" }, 
@@ -20,6 +22,45 @@ function showFeedback(msg, type='success') {
     setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 3000);
 }
 
+function getTodayDateString() {
+    return new Date().toISOString().split('T')[0]; // Ej: "2026-05-28"
+}
+
+// ==========================================
+// 🛡️ SISTEMA DE BLOQUEO (COOLDOWN FRONTEND)
+// ==========================================
+function checkRoutineLock(dayId) {
+    const todayStr = getTodayDateString();
+    const lockedDate = localStorage.getItem(`locked_routine_day_${dayId}`);
+    
+    // Si la fecha guardada es hoy, bloqueamos la rutina. Si es ayer, el candado caducó.
+    isRoutineLocked = (lockedDate === todayStr);
+    
+    const badge = document.getElementById('cooldown-badge');
+    if (isRoutineLocked) {
+        badge.classList.remove('hidden');
+        // Recuperamos lo que hizo hoy para que pueda verlo
+        const savedMemory = localStorage.getItem(`journal_memory_${dayId}_${todayStr}`);
+        if (savedMemory) {
+            exerciseStates = JSON.parse(savedMemory);
+            Object.keys(exerciseStates).forEach(k => completedExercises.add(k));
+        }
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+function lockRoutineForToday() {
+    const todayStr = getTodayDateString();
+    localStorage.setItem(`locked_routine_day_${selectedDay}`, todayStr);
+    localStorage.setItem(`journal_memory_${selectedDay}_${todayStr}`, JSON.stringify(exerciseStates));
+    isRoutineLocked = true;
+    document.getElementById('cooldown-badge').classList.remove('hidden');
+}
+
+// ==========================================
+// 🕹️ MECÁNICAS DE INTERFAZ
+// ==========================================
 function renderDaySelector() {
     const container = document.getElementById('day-selector');
     container.innerHTML = '';
@@ -28,14 +69,15 @@ function renderDaySelector() {
         const isActive = day.id === selectedDay;
         btn.className = `px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border ${isActive ? 'bg-[#FFC300] text-black border-[#FFC300] shadow-[0_0_15px_rgba(255,195,0,0.4)]' : 'bg-black/40 text-gray-500 border-white/5 hover:border-white/20 hover:text-white'}`;
         btn.textContent = day.label;
-        btn.onclick = () => { selectedDay = day.id; renderDaySelector(); renderRoutineForSelectedDay(); };
+        btn.onclick = () => { 
+            selectedDay = day.id; 
+            renderDaySelector(); 
+            renderRoutineForSelectedDay(); 
+        };
         container.appendChild(btn);
     });
 }
 
-// ==========================================
-// 🕹️ MECÁNICAS DE EJECUCIÓN (ACORDEÓN Y SETS)
-// ==========================================
 function toggleAccordion(exId) {
     const content = document.getElementById(`acc-content-${exId}`);
     const icon = document.getElementById(`acc-icon-${exId}`);
@@ -49,6 +91,8 @@ function toggleAccordion(exId) {
 }
 
 function toggleSetComplete(exId, setIndex) {
+    if (isRoutineLocked) return; // Si está bloqueado, no hace nada
+
     const btn = document.getElementById(`btn-set-${exId}-${setIndex}`);
     const repInput = document.getElementById(`reps-${exId}-${setIndex}`);
     const weightInput = document.getElementById(`weight-${exId}-${setIndex}`);
@@ -58,7 +102,6 @@ function toggleSetComplete(exId, setIndex) {
     const isDone = exerciseStates[exId].sets[setIndex].done;
     
     if (!isDone) {
-        // Marcar Listo
         exerciseStates[exId].sets[setIndex] = { done: true, reps: repInput.value, weight: weightInput.value || 0 };
         btn.innerHTML = '✅';
         btn.classList.replace('bg-white/5', 'bg-emerald-500/20');
@@ -66,7 +109,6 @@ function toggleSetComplete(exId, setIndex) {
         btn.classList.replace('border-white/10', 'border-emerald-500/50');
         repInput.disabled = true; weightInput.disabled = true;
     } else {
-        // Desmarcar
         exerciseStates[exId].sets[setIndex].done = false;
         btn.innerHTML = '⬜';
         btn.classList.replace('bg-emerald-500/20', 'bg-white/5');
@@ -82,9 +124,8 @@ function checkAllSetsCompleted(exId) {
     const allDone = exerciseStates[exId].sets.every(set => set.done);
     const rpeSection = document.getElementById(`rpe-section-${exId}`);
     
-    if (allDone) {
+    if (allDone && !isRoutineLocked) {
         rpeSection.classList.remove('hidden');
-        // Pequeña animación de entrada
         setTimeout(() => { rpeSection.style.opacity = '1'; rpeSection.style.transform = 'translateY(0)'; }, 50);
     } else {
         rpeSection.classList.add('hidden');
@@ -93,9 +134,9 @@ function checkAllSetsCompleted(exId) {
 }
 
 function selectRPE(exId, value) {
+    if (isRoutineLocked) return;
     exerciseStates[exId].rpe = value;
     
-    // UI Update para botones RPE
     for(let i=1; i<=5; i++) {
         const btn = document.getElementById(`rpe-btn-${exId}-${i}`);
         if(i === value) {
@@ -105,21 +146,24 @@ function selectRPE(exId, value) {
         }
     }
     
-    // Habilitar Botón de Guardado
     const submitBtn = document.getElementById(`submit-journal-${exId}`);
     submitBtn.disabled = false;
     submitBtn.classList.replace('opacity-50', 'opacity-100');
     submitBtn.classList.replace('cursor-not-allowed', 'hover:scale-[1.02]');
 }
 
+// ==========================================
+// 📦 ENVÍO DE DATOS Y MODAL DE VICTORIA
+// ==========================================
 async function saveToJournal(exId) {
-    if(!exerciseStates[exId].rpe) return;
+    if(isRoutineLocked || !exerciseStates[exId].rpe) return;
     
     const submitBtn = document.getElementById(`submit-journal-${exId}`);
     submitBtn.innerHTML = '<div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
 
-    // 📦 EMPAQUETADO DATA-DRIVEN PARA LA BD
+    // Empaquetado Inteligente con ID de Sesión
     const journalData = {
+        session_id: sessionId,
         exercise_id: exId,
         date: new Date().toISOString(),
         rpe: exerciseStates[exId].rpe,
@@ -127,30 +171,28 @@ async function saveToJournal(exId) {
     };
 
     try {
-        /* LÓGICA DE API FUTURA:
-        const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token');
-        await fetch(`${API_BASE_URL}/api/client/journal`, {
-            method: 'POST', headers: {'Content-Type':'application/json','Authorization':`Bearer ${token}`},
-            body: JSON.stringify(journalData)
-        });
-        */
-        
-        // Simulación de delay de red
+        // Simulación de guardado en API
         await new Promise(r => setTimeout(r, 600));
 
         showFeedback('Sobrecarga registrada en el Journal.');
         
-        // Efectos Visuales de Victoria
         completedExercises.add(exId);
         updateProgressBar();
-        toggleAccordion(exId); // Cerrar acordeón
+        toggleAccordion(exId); // Cerrar y marcar verde
         
         const card = document.getElementById(`ex-card-${exId}`);
         card.classList.add('exercise-done');
         
         const statusBadge = document.getElementById(`badge-status-${exId}`);
-        statusBadge.textContent = 'COMPLETADO';
+        statusBadge.textContent = 'ASENTADO';
         statusBadge.className = 'px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded text-[8px] font-black uppercase tracking-widest';
+
+        // 🏆 VERIFICAR SI TERMINÓ TODA LA RUTINA
+        const totalExercises = currentWeekData[selectedDay].ejercicios.length;
+        if (completedExercises.size === totalExercises) {
+            lockRoutineForToday();
+            setTimeout(showVictoryModal, 800);
+        }
 
     } catch(e) {
         showFeedback('Error de conexión.', 'error');
@@ -158,12 +200,41 @@ async function saveToJournal(exId) {
     }
 }
 
+function showVictoryModal() {
+    const modal = document.getElementById('victory-modal');
+    const content = document.getElementById('victory-modal-content');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeVictoryModal() {
+    const modal = document.getElementById('victory-modal');
+    const content = document.getElementById('victory-modal-content');
+    content.classList.remove('scale-100', 'opacity-100');
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }, 500);
+}
+
+function exitToHub() {
+    window.location.href = '/apps/start/inicio.html';
+}
+
 // ==========================================
-// RENDERIZADOR DE RUTINA
+// 🏗️ RENDERIZADOR PRINCIPAL
 // ==========================================
 function renderRoutineForSelectedDay() {
     completedExercises.clear();
     exerciseStates = {};
+    sessionId = `session_${selectedDay}_${getTodayDateString()}`;
+    
+    checkRoutineLock(selectedDay);
     
     const titleEl = document.getElementById('routine-title'), descEl = document.getElementById('routine-desc');
     const listEl = document.getElementById('exercises-list'), restState = document.getElementById('rest-day-state');
@@ -173,7 +244,7 @@ function renderRoutineForSelectedDay() {
         titleEl.textContent = "Sin Asignación"; descEl.textContent = "Fase de Recuperación Activa";
         listEl.innerHTML = ''; listEl.classList.add('hidden');
         restState.classList.remove('hidden'); restState.classList.add('flex');
-        document.getElementById('workout-progress-bar').style.width = `0%`; document.getElementById('workout-progress-text').textContent = `0%`;
+        updateProgressBar();
         return;
     }
 
@@ -187,35 +258,43 @@ function renderRoutineForSelectedDay() {
         const exId = ex.id || `temp-${index}`;
         const numSets = parseInt(ex.series) || 3;
         
-        // Inicializar Estado de Memoria para este ejercicio
-        exerciseStates[exId] = { rpe: null, sets: Array(numSets).fill({done: false, reps: 0, weight: 0}) };
+        // Si no está bloqueado, inicializamos la memoria limpia
+        if (!isRoutineLocked || !exerciseStates[exId]) {
+            exerciseStates[exId] = { rpe: null, sets: Array(numSets).fill({done: false, reps: '', weight: ''}) };
+        }
+        
+        const memState = exerciseStates[exId];
+        const isExCompleted = completedExercises.has(exId);
 
-        // Generador de HTML para las Rondas (Series)
         let setsHtml = '';
         for(let i=0; i<numSets; i++) {
+            const setMem = memState.sets[i] || {done: false, reps: '', weight: ''};
+            
             setsHtml += `
             <div class="flex items-center gap-2 mb-2 p-2 rounded-lg bg-black/40 border border-white/5">
                 <span class="w-6 text-center text-[10px] font-black text-gray-500">${i+1}</span>
                 <div class="flex-1 flex gap-2">
                     <div class="relative w-full">
                         <span class="absolute -top-2 left-2 text-[7px] font-black text-gray-500 uppercase bg-black px-1">Reps (${ex.repeticiones})</span>
-                        <input type="number" id="reps-${exId}-${i}" class="w-full telemetry-input p-2.5 rounded-lg text-sm" placeholder="-" />
+                        <input type="number" id="reps-${exId}-${i}" value="${setMem.reps}" ${isRoutineLocked ? 'disabled' : ''} class="w-full telemetry-input p-2.5 rounded-lg text-sm" placeholder="-" />
                     </div>
                     <div class="relative w-full">
                         <span class="absolute -top-2 left-2 text-[7px] font-black text-gray-500 uppercase bg-black px-1">KG</span>
-                        <input type="number" id="weight-${exId}-${i}" class="w-full telemetry-input p-2.5 rounded-lg text-sm" placeholder="0" />
+                        <input type="number" id="weight-${exId}-${i}" value="${setMem.weight}" ${isRoutineLocked ? 'disabled' : ''} class="w-full telemetry-input p-2.5 rounded-lg text-sm" placeholder="0" />
                     </div>
                 </div>
-                <button id="btn-set-${exId}-${i}" onclick="toggleSetComplete('${exId}', ${i})" class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 text-gray-400 font-bold text-xs flex items-center justify-center transition-colors">⬜</button>
+                ${isRoutineLocked 
+                  ? `<div class="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 flex items-center justify-center text-xs">✅</div>`
+                  : `<button id="btn-set-${exId}-${i}" onclick="toggleSetComplete('${exId}', ${i})" class="w-10 h-10 rounded-lg ${setMem.done ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'bg-white/5 border-white/10 text-gray-400'} font-bold text-xs flex items-center justify-center transition-colors">${setMem.done ? '✅' : '⬜'}</button>`
+                }
             </div>`;
         }
 
         const card = document.createElement('div');
         card.id = `ex-card-${exId}`;
-        card.className = "glass-panel rounded-2xl border border-white/5 transition-all duration-500 overflow-hidden";
+        card.className = `glass-panel rounded-2xl border transition-all duration-500 overflow-hidden ${isExCompleted ? 'exercise-done border-emerald-500/40' : 'border-white/5'}`;
         
         card.innerHTML = `
-            <!-- CABECERA (Siempre visible, clickeable) -->
             <div class="p-5 cursor-pointer flex justify-between items-center group" onclick="toggleAccordion('${exId}')">
                 <div class="flex items-center gap-4">
                     <div class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#FFC300] font-black text-sm">
@@ -224,7 +303,9 @@ function renderRoutineForSelectedDay() {
                     <div>
                         <div class="flex items-center gap-2 mb-0.5">
                             <span class="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[7px] font-black uppercase tracking-widest text-gray-400">${ex.grupo_muscular || 'Global'}</span>
-                            <span id="badge-status-${exId}" class="px-2 py-0.5 bg-transparent border border-gray-600 text-gray-500 rounded text-[7px] font-black uppercase tracking-widest">Pendiente</span>
+                            <span id="badge-status-${exId}" class="px-2 py-0.5 ${isExCompleted ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-transparent border-gray-600 text-gray-500'} rounded text-[7px] font-black uppercase tracking-widest border">
+                                ${isExCompleted ? 'ASENTADO' : 'PENDIENTE'}
+                            </span>
                         </div>
                         <h4 class="ex-header-title text-lg font-black uppercase tracking-tighter text-white group-hover:text-[#FFC300] transition-colors">${ex.nombre}</h4>
                         <p class="text-[9px] font-bold text-gray-500 tracking-widest uppercase mt-1">${ex.series} Series • Objetivo: ${ex.repeticiones} Reps</p>
@@ -233,35 +314,26 @@ function renderRoutineForSelectedDay() {
                 <svg id="acc-icon-${exId}" class="w-5 h-5 text-gray-500 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
 
-            <!-- CUERPO EXPANDIBLE (Acordeón) -->
             <div id="acc-content-${exId}" class="accordion-content bg-black/20 border-t border-white/5">
                 <div class="p-5">
-                    
                     ${ex.link_tutorial ? `
                     <a href="${ex.link_tutorial}" target="_blank" class="w-full mb-6 py-3 rounded-xl bg-white/5 border border-white/10 flex justify-center items-center gap-2 text-xs font-black uppercase tracking-widest text-white hover:bg-white/10 transition-colors">
                         <svg class="w-4 h-4 text-[#FFC300]" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"/></svg> Ver Tutorial de Ejecución
                     </a>` : ''}
 
-                    <div class="mb-6">
-                        ${setsHtml}
-                    </div>
+                    <div class="mb-6">${setsHtml}</div>
                     
-                    <!-- ZONA RPE OCULTA -->
+                    ${!isRoutineLocked ? `
                     <div id="rpe-section-${exId}" class="hidden opacity-0 transform translate-y-2 transition-all duration-500 border-t border-white/10 pt-5">
                         <p class="text-center text-[10px] font-black uppercase tracking-widest text-[#FFC300] mb-3">¿RPE - Dificultad Percibida?</p>
                         <div class="flex justify-between gap-2 mb-6">
-                            <button id="rpe-btn-${exId}-1" onclick="selectRPE('${exId}', 1)" class="flex-1 py-3 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-black transition-all">1</button>
-                            <button id="rpe-btn-${exId}-2" onclick="selectRPE('${exId}', 2)" class="flex-1 py-3 rounded-lg bg-lime-500/20 text-lime-400 border border-lime-500/30 text-xs font-black transition-all">2</button>
-                            <button id="rpe-btn-${exId}-3" onclick="selectRPE('${exId}', 3)" class="flex-1 py-3 rounded-lg bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-xs font-black transition-all">3</button>
-                            <button id="rpe-btn-${exId}-4" onclick="selectRPE('${exId}', 4)" class="flex-1 py-3 rounded-lg bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs font-black transition-all">4</button>
-                            <button id="rpe-btn-${exId}-5" onclick="selectRPE('${exId}', 5)" class="flex-1 py-3 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-black transition-all">5</button>
+                            ${[1,2,3,4,5].map(i => `<button id="rpe-btn-${exId}-${i}" onclick="selectRPE('${exId}', ${i})" class="flex-1 py-3 rounded-lg border text-xs font-black transition-all ${i===1?'bg-emerald-500/20 text-emerald-400 border-emerald-500/30':i===2?'bg-lime-500/20 text-lime-400 border-lime-500/30':i===3?'bg-yellow-500/20 text-yellow-400 border-yellow-500/30':i===4?'bg-orange-500/20 text-orange-400 border-orange-500/30':'bg-red-500/20 text-red-400 border-red-500/30'}">${i}</button>`).join('')}
                         </div>
-                        
-                        <button id="submit-journal-${exId}" onclick="saveToJournal('${exId}')" disabled class="w-full btn-gold py-4 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(255,195,0,0.2)] opacity-50 cursor-not-allowed transition-all">
-                            Asentar en Journal
-                        </button>
-                    </div>
-
+                        <button id="submit-journal-${exId}" onclick="saveToJournal('${exId}')" disabled class="w-full btn-gold py-4 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(255,195,0,0.2)] opacity-50 cursor-not-allowed transition-all">Asentar en Journal</button>
+                    </div>` : `
+                    <div class="border-t border-white/10 pt-4 text-center">
+                        <p class="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Bloque Registrado (RPE: ${memState.rpe})</p>
+                    </div>`}
                 </div>
             </div>
         `;
@@ -273,7 +345,11 @@ function renderRoutineForSelectedDay() {
 
 function updateProgressBar() {
     const routine = currentWeekData[selectedDay];
-    if (!routine || !routine.ejercicios || routine.ejercicios.length === 0) return;
+    if (!routine || !routine.ejercicios || routine.ejercicios.length === 0) {
+        document.getElementById('workout-progress-bar').style.width = `0%`;
+        document.getElementById('workout-progress-text').textContent = `0%`;
+        return;
+    }
 
     const total = routine.ejercicios.length;
     const completed = completedExercises.size;
@@ -292,7 +368,7 @@ function updateProgressBar() {
 }
 
 // ==========================================
-// SIMULADOR DE DATOS (MOCK)
+// SIMULADOR
 // ==========================================
 const MOCK_ROUTINE_DATA = {
     1: {
@@ -306,7 +382,6 @@ const MOCK_ROUTINE_DATA = {
 };
 
 window.addEventListener('DOMContentLoaded', async () => {
-    // Lectura múltiple de llaves JWT por seguridad
     const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token') || localStorage.getItem('token');
     if (!token) { window.location.href = '/apps/start/login.html'; return; }
 
@@ -314,7 +389,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     selectedDay = today === 0 ? 7 : today; 
 
     try {
-        // Petición transparente al Middleware
         const response = await fetch(`${API_BASE_URL}/api/client/routines`);
         if (response.ok) {
             const data = await response.json();
