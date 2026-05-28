@@ -1,171 +1,103 @@
-<!DOCTYPE html>
-<html lang="es" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GYMENEZ | Expediente Biométrico</title>
+<!-- SECCIÓN MAESTRA: LABORATORIO BIOMÉTRICO INTEGRADO -->
+<div class="w-full max-w-5xl mx-auto space-y-6 px-2 md:px-0">
     
-    <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/static/css/auth.css">
-    <link rel="stylesheet" href="/static/css/profile.css">
-</head>
-<body class="selection:bg-[#FFC300] selection:text-black overflow-x-hidden min-h-screen flex flex-col">
-
-    <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-4 md:px-6 py-2 md:py-3 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none text-center w-11/12 max-w-[350px] border border-white/10"></div>
-
-    <div class="fixed inset-0 bg-[url('/static/img/backgrounds/FONDO.png')] bg-cover bg-center opacity-20 -z-10 mix-blend-screen grayscale"></div>
-    <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/50 via-[#030305]/90 to-[#030305] -z-10"></div>
-
-    <header class="w-full border-b border-white/5 bg-black/30 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
-            <div class="flex items-center gap-2 md:gap-3">
-                <h1 class="text-lg md:text-xl font-black uppercase tracking-tighter block">
-                    <span class="text-[#FFC300]">GYM</span><span class="text-white">ENEZ</span>
-                </h1>
-            </div>
-            <a href="/apps/start/inicio.html" class="px-5 py-2 md:px-6 md:py-2.5 rounded-full border border-white/10 text-white font-bold text-[9px] md:text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition shadow-[0_0_15px_rgba(255,255,255,0.05)]">
-                Volver al Hub
-            </a>
+    <!-- CONTENEDOR DUAL: MÉTRICAS BASE Y RESUMEN -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Tarjeta: Peso -->
+        <div class="p-4 rounded-2xl border border-white/5 bg-black/40 backdrop-blur-md text-center">
+            <span class="text-[8px] font-black uppercase text-gray-500 tracking-widest block mb-1">Peso Corporal</span>
+            <span id="view-weight" class="text-2xl font-black text-white font-mono">--</span>
+            <span class="text-[9px] font-bold text-gray-400 block mt-0.5">KG</span>
         </div>
-    </header>
+        <!-- Tarjeta: Altura -->
+        <div class="p-4 rounded-2xl border border-white/5 bg-black/40 backdrop-blur-md text-center">
+            <span class="text-[8px] font-black uppercase text-gray-500 tracking-widest block mb-1">Estatura</span>
+            <span id="view-height" class="text-2xl font-black text-white font-mono">--</span>
+            <span class="text-[9px] font-bold text-gray-400 block mt-0.5">CM</span>
+        </div>
+        <!-- Tarjeta: Edad Automatizada -->
+        <div class="p-4 rounded-2xl border border-white/5 bg-black/40 backdrop-blur-md text-center">
+            <span class="text-[8px] font-black uppercase text-cyan-500 tracking-widest block mb-1">Edad Cronológica</span>
+            <span id="view-age" class="text-2xl font-black text-cyan-400 font-mono">--</span>
+            <span class="text-[9px] font-bold text-cyan-500/70 block mt-0.5">AÑOS</span>
+        </div>
+    </div>
 
-    <main class="max-w-7xl mx-auto w-full px-4 md:px-6 py-8 md:py-12 flex-grow">
+    <!-- REJILLA ANATÓMICA: TREN SUPERIOR E INFERIOR -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        <!-- Título Superior -->
-        <div class="mb-8 md:mb-10 fade-in-up" style="animation-delay: 0.1s;">
-            <p class="text-[#FFC300] text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] mb-1 md:mb-2">Expediente del Atleta</p>
-            <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none break-words">
-                Perfil <span class="text-white">Biométrico</span>
-            </h2>
-        </div>
-
-        <!-- Spinner de Carga Inicial -->
-        <div id="loading-spinner" class="flex flex-col items-center justify-center py-20 fade-in-up">
-            <div class="w-12 h-12 border-4 border-white/10 border-t-[#FFC300] rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(255,195,0,0.5)]"></div>
-            <p class="text-gray-500 text-[10px] md:text-xs font-bold uppercase tracking-widest">Sincronizando Data...</p>
-        </div>
-
-        <!-- Contenedor del Perfil (Oculto hasta cargar) -->
-        <div id="profile-content" class="hidden flex-col gap-4 md:gap-6">
-            
-            <!-- Botón Dinámico: Solo aparece si NO hay métricas -->
-            <div id="request-metrics-container" class="hidden fade-in-up" style="animation-delay: 0.15s;">
-                <a href="/apps/user/goals.html" class="inline-flex items-center justify-center gap-3 btn-gold px-6 md:px-8 py-3.5 rounded-2xl text-[10px] md:text-xs uppercase font-black tracking-[0.2em] shadow-[0_0_20px_rgba(255,195,0,0.2)]">
-                    <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    Solicitar Mediciones
-                </a>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-auto">
-                <!-- 1. IDENTIDAD BASE -->
-                <div class="md:col-span-2 lg:col-span-2 glass-panel bento-card rounded-[24px] md:rounded-[32px] p-6 md:p-8 flex flex-col justify-between relative overflow-hidden fade-in-up" style="animation-delay: 0.2s;">
-                    <div class="absolute top-0 right-0 p-6 md:p-8 opacity-5 pointer-events-none">
-                        <svg class="w-40 h-40 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                    </div>
-                    
-                    <div class="relative z-10">
-                        <span id="p-subscription" class="px-3 py-1 bg-[#FFC300]/10 text-[#FFC300] text-[8px] md:text-[9px] font-black rounded border border-[#FFC300]/20 uppercase tracking-widest inline-block mb-4 shadow-sm">VALIDANDO PLAN...</span>
-                        <h3 id="p-fullname" class="text-2xl md:text-4xl font-black uppercase tracking-tighter mb-1 text-white break-words">--</h3>
-                        <p id="p-email" class="text-gray-400 text-xs md:text-sm font-medium tracking-wide break-words">--</p>
-                    </div>
-                    
-                    <div class="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-white/10 pt-6 relative z-10">
-                        <div>
-                            <p class="text-[8px] md:text-[9px] text-gray-500 uppercase font-black tracking-widest">Nacimiento</p>
-                            <p id="p-dob" class="text-white font-bold text-sm mt-1">--</p>
-                        </div>
-                        <div>
-                            <p class="text-[8px] md:text-[9px] text-gray-500 uppercase font-black tracking-widest">Sexo Biológico</p>
-                            <p id="p-sex" class="text-white font-bold text-sm mt-1">--</p>
-                        </div>
-                        <div class="col-span-2 sm:col-span-1">
-                            <p class="text-[8px] md:text-[9px] text-gray-500 uppercase font-black tracking-widest">Activo Desde</p>
-                            <p id="p-active-since" class="text-emerald-400 font-bold text-sm mt-1">--</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. MÉTRICAS BASE -->
-                <div id="card-metrics-base" class="md:col-span-1 lg:col-span-2 glass-panel bento-card rounded-[24px] md:rounded-[32px] p-6 md:p-8 flex flex-col justify-center relative overflow-hidden bg-gradient-to-br from-white/5 to-transparent fade-in-up" style="animation-delay: 0.3s;">
-                    <h3 class="text-[9px] md:text-[10px] text-gray-500 font-black uppercase tracking-widest mb-6 text-center sm:text-left flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-white"></span> Métricas Base
-                    </h3>
-                    <div class="grid grid-cols-3 gap-2 md:gap-4 text-center relative z-10">
-                        <div>
-                            <p id="m-peso" class="data-value text-3xl lg:text-5xl font-black text-[#FFC300] tracking-tighter">--</p>
-                            <p class="text-[8px] md:text-[9px] text-gray-400 uppercase font-bold tracking-widest mt-2">Peso (KG)</p>
-                        </div>
-                        <div class="border-l border-r border-white/10">
-                            <p id="m-estatura" class="data-value text-3xl lg:text-5xl font-black text-white tracking-tighter">--</p>
-                            <p class="text-[8px] md:text-[9px] text-gray-400 uppercase font-bold tracking-widest mt-2">Altura (CM)</p>
-                        </div>
-                        <div>
-                            <p id="m-edad" class="data-value text-3xl lg:text-5xl font-black text-white tracking-tighter">--</p>
-                            <p class="text-[8px] md:text-[9px] text-gray-400 uppercase font-bold tracking-widest mt-2">Edad</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. TREN SUPERIOR -->
-                <div id="card-upper-body" class="md:col-span-1 lg:col-span-2 glass-panel bento-card rounded-[24px] md:rounded-[32px] p-6 md:p-8 fade-in-up relative overflow-hidden" style="animation-delay: 0.4s;">
-                    <h3 class="text-base md:text-lg font-black uppercase tracking-tighter text-white mb-6 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8]"></span> Tren Superior
-                    </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 relative z-10">
-                        <div class="metric-row"><span class="label">Cuello</span><span id="m-cuello" class="data-value value">--</span></div>
-                        <div class="metric-row"><span class="label">Espalda</span><span id="m-espalda" class="data-value value">--</span></div>
-                        <div class="metric-row"><span class="label">Tórax</span><span id="m-torax" class="data-value value">--</span></div>
-                        <div class="metric-row"><span class="label">Abdomen</span><span id="m-abdomen" class="data-value value">--</span></div>
-                        <div class="metric-row"><span class="label">Brazo (D/I)</span><span class="value"><span id="m-brazo_der" class="data-value">--</span> / <span id="m-brazo_izq" class="data-value">--</span></span></div>
-                        <div class="metric-row"><span class="label">Antebrazo (D/I)</span><span class="value"><span id="m-antebrazo_der" class="data-value">--</span> / <span id="m-antebrazo_izq" class="data-value">--</span></span></div>
-                    </div>
-                </div>
-
-                <!-- 4. TREN INFERIOR -->
-                <div id="card-lower-body" class="md:col-span-1 lg:col-span-2 glass-panel bento-card rounded-[24px] md:rounded-[32px] p-6 md:p-8 fade-in-up relative overflow-hidden" style="animation-delay: 0.5s;">
-                    <h3 class="text-base md:text-lg font-black uppercase tracking-tighter text-white mb-6 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]"></span> Tren Inferior
-                    </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 relative z-10">
-                        <div class="metric-row"><span class="label">Cintura</span><span id="m-cintura" class="data-value value">--</span></div>
-                        <div class="hidden sm:block"></div> 
-                        <div class="metric-row"><span class="label">Fémur (D/I)</span><span class="value"><span id="m-femur_der" class="data-value">--</span> / <span id="m-femur_izq" class="data-value">--</span></span></div>
-                        <div class="metric-row"><span class="label">Tibia (D/I)</span><span class="value"><span id="m-tibia_der" class="data-value">--</span> / <span id="m-tibia_izq" class="data-value">--</span></span></div>
-                    </div>
-                </div>
-
-                <!-- 5. FICHA MÉDICA -->
-                <div id="card-medical" class="md:col-span-3 lg:col-span-4 glass-panel bento-card border-red-500/20 rounded-[24px] md:rounded-[32px] p-6 md:p-8 fade-in-up relative overflow-hidden" style="animation-delay: 0.6s;">
-                    <h3 class="text-base md:text-lg font-black uppercase tracking-tighter text-red-400 mb-6 flex items-center gap-2">
-                        <svg class="w-5 h-5 drop-shadow-[0_0_10px_rgba(248,113,113,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        Ficha Médica & Observaciones Críticas
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 relative z-10">
-                        <div class="bg-black/40 p-5 rounded-2xl border border-white/5 hover:border-white/10 transition">
-                            <p class="text-[9px] md:text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">Alergias</p>
-                            <p id="m-alergias" class="data-value text-xs md:text-sm text-gray-300 leading-relaxed break-words">--</p>
-                        </div>
-                        <div class="bg-black/40 p-5 rounded-2xl border border-white/5 hover:border-white/10 transition">
-                            <p class="text-[9px] md:text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">Enfermedades Crónicas</p>
-                            <p id="m-enfermedades" class="data-value text-xs md:text-sm text-gray-300 leading-relaxed break-words">--</p>
-                        </div>
-                        <div class="bg-black/40 p-5 rounded-2xl border border-white/5 hover:border-white/10 transition">
-                            <p class="text-[9px] md:text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">Otras Notas</p>
-                            <p id="m-otros" class="data-value text-xs md:text-sm text-gray-300 leading-relaxed break-words">--</p>
-                        </div>
-                    </div>
-                </div>
-
+        <!-- BLOQUE: TREN SUPERIOR -->
+        <div class="p-5 rounded-2xl border border-white/5 bg-black/30 backdrop-blur-md space-y-3">
+            <h4 class="text-[10px] font-black uppercase text-white tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span> Tren Superior
+            </h4>
+            <div class="space-y-2.5 text-xs">
+                <div class="flex justify-between items-center py-1 border-b border-white/[0.02]"><span class="text-gray-400 font-medium">Cuello</span><span id="view-neck" class="font-bold font-mono text-white">--</span></div>
+                <div class="flex justify-between items-center py-1 border-b border-white/[0.02]"><span class="text-gray-400 font-medium">Espalda</span><span id="view-back" class="font-bold font-mono text-white">--</span></div>
+                <div class="flex justify-between items-center py-1 border-b border-white/[0.02]"><span class="text-gray-400 font-medium">Tórax</span><span id="view-thorax" class="font-bold font-mono text-white">--</span></div>
+                <div class="flex justify-between items-center py-1 border-b border-white/[0.02]"><span class="text-gray-400 font-medium">Abdomen</span><span id="view-abdomen" class="font-bold font-mono text-white">--</span></div>
+                <div class="flex justify-between items-center py-1 border-b border-white/[0.02]"><span class="text-gray-400 font-medium">Brazo (D / I)</span><span class="font-bold font-mono text-white"><span id="view-bicep-r">--</span> / <span id="view-bicep-l">--</span> cm</span></div>
+                <div class="flex justify-between items-center py-1"><span class="text-gray-400 font-medium">Antebrazo (D / I)</span><span class="font-bold font-mono text-white"><span id="view-forearm-r">--</span> / <span id="view-forearm-l">--</span> cm</span></div>
             </div>
         </div>
-    </main>
-    
-    <footer class="text-center py-8 border-t border-white/5 mt-auto bg-[#030305]/80 backdrop-blur-md">
-        <p class="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] text-gray-600">© 2026 GYMENEZ BIOMETRICS • PRIVACIDAD MÉDICA</p>
-    </footer>
 
-    <script src="/static/js/auth/auth_middleware.js"></script>
-    <script src="/static/js/dashboard/profile.js"></script>
-</body>
-</html>
+        <!-- CONTAINER CONFIGURADO: TREN INFERIOR Y CAPACIDAD MECÁNICA ABAJO -->
+        <div class="space-y-6">
+            <!-- BLOQUE: TREN INFERIOR -->
+            <div class="p-5 rounded-2xl border border-white/5 bg-black/30 backdrop-blur-md space-y-3">
+                <h4 class="text-[10px] font-black uppercase text-white tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#FFC300]"></span> Tren Inferior
+                </h4>
+                <div class="space-y-2.5 text-xs">
+                    <div class="flex justify-between items-center py-1 border-b border-white/[0.02]"><span class="text-[#FFC300] font-bold">Cintura</span><span id="view-waist" class="font-black font-mono text-[#FFC300]">--</span></div>
+                    <div class="flex justify-between items-center py-1 border-b border-white/[0.02]"><span class="text-gray-400 font-medium">Fémur (D / I)</span><span class="font-bold font-mono text-white"><span id="view-femur-r">--</span> / <span id="view-femur-l">--</span> cm</span></div>
+                    <div class="flex justify-between items-center py-1"><span class="text-gray-400 font-medium">Tibia (D / I)</span><span class="font-bold font-mono text-white"><span id="view-tibia-r">--</span> / <span id="view-tibia-l">--</span> cm</span></div>
+                </div>
+            </div>
+
+            <!-- 🌟 ADICIÓN REQUERIDA: CAPACIDAD MECÁNICA (1RM) ABAJO DEL TREN INFERIOR -->
+            <div class="p-5 rounded-2xl border border-white/5 bg-black/30 backdrop-blur-md space-y-3">
+                <h4 class="text-[10px] font-black uppercase text-sky-400 tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span> Capacidad Mecánica (1RM Est.)
+                </h4>
+                <div class="grid grid-cols-3 gap-2 text-center pt-1">
+                    <div class="bg-black/40 p-2 rounded-xl border border-white/5">
+                        <span class="block text-[7px] font-black text-gray-500 uppercase tracking-wider">Empuje</span>
+                        <span id="view-push" class="text-xs font-mono font-black text-sky-400">--</span>
+                    </div>
+                    <div class="bg-black/40 p-2 rounded-xl border border-white/5">
+                        <span class="block text-[7px] font-black text-gray-500 uppercase tracking-wider">Tracción</span>
+                        <span id="view-pull" class="text-xs font-mono font-black text-sky-400">--</span>
+                    </div>
+                    <div class="bg-black/40 p-2 rounded-xl border border-white/5">
+                        <span class="block text-[7px] font-black text-gray-500 uppercase tracking-wider">Pierna</span>
+                        <span id="view-legs" class="text-xs font-mono font-black text-sky-400">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BLOQUE: FICHA MÉDICA Y RESTRICCIONES CRÍTICAS (ANCHO COMPLETO) -->
+    <div class="p-5 rounded-2xl border border-red-500/10 bg-red-950/5 backdrop-blur-md space-y-4">
+        <h4 class="text-[10px] font-black uppercase text-red-400 tracking-widest border-b border-red-500/10 pb-2 flex items-center gap-2">
+            ⚠️ Ficha Médica & Observaciones Críticas
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div class="bg-black/20 p-3 rounded-xl border border-white/5">
+                <span class="block text-[8px] font-black text-gray-500 uppercase tracking-wider mb-0.5">Alergias</span>
+                <p id="view-allergies" class="text-white font-bold">Ninguna registrada.</p>
+            </div>
+            <div class="bg-black/20 p-3 rounded-xl border border-white/5">
+                <span class="block text-[8px] font-black text-gray-500 uppercase tracking-wider mb-0.5">Enfermedades Crónicas</span>
+                <p id="view-diseases" class="text-white font-bold">Ninguna registrada.</p>
+            </div>
+            <div class="md:col-span-2 bg-black/20 p-3 rounded-xl border border-white/5">
+                <span class="block text-[8px] font-black text-gray-500 uppercase tracking-wider mb-1">Otras Notas</span>
+                <p id="view-medical-notes" class="text-gray-300 leading-relaxed font-medium whitespace-pre-line">Sin observaciones.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
