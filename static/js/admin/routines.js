@@ -12,7 +12,7 @@ let currentRoutineExercises = [];
 let currentRoutineUsers = [];
 
 // ==========================================
-// 🛠️ UTILIDADES DE UI Y CORRECCIÓN
+// 🛠️ UTILIDADES DE INTERFAZ (UI)
 // ==========================================
 function showUIFeedback(message, type = 'success') {
     const box = document.getElementById('message-box');
@@ -35,9 +35,6 @@ function toggleModal(modalId, show) {
     }
 }
 
-// ==========================================
-// 🎛️ CONTROL DE PESTAÑAS (TRIPLE EJE)
-// ==========================================
 function switchTab(tab) {
     const btnR = document.getElementById('tab-btn-routines');
     const btnE = document.getElementById('tab-btn-exercises');
@@ -47,7 +44,6 @@ function switchTab(tab) {
     const pnlE = document.getElementById('panel-exercises');
     const pnlV = document.getElementById('panel-recovery');
 
-    // Limpieza de estados visuales activos
     [btnR, btnE, btnV].forEach(b => b.className = "px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-colors whitespace-nowrap");
     [pnlR, pnlE, pnlV].forEach(p => p.classList.add('hidden'));
 
@@ -64,7 +60,7 @@ function switchTab(tab) {
 }
 
 // ==========================================
-// 📡 SYNC SÍNCRONO CON FIRESTORE CLOUD
+// 📡 DESPACHO Y CONSULTA CLOUD (FIRESTORE)
 // ==========================================
 async function fetchAllData() {
     try {
@@ -94,7 +90,7 @@ async function fetchAllData() {
 }
 
 // ==========================================
-// 🧘 SECCIÓN: RECOVERY ROOM (GLOBAL TIERS)
+// 🧘 GESTIÓN: RECOVERY ROOM (GLOBAL TIERS)
 // ==========================================
 function renderRecovery(list) {
     const tbody = document.getElementById('recovery-tbody');
@@ -128,7 +124,7 @@ function openRecoveryModal(rec) {
     toggleModal('recovery-modal', true);
 }
 
-document.getElementById('recovery-form').addEventListener('submit', async (e) => {
+async function submitRecoveryForm(e) {
     e.preventDefault();
     const isEdit = document.getElementById('rec-is-edit').value === 'true';
     const recId = document.getElementById('rec-id').value;
@@ -154,19 +150,19 @@ document.getElementById('recovery-form').addEventListener('submit', async (e) =>
         } else showUIFeedback(data.error, 'error');
     } catch (e) { showUIFeedback("Falla de enlace perimetral.", 'error'); }
     btn.disabled = false; btn.textContent = 'Guardar Protocolo';
-});
+}
 
 async function deleteRecovery(id, name) {
-    if(!confirm(`⚠️ ¿Purgar permanentemente el protocolo global "${name}"?`)) return;
+    if(!confirm(`⚠️ ¿Eliminar el protocolo global "${name}"? Desaparecerá de todos los atletas.`)) return;
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/recovery/${id}`, { method: 'DELETE' });
         const data = await res.json();
-        if (data.success) { showUIFeedback("Protocolo eliminado."); fetchAllData(); }
+        if (data.success) { showUIFeedback("Protocolo depurado."); fetchAllData(); }
     } catch(e) {}
 }
 
 // ==========================================
-// 🏋️ SECCIÓN: BASE DE EJERCICIOS (BOT LAYER)
+// 🏋️ GESTIÓN: BASE DE EJERCICIOS (BOT LAYER)
 // ==========================================
 function renderExercises(list) {
     const tbody = document.getElementById('exercises-tbody');
@@ -192,12 +188,10 @@ function openExerciseModal(ex) {
     document.getElementById('ex-is-edit').value = 'true';
     document.getElementById('ex-modal-title').textContent = `Ficha Científica: ${ex.name}`;
     
-    // Inyección de campos comerciales
     document.getElementById('ex-name').value = ex.name || '';
     document.getElementById('ex-link').value = ex.link_tutorial || '';
     document.getElementById('ex-desc').value = ex.description || '';
 
-    // Inyección de selectores algorítmicos
     document.getElementById('ex-pattern').value = ex.movement_pattern || 'Empuje horizontal';
     document.getElementById('ex-main-muscle').value = ex.main_muscle || 'Pectoral';
     document.getElementById('ex-type').value = ex.type || 'Compuesto';
@@ -207,15 +201,12 @@ function openExerciseModal(ex) {
     document.getElementById('ex-fatigue').value = ex.systemic_fatigue || 'Baja';
     document.getElementById('ex-metabolic').value = ex.metabolic_demand || 'Baja';
     
-    // Nodos relacionales
     document.getElementById('ex-regression').value = ex.regression_exercise || '';
     document.getElementById('ex-progression').value = ex.progression_exercise || '';
 
-    // Switches booleanos de control de fuerza
     document.getElementById('ex-axial').checked = ex.axial_loading === true;
     document.getElementById('ex-unilateral').checked = ex.is_unilateral === true;
 
-    // Checkboxes indexados de articulaciones (Array)
     const joints = ex.joint_strain || [];
     document.querySelectorAll('input[name="ex_joint"]').forEach(cb => {
         cb.checked = joints.includes(cb.value);
@@ -224,7 +215,7 @@ function openExerciseModal(ex) {
     toggleModal('exercise-modal', true);
 }
 
-document.getElementById('exercise-form').addEventListener('submit', async (e) => {
+async function submitExerciseForm(e) {
     e.preventDefault();
     const isEdit = document.getElementById('ex-is-edit').value === 'true';
     const exId = document.getElementById('ex-id').value;
@@ -250,7 +241,6 @@ document.getElementById('exercise-form').addEventListener('submit', async (e) =>
         axial_loading: document.getElementById('ex-axial').checked,
         is_unilateral: document.getElementById('ex-unilateral').checked,
         joint_strain: selectedJoints,
-        // Inyecta el rango ideal automatizado para evitar saturación de clicks en panel administrador
         ideal_rep_ranges: typeValue === 'Compuesto' ? ["Fuerza (1-5)", "Hipertrofia (6-12)"] : ["Hipertrofia (6-12)", "Resistencia (15+)"]
     };
 
@@ -267,10 +257,10 @@ document.getElementById('exercise-form').addEventListener('submit', async (e) =>
         } else showUIFeedback(data.error, 'error');
     } catch (e) { showUIFeedback("Error de comunicación perimetral.", 'error'); }
     btn.disabled = false; btn.textContent = 'Guardar Ficha Ejercicio';
-});
+}
 
 async function deleteExercise(id, name) {
-    if(!confirm(`⚠️ ¿Eliminar permanentemente el ejercicio "${name}"? El bot de entrenamiento se reajustará de forma inmediata.`)) return;
+    if(!confirm(`⚠️ ¿Eliminar el ejercicio "${name}"? El bot se reajustará automáticamente.`)) return;
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/exercise/${id}`, { method: 'DELETE' });
         const data = await res.json();
@@ -279,7 +269,7 @@ async function deleteExercise(id, name) {
 }
 
 // ==========================================
-// 📋 SECCIÓN: ENSAMBLADOR DE RUTINAS BASE
+// 📋 GESTIÓN: ENSAMBLADOR DE RUTINAS BASE
 // ==========================================
 function renderRoutines(list) {
     const tbody = document.getElementById('routines-tbody');
@@ -328,7 +318,7 @@ function renderTransientExercises(searchTerm = '') {
         if (currentRoutineExercises.find(x => x.exercise_id === ex.id)) return;
         const div = document.createElement('div');
         div.className = "flex justify-between items-center p-2 rounded bg-black/40 border border-white/5 hover:border-white/20 transition cursor-pointer";
-        div.innerHTML = `<span class="text-[10px] font-bold text-gray-300 truncate mr-2">${ex.name}</span><button type="button" onclick="addExerciseToRoutine('${ex.id}', '${ex.name.replace(/'/g, "\\'")}')" class="text-[10px] text-emerald-400 font-black tracking-widest">+</button>`;
+        div.innerHTML = `<span class="text-[10px] font-bold text-gray-300 truncate mr-2">${ex.name}</span><button type="button" onclick="addExerciseToRoutine('${ex.id}', '${ex.name.replace(/'/g, "\\'")}')" class="text-[10px] text-emerald-400 font-black">+</button>`;
         availableDiv.appendChild(div);
     });
 
@@ -362,7 +352,7 @@ function renderAssemblerUsers() {
 }
 function toggleUserToRoutine(id) { if(currentRoutineUsers.includes(id)) { currentRoutineUsers = currentRoutineUsers.filter(x => x !== id); } else { currentRoutineUsers.push(id); } renderAssemblerUsers(); }
 
-document.getElementById('routine-form').addEventListener('submit', async (e) => {
+async function submitRoutineForm(e) {
     e.preventDefault(); const isEdit = document.getElementById('rt-is-edit').value === 'true'; const rtId = document.getElementById('rt-id').value; const btn = document.getElementById('rt-submit-btn');
     const selectedDays = Array.from(document.querySelectorAll('input[name="rt_days"]:checked')).map(cb => cb.value);
 
@@ -377,28 +367,55 @@ document.getElementById('routine-form').addEventListener('submit', async (e) => 
     try {
         const res = await fetch(url, { method: isEdit ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
         const data = await res.json();
-        if (data.success) { toggleModal('routine-modal', false); showUIFeedback("Programa físico de entrenamiento ensamblado."); fetchAllData(); } else showUIFeedback(data.error, 'error');
+        if (data.success) { toggleModal('routine-modal', false); showUIFeedback("Programa de entrenamiento ensamblado."); fetchAllData(); } else showUIFeedback(data.error, 'error');
     } catch (e) { showUIFeedback("Error de red", 'error'); }
     btn.disabled = false; btn.textContent = 'Ensamblar Rutina';
-});
+}
 
 async function deleteRoutine(id, name) {
-    if(!confirm(`⚠️ ¿Purgar la rutina "${name}"? Todos los atletas perderán acceso instantáneo.`)) return;
+    if(!confirm(`⚠️ ¿Purgar la rutina "${name}"? Los atletas asignados perderán el acceso.`)) return;
     try { const res = await fetch(`${API_BASE_URL}/api/admin/routine/${id}`, { method: 'DELETE' }); const data = await res.json(); if (data.success) { showUIFeedback("Rutina eliminada."); fetchAllData(); } } catch(e) {}
 }
 
 // ==========================================
-// 🚀 ORQUESTRADOR E INICIALIZACIÓN CORE
+// 🚀 INICIALIZADOR DE INTERFAZ GENERAL (DOM)
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('loaded');
     
-    // Listeners del sistema de pestañas nativo
+    // 1. Enlace de Pestañas (Tabs)
     document.getElementById('tab-btn-routines').addEventListener('click', () => switchTab('routines'));
     document.getElementById('tab-btn-exercises').addEventListener('click', () => switchTab('exercises'));
     document.getElementById('tab-btn-recovery').addEventListener('click', () => switchTab('recovery'));
 
-    // Filtros de búsqueda asíncronos en tiempo real
+    // 2. Controladores de Modales de Creación (¡Aquí se corrigió el problema!)
+    document.getElementById('add-routine-btn').addEventListener('click', () => {
+        document.getElementById('routine-form').reset();
+        document.getElementById('rt-id').value = '';
+        document.getElementById('rt-is-edit').value = 'false';
+        document.getElementById('rt-modal-title').textContent = 'Ensamblar Nueva Rutina';
+        currentRoutineExercises = []; currentRoutineUsers = [];
+        renderTransientExercises(); renderAssemblerUsers();
+        toggleModal('routine-modal', true);
+    });
+
+    document.getElementById('add-exercise-btn').addEventListener('click', () => {
+        document.getElementById('exercise-form').reset();
+        document.getElementById('ex-id').value = '';
+        document.getElementById('ex-is-edit').value = 'false';
+        document.getElementById('ex-modal-title').textContent = 'Inyectar Ejercicio Científico';
+        toggleModal('exercise-modal', true);
+    });
+
+    document.getElementById('add-recovery-btn').addEventListener('click', () => {
+        document.getElementById('recovery-form').reset();
+        document.getElementById('rec-id').value = '';
+        document.getElementById('rec-is-edit').value = 'false';
+        document.getElementById('rec-modal-title').textContent = 'Inyectar Protocolo Recovery';
+        toggleModal('recovery-modal', true);
+    });
+
+    // 3. Filtros de Búsqueda Dinámicos en Tiempo Real
     document.getElementById('exercise-search').addEventListener('input', e => {
         const v = e.target.value.toLowerCase().trim();
         renderExercises(allExercises.filter(ex => (ex.name||'').toLowerCase().includes(v)));
@@ -411,18 +428,13 @@ window.addEventListener('DOMContentLoaded', () => {
         const v = e.target.value.toLowerCase().trim();
         renderRecovery(allRecovery.filter(r => (r.name||'').toLowerCase().includes(v)));
     });
-
-    // Enlace del buscador interno del ensamblador
     document.getElementById('rt-search-ex').addEventListener('input', e => renderTransientExercises(e.target.value));
 
-    // Desencadenador del modal de creación de ejercicios limpios
-    document.getElementById('add-exercise-btn').addEventListener('click', () => {
-        document.getElementById('exercise-form').reset();
-        document.getElementById('ex-id').value = '';
-        document.getElementById('ex-is-edit').value = 'false';
-        document.getElementById('ex-modal-title').textContent = 'Inyectar Ejercicio Científico';
-        toggleModal('exercise-modal', true);
-    });
+    // 4. Enlace del Envío de Formularios (Form Submits)
+    document.getElementById('exercise-form').addEventListener('submit', submitExerciseForm);
+    document.getElementById('routine-form').addEventListener('submit', submitRoutineForm);
+    document.getElementById('recovery-form').addEventListener('submit', submitRecoveryForm);
 
+    // 5. Carga síncrona inicial desde Firestore
     fetchAllData();
 });
