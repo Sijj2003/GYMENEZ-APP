@@ -1,67 +1,272 @@
-// Configuración de API
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
-// Variables Globales de Estado
 let currentWeekData = {};
 let selectedDay = 1;
-let completedExercises = new Set(); // Almacena los IDs de los ejercicios marcados
+let completedExercises = new Set();
+let exerciseStates = {}; // 🧠 ESTADO EN TIEMPO REAL PARA EL JOURNAL
 
-// Días de la Semana
 const DAYS = [
     { id: 1, label: "LUN" }, { id: 2, label: "MAR" }, 
     { id: 3, label: "MIE" }, { id: 4, label: "JUE" }, 
     { id: 5, label: "VIE" }, { id: 6, label: "SAB" }, { id: 7, label: "DOM" }
 ];
 
-// ==========================================
-// RENDERIZADO DEL SELECTOR DE DÍAS
-// ==========================================
+function showFeedback(msg, type='success') {
+    const box = document.getElementById('message-box');
+    box.textContent = msg;
+    box.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] transition-all duration-300 text-center border backdrop-blur-md w-11/12 max-w-[350px] ${type==='success'?'bg-emerald-950/90 text-emerald-400 border-emerald-500/30':'bg-red-950/90 text-red-400 border-red-500/30'}`;
+    box.style.opacity = '1'; box.style.transform = 'translate(-50%, 0)';
+    setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 3000);
+}
+
 function renderDaySelector() {
     const container = document.getElementById('day-selector');
     container.innerHTML = '';
-
     DAYS.forEach(day => {
         const btn = document.createElement('button');
         const isActive = day.id === selectedDay;
-        
-        btn.className = `px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border ${
-            isActive 
-            ? 'bg-[#FFC300] text-black border-[#FFC300] shadow-[0_0_15px_rgba(255,195,0,0.4)]' 
-            : 'bg-black/40 text-gray-500 border-white/5 hover:border-white/20 hover:text-white'
-        }`;
+        btn.className = `px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border ${isActive ? 'bg-[#FFC300] text-black border-[#FFC300] shadow-[0_0_15px_rgba(255,195,0,0.4)]' : 'bg-black/40 text-gray-500 border-white/5 hover:border-white/20 hover:text-white'}`;
         btn.textContent = day.label;
-        btn.onclick = () => {
-            selectedDay = day.id;
-            renderDaySelector(); // Re-dibujar botones
-            renderRoutineForSelectedDay(); // Cargar la rutina del día
-        };
-        
+        btn.onclick = () => { selectedDay = day.id; renderDaySelector(); renderRoutineForSelectedDay(); };
         container.appendChild(btn);
     });
 }
 
 // ==========================================
-// INTERACTIVIDAD Y PROGRESO
+// 🕹️ MECÁNICAS DE EJECUCIÓN (ACORDEÓN Y SETS)
 // ==========================================
-function toggleExerciseComplete(exerciseId) {
-    if (completedExercises.has(exerciseId)) {
-        completedExercises.delete(exerciseId);
+function toggleAccordion(exId) {
+    const content = document.getElementById(`acc-content-${exId}`);
+    const icon = document.getElementById(`acc-icon-${exId}`);
+    if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+        icon.style.transform = 'rotate(0deg)';
     } else {
-        completedExercises.add(exerciseId);
+        content.classList.add('expanded');
+        icon.style.transform = 'rotate(180deg)';
+    }
+}
+
+function toggleSetComplete(exId, setIndex) {
+    const btn = document.getElementById(`btn-set-${exId}-${setIndex}`);
+    const repInput = document.getElementById(`reps-${exId}-${setIndex}`);
+    const weightInput = document.getElementById(`weight-${exId}-${setIndex}`);
+
+    if(!repInput.value) { showFeedback('Ingresa las reps logradas primero.', 'error'); return; }
+
+    const isDone = exerciseStates[exId].sets[setIndex].done;
+    
+    if (!isDone) {
+        // Marcar Listo
+        exerciseStates[exId].sets[setIndex] = { done: true, reps: repInput.value, weight: weightInput.value || 0 };
+        btn.innerHTML = '✅';
+        btn.classList.replace('bg-white/5', 'bg-emerald-500/20');
+        btn.classList.replace('text-gray-400', 'text-emerald-400');
+        btn.classList.replace('border-white/10', 'border-emerald-500/50');
+        repInput.disabled = true; weightInput.disabled = true;
+    } else {
+        // Desmarcar
+        exerciseStates[exId].sets[setIndex].done = false;
+        btn.innerHTML = '⬜';
+        btn.classList.replace('bg-emerald-500/20', 'bg-white/5');
+        btn.classList.replace('text-emerald-400', 'text-gray-400');
+        btn.classList.replace('border-emerald-500/50', 'border-white/10');
+        repInput.disabled = false; weightInput.disabled = false;
+    }
+
+    checkAllSetsCompleted(exId);
+}
+
+function checkAllSetsCompleted(exId) {
+    const allDone = exerciseStates[exId].sets.every(set => set.done);
+    const rpeSection = document.getElementById(`rpe-section-${exId}`);
+    
+    if (allDone) {
+        rpeSection.classList.remove('hidden');
+        // Pequeña animación de entrada
+        setTimeout(() => { rpeSection.style.opacity = '1'; rpeSection.style.transform = 'translateY(0)'; }, 50);
+    } else {
+        rpeSection.classList.add('hidden');
+        rpeSection.style.opacity = '0'; rpeSection.style.transform = 'translateY(10px)';
+    }
+}
+
+function selectRPE(exId, value) {
+    exerciseStates[exId].rpe = value;
+    
+    // UI Update para botones RPE
+    for(let i=1; i<=5; i++) {
+        const btn = document.getElementById(`rpe-btn-${exId}-${i}`);
+        if(i === value) {
+            btn.classList.add('ring-2', 'ring-white', 'scale-110');
+        } else {
+            btn.classList.remove('ring-2', 'ring-white', 'scale-110');
+        }
     }
     
-    // Actualizar UI de la tarjeta
-    const card = document.getElementById(`ex-card-${exerciseId}`);
-    const btn = document.getElementById(`ex-btn-${exerciseId}`);
+    // Habilitar Botón de Guardado
+    const submitBtn = document.getElementById(`submit-journal-${exId}`);
+    submitBtn.disabled = false;
+    submitBtn.classList.replace('opacity-50', 'opacity-100');
+    submitBtn.classList.replace('cursor-not-allowed', 'hover:scale-[1.02]');
+}
+
+async function saveToJournal(exId) {
+    if(!exerciseStates[exId].rpe) return;
     
-    if (completedExercises.has(exerciseId)) {
+    const submitBtn = document.getElementById(`submit-journal-${exId}`);
+    submitBtn.innerHTML = '<div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
+
+    // 📦 EMPAQUETADO DATA-DRIVEN PARA LA BD
+    const journalData = {
+        exercise_id: exId,
+        date: new Date().toISOString(),
+        rpe: exerciseStates[exId].rpe,
+        sets_execution: exerciseStates[exId].sets
+    };
+
+    try {
+        /* LÓGICA DE API FUTURA:
+        const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token');
+        await fetch(`${API_BASE_URL}/api/client/journal`, {
+            method: 'POST', headers: {'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+            body: JSON.stringify(journalData)
+        });
+        */
+        
+        // Simulación de delay de red
+        await new Promise(r => setTimeout(r, 600));
+
+        showFeedback('Sobrecarga registrada en el Journal.');
+        
+        // Efectos Visuales de Victoria
+        completedExercises.add(exId);
+        updateProgressBar();
+        toggleAccordion(exId); // Cerrar acordeón
+        
+        const card = document.getElementById(`ex-card-${exId}`);
         card.classList.add('exercise-done');
-        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Completado';
-    } else {
-        card.classList.remove('exercise-done');
-        btn.innerHTML = 'Marcar Completado';
+        
+        const statusBadge = document.getElementById(`badge-status-${exId}`);
+        statusBadge.textContent = 'COMPLETADO';
+        statusBadge.className = 'px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded text-[8px] font-black uppercase tracking-widest';
+
+    } catch(e) {
+        showFeedback('Error de conexión.', 'error');
+        submitBtn.innerHTML = 'Reintentar Guardado';
     }
+}
+
+// ==========================================
+// RENDERIZADOR DE RUTINA
+// ==========================================
+function renderRoutineForSelectedDay() {
+    completedExercises.clear();
+    exerciseStates = {};
+    
+    const titleEl = document.getElementById('routine-title'), descEl = document.getElementById('routine-desc');
+    const listEl = document.getElementById('exercises-list'), restState = document.getElementById('rest-day-state');
+    const routine = currentWeekData[selectedDay];
+
+    if (!routine || !routine.ejercicios || routine.ejercicios.length === 0) {
+        titleEl.textContent = "Sin Asignación"; descEl.textContent = "Fase de Recuperación Activa";
+        listEl.innerHTML = ''; listEl.classList.add('hidden');
+        restState.classList.remove('hidden'); restState.classList.add('flex');
+        document.getElementById('workout-progress-bar').style.width = `0%`; document.getElementById('workout-progress-text').textContent = `0%`;
+        return;
+    }
+
+    restState.classList.add('hidden'); restState.classList.remove('flex');
+    listEl.classList.remove('hidden');
+    titleEl.textContent = routine.titulo || "Bloque de Entrenamiento";
+    descEl.textContent = routine.enfoque || "Ejecución Táctica";
+    listEl.innerHTML = '';
+
+    routine.ejercicios.forEach((ex, index) => {
+        const exId = ex.id || `temp-${index}`;
+        const numSets = parseInt(ex.series) || 3;
+        
+        // Inicializar Estado de Memoria para este ejercicio
+        exerciseStates[exId] = { rpe: null, sets: Array(numSets).fill({done: false, reps: 0, weight: 0}) };
+
+        // Generador de HTML para las Rondas (Series)
+        let setsHtml = '';
+        for(let i=0; i<numSets; i++) {
+            setsHtml += `
+            <div class="flex items-center gap-2 mb-2 p-2 rounded-lg bg-black/40 border border-white/5">
+                <span class="w-6 text-center text-[10px] font-black text-gray-500">${i+1}</span>
+                <div class="flex-1 flex gap-2">
+                    <div class="relative w-full">
+                        <span class="absolute -top-2 left-2 text-[7px] font-black text-gray-500 uppercase bg-black px-1">Reps (${ex.repeticiones})</span>
+                        <input type="number" id="reps-${exId}-${i}" class="w-full telemetry-input p-2.5 rounded-lg text-sm" placeholder="-" />
+                    </div>
+                    <div class="relative w-full">
+                        <span class="absolute -top-2 left-2 text-[7px] font-black text-gray-500 uppercase bg-black px-1">KG</span>
+                        <input type="number" id="weight-${exId}-${i}" class="w-full telemetry-input p-2.5 rounded-lg text-sm" placeholder="0" />
+                    </div>
+                </div>
+                <button id="btn-set-${exId}-${i}" onclick="toggleSetComplete('${exId}', ${i})" class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 text-gray-400 font-bold text-xs flex items-center justify-center transition-colors">⬜</button>
+            </div>`;
+        }
+
+        const card = document.createElement('div');
+        card.id = `ex-card-${exId}`;
+        card.className = "glass-panel rounded-2xl border border-white/5 transition-all duration-500 overflow-hidden";
+        
+        card.innerHTML = `
+            <!-- CABECERA (Siempre visible, clickeable) -->
+            <div class="p-5 cursor-pointer flex justify-between items-center group" onclick="toggleAccordion('${exId}')">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#FFC300] font-black text-sm">
+                        ${index + 1}
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[7px] font-black uppercase tracking-widest text-gray-400">${ex.grupo_muscular || 'Global'}</span>
+                            <span id="badge-status-${exId}" class="px-2 py-0.5 bg-transparent border border-gray-600 text-gray-500 rounded text-[7px] font-black uppercase tracking-widest">Pendiente</span>
+                        </div>
+                        <h4 class="ex-header-title text-lg font-black uppercase tracking-tighter text-white group-hover:text-[#FFC300] transition-colors">${ex.nombre}</h4>
+                        <p class="text-[9px] font-bold text-gray-500 tracking-widest uppercase mt-1">${ex.series} Series • Objetivo: ${ex.repeticiones} Reps</p>
+                    </div>
+                </div>
+                <svg id="acc-icon-${exId}" class="w-5 h-5 text-gray-500 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+
+            <!-- CUERPO EXPANDIBLE (Acordeón) -->
+            <div id="acc-content-${exId}" class="accordion-content bg-black/20 border-t border-white/5">
+                <div class="p-5">
+                    
+                    ${ex.link_tutorial ? `
+                    <a href="${ex.link_tutorial}" target="_blank" class="w-full mb-6 py-3 rounded-xl bg-white/5 border border-white/10 flex justify-center items-center gap-2 text-xs font-black uppercase tracking-widest text-white hover:bg-white/10 transition-colors">
+                        <svg class="w-4 h-4 text-[#FFC300]" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"/></svg> Ver Tutorial de Ejecución
+                    </a>` : ''}
+
+                    <div class="mb-6">
+                        ${setsHtml}
+                    </div>
+                    
+                    <!-- ZONA RPE OCULTA -->
+                    <div id="rpe-section-${exId}" class="hidden opacity-0 transform translate-y-2 transition-all duration-500 border-t border-white/10 pt-5">
+                        <p class="text-center text-[10px] font-black uppercase tracking-widest text-[#FFC300] mb-3">¿RPE - Dificultad Percibida?</p>
+                        <div class="flex justify-between gap-2 mb-6">
+                            <button id="rpe-btn-${exId}-1" onclick="selectRPE('${exId}', 1)" class="flex-1 py-3 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-black transition-all">1</button>
+                            <button id="rpe-btn-${exId}-2" onclick="selectRPE('${exId}', 2)" class="flex-1 py-3 rounded-lg bg-lime-500/20 text-lime-400 border border-lime-500/30 text-xs font-black transition-all">2</button>
+                            <button id="rpe-btn-${exId}-3" onclick="selectRPE('${exId}', 3)" class="flex-1 py-3 rounded-lg bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-xs font-black transition-all">3</button>
+                            <button id="rpe-btn-${exId}-4" onclick="selectRPE('${exId}', 4)" class="flex-1 py-3 rounded-lg bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs font-black transition-all">4</button>
+                            <button id="rpe-btn-${exId}-5" onclick="selectRPE('${exId}', 5)" class="flex-1 py-3 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-black transition-all">5</button>
+                        </div>
+                        
+                        <button id="submit-journal-${exId}" onclick="saveToJournal('${exId}')" disabled class="w-full btn-gold py-4 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(255,195,0,0.2)] opacity-50 cursor-not-allowed transition-all">
+                            Asentar en Journal
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        `;
+        listEl.appendChild(card);
+    });
 
     updateProgressBar();
 }
@@ -77,7 +282,6 @@ function updateProgressBar() {
     document.getElementById('workout-progress-bar').style.width = `${pct}%`;
     document.getElementById('workout-progress-text').textContent = `${pct}%`;
     
-    // Cambiar a verde si se completa todo
     if (pct === 100) {
         document.getElementById('workout-progress-bar').classList.replace('bg-[#FFC300]', 'bg-emerald-500');
         document.getElementById('workout-progress-text').classList.replace('text-[#FFC300]', 'text-emerald-500');
@@ -88,145 +292,44 @@ function updateProgressBar() {
 }
 
 // ==========================================
-// RENDERIZADO DE RUTINA DIARIA
-// ==========================================
-function renderRoutineForSelectedDay() {
-    completedExercises.clear(); // Limpiar progreso al cambiar de día
-    
-    const titleEl = document.getElementById('routine-title');
-    const descEl = document.getElementById('routine-desc');
-    const listEl = document.getElementById('exercises-list');
-    const restState = document.getElementById('rest-day-state');
-    
-    const routine = currentWeekData[selectedDay];
-
-    if (!routine || !routine.ejercicios || routine.ejercicios.length === 0) {
-        // Día de descanso o sin rutina
-        titleEl.textContent = "Sin Asignación";
-        descEl.textContent = "Fase de Recuperación Activa";
-        listEl.innerHTML = '';
-        listEl.classList.add('hidden');
-        restState.classList.remove('hidden');
-        restState.classList.add('flex');
-        
-        document.getElementById('workout-progress-bar').style.width = `0%`;
-        document.getElementById('workout-progress-text').textContent = `0%`;
-        return;
-    }
-
-    // Si hay rutina
-    restState.classList.add('hidden');
-    restState.classList.remove('flex');
-    listEl.classList.remove('hidden');
-    
-    titleEl.textContent = routine.titulo || "Bloque de Entrenamiento";
-    descEl.textContent = routine.enfoque || "Ejecución Táctica";
-
-    listEl.innerHTML = ''; // Limpiar lista
-    
-    routine.ejercicios.forEach((ex, index) => {
-        const exId = ex.id || `temp-${index}`;
-        
-        const card = document.createElement('div');
-        card.id = `ex-card-${exId}`;
-        card.className = "glass-panel rounded-2xl p-5 border border-white/5 transition-all duration-300";
-        
-        card.innerHTML = `
-            <div class="flex flex-col sm:flex-row justify-between gap-4">
-                <div class="flex-grow">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[8px] font-black uppercase tracking-widest text-gray-400">${ex.grupo_muscular || 'Global'}</span>
-                    </div>
-                    <h4 class="text-lg md:text-xl font-black uppercase tracking-tighter text-white mb-4">${ex.nombre}</h4>
-                    
-                    <div class="grid grid-cols-3 gap-2">
-                        <div class="bg-black/40 p-3 rounded-xl border border-white/5 text-center">
-                            <p class="text-[8px] font-black text-gray-500 uppercase tracking-widest">Series</p>
-                            <p class="text-lg font-mono font-bold text-white mt-0.5">${ex.series}</p>
-                        </div>
-                        <div class="bg-black/40 p-3 rounded-xl border border-white/5 text-center">
-                            <p class="text-[8px] font-black text-gray-500 uppercase tracking-widest">Reps</p>
-                            <p class="text-lg font-mono font-bold text-white mt-0.5">${ex.repeticiones}</p>
-                        </div>
-                        <div class="bg-black/40 p-3 rounded-xl border border-white/5 text-center">
-                            <p class="text-[8px] font-black text-gray-500 uppercase tracking-widest">Descanso</p>
-                            <p class="text-lg font-mono font-bold text-[#FFC300] mt-0.5">${ex.descanso || '90s'}</p>
-                        </div>
-                    </div>
-                    
-                    ${ex.notas ? `<p class="text-[10px] text-gray-500 font-medium uppercase tracking-wide mt-4 border-l-2 border-white/10 pl-2">${ex.notas}</p>` : ''}
-                </div>
-                
-                <div class="flex items-end justify-end sm:w-40">
-                    <button id="ex-btn-${exId}" onclick="toggleExerciseComplete('${exId}')" class="done-btn w-full sm:w-auto px-6 py-3.5 bg-white/5 border border-white/10 hover:border-[#FFC300] hover:text-[#FFC300] text-gray-300 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2">
-                        Marcar Completado
-                    </button>
-                </div>
-            </div>
-        `;
-        listEl.appendChild(card);
-    });
-
-    updateProgressBar();
-}
-
-// ==========================================
 // SIMULADOR DE DATOS (MOCK)
 // ==========================================
-// Si el backend no devuelve nada, usamos esto para mostrar el potencial del módulo.
 const MOCK_ROUTINE_DATA = {
-    1: { // Lunes
+    1: {
         titulo: "Día 1: Empuje Vectorial", enfoque: "Pecho, Hombros y Tríceps",
         ejercicios: [
-            { id: 'e1', nombre: "Press de Banca Plano", grupo_muscular: "Pecho", series: 4, repeticiones: "8-10", descanso: "120s", notas: "Control excéntrico de 3 segundos." },
-            { id: 'e2', nombre: "Press Militar c/ Mancuernas", grupo_muscular: "Hombros", series: 4, repeticiones: "10-12", descanso: "90s" },
-            { id: 'e3', nombre: "Extensiones de Tríceps en Polea", grupo_muscular: "Tríceps", series: 3, repeticiones: "12-15", descanso: "60s", notas: "Apretar un segundo en contracción máxima." }
-        ]
-    },
-    3: { // Miércoles
-        titulo: "Día 3: Tracción Pesada", enfoque: "Espalda y Bíceps",
-        ejercicios: [
-            { id: 'e4', nombre: "Dominadas Lastradas", grupo_muscular: "Espalda", series: 4, repeticiones: "6-8", descanso: "120s" },
-            { id: 'e5', nombre: "Remo con Barra", grupo_muscular: "Espalda", series: 4, repeticiones: "8-10", descanso: "90s" },
-            { id: 'e6', nombre: "Curl de Bíceps Alterno", grupo_muscular: "Bíceps", series: 3, repeticiones: "12", descanso: "60s" }
+            { id: 'e1', nombre: "Press de Banca Plano", grupo_muscular: "Pecho", series: 4, repeticiones: "8-10", link_tutorial: "https://youtube.com" },
+            { id: 'e2', nombre: "Press Militar c/ Mancuernas", grupo_muscular: "Hombros", series: 3, repeticiones: "10-12", link_tutorial: "https://youtube.com" },
+            { id: 'e3', nombre: "Extensiones de Tríceps en Polea", grupo_muscular: "Tríceps", series: 3, repeticiones: "12-15" }
         ]
     }
 };
 
-// ==========================================
-// INICIALIZADOR CORE
-// ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
-    document.body.classList.add('loaded');
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    // Lectura múltiple de llaves JWT por seguridad
+    const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token') || localStorage.getItem('token');
     if (!token) { window.location.href = '/apps/start/login.html'; return; }
 
-    // Fijar el día actual basado en la fecha real (1=Lunes ... 7=Domingo)
     let today = new Date().getDay();
     selectedDay = today === 0 ? 7 : today; 
 
     try {
-        // Intentar obtener las rutinas reales del backend
-        const response = await fetch(`${API_BASE_URL}/api/client/routines`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
+        // Petición transparente al Middleware
+        const response = await fetch(`${API_BASE_URL}/api/client/routines`);
         if (response.ok) {
             const data = await response.json();
-            // Si el backend devuelve data real, la usamos. Si está vacío, inyectamos el simulador.
             currentWeekData = (data.rutinas && Object.keys(data.rutinas).length > 0) ? data.rutinas : MOCK_ROUTINE_DATA;
         } else {
-            throw new Error("Sin endpoint de rutinas");
+            throw new Error("Sin endpoint");
         }
     } catch (e) {
-        // Si el endpoint aún no existe o falla, cargamos el simulador táctico para que la UI no quede vacía.
-        console.log("Activando Simulador Táctico de Rutinas (Fallback)");
         currentWeekData = MOCK_ROUTINE_DATA;
     }
 
     document.getElementById('loading-spinner').classList.add('hidden');
     document.getElementById('workout-container').classList.remove('hidden');
     document.getElementById('workout-container').classList.add('flex');
+    document.body.classList.add('loaded');
 
     renderDaySelector();
     renderRoutineForSelectedDay();
