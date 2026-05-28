@@ -17,6 +17,7 @@ const DAYS = [
 
 function showFeedback(msg, type='success') {
     const box = document.getElementById('message-box');
+    if (!box) return;
     box.textContent = msg;
     box.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] transition-all duration-300 text-center border backdrop-blur-md w-11/12 max-w-[350px] ${type==='success'?'bg-emerald-950/90 text-emerald-400 border-emerald-500/30':'bg-red-950/90 text-red-400 border-red-500/30'}`;
     box.style.opacity = '1'; box.style.transform = 'translate(-50%, 0)';
@@ -29,6 +30,7 @@ function getTodayDateString() {
 
 function renderDaySelector() {
     const container = document.getElementById('day-selector');
+    if (!container) return;
     container.innerHTML = '';
     DAYS.forEach(day => {
         const btn = document.createElement('button');
@@ -47,6 +49,7 @@ function renderDaySelector() {
 function toggleAccordion(exId) {
     const content = document.getElementById(`acc-content-${exId}`);
     const icon = document.getElementById(`acc-icon-${exId}`);
+    if (!content || !icon) return;
     if (content.classList.contains('expanded')) {
         content.classList.remove('expanded');
         icon.style.transform = 'rotate(0deg)';
@@ -63,7 +66,8 @@ function toggleSetComplete(exId, setIndex) {
     const repInput = document.getElementById(`reps-${exId}-${setIndex}`);
     const weightInput = document.getElementById(`weight-${exId}-${setIndex}`);
 
-    if(!repInput.value) { showFeedback('Ingresa las reps logradas primero.', 'error'); return; }
+    if (!btn || !repInput || !weightInput) return;
+    if (!repInput.value) { showFeedback('Ingresa las reps logradas primero.', 'error'); return; }
 
     const isDone = exerciseStates[exId].sets[setIndex].done;
     
@@ -87,9 +91,11 @@ function toggleSetComplete(exId, setIndex) {
 }
 
 function checkAllSetsCompleted(exId) {
+    if (!exerciseStates[exId] || !exerciseStates[exId].sets) return;
     const allDone = exerciseStates[exId].sets.every(set => set.done);
     const rpeSection = document.getElementById(`rpe-section-${exId}`);
     
+    if (!rpeSection) return;
     if (allDone && !isRoutineLocked) {
         rpeSection.classList.remove('hidden');
         setTimeout(() => { rpeSection.style.opacity = '1'; rpeSection.style.transform = 'translateY(0)'; }, 50);
@@ -101,46 +107,50 @@ function checkAllSetsCompleted(exId) {
 
 function selectRPE(exId, value) {
     if (isRoutineLocked) return;
+    if (!exerciseStates[exId]) exerciseStates[exId] = {};
     exerciseStates[exId].rpe = value;
     
-    for(let i=1; i<=5; i++) {
+    for (let i = 1; i <= 5; i++) {
         const btn = document.getElementById(`rpe-btn-${exId}-${i}`);
-        if(i === value) {
-            btn.classList.add('ring-2', 'ring-white', 'scale-110');
-        } else {
-            btn.classList.remove('ring-2', 'ring-white', 'scale-110');
+        if (btn) {
+            if (i === value) {
+                btn.classList.add('ring-2', 'ring-white', 'scale-110');
+            } else {
+                btn.classList.remove('ring-2', 'ring-white', 'scale-110');
+            }
         }
     }
     
     const submitBtn = document.getElementById(`submit-journal-${exId}`);
-    submitBtn.disabled = false;
-    submitBtn.classList.replace('opacity-50', 'opacity-100');
-    submitBtn.classList.replace('cursor-not-allowed', 'hover:scale-[1.02]');
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.replace('opacity-50', 'opacity-100');
+        submitBtn.classList.replace('cursor-not-allowed', 'hover:scale-[1.02]');
+    }
 }
 
 // ==========================================
-// 📦 EMISOR TÁCTICO CON VARIABLE BIO-NUTRITIVAS
+// 📦 EMISOR TÁCTICO CON VARIABLES BIO-NUTRITIVAS
 // ==========================================
 async function saveToJournal(exId) {
-    if(isRoutineLocked || !exerciseStates[exId].rpe) return;
+    if (isRoutineLocked || !exerciseStates[exId] || !exerciseStates[exId].rpe) return;
     
     const submitBtn = document.getElementById(`submit-journal-${exId}`);
-    submitBtn.innerHTML = '<div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
+    if (submitBtn) submitBtn.innerHTML = '<div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
 
-    const totalExercises = currentWeekData[selectedDay].ejercicios.length;
+    const totalExercises = currentWeekData[selectedDay]?.ejercicios?.length || 0;
     const isLastExercise = (completedExercises.size + 1 === totalExercises);
 
-    // Buscamos la plantilla actual del ejercicio para clonar su ADN en el Journal
     const currentExRaw = currentWeekData[selectedDay].ejercicios.find(e => e.id === exId);
 
     const journalData = {
         session_id: sessionId,
         exercise_id: exId,
         exercise_name: currentExRaw.nombre,
-        search_name: currentExRaw.search_name || "unknown", // 🤖 Puente exacto al catálogo
-        main_muscle: currentExRaw.grupo_muscular || "Global", // 🤖 Músculo Primario
-        movement_pattern: currentExRaw.movement_pattern || "Desconocido", // 🤖 Patrón mecánico
-        equipment: currentExRaw.equipment || "Ninguno", // 🤖 Equipamiento
+        search_name: currentExRaw.search_name || "unknown", 
+        main_muscle: currentExRaw.grupo_muscular || "Global", 
+        movement_pattern: currentExRaw.movement_pattern || "Desconocido", 
+        equipment: currentExRaw.equipment || "Ninguno", 
         date: new Date().toISOString(),
         rpe: exerciseStates[exId].rpe,
         sets_execution: exerciseStates[exId].sets.map(s => ({ done: s.done, reps: s.reps, weight: s.weight })),
@@ -180,38 +190,42 @@ async function saveToJournal(exId) {
         updateProgressBar();
         toggleAccordion(exId);
         
+        // 🛡️ CONTROL SEGURO DE INTERFAZ BLINDADA
         const card = document.getElementById(`ex-card-${exId}`);
-        card.classList.add('exercise-done');
+        if (card) card.classList.add('exercise-done');
         
         const statusBadge = document.getElementById(`badge-status-${exId}`);
-        statusBadge.textContent = 'ASENTADO';
-        statusBadge.className = 'px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded text-[8px] font-black uppercase tracking-widest';
+        if (statusBadge) {
+            statusBadge.textContent = 'ASENTADO';
+            statusBadge.className = 'px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded text-[8px] font-black uppercase tracking-widest';
+        }
 
         if (isLastExercise) {
             isRoutineLocked = true;
-            document.getElementById('cooldown-badge').classList.remove('hidden');
+            const cooldownBadge = document.getElementById('cooldown-badge');
+            if (cooldownBadge) cooldownBadge.classList.remove('hidden');
             setTimeout(showVictoryModal, 800);
         }
 
     } catch(e) {
         console.error(e);
         showFeedback('Error de conexión al asentar ejercicio.', 'error');
-        submitBtn.innerHTML = 'Reintentar Guardado';
+        if (submitBtn) submitBtn.innerHTML = 'Reintentar Guardado';
     }
 }
 
 function showVictoryModal() {
     const modal = document.getElementById('victory-modal');
     const content = document.getElementById('victory-modal-content');
-    modal.classList.remove('hidden'); modal.classList.add('flex');
-    setTimeout(() => { content.classList.remove('scale-95', 'opacity-0'); content.classList.add('scale-100', 'opacity-100'); }, 10);
+    if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    if (content) { setTimeout(() => { content.classList.remove('scale-95', 'opacity-0'); content.classList.add('scale-100', 'opacity-100'); }, 10); }
 }
 
 function closeVictoryModal() {
     const modal = document.getElementById('victory-modal');
     const content = document.getElementById('victory-modal-content');
-    content.classList.remove('scale-100', 'opacity-100'); content.classList.add('scale-95', 'opacity-0');
-    setTimeout(() => { modal.classList.remove('flex'); modal.classList.add('hidden'); }, 500);
+    if (content) { content.classList.remove('scale-100', 'opacity-100'); content.classList.add('scale-95', 'opacity-0'); }
+    if (modal) { setTimeout(() => { modal.classList.remove('flex'); modal.classList.add('hidden'); }, 500); }
 }
 
 function exitToHub() { window.location.href = '/apps/start/inicio.html'; }
@@ -224,40 +238,45 @@ function renderRoutineForSelectedDay() {
     exerciseStates = {};
     sessionId = `session_${selectedDay}_${getTodayDateString()}`;
     
-    const currentProgress = todayProgressData[selectedDay];
+    // Mapeo defensivo de llaves tipo String e Integer enviadas por Python
+    const currentProgress = todayProgressData[selectedDay] || todayProgressData[String(selectedDay)];
+    
     if (currentProgress) {
         isRoutineLocked = (currentProgress.status === 'Finalizado');
         const badge = document.getElementById('cooldown-badge');
-        if (isRoutineLocked) badge.classList.remove('hidden');
-        else badge.classList.add('hidden');
+        if (badge) {
+            if (isRoutineLocked) badge.classList.remove('hidden');
+            else badge.classList.add('hidden');
+        }
     } else {
         isRoutineLocked = false;
-        document.getElementById('cooldown-badge').classList.add('hidden');
+        const badge = document.getElementById('cooldown-badge');
+        if (badge) badge.classList.add('hidden');
     }
     
     const titleEl = document.getElementById('routine-title'), descEl = document.getElementById('routine-desc');
     const listEl = document.getElementById('exercises-list'), restState = document.getElementById('rest-day-state');
     
-    const routine = currentWeekData[selectedDay];
+    const routine = currentWeekData[selectedDay] || currentWeekData[String(selectedDay)];
 
     if ((!routine || !routine.ejercicios || routine.ejercicios.length === 0) && !currentProgress) {
-        titleEl.textContent = "Sin Asignación"; descEl.textContent = "Fase de Recuperación Activa";
-        listEl.innerHTML = ''; listEl.classList.add('hidden');
-        restState.classList.remove('hidden'); restState.classList.add('flex');
+        if (titleEl) titleEl.textContent = "Sin Asignación"; 
+        if (descEl) descEl.textContent = "Fase de Recuperación Activa";
+        if (listEl) { listEl.innerHTML = ''; listEl.classList.add('hidden'); }
+        if (restState) { restState.classList.remove('hidden'); restState.classList.add('flex'); }
         updateProgressBar();
         return;
     }
 
-    restState.classList.add('hidden'); restState.classList.remove('flex');
-    listEl.classList.remove('hidden');
-    listEl.innerHTML = '';
+    if (restState) { restState.classList.add('hidden'); restState.classList.remove('flex'); }
+    if (listEl) { listEl.classList.remove('hidden'); listEl.innerHTML = ''; }
 
     let exercisesToRender = [];
 
     if (isRoutineLocked && currentProgress && currentProgress.exercises) {
-        // 🛡️ RECONSTRUCCIÓN PREMIUM HISTÓRICA: Se alimenta 100% del Journal Snapshot
-        titleEl.textContent = "Bitácora de Sesión";
-        descEl.textContent = "Registro Histórico de Ejecución";
+        // MODO HISTÓRICO CONGELADO: Se alimenta 100% del Journal Snapshot inmutable
+        if (titleEl) titleEl.textContent = "Bitácora de Sesión";
+        if (descEl) descEl.textContent = "Registro Histórico de Ejecución";
         
         Object.keys(currentProgress.exercises).forEach((exId, index) => {
             const savedEx = currentProgress.exercises[exId];
@@ -267,16 +286,16 @@ function renderRoutineForSelectedDay() {
                 grupo_muscular: savedEx.main_muscle || "Global",
                 movement_pattern: savedEx.movement_pattern || "Desconocido",
                 equipment: savedEx.equipment || "Ninguno",
-                series: savedEx.sets_execution.length,
+                series: savedEx.sets_execution?.length || 3,
                 repeticiones: "-", 
                 isSaved: true,
                 savedData: savedEx
             });
         });
     } else if (routine && routine.ejercicios) {
-        // MODO EN VIVO O EN PROGRESO: Usamos la plantilla actual
-        titleEl.textContent = routine.titulo || "Bloque de Entrenamiento";
-        descEl.textContent = routine.enfoque || "Ejecución Táctica";
+        // MODO EN VIVO / EN PROGRESO SINCRO: Reconstruye lo guardado y deja libre lo pendiente
+        if (titleEl) titleEl.textContent = routine.titulo || "Bloque de Entrenamiento";
+        if (descEl) descEl.textContent = routine.enfoque || "Ejecución Táctica";
         
         routine.ejercicios.forEach(ex => {
             const exId = ex.id;
@@ -286,7 +305,6 @@ function renderRoutineForSelectedDay() {
                 nombre: ex.nombre,
                 search_name: ex.search_name,
                 grupo_muscular: ex.grupo_muscular,
-                movement_pattern: ex.movement_pattern,
                 equipment: ex.equipment,
                 series: ex.series,
                 repeticiones: ex.repeticiones,
@@ -297,7 +315,7 @@ function renderRoutineForSelectedDay() {
         });
     }
 
-    // Renderizamos las tarjetas finales
+    // Renderizado atómico de tarjetas
     exercisesToRender.forEach((ex, index) => {
         const numSets = parseInt(ex.series) || 3;
         
@@ -311,7 +329,7 @@ function renderRoutineForSelectedDay() {
         const memState = exerciseStates[ex.id];
 
         let setsHtml = '';
-        for(let i=0; i<numSets; i++) {
+        for (let i = 0; i < numSets; i++) {
             const setMem = memState.sets[i];
             setsHtml += `
             <div class="flex items-center gap-2 mb-2 p-2 rounded-lg bg-black/40 border border-white/5">
@@ -347,7 +365,7 @@ function renderRoutineForSelectedDay() {
                         <div class="flex items-center gap-2 mb-0.5">
                             <span class="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[7px] font-black uppercase tracking-widest text-gray-400">${ex.grupo_muscular}</span>
                             <span class="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[7px] font-black uppercase tracking-widest text-gray-500 hidden md:inline-block">${ex.equipment}</span>
-                            <span class="px-2 py-0.5 ${ex.isSaved ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-transparent border-gray-600 text-gray-500'} rounded text-[7px] font-black uppercase tracking-widest border">
+                            <span id="badge-status-${ex.id}" class="px-2 py-0.5 ${ex.isSaved ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-transparent border-gray-600 text-gray-500'} rounded text-[7px] font-black uppercase tracking-widest border">
                                 ${ex.isSaved ? 'ASENTADO' : 'PENDIENTE'}
                             </span>
                         </div>
@@ -360,7 +378,7 @@ function renderRoutineForSelectedDay() {
 
             <div id="acc-content-${ex.id}" class="accordion-content bg-black/20 border-t border-white/5">
                 <div class="p-5">
-                    ${ex.link_tutorial && !isRoutineLocked ? `
+                    ${ex.link_tutorial && !isRoutineLocked && !ex.isSaved ? `
                     <a href="${ex.link_tutorial}" target="_blank" class="w-full mb-6 py-3 rounded-xl bg-white/5 border border-white/10 flex justify-center items-center gap-2 text-xs font-black uppercase tracking-widest text-white hover:bg-white/10 transition-colors">
                         <svg class="w-4 h-4 text-[#FFC300]" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"/></svg> Ver Tutorial de Ejecución
                     </a>` : ''}
@@ -381,24 +399,32 @@ function renderRoutineForSelectedDay() {
                 </div>
             </div>
         `;
-        listEl.appendChild(card);
+        if (listEl) listEl.appendChild(card);
     });
 
     if (isRoutineLocked) {
-        document.getElementById('workout-progress-bar').style.width = `100%`;
-        document.getElementById('workout-progress-text').textContent = `100%`;
-        document.getElementById('workout-progress-bar').classList.replace('bg-[#FFC300]', 'bg-emerald-500');
-        document.getElementById('workout-progress-text').classList.replace('text-[#FFC300]', 'text-emerald-500');
+        const progressBar = document.getElementById('workout-progress-bar');
+        const progressText = document.getElementById('workout-progress-text');
+        if (progressBar) {
+            progressBar.style.width = `100%`;
+            progressBar.classList.replace('bg-[#FFC300]', 'bg-emerald-500');
+        }
+        if (progressText) {
+            progressText.textContent = `100%`;
+            progressText.classList.replace('text-[#FFC300]', 'text-emerald-500');
+        }
     } else {
         updateProgressBar();
     }
 }
 
 function updateProgressBar() {
-    const routine = currentWeekData[selectedDay];
+    const routine = currentWeekData[selectedDay] || currentWeekData[String(selectedDay)];
     if (!routine || !routine.ejercicios || routine.ejercicios.length === 0) {
-        document.getElementById('workout-progress-bar').style.width = `0%`;
-        document.getElementById('workout-progress-text').textContent = `0%`;
+        const progressBar = document.getElementById('workout-progress-bar');
+        const progressText = document.getElementById('workout-progress-text');
+        if (progressBar) progressBar.style.width = `0%`;
+        if (progressText) progressText.textContent = `0%`;
         return;
     }
 
@@ -406,15 +432,18 @@ function updateProgressBar() {
     const completed = completedExercises.size;
     const pct = Math.round((completed / total) * 100);
 
-    document.getElementById('workout-progress-bar').style.width = `${pct}%`;
-    document.getElementById('workout-progress-text').textContent = `${pct}%`;
+    const progressBar = document.getElementById('workout-progress-bar');
+    const progressText = document.getElementById('workout-progress-text');
+    
+    if (progressBar) progressBar.style.width = `${pct}%`;
+    if (progressText) progressText.textContent = `${pct}%`;
     
     if (pct === 100) {
-        document.getElementById('workout-progress-bar').classList.replace('bg-[#FFC300]', 'bg-emerald-500');
-        document.getElementById('workout-progress-text').classList.replace('text-[#FFC300]', 'text-emerald-500');
+        if (progressBar) progressBar.classList.replace('bg-[#FFC300]', 'bg-emerald-500');
+        if (progressText) progressText.classList.replace('text-[#FFC300]', 'text-emerald-500');
     } else {
-        document.getElementById('workout-progress-bar').classList.replace('bg-emerald-500', 'bg-[#FFC300]');
-        document.getElementById('workout-progress-text').classList.replace('text-emerald-500', 'text-[#FFC300]');
+        if (progressBar) progressBar.classList.replace('bg-emerald-500', 'bg-[#FFC300]');
+        if (progressText) progressText.classList.replace('text-emerald-500', 'text-[#FFC300]');
     }
 }
 
@@ -438,9 +467,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         console.error("Error cargando sincronización táctica:", e);
     }
 
-    document.getElementById('loading-spinner').classList.add('hidden');
-    document.getElementById('workout-container').classList.remove('hidden');
-    document.getElementById('workout-container').classList.add('flex');
+    const spinner = document.getElementById('loading-spinner');
+    const container = document.getElementById('workout-container');
+    if (spinner) spinner.classList.add('hidden');
+    if (container) { container.classList.remove('hidden'); container.classList.add('flex'); }
     document.body.classList.add('loaded');
 
     renderDaySelector();
