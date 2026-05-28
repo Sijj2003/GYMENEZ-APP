@@ -2,9 +2,9 @@ const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || windo
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
 // ==========================================
-// 🛠️ RENDERIZADOR DINÁMICO DE OBJETIVOS (Soporta múltiples)
+// 🛠️ RENDERIZADOR DATA-DRIVEN (Con Barras de Progreso Reales)
 // ==========================================
-function renderPremiumDashboard(goals) {
+function renderPremiumDashboard(goals, metrics) {
     const emptyState = document.getElementById('goals-empty-state');
     const gridState = document.getElementById('goals-grid');
 
@@ -22,11 +22,9 @@ function renderPremiumDashboard(goals) {
 
     document.getElementById('g-focus-title').textContent = goals.focus;
 
-    // Normalizador defensivo: convierte objetos en arrays por si el admin añade múltiples
     const normalizeToArray = (data) => {
         if (!data) return [];
         if (Array.isArray(data)) return data;
-        // Si es un objeto vacío sin descripcion, lo ignoramos
         if (!data.description || data.description.trim() === '') return [];
         return [data];
     };
@@ -35,22 +33,68 @@ function renderPremiumDashboard(goals) {
     const mtGoals = normalizeToArray(goals.medium_term);
     const ltGoals = normalizeToArray(goals.long_term);
 
-    // Fábrica de tarjetas HTML para iterar
+    // FÁBRICA INTELIGENTE: Cruza la meta (goals) con la realidad (metrics)
     const createGoalHTML = (goal) => {
         const isDone = goal.status === 'Cumplido';
         const badgeClass = isDone ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-white/10 text-white border-white/20';
         const targetColor = isDone ? 'text-emerald-400' : 'text-[#FFC300]';
 
-        return `
-        <div class="p-5 rounded-[20px] bg-black/40 border border-white/5 relative overflow-hidden group hover:border-white/10 transition-colors">
-            <div class="absolute top-0 right-0 p-4">
-                <span class="px-2 py-1 rounded text-[7px] font-black uppercase tracking-widest border ${badgeClass}">${goal.status || 'En progreso'}</span>
-            </div>
-            <p class="text-xs text-gray-300 leading-relaxed font-medium pr-16">${goal.description}</p>
+        let dynamicProgressHtml = '';
+
+        // 🧠 MOTOR ALGÓRITMICO: Si el objetivo tiene una clave métrica que no sea 'custom' y el usuario tiene ese dato registrado
+        if (goal.metric_key && goal.metric_key !== 'custom' && metrics[goal.metric_key]) {
+            const currentVal = parseFloat(metrics[goal.metric_key]);
+            const targetVal = parseFloat(goal.target_value);
+
+            if (!isNaN(currentVal) && !isNaN(targetVal) && targetVal !== 0) {
+                let percent = 0;
+                
+                // Si la meta es MAYOR (Ej: Aumentar Potencia o Músculo)
+                if (currentVal <= targetVal) {
+                    percent = (currentVal / targetVal) * 100;
+                } 
+                // Si la meta es MENOR (Ej: Bajar Peso o Grasa)
+                else {
+                    percent = (targetVal / currentVal) * 100;
+                }
+                
+                // Topamos el progreso visual al 100%
+                if (percent > 100 || isDone) percent = 100;
+
+                dynamicProgressHtml = `
+                <div class="mt-4 pt-3 border-t border-white/5">
+                    <div class="flex justify-between items-end mb-2">
+                        <span class="text-[7px] text-gray-500 font-black uppercase tracking-widest">Progreso Realizado</span>
+                        <span class="text-[10px] font-mono font-bold ${isDone ? 'text-emerald-400' : 'text-white'}">
+                            ${currentVal} <span class="text-gray-500">/ ${targetVal}</span>
+                        </span>
+                    </div>
+                    <div class="w-full bg-black/50 h-1.5 rounded-full overflow-hidden border border-white/5">
+                        <div class="h-full rounded-full ${isDone ? 'bg-emerald-400' : 'bg-[#FFC300]'} transition-all duration-1000" style="width: ${percent}%;"></div>
+                    </div>
+                </div>
+                `;
+            }
+        } 
+        
+        // Si es un objetivo Cualitativo (Custom) o el atleta aún no se ha medido ese campo
+        if (!dynamicProgressHtml) {
+            dynamicProgressHtml = `
             <div class="mt-4 border-t border-white/5 pt-3 flex flex-col">
                 <span class="text-[7px] text-gray-500 font-black uppercase tracking-widest mb-1">Target Específico</span>
                 <span class="text-lg md:text-xl font-black tracking-tighter ${targetColor}">${goal.target_value || '--'}</span>
+            </div>`;
+        }
+
+        return `
+        <div class="p-5 rounded-[20px] bg-black/40 border border-white/5 relative overflow-hidden group hover:border-white/10 transition-colors flex flex-col justify-between">
+            <div>
+                <div class="absolute top-0 right-0 p-4">
+                    <span class="px-2 py-1 rounded text-[7px] font-black uppercase tracking-widest border ${badgeClass}">${goal.status || 'En progreso'}</span>
+                </div>
+                <p class="text-xs text-gray-300 leading-relaxed font-medium pr-16">${goal.description}</p>
             </div>
+            ${dynamicProgressHtml}
         </div>
         `;
     };
@@ -62,8 +106,16 @@ function renderPremiumDashboard(goals) {
     stContainer.innerHTML = stGoals.length ? stGoals.map(createGoalHTML).join('') : '<p class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Sin asignar.</p>';
     mtContainer.innerHTML = mtGoals.length ? mtGoals.map(createGoalHTML).join('') : '<p class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Sin asignar.</p>';
     ltContainer.innerHTML = ltGoals.length ? ltGoals.map(createGoalHTML).join('') : '<p class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Sin asignar.</p>';
-}
 
+    // Un pequeño toque de lujo: Animar las barras de progreso después de dibujarlas
+    setTimeout(() => {
+        document.querySelectorAll('.bg-\\[\\#FFC300\\]').forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => { bar.style.width = width; }, 100);
+        });
+    }, 100);
+}
 
 // ==========================================
 // 🎬 MOTOR CINEMÁTICO: EL VIAJE DEL MACROCICLO
@@ -72,7 +124,6 @@ function initCinematicScroll3D() {
     const showcaseView = document.getElementById('basico-showcase-view');
     const masterCard = document.getElementById('sc-master-card');
     
-    // Nodos de texto a inyectar
     const cardTag = document.getElementById('sc-card-tag');
     const cardTitle = document.getElementById('sc-card-title');
     const cardDesc = document.getElementById('sc-card-desc');
@@ -102,14 +153,10 @@ function initCinematicScroll3D() {
         if (progress < 0) progress = 0;
         if (progress > 1) progress = 1;
 
-        // FASE 1: FOCO GLOBAL (0 - 0.20)
         if (progress >= 0 && progress < 0.20) {
             let p = progress / 0.20; 
             switchBg('sc-bg-1');
-            
-            const rotX = 15 - (15 * p);
-            const rotY = -15 + (15 * p);
-            
+            const rotX = 15 - (15 * p), rotY = -15 + (15 * p);
             masterCard.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(${p * 40}px)`;
             masterCard.style.opacity = '1';
             masterCard.style.filter = 'none';
@@ -119,7 +166,6 @@ function initCinematicScroll3D() {
             cardDesc.textContent = "Definición del protocolo de entrenamiento y alimentación en base a tu fisiología. (Pérdida Lipídica, Ganancia Magra o Rendimiento).";
             cardTarget.textContent = "Métrica Maestra";
             cardTarget.className = "text-2xl md:text-3xl font-black tracking-tighter font-mono text-white";
-            
             cardIndicator.className = "px-3 py-1 bg-white/10 border border-white/20 rounded text-white text-[7px] font-black uppercase tracking-widest";
             
             mainTag.textContent = "Macrociclo";
@@ -130,12 +176,8 @@ function initCinematicScroll3D() {
             narrativeText.style.transform = 'translateY(0)';
             ctaLock.style.opacity = '0';
         }
-        
-        // FASE 2: CORTO PLAZO (0.20 - 0.45)
         else if (progress >= 0.20 && progress < 0.45) {
-            let p = (progress - 0.20) / 0.25; 
             switchBg('sc-bg-2');
-
             masterCard.style.transform = `rotateX(0deg) rotateY(0deg) translateZ(40px)`;
             masterCard.style.opacity = '1';
 
@@ -144,21 +186,15 @@ function initCinematicScroll3D() {
             cardDesc.textContent = "Adecuación neuromuscular, asimilación del déficit/superávit y construcción de hábitos de disciplina inquebrantable.";
             cardTarget.textContent = "Hitos a Corto Plazo";
             cardTarget.className = "text-2xl md:text-3xl font-black tracking-tighter font-mono text-[#FFC300]";
-            
             cardIndicator.className = "px-3 py-1 bg-[#FFC300]/10 border border-[#FFC300]/30 rounded text-[#FFC300] text-[7px] font-black uppercase tracking-widest";
 
             mainTag.textContent = "Fase I";
             mainTitle.textContent = "El Cimiento";
             mainDesc.textContent = "Acostumbrando al cuerpo al estrés";
-            
             narrativeText.style.opacity = '1';
         }
-
-        // FASE 3: MEDIANO PLAZO (0.45 - 0.70)
         else if (progress >= 0.45 && progress < 0.70) {
-            let p = (progress - 0.45) / 0.25; 
             switchBg('sc-bg-3');
-
             masterCard.style.transform = `rotateX(0deg) rotateY(0deg) translateZ(40px)`;
             masterCard.style.opacity = '1';
             masterCard.style.filter = `none`;
@@ -168,32 +204,24 @@ function initCinematicScroll3D() {
             cardDesc.textContent = "El punto de quiebre. Sobrecarga progresiva agresiva, ruptura de mesetas de peso y transformación visual de tu biotipo.";
             cardTarget.textContent = "Hitos a Mediano Plazo";
             cardTarget.className = "text-2xl md:text-3xl font-black tracking-tighter font-mono text-emerald-400";
-            
             cardIndicator.className = "px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded text-emerald-400 text-[7px] font-black uppercase tracking-widest";
 
             mainTag.textContent = "Fase II";
             mainTitle.textContent = "La Transformación";
             mainDesc.textContent = "Cuando los números se hacen visibles";
-            
             narrativeText.style.opacity = '1';
         }
-
-        // FASE 4: LARGO PLAZO Y PAYWALL (0.70 - 1.0)
         else if (progress >= 0.70) {
             let p = (progress - 0.70) / 0.30; 
             switchBg('sc-bg-4');
 
-            // La tarjeta empieza a desaparecer
             masterCard.style.opacity = `${1 - p}`;
             masterCard.style.transform = `scale(${1 - p * 0.5}) translateZ(${40 - p * 100}px)`;
             masterCard.style.filter = `blur(${p * 10}px)`;
-            
             narrativeText.style.opacity = `${1 - (p * 2)}`;
 
-            // Entra el Paywall
             ctaLock.style.opacity = `${p}`;
             ctaLock.style.transform = `scale(${0.90 + (p * 0.10)})`;
-            
             if (p > 0.6) ctaLock.style.pointerEvents = 'auto'; 
             else ctaLock.style.pointerEvents = 'none';
         }
@@ -204,21 +232,19 @@ function initCinematicScroll3D() {
 // 🚀 INICIALIZADOR CENTRAL BLINDADO
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
-    // 1. Buscamos el token general
     const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token') || localStorage.getItem('token') || localStorage.getItem('admin_token');
     
     if (!token) {
-        console.warn("Llave de token no detectada en LocalStorage.");
         document.getElementById('loading-spinner').innerHTML = '<p class="text-red-400 font-bold uppercase tracking-widest text-[10px]">No hay sesión activa.</p>';
-        document.body.classList.add('loaded'); // Aseguramos remover el blur
+        document.body.classList.add('loaded');
         return;
     }
 
     try {
-        // 2. Fetch limpio sin Headers, tu `auth_middleware.js` hace el trabajo pesado
+        // En una sola petición nos traemos las Métricas de Telemetría Y los Objetivos
         const res = await fetch(`${API_BASE_URL}/api/client/metrics`);
         
-        if (!res.ok) throw new Error("El middleware o el servidor denegó el acceso.");
+        if (!res.ok) throw new Error("Acceso denegado.");
         
         const data = await res.json();
         const level = data.profile?.subscription_level || 'BASICO';
@@ -230,7 +256,8 @@ window.addEventListener('DOMContentLoaded', async () => {
             plusView.classList.remove('hidden');
             plusView.classList.add('flex');
             
-            renderPremiumDashboard(data.goals || {});
+            // Le pasamos AMBOS datos a la función renderizadora para que cruce la información
+            renderPremiumDashboard(data.goals || {}, data.metrics || {});
         } else {
             const basicoView = document.getElementById('basico-showcase-view');
             basicoView.classList.remove('hidden');
