@@ -3,28 +3,20 @@ const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https:/
 
 let activeSelectedUserId = null;
 
-const GOALS_GLOSSARY = {
-    "Pérdida de Grasa": {
-        st: "Reducir el porcentaje de grasa corporal mediante un déficit calórico controlado y asentar el hábito de registro diario alimentario.",
-        mt: "Reducción adaptativa de medidas antropométricas basales y estabilización de la energía metabólica diaria sin picos de fatiga.",
-        lt: "Alcanzar y mantener el porcentaje de adiposidad objetivo de forma completamente sostenible y con flexibilidad metabólica activa."
-    },
-    "Masa Muscular": {
-        st: "Incrementar el volumen de tejido magro primario optimizando la resíntesis de glucógeno y la recuperación neuromuscular.",
-        mt: "Superar mesetas de fuerza incrementando las cargas en los vectores principales del entrenamiento de forma progresiva.",
-        lt: "Consolidar de masa muscular real y densa, mitigando asimetrías y logrando un balance estético y estructural óptimo."
-    },
-    "Rendimiento / Calistenia": {
-        st: "Dominar la ejecución técnica y control motor de los patrones multiarticulares compuestos básicos corporales.",
-        mt: "Alcanzar hitos avanzados de fuerza relativa, optimizando el reclutamiento de unidades motoras en tracciones y empujes.",
-        lt: "Dominar cadenas cinemáticas complejas de alta demanda técnica manteniendo estabilidad articular absoluta en cada plano."
-    },
-    "Salud / Cardio": {
-        st: "Reducir la frecuencia cardíaca basal en reposo y optimizar el volumen de pasos y actividad diaria sostenida.",
-        mt: "Incrementar el techo de capacidad cardiovascular (VO2 Máx) acelerando los tiempos de recuperación celular post-esfuerzo.",
-        lt: "Maximizar la eficiencia del sistema cardiorrespiratorio y consolidar un perfil lipídico y analíticas de salud de élite."
-    }
-};
+// ==========================================
+// 🧠 DICCIONARIO ALGORÍTMICO DE MÉTRICAS
+// Conecta los objetivos con la biometría real
+// ==========================================
+const MEASURABLE_METRICS = [
+    { id: "weight", label: "Peso Corporal Base", unit: "kg" },
+    { id: "fat_percent", label: "% Grasa Estimada", unit: "%" },
+    { id: "muscle_percent", label: "% Masa Muscular", unit: "%" },
+    { id: "waist", label: "Perímetro Cintura", unit: "cm" },
+    { id: "rm_push", label: "Potencia: 1RM Empuje", unit: "kg" },
+    { id: "rm_pull", label: "Potencia: 1RM Tracción", unit: "kg" },
+    { id: "rm_legs", label: "Potencia: 1RM Pierna", unit: "kg" },
+    { id: "custom", label: "Hábito Cualitativo / Otro", unit: "" }
+];
 
 function getSecureHeaders() {
     const token = localStorage.getItem('admin_token'); 
@@ -61,16 +53,88 @@ function switchTab(tab) {
     }
 }
 
-function autoFillGlossaryTemplates() {
-    const focusSelected = document.getElementById('g-focus').value;
-    const template = GOALS_GLOSSARY[focusSelected];
-    if (!template) return;
+// ==========================================
+// 🏗️ FÁBRICA DE OBJETIVOS DINÁMICOS
+// ==========================================
+function addGoalRow(containerId, data = null) {
+    const container = document.getElementById(containerId);
+    const rowId = `goal-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-    if(!document.getElementById('g-st-desc').value.trim()) document.getElementById('g-st-desc').value = template.st;
-    if(!document.getElementById('g-mt-desc').value.trim()) document.getElementById('g-mt-desc').value = template.mt;
-    if(!document.getElementById('g-lt-desc').value.trim()) document.getElementById('g-lt-desc').value = template.lt;
+    const metricOptions = MEASURABLE_METRICS.map(m => 
+        `<option value="${m.id}" ${data && data.metric_key === m.id ? 'selected' : ''}>${m.label}</option>`
+    ).join('');
+
+    const isDone = data && data.status === 'Cumplido';
+    
+    const row = document.createElement('div');
+    row.className = 'goal-row flex flex-col xl:flex-row gap-3 p-4 bg-black/50 border border-white/5 rounded-2xl items-end relative transition-all hover:border-white/10';
+    row.id = rowId;
+
+    row.innerHTML = `
+        <div class="w-full xl:w-1/5">
+            <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Variable Base</label>
+            <select class="goal-metric-key bg-black border border-white/10 rounded-lg p-2 text-[10px] font-bold text-white outline-none w-full">
+                ${metricOptions}
+            </select>
+        </div>
+        <div class="w-full xl:w-[15%]">
+            <label class="block text-[8px] text-[#FFC300] uppercase font-black mb-1 xl:text-center">Valor Target</label>
+            <input type="text" class="goal-target gymenez-input !p-2 xl:!text-center !text-[#FFC300]" placeholder="Ej: 75.5" value="${data ? (data.target_value || '') : ''}">
+        </div>
+        <div class="w-full xl:flex-grow">
+            <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción / Directiva SMART</label>
+            <input type="text" class="goal-desc gymenez-input !p-2 !text-xs" placeholder="Describe la meta de forma medible..." value="${data ? (data.description || '') : ''}">
+        </div>
+        <div class="w-full xl:w-1/6">
+            <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Estatus</label>
+            <select class="goal-status bg-black border border-white/10 rounded-lg p-2 text-[10px] font-black uppercase ${isDone ? 'text-emerald-400' : 'text-gray-300'} outline-none w-full">
+                <option value="En progreso" ${!isDone ? 'selected' : ''}>En progreso</option>
+                <option value="Cumplido" ${isDone ? 'selected' : ''}>Cumplido</option>
+            </select>
+        </div>
+        <button type="button" onclick="document.getElementById('${rowId}').remove()" class="w-full xl:w-auto px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-[10px] font-black uppercase transition shrink-0">
+            Eliminar
+        </button>
+    `;
+
+    container.appendChild(row);
+
+    // Automatización de Descripciones al seleccionar variables
+    const selectEl = row.querySelector('.goal-metric-key');
+    const targetEl = row.querySelector('.goal-target');
+    const descEl = row.querySelector('.goal-desc');
+    const statusEl = row.querySelector('.goal-status');
+
+    const updateDescription = () => {
+        const metricKey = selectEl.value;
+        const metricObj = MEASURABLE_METRICS.find(m => m.id === metricKey);
+        if (metricKey !== 'custom' && targetEl.value.trim() !== '') {
+            descEl.value = `Establecer ${metricObj.label.toLowerCase()} en ${targetEl.value} ${metricObj.unit}`.trim();
+        }
+    };
+
+    statusEl.addEventListener('change', (e) => {
+        e.target.className = `goal-status bg-black border border-white/10 rounded-lg p-2 text-[10px] font-black uppercase outline-none w-full ${e.target.value === 'Cumplido' ? 'text-emerald-400' : 'text-gray-300'}`;
+    });
+
+    selectEl.addEventListener('change', updateDescription);
+    targetEl.addEventListener('input', updateDescription);
 }
 
+// Extractor de arreglos para empaquetar JSON
+function extractGoalsArray(containerId) {
+    const rows = document.querySelectorAll(`#${containerId} .goal-row`);
+    return Array.from(rows).map(row => ({
+        metric_key: row.querySelector('.goal-metric-key').value,
+        target_value: row.querySelector('.goal-target').value,
+        description: row.querySelector('.goal-desc').value,
+        status: row.querySelector('.goal-status').value
+    }));
+}
+
+// ==========================================
+// 📥 CARGA DE DATOS Y RENDERIZADO
+// ==========================================
 async function loadAthletesSidebar(filterText = '') {
     const container = document.getElementById('athletes-list-container');
     const badge = document.getElementById('users-count-badge');
@@ -167,29 +231,29 @@ async function fetchUserProfile(userId) {
             document.getElementById('m-diseases').value = m.chronic_diseases || '';
             document.getElementById('m-medical-notes').value = m.medical_notes || '';
 
-            // Objetivos
+            // Mapeo Dinámico de Objetivos
             const g = data.goals || {};
             document.getElementById('g-focus').value = g.focus || 'Masa Muscular';
             
-            document.getElementById('g-st-desc').value = g.short_term?.description || '';
-            document.getElementById('g-st-target').value = g.short_term?.target_value || '';
-            document.getElementById('g-st-status').value = g.short_term?.status || 'En progreso';
+            // Limpiamos los contenedores
+            document.getElementById('st-goals-container').innerHTML = '';
+            document.getElementById('mt-goals-container').innerHTML = '';
+            document.getElementById('lt-goals-container').innerHTML = '';
 
-            document.getElementById('g-mt-desc').value = g.medium_term?.description || '';
-            document.getElementById('g-mt-target').value = g.medium_term?.target_value || '';
-            document.getElementById('g-mt-status').value = g.medium_term?.status || 'En progreso';
-
-            document.getElementById('g-lt-desc').value = g.long_term?.description || '';
-            document.getElementById('g-lt-target').value = g.long_term?.target_value || '';
-            document.getElementById('g-lt-status').value = g.long_term?.status || 'En progreso';
-
-            autoFillGlossaryTemplates();
+            // Renderizamos los arreglos
+            const normalize = (val) => Array.isArray(val) ? val : (val && val.description ? [val] : []);
+            normalize(g.short_term).forEach(goal => addGoalRow('st-goals-container', goal));
+            normalize(g.medium_term).forEach(goal => addGoalRow('mt-goals-container', goal));
+            normalize(g.long_term).forEach(goal => addGoalRow('lt-goals-container', goal));
         }
     } catch (e) { 
         showUIFeedback("Error de lectura.", "error"); 
     }
 }
 
+// ==========================================
+// 🚀 EVENTOS DE FORMULARIO (SUBMITS)
+// ==========================================
 document.getElementById('metrics-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     if(!activeSelectedUserId) return;
@@ -198,7 +262,6 @@ document.getElementById('metrics-form').addEventListener('submit', async (e) => 
     const payload = {
         weight: document.getElementById('m-weight').value,
         height: document.getElementById('m-height').value,
-        // Omitimos enviar "age" ya que el backend la calcula y no debe ser sobreescrita manualmente
         fat_percent: document.getElementById('m-fat').value,
         muscle_percent: document.getElementById('m-muscle').value,
         neck: document.getElementById('m-neck').value,
@@ -240,11 +303,12 @@ document.getElementById('goals-form').addEventListener('submit', async (e) => {
     if(!activeSelectedUserId) return;
     const btn = document.getElementById('btn-submit-goals');
 
+    // Ahora enviamos arreglos extraídos de la interfaz
     const payload = {
         focus: document.getElementById('g-focus').value,
-        st_desc: document.getElementById('g-st-desc').value, st_target: document.getElementById('g-st-target').value, st_status: document.getElementById('g-st-status').value,
-        mt_desc: document.getElementById('g-mt-desc').value, mt_target: document.getElementById('g-mt-target').value, mt_status: document.getElementById('g-mt-status').value,
-        lt_desc: document.getElementById('g-lt-desc').value, lt_target: document.getElementById('g-lt-target').value, lt_status: document.getElementById('g-lt-status').value
+        short_term: extractGoalsArray('st-goals-container'),
+        medium_term: extractGoalsArray('mt-goals-container'),
+        long_term: extractGoalsArray('lt-goals-container')
     };
 
     btn.disabled = true; btn.textContent = 'INDEXANDO MACROCICLO...';
@@ -255,11 +319,14 @@ document.getElementById('goals-form').addEventListener('submit', async (e) => {
             body: JSON.stringify(payload) 
         });
         const data = await res.json();
-        if(data.success) showUIFeedback("Macrociclo de objetivos configurado.");
+        if(data.success) showUIFeedback("Matriz de objetivos algorítmicos guardada.");
     } catch (e) { showUIFeedback("Error de red.", "error"); }
-    btn.disabled = false; btn.textContent = 'Fijar Objetivos Estratégicos';
+    btn.disabled = false; btn.textContent = 'Fijar Matriz Estratégica';
 });
 
+// ==========================================
+// 🎯 INICIALIZACIÓN
+// ==========================================
 window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('loaded');
     
@@ -268,13 +335,6 @@ window.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('user-search-input').addEventListener('input', (e) => {
         loadAthletesSidebar(e.target.value);
-    });
-
-    document.getElementById('g-focus').addEventListener('change', () => {
-        document.getElementById('g-st-desc').value = '';
-        document.getElementById('g-mt-desc').value = '';
-        document.getElementById('g-lt-desc').value = '';
-        autoFillGlossaryTemplates();
     });
     
     loadAthletesSidebar();
