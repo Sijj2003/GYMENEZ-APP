@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GYMENEZ CORE | Gestión de Usuarios</title>
+    <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/auth.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/admin.css"> </head>
+<body class="selection:bg-[#FFC300] selection:text-black overflow-x-hidden min-h-screen flex flex-col bg-[#030305]">
+
+    <div class="fixed inset-0 bg-[url('/static/img/backgrounds/FONDO.png')] bg-cover bg-center opacity-5 -z-10 mix-blend-screen grayscale"></div>
+    <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/50 via-[#030305]/95 to-[#030305] -z-10"></div>
+
+    <header class="w-full border-b border-white/5 bg-black/30 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-black uppercase tracking-tighter text-white">
+                <span class="text-[#FFC300]">GYM</span>ENEZ CORE
+            </h1>
+            <a href="/apps/admin/dashboard.html" class="px-5 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition">
+                ← Volver al Panel
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto w-full px-4 md:px-6 py-8 flex-grow fade-in-up">
+        <div class="glass-panel p-6 md:p-8 rounded-[24px]">
+            
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-white/5 pb-6">
+                <div>
+                    <h2 class="text-2xl font-black text-white uppercase tracking-tighter">Directorio de Atletas</h2>
+                    <p class="text-xs text-gray-500 font-bold tracking-widest uppercase mt-1">Gestión de accesos y membresías</p>
+                </div>
+                <button id="add-user-btn" class="btn-gold px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(255,195,0,0.2)]">
+                    + Inyectar Usuario
+                </button>
+            </div>
+            
+            <div class="mb-6">
+                <input type="text" id="user-search-input" placeholder="Buscar por Nombre, Email o Cédula..." 
+                       class="w-full glass-input p-4 rounded-xl text-sm font-medium">
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-white/5 bg-black/20">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th class="rounded-tl-xl">Nombre Completo</th>
+                            <th>Email</th>
+                            <th>Cédula</th>
+                            <th>Teléfono</th>
+                            <th>Suscripción</th>
+                            <th>Ingreso</th>
+                            <th class="rounded-tr-xl">Controles Tácticos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body" class="text-xs text-gray-300 font-medium">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="user-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-[1010] flex justify-center items-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="modal-content w-full max-w-2xl p-6 md:p-8 rounded-[24px] transform scale-95 transition-transform duration-300">
+            
+            <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
+                <h3 id="modal-title" class="text-xl font-black text-white uppercase tracking-tighter">Añadir Nuevo Usuario</h3>
+                <button id="close-modal-btn" class="text-gray-500 hover:text-[#FFC300] text-3xl leading-none transition-colors">&times;</button>
+            </div>
+
+            <form id="user-form" class="space-y-5">
+                <input type="hidden" id="user-id-field" name="id">
+                <input type="hidden" id="is-edit-mode" value="false">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Nombre</label>
+                        <input type="text" id="name" name="name" required class="w-full glass-input p-3 rounded-xl text-xs uppercase font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Apellido</label>
+                        <input type="text" id="last_name" name="last_name" required class="w-full glass-input p-3 rounded-xl text-xs uppercase font-bold">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Email <span class="text-red-500">*</span></label>
+                        <input type="email" id="email" name="email" required class="w-full glass-input p-3 rounded-xl text-xs font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Contraseña <span id="password-req" class="text-red-500">*</span></label>
+                        <input type="password" id="password" name="password" class="w-full glass-input p-3 rounded-xl text-xs font-mono" required placeholder="Mínimo 6 caracteres">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Cédula</label>
+                        <div class="flex gap-2">
+                            <select id="id_number_prefix" name="id_number_prefix" class="glass-input p-3 rounded-xl text-xs font-bold w-20">
+                                <option value="V">V</option><option value="E">E</option>
+                            </select>
+                            <input type="text" id="id_number" name="id_number" required class="flex-1 glass-input p-3 rounded-xl text-xs font-mono">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label>
+                        <div class="flex gap-2">
+                            <select id="phone_prefix" name="phone_prefix" class="glass-input p-3 rounded-xl text-xs font-bold w-24">
+                                <option value="0414">0414</option><option value="0424">0424</option>
+                                <option value="0412">0412</option><option value="0422">0422</option>
+                                <option value="0416">0416</option><option value="0426">0426</option>
+                            </select>
+                            <input type="tel" id="phone_number_body" name="phone_number_body" required class="flex-1 glass-input p-3 rounded-xl text-xs font-mono">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Suscripción</label>
+                        <select id="subscription_level" name="subscription_level" class="w-full glass-input p-3 rounded-xl text-xs font-bold text-[#FFC300]">
+                            <option value="BASICO" class="text-white">BÁSICO</option>
+                            <option value="PLUS" class="text-white">PLUS</option>
+                            <option value="ULTRA" class="text-white">ULTRA</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Sexo</label>
+                        <select id="sex" name="sex" class="w-full glass-input p-3 rounded-xl text-xs font-bold">
+                            <option value="Hombre">Hombre</option><option value="Mujer">Mujer</option><option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Nacimiento</label>
+                        <input type="date" id="dob" name="dob" class="w-full glass-input p-3 rounded-xl text-xs font-mono text-gray-400">
+                    </div>
+                </div>
+
+                <div class="pt-6 flex justify-end gap-3 border-t border-white/10">
+                    <button type="button" id="cancel-modal-btn" class="px-6 py-3 rounded-xl bg-white/5 text-gray-400 font-bold text-[10px] uppercase tracking-widest hover:text-white transition">Cancelar</button>
+                    <button type="submit" id="submit-btn" class="btn-gold px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em]">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/admin/admin_middleware.js"></script>
+    <script src="/static/js/admin/users.js"></script>
+</body>
+</html>
