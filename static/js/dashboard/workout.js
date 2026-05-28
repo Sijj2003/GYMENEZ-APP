@@ -130,13 +130,20 @@ function selectRPE(exId, value) {
 }
 
 // ==========================================
-// 📦 EMISOR TÁCTICO CON VARIABLES BIO-NUTRITIVAS
+// 📦 EMISOR TÁCTICO CON PARCHE ANTI-DOBLE PETICIÓN
 // ==========================================
 async function saveToJournal(exId) {
     if (isRoutineLocked || !exerciseStates[exId] || !exerciseStates[exId].rpe) return;
     
     const submitBtn = document.getElementById(`submit-journal-${exId}`);
-    if (submitBtn) submitBtn.innerHTML = '<div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
+    
+    // 🛡️ PASO 1: BLOQUEO INMEDIATO DEFENSIVO (Evita dobles peticiones concurrentes)
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.pointerEvents = 'none'; // Congela interacciones del mouse
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        submitBtn.innerHTML = '<div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
+    }
 
     const totalExercises = currentWeekData[selectedDay]?.ejercicios?.length || 0;
     const isLastExercise = (completedExercises.size + 1 === totalExercises);
@@ -190,7 +197,7 @@ async function saveToJournal(exId) {
         updateProgressBar();
         toggleAccordion(exId);
         
-        // 🛡️ CONTROL SEGURO DE INTERFAZ BLINDADA
+        // CONTROL SEGURO DE INTERFAZ BLINDADA
         const card = document.getElementById(`ex-card-${exId}`);
         if (card) card.classList.add('exercise-done');
         
@@ -198,6 +205,14 @@ async function saveToJournal(exId) {
         if (statusBadge) {
             statusBadge.textContent = 'ASENTADO';
             statusBadge.className = 'px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded text-[8px] font-black uppercase tracking-widest';
+        }
+
+        // 🛡️ PASO 2: CONGELAMIENTO PERMANENTE POR ÉXITO (Estética Premium Deshabilitada)
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.style.pointerEvents = 'none';
+            submitBtn.textContent = 'ASENTADO EN JOURNAL';
+            submitBtn.className = 'w-full py-4 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-[0.2em] bg-emerald-950/20 text-emerald-500/40 border border-emerald-500/10 cursor-not-allowed opacity-100 transition-all';
         }
 
         if (isLastExercise) {
@@ -210,7 +225,14 @@ async function saveToJournal(exId) {
     } catch(e) {
         console.error(e);
         showFeedback('Error de conexión al asentar ejercicio.', 'error');
-        if (submitBtn) submitBtn.innerHTML = 'Reintentar Guardado';
+        
+        // 🛡️ LIBERACIÓN EN CASO DE FALLO: Si la red falla, le permitimos reintentar
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.style.pointerEvents = 'auto'; // Devuelve el control al usuario
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            submitBtn.innerHTML = 'Reintentar Guardado';
+        }
     }
 }
 
