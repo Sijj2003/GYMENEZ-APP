@@ -221,10 +221,11 @@
 
                         <!-- PESTAÑA 2: GOALS -->
                         <div id="panel-goals" class="hidden w-full">
-                            <form id="goals-form" class="space-y-4">
-                                <div class="gymenez-glass p-4 flex items-center gap-4">
+                            <form id="goals-form" class="space-y-6">
+                                <!-- MACROCICLO FOCUS -->
+                                <div class="gymenez-glass p-6 flex flex-col md:flex-row items-center gap-4">
                                     <label class="text-[10px] font-black uppercase tracking-widest text-[#FFC300]">Foco Central del Macrociclo:</label>
-                                    <select id="g-focus" class="bg-black border border-white/10 rounded-lg p-2 text-xs font-bold text-white outline-none">
+                                    <select id="g-focus" class="bg-black border border-white/10 rounded-lg p-2 text-xs font-bold text-white outline-none w-full md:w-auto">
                                         <option value="Pérdida de Grasa">Pérdida de Grasa</option>
                                         <option value="Masa Muscular">Masa Muscular</option>
                                         <option value="Rendimiento / Calistenia">Rendimiento / Calistenia</option>
@@ -232,43 +233,55 @@
                                     </select>
                                 </div>
 
-                                <div class="space-y-4">
-                                    <div class="gymenez-glass p-5">
-                                        <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                                            <h4 class="text-xs font-black uppercase tracking-wider text-white">Corto Plazo <span class="text-gray-500 text-[10px] font-bold">(3 Meses)</span></h4>
-                                            <select id="g-st-status" class="bg-black border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300]"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
+                                <!-- CONTENEDORES DINÁMICOS DE OBJETIVOS -->
+                                <div class="space-y-6">
+                                    
+                                    <!-- CORTO PLAZO -->
+                                    <div class="gymenez-glass p-6">
+                                        <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-3">
+                                            <div>
+                                                <h4 class="text-xs font-black uppercase tracking-wider text-white">Corto Plazo <span class="text-gray-500 text-[10px] font-bold">(1 - 3 Meses)</span></h4>
+                                                <p class="text-[8px] text-gray-500 uppercase font-black tracking-widest mt-1">Metas Tácticas y Adaptativas</p>
+                                            </div>
+                                            <button type="button" onclick="addGoalRow('st-goals-container')" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition shadow-md">
+                                                + Añadir Meta
+                                            </button>
                                         </div>
-                                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                                            <div class="lg:col-span-3"><label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción SMART</label><textarea id="g-st-desc" rows="2" class="gymenez-textarea"></textarea></div>
-                                            <div class="flex flex-col justify-end"><label class="block text-[8px] text-gray-500 uppercase font-black mb-1 text-center">Valor Meta</label><input type="text" id="g-st-target" class="gymenez-input font-bold" placeholder="Ej: 75.0 kg"></div>
-                                        </div>
+                                        <div id="st-goals-container" class="space-y-3"></div>
                                     </div>
 
-                                    <div class="gymenez-glass p-5">
-                                        <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                                            <h4 class="text-xs font-black uppercase tracking-wider text-white">Mediano Plazo <span class="text-gray-500 text-[10px] font-bold">(7 Meses)</span></h4>
-                                            <select id="g-mt-status" class="bg-black border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300]"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
+                                    <!-- MEDIANO PLAZO -->
+                                    <div class="gymenez-glass p-6">
+                                        <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-3">
+                                            <div>
+                                                <h4 class="text-xs font-black uppercase tracking-wider text-white">Mediano Plazo <span class="text-gray-500 text-[10px] font-bold">(4 - 7 Meses)</span></h4>
+                                                <p class="text-[8px] text-gray-500 uppercase font-black tracking-widest mt-1">Recomposición Biológica</p>
+                                            </div>
+                                            <button type="button" onclick="addGoalRow('mt-goals-container')" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition shadow-md">
+                                                + Añadir Meta
+                                            </button>
                                         </div>
-                                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                                            <div class="lg:col-span-3"><label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción SMART</label><textarea id="g-mt-desc" rows="2" class="gymenez-textarea"></textarea></div>
-                                            <div class="flex flex-col justify-end"><label class="block text-[8px] text-gray-500 uppercase font-black mb-1 text-center">Valor Meta</label><input type="text" id="g-mt-target" class="gymenez-input font-bold" placeholder="Ej: 14% Grasa"></div>
-                                        </div>
+                                        <div id="mt-goals-container" class="space-y-3"></div>
                                     </div>
 
-                                    <div class="gymenez-glass p-5">
-                                        <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                                            <h4 class="text-xs font-black uppercase tracking-wider text-white">Largo Plazo <span class="text-gray-500 text-[10px] font-bold">(1 Año)</span></h4>
-                                            <select id="g-lt-status" class="bg-black border border-white/10 rounded-lg p-1.5 text-[10px] font-black uppercase text-[#FFC300]"><option value="En progreso">En progreso</option><option value="Cumplido">Cumplido</option></select>
+                                    <!-- LARGO PLAZO -->
+                                    <div class="gymenez-glass p-6">
+                                        <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-3">
+                                            <div>
+                                                <h4 class="text-xs font-black uppercase tracking-wider text-white">Largo Plazo <span class="text-gray-500 text-[10px] font-bold">(8 - 12 Meses)</span></h4>
+                                                <p class="text-[8px] text-gray-500 uppercase font-black tracking-widest mt-1">Consolidación Estructural</p>
+                                            </div>
+                                            <button type="button" onclick="addGoalRow('lt-goals-container')" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition shadow-md">
+                                                + Añadir Meta
+                                            </button>
                                         </div>
-                                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                                            <div class="lg:col-span-3"><label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción SMART</label><textarea id="g-lt-desc" rows="2" class="gymenez-textarea"></textarea></div>
-                                            <div class="flex flex-col justify-end"><label class="block text-[8px] text-gray-500 uppercase font-black mb-1 text-center">Valor Meta</label><input type="text" id="g-lt-target" class="gymenez-input font-bold" placeholder="Ej: Mantener Cargas"></div>
-                                        </div>
+                                        <div id="lt-goals-container" class="space-y-3"></div>
                                     </div>
+
                                 </div>
 
-                                <div class="flex justify-end w-full">
-                                    <button type="submit" id="btn-submit-goals" class="bg-white text-black font-black w-full sm:w-auto px-10 py-4 rounded-xl text-[10px] uppercase tracking-widest hover:bg-gray-200 transition shadow-xl">Fijar Objetivos Estratégicos</button>
+                                <div class="flex justify-end w-full mt-8">
+                                    <button type="submit" id="btn-submit-goals" class="bg-white text-black font-black w-full sm:w-auto px-12 py-4 rounded-xl text-[10px] uppercase tracking-widest hover:bg-gray-200 transition shadow-[0_0_20px_rgba(255,255,255,0.2)]">Fijar Matriz Estratégica</button>
                                 </div>
                             </form>
                         </div>
