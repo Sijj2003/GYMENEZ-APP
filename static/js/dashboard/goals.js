@@ -33,7 +33,7 @@ function renderPremiumDashboard(goals, metrics) {
     const mtGoals = normalizeToArray(goals.medium_term);
     const ltGoals = normalizeToArray(goals.long_term);
 
-    // FÁBRICA INTELIGENTE: Matemática de Progreso Absoluto
+    // FÁBRICA INTELIGENTE: Matemática de Direccionalidad Absoluta
     const createGoalHTML = (goal) => {
         const isDone = goal.status === 'Cumplido';
         const badgeClass = isDone ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-white/10 text-white border-white/20';
@@ -48,14 +48,24 @@ function renderPremiumDashboard(goals, metrics) {
                 const targetVal = parseFloat(goal.target_value);
                 const startVal = parseFloat(goal.start_value);
 
-                // 🧠 SI TENEMOS LOS 3 DATOS: FÓRMULA DE PROGRESO REAL
                 if (!isNaN(currentVal) && !isNaN(targetVal) && !isNaN(startVal) && targetVal !== startVal) {
                     
-                    // Fórmula Maestra: Absorbe reducciones y aumentos por igual
-                    let percent = ((currentVal - startVal) / (targetVal - startVal)) * 100;
+                    // 1. Distancias absolutas
+                    const distanceTotal = Math.abs(targetVal - startVal);
+                    const distanceCovered = Math.abs(currentVal - startVal);
+                    let percent = 0;
+
+                    // 2. Evaluador de Vector (¿Va en la dirección correcta?)
+                    const isImproving = (targetVal < startVal && currentVal <= startVal) || 
+                                        (targetVal > startVal && currentVal >= startVal);
+
+                    if (isImproving) {
+                        percent = (distanceCovered / distanceTotal) * 100;
+                    } else {
+                        // Si hubo retroceso físico respecto al punto de inicio
+                        percent = 0; 
+                    }
                     
-                    // Control de límites (Si el usuario empeoró, la barra no se sale por la izquierda; si llegó, no pasa de 100)
-                    if (percent < 0) percent = 0; 
                     if (percent > 100 || isDone) percent = 100;
 
                     dynamicProgressHtml = `
@@ -72,7 +82,6 @@ function renderPremiumDashboard(goals, metrics) {
                     </div>
                     `;
                 } 
-                // FALLBACK: Si el Admin olvidó colocar un Valor Inicial
                 else if (!isNaN(currentVal) && !isNaN(targetVal)) {
                     dynamicProgressHtml = `
                     <div class="mt-4 pt-3 border-t border-white/5 flex flex-col">
@@ -80,7 +89,7 @@ function renderPremiumDashboard(goals, metrics) {
                         <span class="text-sm font-black tracking-tighter ${isDone ? 'text-emerald-400' : 'text-white'}">
                             ${currentVal} <span class="text-gray-600 text-xs">➡️ ${targetVal}</span>
                         </span>
-                        <span class="text-[8px] text-amber-500/70 uppercase font-bold mt-1">Falta registrar "Valor Inicial" en Admin para ver barra de progreso.</span>
+                        <span class="text-[8px] text-amber-500/70 uppercase font-bold mt-1">Falta registrar "Valor Inicial" en Admin.</span>
                     </div>
                     `;
                 }
