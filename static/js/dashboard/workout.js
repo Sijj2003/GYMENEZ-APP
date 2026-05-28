@@ -171,8 +171,18 @@ async function saveToJournal(exId) {
     };
 
     try {
-        // Simulación de guardado en API
-        await new Promise(r => setTimeout(r, 600));
+        // 🚀 ¡AHORA SÍ CONECTAMOS CON LA BASE DE DATOS REAL!
+        const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token') || localStorage.getItem('token');
+        const res = await fetch(`${API_BASE_URL}/api/client/journal`, {
+            method: 'POST', 
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(journalData)
+        });
+
+        if (!res.ok) throw new Error("Fallo al guardar en BD");
 
         showFeedback('Sobrecarga registrada en el Journal.');
         
