@@ -4,8 +4,8 @@ const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https:/
 let allRoutines = [];
 let allExercises = [];
 let allUsers = [];
+let allRecovery = []; // Memoria para recovery
 
-// Estado temporal para el ensamblador de rutinas
 let currentRoutineExercises = [];
 let currentRoutineUsers = [];
 
@@ -34,56 +34,154 @@ function toggleModal(modalId, show) {
 }
 
 // ==========================================
-// TABS (Pestañas)
+// TABS TRIPLE EJE (Rutinas, Ejercicios, Recovery)
 // ==========================================
 document.getElementById('tab-btn-routines').addEventListener('click', () => switchTab('routines'));
 document.getElementById('tab-btn-exercises').addEventListener('click', () => switchTab('exercises'));
+document.getElementById('tab-btn-recovery').addEventListener('click', () => switchTab('recovery'));
 
 function switchTab(tab) {
     const btnR = document.getElementById('tab-btn-routines');
     const btnE = document.getElementById('tab-btn-exercises');
+    const btnV = document.getElementById('tab-btn-recovery');
+    
     const pnlR = document.getElementById('panel-routines');
     const pnlE = document.getElementById('panel-exercises');
+    const pnlV = document.getElementById('panel-recovery');
+
+    // Reset general
+    [btnR, btnE, btnV].forEach(b => b.className = "px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-colors whitespace-nowrap");
+    [pnlR, pnlE, pnlV].forEach(p => p.classList.add('hidden'));
 
     if (tab === 'routines') {
-        btnR.className = "px-6 py-3 border-b-2 border-[#FFC300] text-[#FFC300] font-black uppercase tracking-widest text-[10px] transition-colors";
-        btnE.className = "px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-colors";
-        pnlR.classList.remove('hidden'); pnlE.classList.add('hidden');
-    } else {
-        btnE.className = "px-6 py-3 border-b-2 border-white text-white font-black uppercase tracking-widest text-[10px] transition-colors";
-        btnR.className = "px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-colors";
-        pnlE.classList.remove('hidden'); pnlR.classList.add('hidden');
+        btnR.className = "px-6 py-3 border-b-2 border-[#FFC300] text-[#FFC300] font-black uppercase tracking-widest text-[10px] transition-colors whitespace-nowrap";
+        pnlR.classList.remove('hidden');
+    } else if (tab === 'exercises') {
+        btnE.className = "px-6 py-3 border-b-2 border-white text-white font-black uppercase tracking-widest text-[10px] transition-colors whitespace-nowrap";
+        pnlE.classList.remove('hidden');
+    } else if (tab === 'recovery') {
+        btnV.className = "px-6 py-3 border-b-2 border-sky-400 text-sky-400 font-black uppercase tracking-widest text-[10px] transition-colors whitespace-nowrap";
+        pnlV.classList.remove('hidden');
     }
 }
 
 // ==========================================
-// DATA FETCHING (Lectura Inicial)
+// DATA SYNC SÍNCRONO GLOBAL
 // ==========================================
 async function fetchAllData() {
     try {
-        const [resR, resE, resU] = await Promise.all([
+        const [resR, resE, resU, resV] = await Promise.all([
             fetch(`${API_BASE_URL}/api/admin/routines`),
             fetch(`${API_BASE_URL}/api/admin/exercises`),
-            fetch(`${API_BASE_URL}/api/admin/users`)
+            fetch(`${API_BASE_URL}/api/admin/users`),
+            fetch(`${API_BASE_URL}/api/admin/recovery`) // Nueva compuerta
         ]);
 
         const dataR = await resR.json();
         const dataE = await resE.json();
         const dataU = await resU.json();
+        const dataV = await resV.json();
 
         allRoutines = dataR.success ? dataR.routines : [];
         allExercises = dataE.success ? dataE.exercises : [];
         allUsers = dataU.success ? dataU.users : [];
+        allRecovery = dataV.success ? dataV.protocols : [];
 
         renderRoutines(allRoutines);
         renderExercises(allExercises);
+        renderRecovery(allRecovery);
     } catch (e) {
-        showUIFeedback("Error de red sincronizando datos físicos.", "error");
+        showUIFeedback("Error sincronizando servidores centrales.", "error");
     }
 }
 
 // ==========================================
-// MÓDULO 1: EJERCICIOS
+// SECCIÓN: RECOVERY ROOM (CRUD GLOBAL)
+// ==========================================
+function renderRecovery(list) {
+    const tbody = document.getElementById('recovery-tbody');
+    tbody.innerHTML = list.length === 0 ? `<tr><td colspan="4" class="text-center py-6 text-gray-500">Salón Recovery vacío.</td></tr>` : '';
+    
+    list.forEach(rec => {
+        const tr = tbody.insertRow();
+        tr.insertCell().innerHTML = `<span class="font-bold text-white uppercase">${rec.name || 'N/A'}</span>`;
+        tr.insertCell().innerHTML = `<span class="truncate block max-w-xs text-[10px] text-gray-400">${rec.description || 'N/A'}</span>`;
+        tr.insertCell().innerHTML = rec.link_tutorial ? `<a href="${rec.link_tutorial}" target="_blank" class="text-sky-400 font-bold text-[9px] uppercase hover:underline">Abrir Guía</a>` : `<span class="text-gray-600 text-[9px]">Sin Video</span>`;
+        
+        const act = tr.insertCell(); act.className = "text-right whitespace-nowrap";
+        act.innerHTML = `
+            <button onclick='openRecoveryModal(${JSON.stringify(rec).replace(/'/g, "&#39;")})' class="text-[9px] font-black text-sky-400 hover:text-white uppercase tracking-widest mr-3">Editar</button>
+            <button onclick="deleteRecovery('${rec.id}', '${rec.name}')" class="text-[9px] font-black text-red-500 hover:text-red-400 uppercase tracking-widest">Eliminar</button>
+        `;
+    });
+}
+
+document.getElementById('recovery-search').addEventListener('input', e => {
+    const v = e.target.value.toLowerCase();
+    renderRecovery(allRecovery.filter(r => (r.name||'').toLowerCase().includes(v)));
+});
+
+document.getElementById('add-recovery-btn').addEventListener('click', () => {
+    document.getElementById('recovery-form').reset();
+    document.getElementById('rec-id').value = '';
+    document.getElementById('rec-is-edit').value = 'false';
+    document.getElementById('rec-modal-title').textContent = 'Inyectar Protocolo Recovery';
+    toggleModal('recovery-modal', true);
+});
+
+function openRecoveryModal(rec) {
+    document.getElementById('recovery-form').reset();
+    document.getElementById('rec-id').value = rec.id;
+    document.getElementById('rec-is-edit').value = 'true';
+    document.getElementById('rec-modal-title').textContent = `Editar: ${rec.name}`;
+    
+    document.getElementById('rec-name').value = rec.name;
+    document.getElementById('rec-desc').value = rec.description;
+    document.getElementById('rec-link').value = rec.link_tutorial || '';
+    document.getElementById('rec-image').value = rec.image_url || '';
+    
+    toggleModal('recovery-modal', true);
+}
+
+document.getElementById('recovery-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const isEdit = document.getElementById('rec-is-edit').value === 'true';
+    const recId = document.getElementById('rec-id').value;
+    const btn = document.getElementById('rec-submit-btn');
+
+    const payload = {
+        name: document.getElementById('rec-name').value.trim(),
+        description: document.getElementById('rec-desc').value.trim(),
+        link_tutorial: document.getElementById('rec-link').value.trim(),
+        image_url: document.getElementById('rec-image').value.trim()
+    };
+
+    btn.disabled = true; btn.textContent = 'GUARDANDO...';
+    const url = isEdit ? `${API_BASE_URL}/api/admin/recovery/${recId}` : `${API_BASE_URL}/api/admin/recovery`;
+
+    try {
+        const res = await fetch(url, { method: isEdit ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+        const data = await res.json();
+        if (data.success) {
+            toggleModal('recovery-modal', false);
+            showUIFeedback("Salón Recovery sincronizado.");
+            fetchAllData();
+        } else showUIFeedback(data.error, 'error');
+    } catch (e) { showUIFeedback("Falla de enlace.", 'error'); }
+    btn.disabled = false; btn.textContent = 'Guardar Protocolo';
+});
+
+async function deleteRecovery(id, name) {
+    if(!confirm(`⚠️ ¿Purgar permanentemente el protocolo global "${name}"?`)) return;
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/recovery/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) { showUIFeedback("Protocolo eliminado."); fetchAllData(); }
+    } catch(e) {}
+}
+
+// ==========================================
+// SECCIÓN: EJERCICIOS (CRUD)
 // ==========================================
 function renderExercises(list) {
     const tbody = document.getElementById('exercises-tbody');
@@ -95,8 +193,7 @@ function renderExercises(list) {
         tr.insertCell().innerHTML = `<span class="truncate block max-w-xs text-[10px] text-gray-400">${ex.description || 'N/A'}</span>`;
         tr.insertCell().innerHTML = ex.link_tutorial ? `<a href="${ex.link_tutorial}" target="_blank" class="text-sky-400 font-bold text-[9px] uppercase hover:underline">Ver Video</a>` : `<span class="text-gray-600 text-[9px]">Sin Video</span>`;
         
-        const act = tr.insertCell();
-        act.className = "text-right";
+        const act = tr.insertCell(); act.className = "text-right whitespace-nowrap";
         act.innerHTML = `
             <button onclick='openExerciseModal(${JSON.stringify(ex).replace(/'/g, "&#39;")})' class="text-[9px] font-black text-white hover:text-[#FFC300] uppercase tracking-widest mr-3">Editar</button>
             <button onclick="deleteExercise('${ex.id}', '${ex.name}')" class="text-[9px] font-black text-red-500 hover:text-red-400 uppercase tracking-widest">Eliminar</button>
@@ -122,11 +219,9 @@ function openExerciseModal(ex) {
     document.getElementById('ex-id').value = ex.id;
     document.getElementById('ex-is-edit').value = 'true';
     document.getElementById('ex-modal-title').textContent = `Editar: ${ex.name}`;
-    
     document.getElementById('ex-name').value = ex.name;
     document.getElementById('ex-desc').value = ex.description;
     document.getElementById('ex-link').value = ex.link_tutorial || '';
-    
     toggleModal('exercise-modal', true);
 }
 
@@ -167,7 +262,7 @@ async function deleteExercise(id, name) {
 }
 
 // ==========================================
-// MÓDULO 2: RUTINAS (ENSAMBLADOR)
+// SECCIÓN: RUTINAS (ENSAMBLADOR)
 // ==========================================
 function renderRoutines(list) {
     const tbody = document.getElementById('routines-tbody');
@@ -180,8 +275,7 @@ function renderRoutines(list) {
         tr.insertCell().innerHTML = `<span class="font-mono text-gray-400">${(rt.exercises||[]).length} Ejercicios</span>`;
         tr.insertCell().innerHTML = `<span class="font-mono text-emerald-400">${(rt.assigned_users||[]).length} Atletas</span>`;
         
-        const act = tr.insertCell();
-        act.className = "text-right whitespace-nowrap";
+        const act = tr.insertCell(); act.className = "text-right whitespace-nowrap";
         act.innerHTML = `
             <button onclick="openRoutineModal('${rt.id}')" class="text-[9px] font-black text-[#FFC300] hover:text-white uppercase tracking-widest mr-3">Configurar</button>
             <button onclick="deleteRoutine('${rt.id}', '${rt.name}')" class="text-[9px] font-black text-red-500 hover:text-red-400 uppercase tracking-widest">Purgar</button>
@@ -194,30 +288,22 @@ document.getElementById('routine-search').addEventListener('input', e => {
     renderRoutines(allRoutines.filter(rt => (rt.name||'').toLowerCase().includes(v)));
 });
 
-// ABRIR MODAL RUTINA
 document.getElementById('add-routine-btn').addEventListener('click', () => {
     document.getElementById('routine-form').reset();
     document.getElementById('rt-id').value = '';
     document.getElementById('rt-is-edit').value = 'false';
     document.getElementById('rt-modal-title').textContent = 'Ensamblar Nueva Rutina';
-    
-    currentRoutineExercises = [];
-    currentRoutineUsers = [];
-    
-    renderAssemblerExercises();
-    renderAssemblerUsers();
+    currentRoutineExercises = []; currentRoutineUsers = [];
+    renderAssemblerExercises(); renderAssemblerUsers();
     toggleModal('routine-modal', true);
 });
 
 function openRoutineModal(id) {
-    const rt = allRoutines.find(x => x.id === id);
-    if (!rt) return;
-
+    const rt = allRoutines.find(x => x.id === id); if (!rt) return;
     document.getElementById('routine-form').reset();
     document.getElementById('rt-id').value = rt.id;
     document.getElementById('rt-is-edit').value = 'true';
     document.getElementById('rt-modal-title').textContent = `Configurar: ${rt.name}`;
-    
     document.getElementById('rt-name').value = rt.name;
     document.getElementById('rt-desc').value = rt.notes || '';
     
@@ -227,118 +313,61 @@ function openRoutineModal(id) {
 
     currentRoutineExercises = [...(rt.exercises || [])];
     currentRoutineUsers = [...(rt.assigned_users || [])];
-
-    renderAssemblerExercises();
-    renderAssemblerUsers();
+    renderAssemblerExercises(); renderAssemblerUsers();
     toggleModal('routine-modal', true);
 }
 
-// LOGICA INTERNA DEL ENSAMBLADOR DE EJERCICIOS
 function renderAssemblerExercises(searchTerm = '') {
     const availableDiv = document.getElementById('rt-available-ex');
     const selectedDiv = document.getElementById('rt-selected-ex');
+    availableDiv.innerHTML = ''; const term = searchTerm.toLowerCase();
     
-    // RENDER DISPONIBLES
-    availableDiv.innerHTML = '';
-    const term = searchTerm.toLowerCase();
-    const filtered = allExercises.filter(ex => (ex.name||'').toLowerCase().includes(term));
-    
-    filtered.forEach(ex => {
-        const isAdded = currentRoutineExercises.find(x => x.exercise_id === ex.id);
-        if (isAdded) return; // Si ya está añadido, no lo mostramos en disponibles
-
+    allExercises.filter(ex => (ex.name||'').toLowerCase().includes(term)).forEach(ex => {
+        if (currentRoutineExercises.find(x => x.exercise_id === ex.id)) return;
         const div = document.createElement('div');
         div.className = "flex justify-between items-center p-2 rounded bg-black/40 border border-white/5 hover:border-white/20 transition cursor-pointer";
-        div.innerHTML = `
-            <span class="text-[10px] font-bold text-gray-300 truncate mr-2">${ex.name}</span>
-            <button type="button" onclick="addExerciseToRoutine('${ex.id}', '${ex.name.replace(/'/g, "\\'")}')" class="text-[10px] text-emerald-400 font-black tracking-widest">+</button>
-        `;
+        div.innerHTML = `<span class="text-[10px] font-bold text-gray-300 truncate mr-2">${ex.name}</span><button type="button" onclick="addExerciseToRoutine('${ex.id}', '${ex.name.replace(/'/g, "\\'")}')" class="text-[10px] text-emerald-400 font-black tracking-widest">+</button>`;
         availableDiv.appendChild(div);
     });
 
-    // RENDER SELECCIONADOS
     selectedDiv.innerHTML = '';
     currentRoutineExercises.forEach((ex, idx) => {
         const div = document.createElement('div');
         div.className = "p-3 rounded-lg bg-black/40 border border-[#FFC300]/20 space-y-2 relative";
         div.innerHTML = `
-            <div class="flex justify-between items-start">
-                <span class="text-[10px] font-black text-[#FFC300] tracking-tighter uppercase leading-tight pr-4">${idx+1}. ${ex.exercise_name}</span>
-                <button type="button" onclick="removeExerciseFromRoutine('${ex.exercise_id}')" class="absolute top-2 right-2 text-red-500 hover:text-red-400 font-bold">&times;</button>
-            </div>
+            <div class="flex justify-between items-start"><span class="text-[10px] font-black text-[#FFC300] tracking-tighter uppercase leading-tight pr-4">${idx+1}. ${ex.exercise_name}</span><button type="button" onclick="removeExerciseFromRoutine('${ex.exercise_id}')" class="absolute top-2 right-2 text-red-500 hover:text-red-400 font-bold">&times;</button></div>
             <div class="flex gap-2">
-                <div class="flex-1">
-                    <label class="text-[8px] text-gray-500 uppercase font-bold">Series</label>
-                    <input type="number" min="1" value="${ex.sets || 4}" onchange="updateExParam('${ex.exercise_id}', 'sets', this.value)" class="w-full bg-black border border-white/10 rounded p-1 text-center text-xs text-white">
-                </div>
-                <div class="flex-1">
-                    <label class="text-[8px] text-gray-500 uppercase font-bold">Reps</label>
-                    <input type="number" min="1" value="${ex.repetitions || 10}" onchange="updateExParam('${ex.exercise_id}', 'repetitions', this.value)" class="w-full bg-black border border-white/10 rounded p-1 text-center text-xs text-white">
-                </div>
-            </div>
-        `;
+                <div class="flex-1"><label class="text-[8px] text-gray-500 uppercase font-bold">Series</label><input type="number" min="1" value="${ex.sets || 4}" onchange="updateExParam('${ex.exercise_id}', 'sets', this.value)" class="w-full bg-black border border-white/10 rounded p-1 text-center text-xs text-white"></div>
+                <div class="flex-1"><label class="text-[8px] text-gray-500 uppercase font-bold">Reps</label><input type="number" min="1" value="${ex.repetitions || 10}" onchange="updateExParam('${ex.exercise_id}', 'repetitions', this.value)" class="w-full bg-black border border-white/10 rounded p-1 text-center text-xs text-white"></div>
+            </div>`;
         selectedDiv.appendChild(div);
     });
-
     document.getElementById('rt-count-ex').textContent = currentRoutineExercises.length;
 }
 
 document.getElementById('rt-search-ex').addEventListener('input', e => renderAssemblerExercises(e.target.value));
+function addExerciseToRoutine(id, name) { currentRoutineExercises.push({ exercise_id: id, exercise_name: name, sets: 4, repetitions: 10 }); renderAssemblerExercises(document.getElementById('rt-search-ex').value); }
+    function removeExerciseFromRoutine(id) { currentRoutineExercises = currentRoutineExercises.filter(x => x.exercise_id !== id); renderAssemblerExercises(document.getElementById('rt-search-ex').value); }
+function updateExParam(id, field, val) { const ex = currentRoutineExercises.find(x => x.exercise_id === id); if(ex) ex[field] = parseInt(val) || 1; }
 
-function addExerciseToRoutine(id, name) {
-    currentRoutineExercises.push({ exercise_id: id, exercise_name: name, sets: 4, repetitions: 10 });
-    renderAssemblerExercises(document.getElementById('rt-search-ex').value);
-}
-function removeExerciseFromRoutine(id) {
-    currentRoutineExercises = currentRoutineExercises.filter(x => x.exercise_id !== id);
-    renderAssemblerExercises(document.getElementById('rt-search-ex').value);
-}
-function updateExParam(id, field, val) {
-    const ex = currentRoutineExercises.find(x => x.exercise_id === id);
-    if(ex) ex[field] = parseInt(val) || 1;
-}
-
-// LOGICA INTERNA DEL ENSAMBLADOR DE USUARIOS
 function renderAssemblerUsers() {
-    const list = document.getElementById('rt-users-list');
-    list.innerHTML = '';
-    
+    const list = document.getElementById('rt-users-list'); list.innerHTML = '';
     allUsers.forEach(u => {
-        const isChecked = currentRoutineUsers.includes(u.id);
-        const label = document.createElement('label');
+        const isChecked = currentRoutineUsers.includes(u.id); const label = document.createElement('label');
         label.className = `flex items-center gap-2 p-2 rounded cursor-pointer transition border ${isChecked ? 'bg-emerald-600/10 border-emerald-500/30' : 'bg-black/20 border-white/5 hover:border-white/20'}`;
-        label.innerHTML = `
-            <input type="checkbox" value="${u.id}" class="accent-emerald-500" ${isChecked ? 'checked' : ''} onchange="toggleUserToRoutine('${u.id}')">
-            <span class="text-[10px] font-bold text-gray-300 truncate">${u.name} ${u.last_name || ''}</span>
-        `;
+        label.innerHTML = `<input type="checkbox" value="${u.id}" class="accent-emerald-500" ${isChecked ? 'checked' : ''} onchange="toggleUserToRoutine('${u.id}')"><span class="text-[10px] font-bold text-gray-300 truncate">${u.name} ${u.last_name || ''}</span>`;
         list.appendChild(label);
     });
 }
+function toggleUserToRoutine(id) { if(currentRoutineUsers.includes(id)) { currentRoutineUsers = currentRoutineUsers.filter(x => x !== id); } else { currentRoutineUsers.push(id); } renderAssemblerUsers(); }
 
-function toggleUserToRoutine(id) {
-    if(currentRoutineUsers.includes(id)) {
-        currentRoutineUsers = currentRoutineUsers.filter(x => x !== id);
-    } else {
-        currentRoutineUsers.push(id);
-    }
-    renderAssemblerUsers();
-}
-
-// GUARDAR RUTINA
 document.getElementById('routine-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const isEdit = document.getElementById('rt-is-edit').value === 'true';
-    const rtId = document.getElementById('rt-id').value;
-    const btn = document.getElementById('rt-submit-btn');
-
+    e.preventDefault(); const form = e.target; const isEdit = document.getElementById('rt-is-edit').value === 'true'; const rtId = document.getElementById('rt-id').value; const btn = document.getElementById('rt-submit-btn');
     const selectedDays = Array.from(document.querySelectorAll('input[name="rt_days"]:checked')).map(cb => cb.value);
 
     const payload = {
-        name: document.getElementById('rt-name').value.trim(),
-        description: document.getElementById('rt-desc').value.trim(),
-        assigned_days: selectedDays,
-        exercises: currentRoutineExercises,
-        assigned_users: currentRoutineUsers
+        name: document.getElementById('rt-name').value.trim(), description: document.getElementById('rt-desc').value.trim(),
+        assigned_days: selectedDays, exercises: currentRoutineExercises, assigned_users: currentRoutineUsers
     };
 
     btn.disabled = true; btn.textContent = 'PROCESANDO...';
@@ -347,25 +376,19 @@ document.getElementById('routine-form').addEventListener('submit', async (e) => 
     try {
         const res = await fetch(url, { method: isEdit ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
         const data = await res.json();
-        if (data.success) {
-            toggleModal('routine-modal', false);
-            showUIFeedback("Rutina ensamblada y asignada exitosamente.");
-            fetchAllData(); // Recarga todo para actualizar tablas
-        } else showUIFeedback(data.error, 'error');
+        if (data.success) { toggleModal('routine-modal', false); showUIFeedback("Rutina ensamblada."); fetchAllData(); } else showUIFeedback(data.error, 'error');
     } catch (e) { showUIFeedback("Error de red", 'error'); }
-    
     btn.disabled = false; btn.textContent = 'Ensamblar Rutina';
 });
 
 async function deleteRoutine(id, name) {
-    if(!confirm(`⚠️ ¿Purgar permanentemente la rutina "${name}"? Todos los atletas perderán acceso a ella.`)) return;
-    try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/routine/${id}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (data.success) { showUIFeedback("Rutina eliminada."); fetchAllData(); }
-    } catch(e) {}
+    if(!confirm(`⚠️ ¿Purgar la rutina "${name}"?`)) return;
+    try { const res = await fetch(`${API_BASE_URL}/api/admin/routine/${id}`, { method: 'DELETE' }); const data = await res.json(); if (data.success) { showUIFeedback("Rutina eliminada."); fetchAllData(); } } catch(e) {}
 }
 
+// ==========================================
+// INITIALIZER
+// ==========================================
 window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('loaded');
     fetchAllData();
