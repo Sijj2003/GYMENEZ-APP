@@ -171,9 +171,9 @@ async function saveToJournal(exId) {
     };
 
     try {
-        // 🚀 ¡AHORA SÍ CONECTAMOS CON LA BASE DE DATOS REAL!
+        // 🚀 ¡CORRECCIÓN DE RUTA! Apuntamos al recurso unificado usando POST
         const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token') || localStorage.getItem('token');
-        const res = await fetch(`${API_BASE_URL}/api/client/journal`, {
+        const res = await fetch(`${API_BASE_URL}/api/client/routines`, {
             method: 'POST', 
             headers: {
                 'Content-Type': 'application/json',
