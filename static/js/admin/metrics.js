@@ -1,6 +1,9 @@
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
+// ID del atleta seleccionado activamente en el espacio de trabajo
+let activeSelectedUserId = null;
+
 // ==========================================
 // 📚 GLOSARIO CIENTÍFICO DE PLANTILLAS SMART
 // ==========================================
@@ -26,6 +29,17 @@ const GOALS_GLOSSARY = {
         lt: "Maximizar la eficiencia del sistema cardiorrespiratorio y consolidar un perfil lipídico y analíticas de salud de élite."
     }
 };
+
+// ==========================================
+// 🛡️ CAPA DE SEGURIDAD (TOKEN BLINDADO)
+// ==========================================
+function getSecureHeaders() {
+    const token = localStorage.getItem('admin_token'); 
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+}
 
 // ==========================================
 // 🛠️ CONTROLADORES VISUALES CORE
@@ -62,45 +76,80 @@ function autoFillGlossaryTemplates() {
     const template = GOALS_GLOSSARY[focusSelected];
     if (!template) return;
 
-    // Solo se autocompleta si el campo de texto está vacío para no machacar datos del admin
     if(!document.getElementById('g-st-desc').value.trim()) document.getElementById('g-st-desc').value = template.st;
     if(!document.getElementById('g-mt-desc').value.trim()) document.getElementById('g-mt-desc').value = template.mt;
     if(!document.getElementById('g-lt-desc').value.trim()) document.getElementById('g-lt-desc').value = template.lt;
 }
 
 // ==========================================
-// 📡 ENLACE DE DATOS CON ENDPOINTS
+// 📡 ENLACE DE DATOS PROTEGIDO (ENDPOINTS)
 // ==========================================
-async function loadUsersDropdown() {
-    const selector = document.getElementById('user-selector');
-    try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/users`);
-        const data = await res.json();
-        if (data.success) {
-            data.users.forEach(u => {
-                const opt = document.createElement('option');
-                opt.value = u.id; opt.textContent = `${u.name} ${u.last_name || ''} (${u.email})`;
-                selector.appendChild(opt);
-            });
-        }
-    } catch (e) { console.error("Error cargando atletas."); }
-}
-
-async function fetchUserProfile(userId) {
-    if (!userId) {
-        document.getElementById('workspace-container').classList.add('hidden');
-        return;
-    }
+async function loadAthletesSidebar(filterText = '') {
+    const container = document.getElementById('athletes-list-container');
+    const badge = document.getElementById('users-count-badge');
     
     try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/fitness-profile/${userId}`);
+        const res = await fetch(`${API_BASE_URL}/api/admin/users`, {
+            headers: getSecureHeaders()
+        });
         const data = await res.json();
         
         if (data.success) {
-            document.getElementById('workspace-container').classList.remove('hidden');
-            document.getElementById('last-sync-tag').textContent = "Expediente Sincronizado";
+            let list = data.users || [];
+            const term = filterText.toLowerCase().trim();
+            
+            if (term) {
+                list = list.filter(u => 
+                    (u.name || '').toLowerCase().includes(term) || 
+                    (u.last_name || '').toLowerCase().includes(term) || 
+                    (u.email || '').toLowerCase().includes(term)
+                );
+            } else {
+                list = list.slice(0, 20); 
+            }
 
-            // Rellenar métricas actuales
+            badge.textContent = list.length;
+            container.innerHTML = list.length === 0 ? `<p class="text-center text-gray-600 font-bold uppercase text-[9px] py-4">Sin Coincidencias</p>` : '';
+
+            list.forEach(u => {
+                const item = document.createElement('div');
+                const isActive = u.id === activeSelectedUserId;
+                
+                item.className = `p-3 rounded-xl border transition {{hardware-acceleration}} duration-300 cursor-pointer flex flex-col gap-0.5 select-none ${isActive ? 'bg-[#FFC300]/10 border-[#FFC300]' : 'bg-black/30 border-white/5 hover:border-white/10'}`;
+                item.innerHTML = `
+                    <span class="font-black text-white uppercase text-[10px] tracking-tight truncate">${u.name} ${u.last_name || ''}</span>
+                    <span class="text-[8px] font-mono text-gray-500 truncate">${u.email}</span>
+                `;
+                
+                item.addEventListener('click', () => {
+                    activeSelectedUserId = u.id;
+                    loadAthletesSidebar(document.getElementById('user-search-input').value);
+                    fetchUserProfile(u.id);
+                });
+                
+                container.appendChild(item);
+            });
+        }
+    } catch (e) {
+        container.innerHTML = `<p class="text-center text-red-400 font-bold uppercase text-[9px] py-4">Sesión Expirada / Error Central</p>`;
+    }
+}
+
+async function fetchUserProfile(userId) {
+    const workspace = document.getElementById('workspace-container');
+    const emptyView = document.getElementById('no-athlete-selected-view');
+    
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/fitness-profile/${userId}`, {
+            headers: getSecureHeaders()
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            emptyView.classList.add('hidden');
+            workspace.classList.remove('hidden');
+
+            // Rellenar métricas antropométricas y mecánicas
             const m = data.metrics || {};
             document.getElementById('m-weight').value = m.weight || '';
             document.getElementById('m-fat').value = m.fat_percent || '';
@@ -116,7 +165,7 @@ async function fetchUserProfile(userId) {
             document.getElementById('m-pull').value = m.rm_pull || '';
             document.getElementById('m-legs').value = m.rm_legs || '';
 
-            // Rellenar objetivos macrociclo
+            // Rellenar objetivos de macrociclo
             const g = data.goals || {};
             document.getElementById('g-focus').value = g.focus || 'Masa Muscular';
             
@@ -132,16 +181,19 @@ async function fetchUserProfile(userId) {
             document.getElementById('g-lt-target').value = g.long_term?.target_value || '';
             document.getElementById('g-lt-status').value = g.long_term?.status || 'En progreso';
 
-            // Si las descripciones de objetivos están vacías, aplicamos el glosario automático de inmediato
             autoFillGlossaryTemplates();
         }
-    } catch (e) { showUIFeedback("Error de lectura biométrica.", "error"); }
+    } catch (e) { 
+        showUIFeedback("Fallo de autenticación o lectura.", "error"); 
+    }
 }
 
-// Envíos de Formulario (Form Submits)
+// ==========================================
+// 🚀 PROCESAMIENTO DE FORMULARIOS SECURE
+// ==========================================
 document.getElementById('metrics-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const userId = document.getElementById('user-selector').value;
+    if(!activeSelectedUserId) return;
     const btn = document.getElementById('btn-submit-metrics');
     
     const payload = {
@@ -154,9 +206,13 @@ document.getElementById('metrics-form').addEventListener('submit', async (e) => 
         rm_legs: document.getElementById('m-legs').value
     };
 
-    btn.disabled = true; btn.textContent = 'ASENTANDO...';
+    btn.disabled = true; btn.textContent = 'ASENTANDO EN LA NUBE...';
     try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/metrics/${userId}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+        const res = await fetch(`${API_BASE_URL}/api/admin/metrics/${activeSelectedUserId}`, { 
+            method: 'POST', 
+            headers: getSecureHeaders(), 
+            body: JSON.stringify(payload) 
+        });
         const data = await res.json();
         if(data.success) showUIFeedback("Telemetría corporal actualizada.");
     } catch (e) { showUIFeedback("Error de red.", "error"); }
@@ -165,7 +221,7 @@ document.getElementById('metrics-form').addEventListener('submit', async (e) => 
 
 document.getElementById('goals-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const userId = document.getElementById('user-selector').value;
+    if(!activeSelectedUserId) return;
     const btn = document.getElementById('btn-submit-goals');
 
     const payload = {
@@ -175,9 +231,13 @@ document.getElementById('goals-form').addEventListener('submit', async (e) => {
         lt_desc: document.getElementById('g-lt-desc').value, lt_target: document.getElementById('g-lt-target').value, lt_status: document.getElementById('g-lt-status').value
     };
 
-    btn.disabled = true; btn.textContent = 'INDEXANDO...';
+    btn.disabled = true; btn.textContent = 'INDEXANDO MACROCICLO...';
     try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/goals/${userId}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+        const res = await fetch(`${API_BASE_URL}/api/admin/goals/${activeSelectedUserId}`, { 
+            method: 'POST', 
+            headers: getSecureHeaders(), 
+            body: JSON.stringify(payload) 
+        });
         const data = await res.json();
         if(data.success) showUIFeedback("Macrociclo de objetivos configurado.");
     } catch (e) { showUIFeedback("Error de red.", "error"); }
@@ -185,24 +245,28 @@ document.getElementById('goals-form').addEventListener('submit', async (e) => {
 });
 
 // ==========================================
-// 🚀 INICIALIZACIÓN
+// 🏎️ ORQUESTRADOR DE INICIALIZACIÓN (DOM)
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('loaded');
     
-    // Listeners del ecosistema
+    // Enlace de navegadores de pestañas duales
     document.getElementById('tab-btn-metrics').addEventListener('click', () => switchTab('metrics'));
     document.getElementById('tab-btn-goals').addEventListener('click', () => switchTab('goals'));
+    
+    // Escucha del filtro del buscador rápido lateral
+    document.getElementById('user-search-input').addEventListener('input', (e) => {
+        loadAthletesSidebar(e.target.value);
+    });
+
+    // Reset estructural automático de foco SMART
     document.getElementById('g-focus').addEventListener('change', () => {
-        // Al alterar el foco, forzamos un reset limpio de descripciones para que entren las nuevas plantillas
         document.getElementById('g-st-desc').value = '';
         document.getElementById('g-mt-desc').value = '';
         document.getElementById('g-lt-desc').value = '';
         autoFillGlossaryTemplates();
     });
     
-    document.getElementById('user-selector').addEventListener('change', (e) => fetchUserProfile(e.target.value));
-
-    // Arranque
-    loadUsersDropdown();
+    // Ejecución de la primera consulta controlada
+    loadAthletesSidebar();
 });
