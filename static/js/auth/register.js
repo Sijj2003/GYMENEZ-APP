@@ -80,14 +80,44 @@ function validateFields(step) {
     if (step === 1) {
         const name = document.getElementById('reg-name').value.trim();
         const lastname = document.getElementById('reg-lastname').value.trim();
-        const email = document.getElementById('reg-email').value.trim();
+        const emailRaw = document.getElementById('reg-email').value; // Captura cruda sin trim para evaluar espacios
 
         if (!name || !letterRegex.test(name) || !lastname || !letterRegex.test(lastname)) {
             showUIFeedback("Nombre y Apellido solo deben contener letras.", "error");
             return false;
         }
+
+        // 🔒 REGLA 1 FRONTEND: Prohibición inmediata de espacios
+        if (emailRaw.includes(' ')) {
+            showUIFeedback("El correo electrónico no puede contener espacios.", "error");
+            return false;
+        }
+
+        const email = emailRaw.trim().toLowerCase();
         if (!email || email.length > 25 || !document.getElementById('reg-email').checkValidity()) {
             showUIFeedback("Ingresa un correo válido (Máximo 25 caracteres).", "error");
+            return false;
+        }
+
+        // 🔒 REGLA 2 FRONTEND: Espejo de verificación estructural de dominios
+        const emailParts = email.split('@');
+        if (emailParts.length !== 2) {
+            showUIFeedback("Estructura de correo electrónico inválida.", "error");
+            return false;
+        }
+
+        const domainPart = emailParts[1];
+        const ALLOWED_DOMAINS = [
+            'gmail.com',
+            'hotmail.com', 'hotmail.es', 'windowslive.com',
+            'outlook.com', 'outlook.es',
+            'proton.me', 'protonmail.com',
+            'yahoo.com', 'yahoo.es', 'ymail.com',
+            'icloud.com'
+        ];
+
+        if (!ALLOWED_DOMAINS.includes(domainPart)) {
+            showUIFeedback("Usa un proveedor seguro (Gmail, Hotmail, Outlook, Proton, Yahoo, iCloud).", "error");
             return false;
         }
     }
