@@ -1,8 +1,19 @@
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
+// 🧠 DICCIONARIO BIOMÉTRICO CENTRALIZADO PARA RECONOCIMIENTO DE UNIDADES
+const METRIC_CONFIG = {
+    "weight": { label: "Peso Corporal", unit: "kg", icon: "⚖️" },
+    "fat_percent": { label: "Grasa Corporal", unit: "%", icon: "🧬" },
+    "muscle_percent": { label: "Masa Muscular", unit: "%", icon: "💪" },
+    "waist": { label: "Perímetro Cintura", unit: "cm", icon: "📏" },
+    "rm_push": { label: "1RM Empuje", unit: "kg", icon: "⚡" },
+    "rm_pull": { label: "1RM Tracción", unit: "kg", icon: "💥" },
+    "rm_legs": { label: "1RM Piernas", unit: "kg", icon: "🏋️" }
+};
+
 // ==========================================
-// 🛠️ RENDERIZADOR DATA-DRIVEN (Con Barras de Progreso Reales)
+// 🛠️ RENDERIZADOR DIGITAL DE ALTA GAMA (DASHBOARD)
 // ==========================================
 function renderPremiumDashboard(goals, metrics) {
     const emptyState = document.getElementById('goals-empty-state');
@@ -33,95 +44,126 @@ function renderPremiumDashboard(goals, metrics) {
     const mtGoals = normalizeToArray(goals.medium_term);
     const ltGoals = normalizeToArray(goals.long_term);
 
-    // FÁBRICA INTELIGENTE: Matemática de Direccionalidad Absoluta
+    // FÁBRICA DE TELEMETRÍA: Generador de Widgets de Control
     const createGoalHTML = (goal) => {
         const isDone = goal.status === 'Cumplido';
-        const badgeClass = isDone ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-white/10 text-white border-white/20';
-        const targetColor = isDone ? 'text-emerald-400' : 'text-[#FFC300]';
-
-        let dynamicProgressHtml = '';
-
-        if (goal.metric_key && goal.metric_key !== 'custom') {
-            
-            if (metrics[goal.metric_key] !== undefined && metrics[goal.metric_key] !== null && metrics[goal.metric_key] !== '') {
-                const currentVal = parseFloat(metrics[goal.metric_key]);
-                const targetVal = parseFloat(goal.target_value);
-                const startVal = parseFloat(goal.start_value);
-
-                if (!isNaN(currentVal) && !isNaN(targetVal) && !isNaN(startVal) && targetVal !== startVal) {
-                    
-                    // 1. Distancias absolutas
-                    const distanceTotal = Math.abs(targetVal - startVal);
-                    const distanceCovered = Math.abs(currentVal - startVal);
-                    let percent = 0;
-
-                    // 2. Evaluador de Vector (¿Va en la dirección correcta?)
-                    const isImproving = (targetVal < startVal && currentVal <= startVal) || 
-                                        (targetVal > startVal && currentVal >= startVal);
-
-                    if (isImproving) {
-                        percent = (distanceCovered / distanceTotal) * 100;
-                    } else {
-                        // Si hubo retroceso físico respecto al punto de inicio
-                        percent = 0; 
-                    }
-                    
-                    if (percent > 100 || isDone) percent = 100;
-
-                    dynamicProgressHtml = `
-                    <div class="mt-4 pt-3 border-t border-white/5">
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-[7px] text-gray-500 font-black uppercase tracking-widest">Progreso Táctico (${Math.round(percent)}%)</span>
-                            <span class="text-[10px] font-mono font-bold ${isDone ? 'text-emerald-400' : 'text-white'}">
-                                ${currentVal} <span class="text-gray-500">/ ${targetVal}</span>
-                            </span>
-                        </div>
-                        <div class="w-full bg-black/50 h-1.5 rounded-full overflow-hidden border border-white/5">
-                            <div class="h-full rounded-full ${isDone ? 'bg-emerald-400' : 'bg-[#FFC300]'} transition-all duration-1000" style="width: ${percent}%;"></div>
-                        </div>
-                    </div>
-                    `;
-                } 
-                else if (!isNaN(currentVal) && !isNaN(targetVal)) {
-                    dynamicProgressHtml = `
-                    <div class="mt-4 pt-3 border-t border-white/5 flex flex-col">
-                        <span class="text-[7px] text-gray-500 font-black uppercase tracking-widest mb-1">Estado Actual vs Meta</span>
-                        <span class="text-sm font-black tracking-tighter ${isDone ? 'text-emerald-400' : 'text-white'}">
-                            ${currentVal} <span class="text-gray-600 text-xs">➡️ ${targetVal}</span>
-                        </span>
-                        <span class="text-[8px] text-amber-500/70 uppercase font-bold mt-1">Falta registrar "Valor Inicial" en Admin.</span>
-                    </div>
-                    `;
-                }
-            } else {
-                dynamicProgressHtml = `
-                <div class="mt-4 pt-3 border-t border-white/5">
-                    <div class="p-2 rounded bg-red-500/10 border border-red-500/20 text-center">
-                        <span class="text-[7px] text-red-400 font-black uppercase tracking-widest">⚠️ Requiere Telemetría Base</span>
-                        <p class="text-[9px] text-gray-400 mt-1 font-medium">Asienta esta variable en el perfil para habilitar métricas.</p>
-                    </div>
-                </div>`;
-            }
-        } 
+        const isCustom = !goal.metric_key || goal.metric_key === 'custom';
         
-        if (!dynamicProgressHtml) {
-            dynamicProgressHtml = `
-            <div class="mt-4 border-t border-white/5 pt-3 flex flex-col">
-                <span class="text-[7px] text-gray-500 font-black uppercase tracking-widest mb-1">Target Específico</span>
-                <span class="text-lg md:text-xl font-black tracking-tighter ${targetColor}">${goal.target_value || '--'}</span>
-            </div>`;
+        let headerLabel = "Meta Cualitativa";
+        let unit = "";
+        let icon = "🎯";
+
+        if (!isCustom && METRIC_CONFIG[goal.metric_key]) {
+            headerLabel = METRIC_CONFIG[goal.metric_key].label;
+            unit = METRIC_CONFIG[goal.metric_key].unit;
+            icon = METRIC_CONFIG[goal.metric_key].icon;
+        }
+
+        // Estilos dinámicos según estado de cumplimiento
+        const statusBadge = isDone 
+            ? `<span class="px-2 py-0.5 rounded text-[7px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">CUMPLIDO</span>`
+            : `<span class="px-2 py-0.5 rounded text-[7px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20">EN PROGRESO</span>`;
+
+        let telemetryBlockHtml = '';
+
+        // Si es una métrica medible y tenemos telemetría en el perfil
+        if (!isCustom && metrics[goal.metric_key] !== undefined && metrics[goal.metric_key] !== null && metrics[goal.metric_key] !== '') {
+            const currentVal = parseFloat(metrics[goal.metric_key]);
+            const targetVal = parseFloat(goal.target_value);
+            const startVal = parseFloat(goal.start_value);
+
+            if (!isNaN(currentVal) && !isNaN(targetVal) && !isNaN(startVal) && targetVal !== startVal) {
+                
+                // 1. Cálculo matemático de distancias relativas
+                const distanceTotal = Math.abs(targetVal - startVal);
+                const distanceCovered = Math.abs(currentVal - startVal);
+                let percent = 0;
+
+                // 2. Evaluador de Vector Direccional (¿Avanza hacia la meta?)
+                const isGoingDownAndCorrect = (targetVal < startVal && currentVal <= startVal);
+                const isGoingUpAndCorrect = (targetVal > startVal && currentVal >= startVal);
+                const isImproving = isGoingDownAndCorrect || isGoingUpAndCorrect;
+
+                if (isImproving) {
+                    percent = (distanceCovered / distanceTotal) * 100;
+                }
+                if (percent > 100 || isDone) percent = 100;
+
+                // 3. Cálculo del Delta Restante o Superado
+                const remainingDelta = targetVal - currentVal;
+                let deltaText = "";
+                let deltaClass = "text-[#FFC300]";
+
+                if (isDone || (targetVal < startVal && currentVal <= targetVal) || (targetVal > startVal && currentVal >= targetVal)) {
+                    deltaText = "✨ META ALCANZADA";
+                    deltaClass = "text-emerald-400 font-black";
+                } else {
+                    const absDelta = Math.abs(remainingDelta).toFixed(1);
+                    deltaText = targetVal < startVal 
+                        ? `FALTAN -${absDelta} ${unit}` 
+                        : `FALTAN +${absDelta} ${unit}`;
+                }
+
+                // Generamos la línea de tiempo visual automatizada
+                telemetryBlockHtml = `
+                    <div class="grid grid-cols-3 gap-1 text-center bg-black/50 p-2.5 rounded-xl border border-white/5 my-4">
+                        <div>
+                            <span class="block text-[7px] text-gray-500 font-black uppercase tracking-widest">Inicial</span>
+                            <span class="text-xs font-mono font-bold text-gray-400">${startVal}${unit}</span>
+                        </div>
+                        <div class="border-x border-white/5">
+                            <span class="block text-[7px] text-gray-400 font-black uppercase tracking-widest">Actual</span>
+                            <span class="text-xs font-mono font-black text-white">${currentVal}${unit}</span>
+                        </div>
+                        <div>
+                            <span class="block text-[7px] text-[#FFC300] font-black uppercase tracking-widest">Objetivo</span>
+                            <span class="text-xs font-mono font-black text-[#FFC300]">${targetVal}${unit}</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-end text-[7px] font-black uppercase tracking-widest">
+                            <span class="text-gray-500">Progreso Relativo (${Math.round(percent)}%)</span>
+                            <span class="${deltaClass}">${deltaText}</span>
+                        </div>
+                        <div class="w-full bg-black/60 h-2 rounded-full overflow-hidden border border-white/5 p-[1px]">
+                            <div class="h-full rounded-full bg-gradient-to-r ${isDone || percent === 100 ? 'from-emerald-500 to-teal-400' : 'from-[#FFC300] to-amber-500'} transition-all duration-1000" style="width: ${percent}%;"></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Fallback si faltan variables en el admin
+                telemetryBlockHtml = `
+                    <div class="mt-4 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 text-center">
+                        <span class="text-[8px] text-amber-400 font-black uppercase tracking-widest">⚠️ Registro Incompleto</span>
+                        <p class="text-[9px] text-gray-500 mt-0.5 font-medium">Falta calibrar el valor inicial en la Consola Core.</p>
+                    </div>
+                `;
+            }
+        } else {
+            // Render para Metas Cualitativas (Hábitos o Textos Libres)
+            telemetryBlockHtml = `
+                <div class="mt-4 pt-3 border-t border-white/5 flex flex-col">
+                    <span class="text-[7px] text-gray-500 font-black uppercase tracking-widest mb-1">Target Específico</span>
+                    <span class="text-lg font-black tracking-tighter text-[#FFC300] uppercase">${goal.target_value || 'Ver Directiva'}</span>
+                </div>
+            `;
         }
 
         return `
-        <div class="p-5 rounded-[20px] bg-black/40 border border-white/5 relative overflow-hidden group hover:border-white/10 transition-colors flex flex-col justify-between">
-            <div>
-                <div class="absolute top-0 right-0 p-4">
-                    <span class="px-2 py-1 rounded text-[7px] font-black uppercase tracking-widest border ${badgeClass}">${goal.status || 'En progreso'}</span>
+            <div class="p-5 rounded-2xl bg-white/[0.01] border border-white/5 hover:border-white/10 transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+                <div>
+                    <div class="flex justify-between items-start gap-4 mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm">${icon}</span>
+                            <h5 class="text-[10px] font-black uppercase tracking-widest text-white">${headerLabel}</h5>
+                        </div>
+                        ${statusBadge}
+                    </div>
+                    <p class="text-[11px] text-gray-400 leading-relaxed font-medium pr-2 mt-1 italic">${goal.description}</p>
                 </div>
-                <p class="text-xs text-gray-300 leading-relaxed font-medium pr-16">${goal.description}</p>
+                ${telemetryBlockHtml}
             </div>
-            ${dynamicProgressHtml}
-        </div>
         `;
     };
     
@@ -129,22 +171,22 @@ function renderPremiumDashboard(goals, metrics) {
     const mtContainer = document.getElementById('g-mt-container');
     const ltContainer = document.getElementById('g-lt-container');
 
-    stContainer.innerHTML = stGoals.length ? stGoals.map(createGoalHTML).join('') : '<p class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Sin asignar.</p>';
-    mtContainer.innerHTML = mtGoals.length ? mtGoals.map(createGoalHTML).join('') : '<p class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Sin asignar.</p>';
-    ltContainer.innerHTML = ltGoals.length ? ltGoals.map(createGoalHTML).join('') : '<p class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Sin asignar.</p>';
+    stContainer.innerHTML = stGoals.length ? stGoals.map(createGoalHTML).join('') : '<div class="text-center py-6 text-gray-600 font-bold uppercase tracking-widest text-[9px]">Sin asignación activa.</div>';
+    mtContainer.innerHTML = mtGoals.length ? mtGoals.map(createGoalHTML).join('') : '<div class="text-center py-6 text-gray-600 font-bold uppercase tracking-widest text-[9px]">Sin asignación activa.</div>';
+    ltContainer.innerHTML = ltGoals.length ? ltGoals.map(createGoalHTML).join('') : '<div class="text-center py-6 text-gray-600 font-bold uppercase tracking-widest text-[9px]">Sin asignación activa.</div>';
 
-    // Un pequeño toque de lujo: Animar las barras de progreso después de dibujarlas
+    // Animación fluida de entrada para las barras de progreso
     setTimeout(() => {
-        document.querySelectorAll('.bg-\\[\\#FFC300\\]').forEach(bar => {
-            const width = bar.style.width;
+        document.querySelectorAll('.bg-gradient-to-r').forEach(bar => {
+            const finalWidth = bar.style.width;
             bar.style.width = '0%';
-            setTimeout(() => { bar.style.width = width; }, 100);
+            setTimeout(() => { bar.style.width = finalWidth; }, 150);
         });
     }, 100);
 }
 
 // ==========================================
-// 🎬 MOTOR CINEMÁTICO: EL VIAJE DEL MACROCICLO
+// 🎬 MOTOR CINEMÁTICO PARALLAX (SÓLO BÁSICOS)
 // ==========================================
 function initCinematicScroll3D() {
     const showcaseView = document.getElementById('basico-showcase-view');
@@ -255,7 +297,7 @@ function initCinematicScroll3D() {
 }
 
 // ==========================================
-// 🚀 INICIALIZADOR CENTRAL BLINDADO
+// 🚀 INICIALIZADOR CENTRAL PERIMETRAL
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token') || localStorage.getItem('token') || localStorage.getItem('admin_token');
@@ -267,8 +309,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        // En una sola petición nos traemos las Métricas de Telemetría Y los Objetivos
-        const res = await fetch(`${API_BASE_URL}/api/client/metrics`);
+        const res = await fetch(`${API_BASE_URL}/api/client/metrics`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         
         if (!res.ok) throw new Error("Acceso denegado.");
         
@@ -282,7 +325,6 @@ window.addEventListener('DOMContentLoaded', async () => {
             plusView.classList.remove('hidden');
             plusView.classList.add('flex');
             
-            // Le pasamos AMBOS datos a la función renderizadora para que cruce la información
             renderPremiumDashboard(data.goals || {}, data.metrics || {});
         } else {
             const basicoView = document.getElementById('basico-showcase-view');
