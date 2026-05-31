@@ -3,7 +3,7 @@ const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https:/
 
 async function loadAthleteBiometricsDashboard() {
     // Busca el token bajo los nombres estándar de tu ecosistema de autenticación
-    const token = localStorage.getItem('user_token') || localStorage.getItem('token') || localStorage.getItem('admin_token');
+    const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token') || localStorage.getItem('token') || localStorage.getItem('admin_token');
     
     const spinner = document.getElementById('loading-spinner');
     const content = document.getElementById('profile-content');
