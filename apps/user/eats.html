@@ -9,13 +9,24 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/static/css/auth.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
-    <link rel="stylesheet" href="/static/css/goals.css"> <!-- Reutilizamos las utilidades 3D -->
+    <link rel="stylesheet" href="/static/css/goals.css"> <style>
+        .category-pill::-webkit-scrollbar { display: none; }
+        .category-pill { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .food-bento-card {
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .food-bento-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(52, 211, 153, 0.3);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.9), 0 0 15px rgba(52, 211, 153, 0.05);
+        }
+    </style>
 </head>
-<body class="selection:bg-[#FFC300] selection:text-black overflow-x-hidden min-h-screen flex flex-col bg-[#030305]">
+<body class="selection:bg-emerald-500 selection:text-black overflow-x-hidden min-h-screen flex flex-col bg-[#030305]">
 
     <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-4 md:px-6 py-2 md:py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none text-center w-11/12 max-w-[350px] border border-white/10"></div>
 
-    <!-- Header -->
     <header class="w-full border-b border-white/5 bg-black/30 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
             <h1 class="text-lg md:text-xl font-black uppercase tracking-tighter block">
@@ -30,30 +41,71 @@
         <p class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Sincronizando Macros...</p>
     </div>
 
-    <!-- VISTA PREMIUM (Oculta para básicos) -->
-    <main id="premium-view" class="hidden max-w-7xl mx-auto w-full px-4 md:px-6 py-12 flex-grow flex-col">
-        <h2 class="text-4xl font-black uppercase tracking-tighter text-white">Eats <span class="text-[#34d399]">Dashboard</span></h2>
-        <p class="text-gray-500 text-xs uppercase tracking-widest mt-2">Tu planificación nutricional activa se mostrará aquí.</p>
+    <main id="premium-view" class="hidden max-w-7xl mx-auto w-full px-4 md:px-6 py-8 md:py-12 flex-grow flex-col">
+        
+        <div class="mb-8 fade-in-up">
+            <p class="text-emerald-400 text-[9px] font-black uppercase tracking-[0.4em] mb-1">Módulo de Nutrición de Precisión</p>
+            <h2 class="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white leading-none">GYMENEZ <span class="text-emerald-500">EATS</span></h2>
+        </div>
+
+        <div class="flex gap-4 border-b border-white/5 mb-8 overflow-x-auto category-pill">
+            <button id="tab-btn-dictionary" onclick="switchEatsTab('dictionary')" class="px-5 py-3 border-b-2 border-emerald-400 text-emerald-400 font-black uppercase tracking-widest text-[10px] transition-colors whitespace-nowrap">📚 Diccionario Químico</button>
+            <button id="tab-btn-diet" onclick="switchEatsTab('diet')" class="px-5 py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-all whitespace-nowrap">🍽️ Mi Plan de Dieta</button>
+        </div>
+
+        <div id="panel-dictionary" class="block w-full space-y-6">
+            
+            <div class="w-full">
+                <input type="text" id="food-search-input" placeholder="Buscar alimento por nombre (ej. pechuga de pollo, avena, aislado)..." class="w-full glass-input p-4 rounded-xl text-sm font-medium">
+            </div>
+
+            <div class="w-full overflow-x-auto category-pill pb-2">
+                <div class="flex gap-2 min-w-max" id="category-pill-container">
+                    </div>
+            </div>
+
+            <div id="foods-grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-auto">
+                </div>
+        </div>
+
+        <div id="panel-diet" class="hidden w-full">
+            <div id="diet-locked-view" class="hidden glass-panel rounded-[32px] p-10 md:p-16 flex-col items-center text-center justify-center border border-white/5 bg-black/20">
+                <div class="w-14 h-14 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10 text-gray-400">
+                    <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <h3 class="text-2xl font-black uppercase tracking-tighter text-white">Diseño de Menús Reservado</h3>
+                <p class="text-gray-400 text-xs md:text-sm font-medium max-w-sm mx-auto leading-relaxed mb-8">El cálculo exacto de porciones líquidas, la sincronización de comidas según el gasto y las estrategias antiinflamatorias exclusivas pertenecen al nivel máximo.</p>
+                <a href="/billing/planes.html" class="btn-gold px-8 py-4 rounded-xl text-[10px] uppercase font-black tracking-widest shadow-[0_0_20px_rgba(255,195,0,0.2)]">Mejorar al Plan Ultra</a>
+            </div>
+
+            <div id="diet-active-view" class="hidden flex-col w-full space-y-6">
+                <div class="glass-panel rounded-3xl p-6 md:p-8 border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-500/[0.03] to-transparent">
+                    <h3 class="text-xl md:text-2xl font-black uppercase text-white tracking-tighter" id="diet-title">Cargando Planificación...</h3>
+                    <p class="text-gray-400 text-xs mt-2 uppercase tracking-widest font-mono" id="diet-updated-date">--</p>
+                </div>
+                
+                <div class="glass-panel rounded-3xl p-6 md:p-8 border border-white/5 bg-white/[0.01]">
+                    <div id="diet-content-body" class="text-gray-300 text-xs md:text-sm leading-relaxed font-medium whitespace-pre-wrap break-words border-l border-white/10 pl-4">
+                        </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
-    <!-- 🎬 VISTA INTERACTIVA MULTICAPA (Usuarios BÁSICOS) -->
     <div id="showcase-view" class="hidden relative w-full h-[550vh] bg-[#020203]">
         
-        <!-- Orbe de Color Líquido (Fondo) -->
         <div id="sc-blur-orb" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] md:w-[500px] md:h-[500px] rounded-full bg-emerald-500/10 blur-[100px] -z-20 transition-all duration-700"></div>
         <div class="fixed inset-0 bg-[url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=1800')] bg-cover bg-center opacity-5 -z-30 filter grayscale"></div>
 
-        <!-- Contenedor Espacial -->
         <div class="sticky top-0 w-full h-screen flex flex-col items-center justify-center p-4 perspective-container overflow-hidden">
             
-            <!-- Textos Narrativos -->
             <div id="sc-text-layer" class="absolute top-20 text-center max-w-xl px-4 transition-all duration-500 z-30">
                 <span class="text-[#34d399] text-[9px] font-black uppercase tracking-[0.6em] block mb-3">Ecosistema EATS</span>
                 <h3 id="sc-title" class="text-3xl md:text-5xl font-[900] uppercase tracking-tighter text-white leading-none">Carga de Macros</h3>
                 <p id="sc-desc" class="text-gray-500 text-[10px] md:text-xs uppercase font-bold tracking-[0.25em] mt-3">Sincronización Circadiana</p>
             </div>
 
-            <!-- 🎴 CAPA 1: Interfaz Principal (La Base) -->
             <div id="sc-layer-main" class="mock-card-3d absolute glass-panel rounded-[32px] p-6 md:p-8 w-full max-w-sm md:max-w-md min-h-[280px] flex flex-col justify-between border-white/10 z-10">
                 <div>
                     <span class="text-[8px] font-black text-gray-500 uppercase tracking-widest block mb-1">Estructura Nutricional</span>
@@ -66,7 +118,6 @@
                 </div>
             </div>
 
-            <!-- 📊 CAPA 2: Gráfico Flotante (Mayor Profundidad) -->
             <div id="sc-layer-float" class="mock-card-3d absolute glass-panel rounded-2xl p-5 w-56 border-emerald-500/20 z-20 pointer-events-none" style="background: rgba(16, 185, 129, 0.05);">
                 <p class="text-[8px] font-black text-emerald-400 uppercase tracking-widest mb-3">Síntesis Proteica</p>
                 <div class="space-y-3">
@@ -81,7 +132,6 @@
                 </div>
             </div>
 
-            <!-- 🔒 PAYWALL CTA -->
             <div id="sc-cta" class="absolute flex flex-col items-center justify-center text-center p-6 transform scale-95 opacity-0 pointer-events-none transition-all duration-700 max-w-md z-30">
                 <div class="w-16 h-16 bg-[#34d399]/10 rounded-full flex items-center justify-center border border-[#34d399]/30 shadow-[0_0_40px_rgba(52,211,153,0.2)] mb-6">
                     <svg class="w-7 h-7 text-[#34d399]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
