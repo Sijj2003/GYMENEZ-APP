@@ -177,7 +177,7 @@ async function saveToJournal(exId) {
 
         if (!res.ok) throw new Error("Fallo al actualizar sesión.");
 
-        showFeedback('Sobrecarga registrada en el Journal Unificado.');
+        showFeedback('registrado en el Journal.');
         
         if (!todayProgressData[selectedDay]) {
             todayProgressData[selectedDay] = { status: journalData.status, exercises: {} };
@@ -413,7 +413,7 @@ function renderRoutineForSelectedDay() {
                         <div class="flex justify-between gap-2 mb-6">
                             ${[1,2,3,4,5].map(i => `<button id="rpe-btn-${ex.id}-${i}" onclick="selectRPE('${ex.id}', ${i})" class="flex-1 py-3 rounded-lg border text-xs font-black transition-all ${i===1?'bg-emerald-500/20 text-emerald-400 border-emerald-500/30':i===2?'bg-lime-500/20 text-lime-400 border-lime-500/30':i===3?'bg-yellow-500/20 text-yellow-400 border-yellow-500/30':i===4?'bg-orange-500/20 text-orange-400 border-orange-500/30':'bg-red-500/20 text-red-400 border-red-500/30'}">${i}</button>`).join('')}
                         </div>
-                        <button id="submit-journal-${ex.id}" onclick="saveToJournal('${ex.id}')" disabled class="w-full btn-gold py-4 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(255,195,0,0.2)] opacity-50 cursor-not-allowed transition-all">Asentar en Journal</button>
+                        <button id="submit-journal-${ex.id}" onclick="saveToJournal('${ex.id}')" disabled class="w-full btn-gold py-4 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(255,195,0,0.2)] opacity-50 cursor-not-allowed transition-all">Guardar en Journal</button>
                     </div>` : `
                     <div class="border-t border-white/10 pt-4 text-center">
                         <p class="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Bloque Registrado (RPE: ${memState.rpe})</p>
