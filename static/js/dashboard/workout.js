@@ -211,7 +211,7 @@ async function saveToJournal(exId) {
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.style.pointerEvents = 'none';
-            submitBtn.textContent = 'ASENTADO EN JOURNAL';
+            submitBtn.textContent = 'GUARDADO EN JOURNAL';
             submitBtn.className = 'w-full py-4 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-[0.2em] bg-emerald-950/20 text-emerald-500/40 border border-emerald-500/10 cursor-not-allowed opacity-100 transition-all';
         }
 
