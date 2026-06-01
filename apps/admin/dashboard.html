@@ -35,11 +35,13 @@
         </div>
     </header>
 
+    <!-- Contenedor Principal de la Consola (Bento Grid 100% Unificado) -->
     <main class="relative z-10 max-w-7xl mx-auto w-full px-4 md:px-6 py-8 md:py-12 flex-grow fade-in-up">
         
+        <!-- Encabezado de Operaciones -->
         <div class="mb-8 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
             <div>
-                <p class="text-gray-500 text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] mb-1 md:mb-2">Centro de Operaciones</p>
+                <p class="text-gray-500 text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] mb-1 md:mb-2">Centro de Operaciones Globales</p>
                 <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter leading-none break-words">
                     Consola <span class="text-[#FFC300]">Gestión.</span>
                 </h2>
@@ -50,38 +52,58 @@
             </div>
         </div>
 
+        <!-- REJILLA DE TARJETAS BENTO-GRID 100% UNIFICADA (ESTILO INTEGRAL CINEMÁTICO) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             
-            <a href="/apps/admin/users.html" class="glass-panel bento-card p-6 md:p-8 rounded-[24px] md:rounded-[32px] flex flex-col justify-between group min-h-[200px]">
-                <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-[#FFC300] group-hover:text-black text-white transition-colors mb-4">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20v-2h2m-6-8a5 5 0 11-10 0 5 5 0 0110 0zM4 16v4h4m-4-4l-1-1m8-1a5 5 0 100-10 5 5 0 000 10z"/></svg>
-                </div>
-                <div>
-                    <h3 class="text-xl font-black uppercase tracking-tight text-white group-hover:text-[#FFC300] transition-colors">Usuarios</h3>
-                    <p class="text-[10px] md:text-xs text-gray-400 mt-2 font-medium">Gestión de atletas, perfiles, accesos y bloqueos de seguridad.</p>
-                </div>
-            </a>
-
-            <a href="/apps/admin/routines.html" class="glass-panel bento-card p-6 md:p-8 rounded-[24px] md:rounded-[32px] flex flex-col justify-between group min-h-[200px]">
-                <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-[#FFC300] group-hover:text-black text-white transition-colors mb-4">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                </div>
-                <div>
-                    <h3 class="text-xl font-black uppercase tracking-tight text-white group-hover:text-[#FFC300] transition-colors">Rutinas Físicas</h3>
-                    <p class="text-[10px] md:text-xs text-gray-400 mt-2 font-medium">Control de contenido, creación de planes y catálogo de ejercicios.</p>
+            <!-- CARD 1: EXPEDIENTES DE USUARIOS (CIAN LAYER) -->
+            <a href="/apps/admin/users.html" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-sky-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px]">
+                <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
+                <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_#0ea5e9]"></span>
+                        <span class="text-[8px] md:text-[9px] font-black text-sky-400 uppercase tracking-[0.2em] block">Control de Cuentas</span>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">SISTEMA <span class="text-sky-400">USUARIOS</span></h3>
+                    <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
+                        Gestión de atletas, perfiles activos, niveles de acceso y bloqueos de seguridad perimetral →
+                    </p>
                 </div>
             </a>
 
-            <a href="/apps/admin/trainers.html" class="glass-panel bento-card p-6 md:p-8 rounded-[24px] md:rounded-[32px] flex flex-col justify-between group min-h-[200px]">
-                <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-[#FFC300] group-hover:text-black text-white transition-colors mb-4">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20h5v-2a3 3 0 00-5.356-1.857M7 20H2v-2a3 3 0 015.356-1.857"/></svg>
-                </div>
-                <div>
-                    <h3 class="text-xl font-black uppercase tracking-tight text-white group-hover:text-[#FFC300] transition-colors">Staff / Coaches</h3>
-                    <p class="text-[10px] md:text-xs text-gray-400 mt-2 font-medium">Directorio, credenciales y asignaciones de entrenadores.</p>
+            <!-- CARD 2: PROGRAMAS Y RUTINAS (PÚRPURA LAYER) -->
+            <a href="/apps/admin/routines.html" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-purple-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px]">
+                <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
+                <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]"></span>
+                        <span class="text-[8px] md:text-[9px] font-black text-purple-400 uppercase tracking-[0.2em] block">Planificación Táctica</span>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">MACROCICLOS <span class="text-purple-400">RUTINAS</span></h3>
+                    <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
+                        Control de contenido físico, dosificación de bloques de fuerza y pool de 100 esenciales →
+                    </p>
                 </div>
             </a>
 
+            <!-- CARD 3: STAFF / COACHES (NARANJA LAYER) -->
+            <a href="/apps/admin/trainers.html" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-orange-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px]">
+                <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
+                <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_#f97316]"></span>
+                        <span class="text-[8px] md:text-[9px] font-black text-orange-400 uppercase tracking-[0.2em] block">Dirección de Equipo</span>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">ORGANIZACIÓN <span class="text-orange-400">STAFF</span></h3>
+                    <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
+                        Directorio del equipo técnico, roles asignados y credenciales de entrenadores →
+                    </p>
+                </div>
+            </a>
+
+            <!-- CARD 4: LABORATORIO BIOMÉTRICO (GOLD LAYER) -->
             <a href="/apps/admin/metrics.html" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-[#FFC300]/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px]">
                 <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
                 <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
@@ -97,6 +119,7 @@
                 </div>
             </a>
 
+            <!-- CARD 5: GESTIÓN DE NUTRICIÓN REAL (EMERALD LAYER) -->
             <a href="/apps/admin/eats.html" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-emerald-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px]">
                 <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
                 <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
