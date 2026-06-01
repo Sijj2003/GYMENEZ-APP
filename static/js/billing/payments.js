@@ -1,0 +1,169 @@
+// ====================================================================
+// 🛡️ NÚCLEO CORE - ARQUITECTURA CONTROLADORA DEL CHECKOUT DE PAGOS
+// ====================================================================
+
+// El identificador AUTH_TOKEN_KEY es heredado desde auth_middleware.js de forma global.
+
+const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
+
+// Memoria volátil del checkout
+let globalActiveTier = 'PLUS';
+let globalRateBCV = 0.00;
+let globalPriceUSD = 0.00;
+
+/**
+ * Conmuta reactivamente los paneles del formulario en la interfaz gráfica
+ * @param {string} method - Identificador de la pestaña ('pago-movil' o 'stripe')
+ */
+function switchPaymentMethod(method) {
+    const btnPagoMovil = document.getElementById('tab-btn-pago-movil');
+    const btnStripe = document.getElementById('tab-btn-stripe');
+    const pnlPagoMovil = document.getElementById('panel-pago-movil');
+    const pnlStripe = document.getElementById('panel-stripe');
+
+    if (!btnPagoMovil || !btnStripe || !pnlPagoMovil || !pnlStripe) return;
+
+    // Desactivación total de clases
+    [btnPagoMovil, btnStripe].forEach(b => b.className = "flex-1 py-4 border-b-2 border-transparent text-gray-500 font-black uppercase tracking-widest text-[10px] transition-all text-center");
+    [pnlPagoMovil, pnlStripe].forEach(p => p.classList.replace('flex', 'hidden'), p => p.classList.add('hidden'));
+
+    if (method === 'pago-movil') {
+        btnPagoMovil.className = "flex-1 py-4 border-b-2 border-[#FFC300] text-[#FFC300] font-black uppercase tracking-widest text-[10px] transition-all text-center bg-white/[0.01]";
+        pnlPagoMovil.classList.remove('hidden');
+    } else {
+        btnStripe.className = "flex-1 py-4 border-b-2 border-white text-white font-black uppercase tracking-widest text-[10px] transition-all text-center bg-white/[0.01]";
+        pnlStripe.classList.remove('hidden');
+        pnlStripe.classList.add('flex');
+    }
+}
+
+/**
+ * Ejecuta la eyección y redirección hacia el canal de soporte internacional de Stripe
+ */
+def redirectToStripeWhatsapp() {
+    const wsMsg = "Hola, deseo realizar el pago de mi servicio GYMENEZ a traves de TDC/TDD internacional en dolares. solicito link de pago a traves de stripe.";
+    window.open(`https://wa.me/584148780392?text=${encodeURIComponent(wsMsg)}`, '_blank');
+}
+
+/**
+ * Despacha la orden de registro financiero atómico hacia el backend core
+ */
+async function handlePaymentSubmit(event) {
+    event.preventDefault();
+    
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    const btnSubmit = document.getElementById('btn-submit-report');
+    const bankVal = document.getElementById('form-bank').value;
+    const refVal = document.getElementById('form-reference').value.trim();
+
+    if (!bankVal || !refVal) {
+        showUIFeedback("Por favor, complete los datos requeridos del Pago Móvil.", "error");
+        return;
+    }
+
+    if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = "PROPAGANDO TRANSACCIÓN...";
+    }
+
+    // Estructuración del payload según la firma estricta exigida por el Backend
+    const payload = {
+        plan: globalActiveTier,
+        banco: bankVal,
+        referencia: refVal
+    };
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/payments/report`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // Autenticación Bearer forzada
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        
+        if (res.ok && data.success) {
+            showUIFeedback("Pago reportado con éxito. En espera de aprobación por el Core.", "success");
+            setTimeout(() => {
+                window.location.href = '/apps/start/inicio.html';
+            }, 2500);
+        } else {
+            showUIFeedback(data.error || "Fallo en la validación transaccional.", "error");
+            if (btnSubmit) {
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = "Reportar Transferencia Obligatoria";
+            }
+        }
+    } catch (error) {
+        console.error("Error crítico de red en pasarela:", error);
+        showUIFeedback("Fallo perimetral de red conectando con la Bóveda.", "error");
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Reportar Transferencia Obligatoria";
+        }
+    }
+}
+
+// Inicializador del Pipeline del Checkout al cargar el DOM
+window.addEventListener('DOMContentLoaded', async () => {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!token) {
+        window.location.href = '/apps/start/login.html';
+        return;
+    }
+
+    // 1. Extraer el plan solicitado desde los parámetros de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    let tierParam = urlParams.get('tier');
+    globalActiveTier = tierParam ? tierParam.toUpperCase() : 'PLUS';
+
+    // Restricción Zero Trust ante alteración manual de URL params de planes inexistentes
+    if (!['PLUS', 'ULTRA'].includes(globalActiveTier)) {
+        globalActiveTier = 'PLUS';
+    }
+
+    try {
+        // 2. Ejecutar consulta asíncrona de tasa cambiaria BCV desde el backend (Lecturas amortizadas)
+        const resRate = await fetch(`${API_BASE_URL}/api/bcv-rate`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const dataRate = await resRate.json();
+
+        if (resRate.ok && dataRate.success) {
+            globalRateBCV = float(dataRate.rate);
+            
+            // 3. Emparejar el precio de forma inmutable simulando la matriz maestra de la BD
+            globalPriceUSD = globalActiveTier === 'ULTRA' ? 25.00 : 4.99; // Precio promocional Plus del backend
+            const totalBs = round(globalPriceUSD * globalRateBCV, 2);
+
+            // 4. Inyección atómica de datos en el bloque analítico derecho
+            document.getElementById('summary-plan-name').textContent = globalActiveTier;
+            document.getElementById('summary-price-usd').textContent = `$${globalPriceUSD.toFixed(2)}`;
+            document.getElementById('summary-bcv').textContent = `${globalRateBCV.toFixed(2)} Bs / USD`;
+            document.getElementById('summary-total-bs').textContent = `${totalBs.toLocaleString("es-VE", { minimumFractionDigits: 2 })} Bs`;
+
+            // 5. Revelar interfaz y apagar cortina de carga
+            document.getElementById('payment-loader').classList.add('hidden');
+            const ws = document.getElementById('payment-workspace');
+            ws.classList.remove('hidden');
+            ws.classList.add('flex');
+
+            // Inicializar por defecto la pestaña de pago móvil nacional
+            switchPaymentMethod('pago-movil');
+        } else {
+            showUIFeedback("Incapacidad del Core para certificar la divisa cambiaria.", "error");
+        }
+    } catch (err) {
+        console.error("Fallo de sincronización inicial:", err);
+        document.getElementById('payment-loader').innerHTML = '<p class="text-red-400 font-bold uppercase tracking-widest text-[10px]">❌ Error de comunicación con el Núcleo Financiero.</p>';
+    }
+});
+
+// Utilidad local de redondeo matemático exacto
+function round(value, decimals) {
+    return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+}
