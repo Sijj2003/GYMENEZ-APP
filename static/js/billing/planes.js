@@ -2,8 +2,10 @@
 // 🛡️ NÚCLEO CORE - CONTROLADOR AUTOMATIZADO DE CATÁLOGO Y DESCUENTOS
 // ====================================================================
 
-const AUTH_TOKEN_KEY = 'gymen_auth_token';
+// REMEDIACIÓN CRÍTICA: Se elimina la redeclaración de AUTH_TOKEN_KEY.
+// La constante ya se encuentra inyectada en el Scope global por auth_middleware.js.
 
+// Configuración adaptativa de Endpoints perimetrales
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
@@ -19,6 +21,7 @@ function selectTier(tierName) {
 window.addEventListener('DOMContentLoaded', async () => {
     document.body.classList.add('loaded');
 
+    // Recuperar el pasaporte digital usando la llave declarada en auth_middleware.js
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (!token) {
         window.location.href = '/apps/start/login.html';
@@ -46,7 +49,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         const currentLevel = String(profileData.profile.subscription_level || 'BASICO').toUpperCase();
         const plans = catalogData.plans || [];
 
-        // Clase inmutable de desactivación de botones
+        // Clase inmutable de desactivación de botones estéticos de la marca
         const disabledBtnClass = "w-full py-5 rounded-2xl bg-white/5 border border-white/10 text-gray-500 font-black text-xs uppercase tracking-[0.2em] cursor-not-allowed text-center transition-all duration-300";
 
         // 🏗️ ITERADOR ATÓMICO: Inyecta precios y configuraciones dinámicas del Backend
