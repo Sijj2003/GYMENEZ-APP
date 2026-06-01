@@ -12,12 +12,18 @@ const CATEGORIES = [
 ];
 
 // ==========================================
-// 🛠️ RENDERIZADOR BENTO DE ALTA FIDELIDAD
+// 🛠️ RENDERIZADOR BENTO CORREGIDO (SIN LETRAS EXTRAÑAS Y MACROS REDONDEADOS)
 // ==========================================
 function createFoodBentoCard(food) {
     const card = document.createElement('div');
     card.className = "glass-panel food-bento-card rounded-2xl border border-white/5 bg-white/[0.01] p-5 flex flex-col justify-between relative overflow-hidden";
     
+    // 🛡️ PARCHE DE REDONDEO SEGURO: Clavamos exactamente 2 decimales para evitar el desborde numérico
+    const proteins = Number(food.proteins || 0).toFixed(2);
+    const carbs = Number(food.carbs_net || 0).toFixed(2);
+    const fats = (Number(food.fats_saturated || 0) + Number(food.fats_unsaturated || 0)).toFixed(2);
+    const calories = Number(food.calories || 0).toFixed(0); // Las calorías las dejamos redondas sin decimales
+
     // Evaluar Banderas Clínicas de Seguridad Alimentaria
     let allergenBadgesHtml = '';
     if (food.has_gluten) allergenBadgesHtml += `<span class="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[6.5px] font-black tracking-widest uppercase">Gluten</span>`;
@@ -30,28 +36,33 @@ function createFoodBentoCard(food) {
 
     card.innerHTML = `
         <div>
+            <!-- Categoría y Alérgenos -->
             <div class="flex justify-between items-start mb-2 gap-2">
                 <span class="text-[7.5px] font-black text-gray-500 uppercase tracking-widest truncate max-w-[60%]">${food.category}</span>
                 <div class="flex gap-1 flex-wrap justify-end">${allergenBadgesHtml}</div>
             </div>
             
+            <!-- Nombre del Alimento -->
             <h4 class="text-base font-black uppercase text-white tracking-tighter truncate leading-tight">${food.name}</h4>
             <span class="text-[7px] font-bold text-gray-600 tracking-widest uppercase block mt-0.5">Por cada 100g base</span>
             
+            <!-- Macros Core Grid (Corregido y Limpio de texto intruso) -->
             <div class="grid grid-cols-3 gap-1 bg-black/40 border border-white/5 rounded-xl p-2 text-center my-4">
-                <div><span class="block text-[6.5px] text-gray-500 font-black uppercase tracking-wider">PROT</span><span class="text-xs font-mono font-black text-white">${food.proteins}g</span></div>
-                <div class="border-x border-white/5">默默<span class="block text-[6.5px] text-gray-500 font-black uppercase tracking-wider">CARB</span><span class="text-xs font-mono font-black text-emerald-400">${food.carbs_net}g</span></div>
-                <div><span class="block text-[6.5px] text-gray-500 font-black uppercase tracking-wider">GRASA</span><span class="text-xs font-mono font-black text-amber-500">${food.fats_saturated + food.fats_unsaturated}g</span></div>
+                <div><span class="block text-[6.5px] text-gray-500 font-black uppercase tracking-wider">PROT</span><span class="text-xs font-mono font-black text-white">${proteins}g</span></div>
+                <div class="border-x border-white/5"><span class="block text-[6.5px] text-gray-500 font-black uppercase tracking-wider">CARB</span><span class="text-xs font-mono font-black text-emerald-400">${carbs}g</span></div>
+                <div><span class="block text-[6.5px] text-gray-500 font-black uppercase tracking-wider">GRASA</span><span class="text-xs font-mono font-black text-amber-500">${fats}g</span></div>
             </div>
 
+            <!-- Parámetros Avanzados -->
             <div class="space-y-1.5 text-[9px] border-t border-white/5 pt-3 font-medium text-gray-400">
-                <div class="flex justify-between"><span>🔥 Energía Estructural:</span><span class="font-mono font-bold text-white">${food.calories} kcal</span></div>
+                <div class="flex justify-between"><span>🔥 Energía Estructural:</span><span class="font-mono font-bold text-white">${calories} kcal</span></div>
                 <div class="flex justify-between"><span>📊 Índice Glucémico (IG):</span><span class="font-mono font-bold ${food.glycemic_index > 65 ? 'text-red-400' : 'text-emerald-400'}">${food.glycemic_index}</span></div>
                 <div class="flex justify-between"><span>🧠 Índice Saciante:</span><span class="font-bold text-white">${food.satiety_index}</span></div>
                 <div class="flex justify-between"><span>🧬 Valor Biológico (VB):</span><span class="font-mono font-bold text-sky-400">${food.biological_value > 0 ? food.biological_value : '--'}</span></div>
             </div>
         </div>
         
+        <!-- Indicadores Fisiológicos -->
         ${physiologicalFlagsHtml ? `<div class="mt-4 pt-2.5 border-t border-dashed border-white/5 flex gap-1 flex-wrap">${physiologicalFlagsHtml}</div>` : ''}
     `;
     return card;
