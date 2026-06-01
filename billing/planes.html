@@ -6,9 +6,7 @@
     <title>GYMENEZ | Membresías de Élite</title>
     
     <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts para Inmersión de Alta Gama -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
@@ -18,8 +16,6 @@
             color: #ffffff;
             overflow-x: hidden;
         }
-
-        /* Glassmorphism Premium Refinado con Desenfoque Profundo */
         .premium-glass {
             background: rgba(10, 10, 15, 0.65);
             backdrop-filter: blur(28px);
@@ -28,45 +24,25 @@
             box-shadow: 0 35px 70px -15px rgba(0, 0, 0, 0.9);
             transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
-
-        /* Luces de Neón Desaturadas para Resplandor de Fondo */
-        .neon-glow-amber {
-            box-shadow: 0 0 50px -10px rgba(255, 195, 0, 0.15), inset 0 0 20px rgba(255, 195, 0, 0.05);
-        }
-        
-        .neon-glow-sky {
-            box-shadow: 0 0 50px -10px rgba(56, 189, 248, 0.15), inset 0 0 20px rgba(56, 189, 248, 0.05);
-        }
-
-        /* Animación de entrada fluida estilo Apple */
         .fade-in-up {
             animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             opacity: 0;
             transform: translateY(30px);
         }
-
         @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        /* Micro-interacción de Tarjeta */
         .tier-card:hover {
             transform: translateY(-8px) scale(1.01);
             border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 45px 80px -20px rgba(0, 0, 0, 0.95);
         }
+        /* Resplandores dinámicos asignados por JS */
+        .glow-white { box-shadow: 0 0 40px -15px rgba(255, 255, 255, 0.05); }
+        .glow-yellow { box-shadow: 0 0 50px -10px rgba(255, 195, 0, 0.12), inset 0 0 20px rgba(255, 195, 0, 0.03); }
+        .glow-ultra { box-shadow: 0 0 60px -10px rgba(234, 179, 8, 0.18), inset 0 0 25px rgba(234, 179, 8, 0.05); }
         
-        .tier-card-active {
-            border-color: rgba(255, 195, 0, 0.4) !important;
-            background: linear-gradient(180deg, rgba(255, 195, 0, 0.03) 0%, rgba(10, 10, 15, 0.8) 100%) !important;
-        }
-
-        /* Tipografía Avanzada de Precios */
         .price-clamp {
-            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-size: clamp(2.2rem, 4.5vw, 3.8rem);
             line-height: 1;
             font-weight: 900;
             letter-spacing: -0.05em;
@@ -75,15 +51,12 @@
 </head>
 <body class="selection:bg-[#FFC300] selection:text-black overflow-x-hidden min-h-screen flex flex-col justify-between">
 
-    <!-- Notificaciones Flotantes de la UI -->
     <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none text-center w-11/12 max-w-[360px] border backdrop-blur-md bg-black/90 border-white/10"></div>
 
-    <!-- Capas del Entorno Atmosférico de Fondo -->
     <div class="fixed inset-0 bg-[url('/static/img/backgrounds/FONDO.png')] bg-cover bg-center opacity-[0.03] -z-10 mix-blend-screen grayscale"></div>
-    <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/40 via-[#030305]/95 to-[#030305] -z-10"></div>
+    <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/60 via-[#030305]/95 to-[#030305] -z-10"></div>
     <div class="fixed top-[-10%] left-1/2 -translate-x-1/2 w-[80vw] h-[50vh] bg-gradient-to-b from-amber-500/5 to-transparent blur-[120px] rounded-full -z-20"></div>
 
-    <!-- 🧭 HEADER UNIVERSAL BILATERADO -->
     <header class="w-full border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='/apps/start/inicio.html'">
@@ -92,126 +65,91 @@
                     <span class="text-[#FFC300]">GYM</span><span class="text-white">ENEZ</span>
                 </h1>
             </div>
-            <a href="/apps/start/inicio.html" class="px-5 py-2 rounded-xl border border-white/10 text-gray-300 font-bold text-[10px] uppercase tracking-widest hover:bg-white hover:text-black hover:border-white transition-all duration-300">
+            <a href="/apps/start/inicio.html" class="px-5 py-2 rounded-xl border border-white/10 text-gray-300 font-bold text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-all duration-300">
                 Volver al Hub
             </a>
         </div>
     </header>
 
-    <!-- 👑 SECCIÓN CENTRAL DE DOSSIER DE PLANES -->
-    <main class="max-w-7xl mx-auto w-full px-6 py-12 md:py-24 flex-grow flex flex-col justify-center relative">
+    <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 md:py-20 flex-grow flex flex-col justify-center">
         
-        <!-- Encabezado Táctico del Macrociclo -->
-        <div class="text-center mb-20 fade-in-up">
-            <p class="text-[#FFC300] text-[10px] font-black uppercase tracking-[0.4em] mb-4">Optimización Biológica Inteligente</p>
+        <div class="text-center mb-16 fade-in-up">
+            <p class="text-[#FFC300] text-[10px] font-black uppercase tracking-[0.4em] mb-4">Pipeline de Calibración Biológica</p>
             <h2 class="text-4xl sm:text-5xl md:text-6xl font-[900] uppercase tracking-tighter text-white leading-none">
                 Planes de <span class="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-300 to-gray-500">Suscripción</span>
             </h2>
             <div class="w-12 h-1 bg-[#FFC300] mx-auto mt-6 rounded-full shadow-[0_0_15px_rgba(255,195,0,0.4)]"></div>
-            <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mt-6 max-w-md mx-auto leading-relaxed">
-                Comando estratégico adaptado a tu nivel de rendimiento, control analítico y requerimientos bioquímicos.
-            </p>
         </div>
 
-        <!-- REJILLA BENTO TRICOLUMNA DE MEMBRESÍAS -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch w-full">
+        <div id="pricing-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch w-full">
             
-            <!-- 1. COMPROMISO: PLAN BÁSICO -->
-            <div id="tier-basico" class="premium-glass tier-card rounded-[32px] p-6 md:p-8 flex flex-col justify-between relative overflow-hidden fade-in-up" style="animation-delay: 0.1s;">
+            <div id="tier-BASICO" class="premium-glass tier-card rounded-[32px] p-6 md:p-8 flex flex-col justify-between relative overflow-hidden fade-in-up" style="animation-delay: 0.1s;">
                 <div>
-                    <div class="flex justify-between items-start mb-6">
+                    <div class="flex justify-between items-center mb-6">
                         <div>
-                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest block mb-1">Nivel 01</span>
+                            <span id="tag-render-BASICO" class="text-[9px] font-black uppercase tracking-widest block mb-1 text-gray-500">Cargando...</span>
                             <h3 class="text-2xl font-black uppercase tracking-tighter text-white">Básico</h3>
                         </div>
-                        <span class="px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-gray-400 font-mono text-[8px] font-black tracking-widest uppercase">Standard</span>
+                        <span id="badge-promo-BASICO" class="hidden px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg text-gray-400 font-mono text-[8px] font-black tracking-widest uppercase">Gratis</span>
                     </div>
-                    
                     <p class="text-gray-400 text-xs font-medium leading-relaxed mb-6">Acceso esencial al perímetro del sistema de entrenamiento guiado automatizado.</p>
                     
-                    <div class="mb-8 flex items-baseline gap-1">
-                        <span class="price-clamp text-white">$0</span>
-                        <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest">/ Mes</span>
-                    </div>
+                    <div id="price-render-BASICO" class="mb-8 flex flex-col justify-center min-h-[70px]">
+                        </div>
                     
-                    <ul class="space-y-4 border-t border-white/5 pt-6 text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                        <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span> Rutinas de Entrenamiento</li>
-                        <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span> Registro Perfil Base</li>
-                        <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span> Despacho Pulse Central</li>
-                        <li class="flex items-center gap-3 opacity-25"><span class="w-1.5 h-1.5 rounded-full bg-gray-700"></span> Telemetría de Metas (Goals)</li>
-                        <li class="flex items-center gap-3 opacity-25"><span class="w-1.5 h-1.5 rounded-full bg-gray-700"></span> Plan Bioquímico Eats</li>
-                    </ul>
+                    <ul id="features-BASICO" class="space-y-4 border-t border-white/5 pt-6 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                        </ul>
                 </div>
                 <div class="mt-12">
-                    <button id="btn-basico" onclick="selectTier('BASICO')" class="w-full py-5 rounded-2xl border border-white/10 text-white font-black text-xs uppercase tracking-[0.2em] hover:bg-white hover:text-black hover:border-white transition-all duration-300">
+                    <button id="btn-BASICO" onclick="selectTier('BASICO')" class="w-full py-5 rounded-2xl border border-white/10 text-white font-black text-xs uppercase tracking-[0.2em] transition-all duration-300">
                         Seleccionar Plan
                     </button>
                 </div>
             </div>
 
-            <!-- 2. COMPROMISO: PLAN PLUS (RECOMENDADO) -->
-            <div id="tier-plus" class="premium-glass neon-glow-sky tier-card rounded-[32px] p-6 md:p-8 flex flex-col justify-between relative overflow-hidden md:-translate-y-3 fade-in-up" style="animation-delay: 0.2s;">
-                <div class="absolute top-0 right-0 px-4 py-1.5 bg-sky-500/10 border-b border-l border-sky-500/20 text-sky-400 font-black text-[8px] tracking-widest uppercase rounded-bl-xl shadow-md">Recomendado</div>
-                
+            <div id="tier-PLUS" class="premium-glass tier-card rounded-[32px] p-6 md:p-8 flex flex-col justify-between relative overflow-hidden fade-in-up" style="animation-delay: 0.2s;">
+                <div id="badge-top-PLUS" class="absolute top-0 right-0 hidden px-4 py-1.5 bg-sky-500/10 border-b border-l border-sky-500/20 text-sky-400 font-black text-[8px] tracking-widest uppercase rounded-bl-xl shadow-md">Promoción</div>
                 <div>
-                    <div class="flex justify-between items-start mb-6 mt-2">
+                    <div class="flex justify-between items-center mb-6 mt-2">
                         <div>
-                            <span class="text-[9px] font-black text-sky-400 uppercase tracking-widest block mb-1">Nivel 02</span>
+                            <span id="tag-render-PLUS" class="text-[9px] font-black uppercase tracking-widest block mb-1 text-gray-500">Cargando...</span>
                             <h3 class="text-2xl font-black uppercase tracking-tighter text-white">Plus</h3>
                         </div>
                     </div>
+                    <p class="text-gray-300 text-xs font-medium leading-relaxed mb-6">Control analítico integral de tu fuerza, consistencia y objetivos corporales.</p>
                     
-                    <p class="text-gray-300 text-xs font-medium leading-relaxed mb-6">Control analítico avanzado de tu fuerza, consistencia y objetivos corporales.</p>
+                    <div id="price-render-PLUS" class="mb-8 flex flex-col justify-center min-h-[70px]">
+                        </div>
                     
-                    <div class="mb-8 flex items-baseline gap-1">
-                        <span class="price-clamp text-white">$13.99</span>
-                        <span class="text-[9px] font-black text-sky-400 uppercase tracking-widest">/ Mes</span>
-                    </div>
-                    
-                    <ul class="space-y-4 border-t border-white/5 pt-6 text-[10px] font-bold uppercase tracking-wider text-gray-300">
-                        <li class="flex items-center gap-3 text-white"><span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8]"></span> Ecosistema Básico Incluido</li>
-                        <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span> Telemetría Biométrica Avanzada</li>
-                        <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span> Dashboard de Metas Real (Goals)</li>
-                        <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span> Canal Cinemático GYMENEZ ON</li>
-                        <li class="flex items-center gap-3 opacity-25"><span class="w-1.5 h-1.5 rounded-full bg-gray-700"></span> Plan Bioquímico Eats</li>
-                    </ul>
+                    <ul id="features-PLUS" class="space-y-4 border-t border-white/5 pt-6 text-[10px] font-bold uppercase tracking-wider text-gray-300">
+                        </ul>
                 </div>
                 <div class="mt-12">
-                    <button id="btn-plus" onclick="selectTier('PLUS')" class="w-full py-5 rounded-2xl bg-white text-black font-black text-xs uppercase tracking-[0.2em] shadow-[0_15px_40px_rgba(255,255,255,0.08)] hover:bg-gray-200 transition-all duration-300 transform hover:scale-[1.02]">
+                    <button id="btn-PLUS" onclick="selectTier('PLUS')" class="w-full py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all duration-300">
                         Adquirir Nivel Plus
                     </button>
                 </div>
             </div>
 
-            <!-- 3. COMPROMISO: PLAN ULTRA (MÁXIMO EXPEDIENTE) -->
-            <div id="tier-ultra" class="premium-glass neon-glow-amber tier-card rounded-[32px] p-6 md:p-8 flex flex-col justify-between relative overflow-hidden fade-in-up" style="animation-delay: 0.3s;">
+            <div id="tier-ULTRA" class="premium-glass tier-card rounded-[32px] p-6 md:p-8 flex flex-col justify-between relative overflow-hidden fade-in-up" style="animation-delay: 0.3s;">
                 <div class="absolute -right-20 -top-20 w-40 h-40 bg-[#FFC300]/5 rounded-full blur-3xl pointer-events-none"></div>
-
                 <div>
-                    <div class="flex justify-between items-start mb-6">
+                    <div class="flex justify-between items-center mb-6">
                         <div>
-                            <span class="text-[9px] font-black text-[#FFC300] uppercase tracking-widest block mb-1">Nivel Máximo</span>
-                            <h3 class="text-2xl font-black uppercase tracking-tighter text-[#FFC300]">Ultra</h3>
+                            <span id="tag-render-ULTRA" class="text-[9px] font-black uppercase tracking-widest block mb-1 text-gray-500">Cargando...</span>
+                            <h3 class="text-2xl font-black uppercase tracking-tighter text-white">Ultra</h3>
                         </div>
-                        <span class="px-2.5 py-1 bg-[#FFC300]/10 border border-[#FFC300]/20 rounded-lg text-[#FFC300] font-mono text-[8px] font-black tracking-widest uppercase">Élite</span>
                     </div>
+                    <p class="text-gray-400 text-xs font-medium leading-relaxed mb-6">El ecosistema de rendimiento absoluto unificado: Entrenamiento, Cinemática y Bioquímica EATS.</p>
                     
-                    <p class="text-gray-400 text-xs font-medium leading-relaxed mb-6">El entorno de rendimiento absoluto unificado: Entrenamiento, Cinemática y Bioquímica EATS.</p>
+                    <div id="price-render-ULTRA" class="mb-8 flex flex-col justify-center min-h-[70px]">
+                        </div>
                     
-                    <div class="mb-8 flex items-baseline gap-1">
-                        <span class="price-clamp text-[#FFC300] drop-shadow-[0_0_15px_rgba(255,195,0,0.2)]">$25.00</span>
-                        <span class="text-[9px] font-black text-[#FFC300] uppercase tracking-widest">/ Mes</span>
-                    </div>
-                    
-                    <ul class="space-y-4 border-t border-white/5 pt-6 text-[10px] font-bold uppercase tracking-wider text-gray-300">
-                        <li class="flex items-center gap-3 text-[#FFC300]"><span class="w-1.5 h-1.5 rounded-full bg-[#FFC300] shadow-[0_0_10px_#FFC300]"></span> Todo el Universo Accesible</li>
-                        <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-[#FFC300]"></span> Planificación Bioquímica EATS</li>
-                        <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-[#FFC300]"></span> Carga de Macronutrientes Exacta</li>
-                        <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-[#FFC300]"></span> Soporte Clínico de Alta Prioridad</li>
-                    </ul>
+                    <ul id="features-ULTRA" class="space-y-4 border-t border-white/5 pt-6 text-[10px] font-bold uppercase tracking-wider text-gray-300">
+                        </ul>
                 </div>
                 <div class="mt-12">
-                    <button id="btn-ultra" onclick="selectTier('ULTRA')" class="w-full py-5 rounded-2xl bg-gradient-to-r from-[#FFC300] to-[#eab308] text-black font-black text-xs uppercase tracking-[0.2em] shadow-[0_15px_40px_rgba(255,195,0,0.2)] hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(255,195,0,0.35)] transition-all duration-300 transform">
+                    <button id="btn-ULTRA" onclick="selectTier('ULTRA')" class="w-full py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all duration-300">
                         Desbloquear Ultra
                     </button>
                 </div>
@@ -220,12 +158,10 @@
         </div>
     </main>
 
-    <!-- 🏁 FOOTER AUTOMATIZADO -->
-    <footer class="text-center py-8 border-t border-white/5 bg-[#030305]/90 backdrop-blur-md relative z-10">
-        <p class="text-[9px] font-black uppercase tracking-[0.5em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • SECURE SUBSCRIPTION NUCLEUS</p>
+    <footer class="text-center py-6 border-t border-white/5 bg-[#030305]/90 backdrop-blur-md relative z-10">
+        <p class="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • INTEGRATED PRICING DEPLOYMENT</p>
     </footer>
 
-    <!-- Scripts de Middleware y Control Core -->
     <script src="/static/js/auth/auth_middleware.js"></script>
     <script src="/static/js/billing/planes.js"></script>
 </body>
