@@ -12,17 +12,38 @@ const CATEGORIES = [
 ];
 
 // ==========================================
-// 🛠️ RENDERIZADOR BENTO CORREGIDO (SIN LETRAS EXTRAÑAS Y MACROS REDONDEADOS)
+// 🧮 MOTOR MATEMÁTICO REACTIVO (COSTE DE RED = $0)
+// Escucha los cambios de gramos y recalcula la equivalencia molecular instantáneamente
+// ==========================================
+function ejecutarRecalculoBentoEats(inputElement, prot100, carb100, gras100, cal100) {
+    const gramosInput = parseFloat(inputElement.value);
+    
+    // Si el campo está vacío o es inválido, forzamos un estado de contingencia seguro en 0
+    const gramos = (!isNaN(gramosInput) && gramosInput >= 0) ? gramosInput : 0;
+    
+    // Rastrear la Bento-Card contenedora específica en el DOM
+    const card = inputElement.closest('.food-bento-card');
+    if (!card) return;
+
+    // Aplicar regla de tres bioquímica y fijar estrictamente el redondeo a 2 decimales
+    card.querySelector('.display-prot').textContent = ((prot100 * gramos) / 100).toFixed(2) + 'g';
+    card.querySelector('.display-carb').textContent = ((carb100 * gramos) / 100).toFixed(2) + 'g';
+    card.querySelector('.display-gras').textContent = ((gras100 * gramos) / 100).toFixed(2) + 'g';
+    card.querySelector('.display-cal').textContent = ((cal100 * gramos) / 100).toFixed(0) + ' kcal';
+}
+
+// ==========================================
+// 🥦 RENDERIZADOR BENTO CON CALCULADORA INCORPORADA
 // ==========================================
 function createFoodBentoCard(food) {
     const card = document.createElement('div');
     card.className = "glass-panel food-bento-card rounded-2xl border border-white/5 bg-white/[0.01] p-5 flex flex-col justify-between relative overflow-hidden";
     
-    // 🛡️ PARCHE DE REDONDEO SEGURO: Clavamos exactamente 2 decimales para evitar el desborde numérico
-    const proteins = Number(food.proteins || 0).toFixed(2);
-    const carbs = Number(food.carbs_net || 0).toFixed(2);
-    const fats = (Number(food.fats_saturated || 0) + Number(food.fats_unsaturated || 0)).toFixed(2);
-    const calories = Number(food.calories || 0).toFixed(0); // Las calorías las dejamos redondas sin decimales
+    // Capturar variables bioquímicas base por cada 100g para pasarlas al motor reactivo
+    const p100 = Number(food.proteins || 0);
+    const c100 = Number(food.carbs_net || 0);
+    const g100 = Number(food.fats_saturated || 0) + Number(food.fats_unsaturated || 0);
+    const cal100 = Number(food.calories || 0);
 
     // Evaluar Banderas Clínicas de Seguridad Alimentaria
     let allergenBadgesHtml = '';
@@ -36,40 +57,39 @@ function createFoodBentoCard(food) {
 
     card.innerHTML = `
         <div>
-            <!-- Categoría y Alérgenos -->
             <div class="flex justify-between items-start mb-2 gap-2">
                 <span class="text-[7.5px] font-black text-gray-500 uppercase tracking-widest truncate max-w-[60%]">${food.category}</span>
                 <div class="flex gap-1 flex-wrap justify-end">${allergenBadgesHtml}</div>
             </div>
             
-            <!-- Nombre del Alimento -->
-            <h4 class="text-base font-black uppercase text-white tracking-tighter truncate leading-tight">${food.name}</h4>
-            <span class="text-[7px] font-bold text-gray-600 tracking-widest uppercase block mt-0.5">Por cada 100g base</span>
+            <h4 class="text-base font-black uppercase text-white tracking-tighter truncate leading-tight mb-3">${food.name}</h4>
             
-            <!-- Macros Core Grid (Corregido y Limpio de texto intruso) -->
+            <div class="relative w-full mb-3">
+                <span class="absolute -top-1.5 left-2.5 text-[6.5px] font-black text-[#10b981] uppercase bg-[#06060a] px-1.5 border border-white/5 rounded tracking-widest">Dosificar Gramos</span>
+                <input type="number" value="100" min="0" oninput="ejecutarRecalculoBentoEats(this, ${p100}, ${c100}, ${g100}, ${cal100})" class="w-full bg-black/60 border border-white/10 text-white font-mono font-black text-center text-sm p-2.5 rounded-xl outline-none focus:border-emerald-500/50 focus:shadow-[0_0_10px_rgba(16,185,129,0.15)] transition-all" placeholder="Gramos">
+            </div>
+            
             <div class="grid grid-cols-3 gap-1 bg-black/40 border border-white/5 rounded-xl p-2 text-center my-4">
-                <div><span class="block text-[6.5px] text-gray-500 font-black uppercase tracking-wider">PROT</span><span class="text-xs font-mono font-black text-white">${proteins}g</span></div>
-                <div class="border-x border-white/5"><span class="block text-[6.5px] text-gray-500 font-black uppercase tracking-wider">CARB</span><span class="text-xs font-mono font-black text-emerald-400">${carbs}g</span></div>
-                <div><span class="block text-[6.5px] text-gray-500 font-black uppercase tracking-wider">GRASA</span><span class="text-xs font-mono font-black text-amber-500">${fats}g</span></div>
+                <div><span class="block text-[6.5px] text-gray-500 font-black uppercase tracking-wider">PROT</span><span class="display-prot text-xs font-mono font-black text-white">${p100.toFixed(2)}g</span></div>
+                <div class="border-x border-white/5"><span class="block text-[6.5px] text-gray-500 font-black uppercase tracking-wider">CARB</span><span class="display-carb text-xs font-mono font-black text-emerald-400">${c100.toFixed(2)}g</span></div>
+                <div><span class="block text-[6.5px] text-gray-500 font-black uppercase tracking-wider">GRASA</span><span class="display-gras text-xs font-mono font-black text-amber-500">${g100.toFixed(2)}g</span></div>
             </div>
 
-            <!-- Parámetros Avanzados -->
             <div class="space-y-1.5 text-[9px] border-t border-white/5 pt-3 font-medium text-gray-400">
-                <div class="flex justify-between"><span>🔥 Energía Estructural:</span><span class="font-mono font-bold text-white">${calories} kcal</span></div>
+                <div class="flex justify-between"><span>🔥 Energía Estructural:</span><span class="display-cal font-mono font-bold text-white">${cal100.toFixed(0)} kcal</span></div>
                 <div class="flex justify-between"><span>📊 Índice Glucémico (IG):</span><span class="font-mono font-bold ${food.glycemic_index > 65 ? 'text-red-400' : 'text-emerald-400'}">${food.glycemic_index}</span></div>
                 <div class="flex justify-between"><span>🧠 Índice Saciante:</span><span class="font-bold text-white">${food.satiety_index}</span></div>
                 <div class="flex justify-between"><span>🧬 Valor Biológico (VB):</span><span class="font-mono font-bold text-sky-400">${food.biological_value > 0 ? food.biological_value : '--'}</span></div>
             </div>
         </div>
         
-        <!-- Indicadores Fisiológicos -->
         ${physiologicalFlagsHtml ? `<div class="mt-4 pt-2.5 border-t border-dashed border-white/5 flex gap-1 flex-wrap">${physiologicalFlagsHtml}</div>` : ''}
     `;
     return card;
 }
 
 // ==========================================
-// 🚀 COMANDO DE INTERROGACIÓN AL BACKEND RAM
+// 📡 INTERROGACIÓN AL SERVIDOR CACHÉ RAM
 // ==========================================
 async function executeEatsSearchQuery() {
     const grid = document.getElementById('foods-grid-container');
@@ -91,19 +111,16 @@ async function executeEatsSearchQuery() {
             }
             data.foods.forEach(food => grid.appendChild(createFoodBentoCard(food)));
         }
-    } catch (e) {
-        console.error("Error buscando en la caché:", e);
-    }
+    } catch (e) { console.error("Error buscando en la caché:", e); }
 }
 
-// Parche Táctico de Debounce para cuidar el ancho de banda de red
 function triggerDebouncedEatsSearch() {
     clearTimeout(searchDebounceTimeout);
     searchDebounceTimeout = setTimeout(executeEatsSearchQuery, 300);
 }
 
 // ==========================================
-// 🍽️ SISTEMA DE PESTAÑAS (TABS)
+// 🍽运营 PESTAÑAS (TABS OPERATIVOS)
 // ==========================================
 function switchEatsTab(tab) {
     const btnD = document.getElementById('tab-btn-dictionary');
@@ -131,12 +148,10 @@ function switchEatsTab(tab) {
     }
 }
 
-// Generador de píldoras de filtrado por categoría
 function renderCategoryPills() {
     const container = document.getElementById('category-pill-container');
     container.innerHTML = '';
     
-    // Opción "Todos"
     const allBtn = document.createElement('button');
     allBtn.className = `px-4 py-2 rounded-xl text-[8.5px] font-black uppercase tracking-widest border transition-all ${activeSelectedCategory === '' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-sm' : 'bg-black/40 text-gray-500 border-white/5 hover:text-white hover:border-white/10'}`;
     allBtn.textContent = "Ver Todos";
@@ -153,9 +168,6 @@ function renderCategoryPills() {
     });
 }
 
-// ==========================================
-// 🧘 CINEMÁTICA PAYWALL INTERACTIVA (BÁSICOS)
-// ==========================================
 function initCinematicEats3D() {
     const showcase = document.getElementById('showcase-view');
     const layerMain = document.getElementById('sc-layer-main');
@@ -220,15 +232,11 @@ function initCinematicEats3D() {
     });
 }
 
-// ==========================================
-// 🚀 INICIALIZADOR CENTRAL PERIMETRAL
-// ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token') || localStorage.getItem('token');
     if (!token) { window.location.href = '/apps/start/login.html'; return; }
 
     try {
-        // Interrogar expediente inmutable único del Atleta (Refleja degradaciones automáticas)
         const profileRes = await fetch(`${API_BASE_URL}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } });
         const profileData = await profileRes.json();
         
@@ -240,13 +248,12 @@ window.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('premium-view').classList.add('flex');
             document.body.classList.add('loaded');
             
-            // Si es ULTRA, disparamos la descarga paralela y síncrona de su plan de dieta
             if (currentSubscriptionLevel === 'ULTRA') {
                 try {
                     const dietRes = await fetch(`${API_BASE_URL}/api/client/ultra/eats/diet`, { headers: { 'Authorization': `Bearer ${token}` } });
                     const dietData = await dietRes.json();
                     if (dietData.success && dietData.has_diet) {
-                        document.getElementById('diet-title').textContent = dietData.diet.title || "Plan Nutricional Activo";
+                        document.getElementById('diet-title').textContent = dietData.diet.title || "Planificación Nutricional Activa";
                         document.getElementById('diet-updated-date').textContent = `Sincronizado: ${dietData.diet.updated_at ? String(dietData.diet.updated_at).split(' ')[0] : 'Hoy'}`;
                         document.getElementById('diet-content-body').textContent = dietData.diet.menu_text || "Notas en proceso de carga...";
                     } else {
@@ -256,13 +263,11 @@ window.addEventListener('DOMContentLoaded', async () => {
                 } catch(errDiet) { console.error("Falla descargando dieta Ultra:", errDiet); }
             }
 
-            // Inicializar catálogo cached RAM
             document.getElementById('food-search-input').addEventListener('input', triggerDebouncedEatsSearch);
             renderCategoryPills();
             executeEatsSearchQuery();
 
         } else {
-            // MODO COMPRADOR BÁSICO: Mostrar Paywall Apple Style Parallax
             document.getElementById('showcase-view').classList.remove('hidden');
             document.body.classList.add('loaded');
             initCinematicEats3D();
