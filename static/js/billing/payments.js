@@ -1,5 +1,5 @@
 // ====================================================================
-// 🛡️ NÚCLEO CORE - ARQUITECTURA CONTROLADORA DEL CHECKOUT DE PAGOS
+// 🛡️ NÚCLEO CORE - ARCHITECTURA CONTROLADORA DEL CHECKOUT DE PAGOS
 // ====================================================================
 
 // El identificador AUTH_TOKEN_KEY es heredado desde auth_middleware.js de forma global.
@@ -7,7 +7,7 @@
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
-// Memoria volátil del checkout
+// Memoria volátil segura del estado del checkout
 let globalActiveTier = 'PLUS';
 let globalRateBCV = 0.00;
 let globalPriceUSD = 0.00;
@@ -24,30 +24,34 @@ function switchPaymentMethod(method) {
 
     if (!btnPagoMovil || !btnStripe || !pnlPagoMovil || !pnlStripe) return;
 
-    // Desactivación total de clases
+    // Resetear clases y estados visuales
     [btnPagoMovil, btnStripe].forEach(b => b.className = "flex-1 py-4 border-b-2 border-transparent text-gray-500 font-black uppercase tracking-widest text-[10px] transition-all text-center");
-    [pnlPagoMovil, pnlStripe].forEach(p => p.classList.replace('flex', 'hidden'), p => p.classList.add('hidden'));
+    
+    pnlPagoMovil.classList.add('hidden');
+    pnlStripe.classList.replace('flex', 'hidden');
+    pnlStripe.classList.add('hidden');
 
     if (method === 'pago-movil') {
-        btnPagoMovil.className = "flex-1 py-4 border-b-2 border-[#FFC300] text-[#FFC300] font-black uppercase tracking-widest text-[10px] transition-all text-center bg-white/[0.01]";
+        btnPagoMovil.className = "flex-1 py-4 border-b-2 border-[#FFC300] text-[#FFC300] font-black uppercase tracking-widest text-[10px] transition-all text-center bg-white/[0.01] active-tab";
         pnlPagoMovil.classList.remove('hidden');
     } else {
-        btnStripe.className = "flex-1 py-4 border-b-2 border-white text-white font-black uppercase tracking-widest text-[10px] transition-all text-center bg-white/[0.01]";
+        btnStripe.className = "flex-1 py-4 border-b-2 border-white text-white font-black uppercase tracking-widest text-[10px] transition-all text-center bg-white/[0.01] active-tab";
         pnlStripe.classList.remove('hidden');
-        pnlStripe.classList.add('flex');
+        pnlStripe.classList.replace('hidden', 'flex');
     }
 }
 
 /**
- * Ejecuta la eyección y redirección hacia el canal de soporte internacional de Stripe
+ * REMEDIACIÓN CRÍTICA: Se corrige la palabra clave 'def' por 'function' (Sintaxis JS V8 estándar).
+ * Ejecuta la redirección segura hacia el canal de soporte internacional de Stripe.
  */
-def redirectToStripeWhatsapp() {
+function redirectToStripeWhatsapp() {
     const wsMsg = "Hola, deseo realizar el pago de mi servicio GYMENEZ a traves de TDC/TDD internacional en dolares. solicito link de pago a traves de stripe.";
     window.open(`https://wa.me/584148780392?text=${encodeURIComponent(wsMsg)}`, '_blank');
 }
 
 /**
- * Despacha la orden de registro financiero atómico hacia el backend core
+ * Despacha el reporte de transacción atómica en Bolívares hacia el backend core
  */
 async function handlePaymentSubmit(event) {
     event.preventDefault();
@@ -67,7 +71,6 @@ async function handlePaymentSubmit(event) {
         btnSubmit.textContent = "PROPAGANDO TRANSACCIÓN...";
     }
 
-    // Estructuración del payload según la firma estricta exigida por el Backend
     const payload = {
         plan: globalActiveTier,
         banco: bankVal,
@@ -79,7 +82,7 @@ async function handlePaymentSubmit(event) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` // Autenticación Bearer forzada
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(payload)
         });
@@ -108,7 +111,7 @@ async function handlePaymentSubmit(event) {
     }
 }
 
-// Inicializador del Pipeline del Checkout al cargar el DOM
+// Inicializador del pipeline del checkout al cargar el DOM
 window.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (!token) {
@@ -116,43 +119,37 @@ window.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 1. Extraer el plan solicitado desde los parámetros de la URL
     const urlParams = new URLSearchParams(window.location.search);
     let tierParam = urlParams.get('tier');
     globalActiveTier = tierParam ? tierParam.toUpperCase() : 'PLUS';
 
-    // Restricción Zero Trust ante alteración manual de URL params de planes inexistentes
     if (!['PLUS', 'ULTRA'].includes(globalActiveTier)) {
         globalActiveTier = 'PLUS';
     }
 
     try {
-        // 2. Ejecutar consulta asíncrona de tasa cambiaria BCV desde el backend (Lecturas amortizadas)
         const resRate = await fetch(`${API_BASE_URL}/api/bcv-rate`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const dataRate = await resRate.json();
 
         if (resRate.ok && dataRate.success) {
-            globalRateBCV = float(dataRate.rate);
+            // REMEDIACIÓN CRÍTICA: Se sustituye 'float()' por 'parseFloat()' nativo de JS.
+            globalRateBCV = parseFloat(dataRate.rate);
             
-            // 3. Emparejar el precio de forma inmutable simulando la matriz maestra de la BD
-            globalPriceUSD = globalActiveTier === 'ULTRA' ? 25.00 : 4.99; // Precio promocional Plus del backend
+            globalPriceUSD = globalActiveTier === 'ULTRA' ? 25.00 : 4.99; 
             const totalBs = round(globalPriceUSD * globalRateBCV, 2);
 
-            // 4. Inyección atómica de datos en el bloque analítico derecho
             document.getElementById('summary-plan-name').textContent = globalActiveTier;
             document.getElementById('summary-price-usd').textContent = `$${globalPriceUSD.toFixed(2)}`;
             document.getElementById('summary-bcv').textContent = `${globalRateBCV.toFixed(2)} Bs / USD`;
             document.getElementById('summary-total-bs').textContent = `${totalBs.toLocaleString("es-VE", { minimumFractionDigits: 2 })} Bs`;
 
-            // 5. Revelar interfaz y apagar cortina de carga
             document.getElementById('payment-loader').classList.add('hidden');
             const ws = document.getElementById('payment-workspace');
             ws.classList.remove('hidden');
             ws.classList.add('flex');
 
-            // Inicializar por defecto la pestaña de pago móvil nacional
             switchPaymentMethod('pago-movil');
         } else {
             showUIFeedback("Incapacidad del Core para certificar la divisa cambiaria.", "error");
@@ -163,7 +160,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Utilidad local de redondeo matemático exacto
 function round(value, decimals) {
     return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
 }
