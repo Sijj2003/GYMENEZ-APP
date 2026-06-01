@@ -2,8 +2,8 @@
 // 🛡️ NÚCLEO CORE - CONTROLADOR AUTOMATIZADO DE CATÁLOGO Y DESCUENTOS
 // ====================================================================
 
-// REMEDIACIÓN CRÍTICA: Se elimina la redeclaración de AUTH_TOKEN_KEY.
-// La constante ya se encuentra inyectada en el Scope global por auth_middleware.js.
+// REMEDIACIÓN CRÍTICA: Se remueve la inicialización redundante de AUTH_TOKEN_KEY.
+// El navegador consume de forma nativa la constante expuesta por auth_middleware.js.
 
 // Configuración adaptativa de Endpoints perimetrales
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
@@ -15,13 +15,14 @@ const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https:/
  */
 function selectTier(tierName) {
     if (!tierName) return;
-    window.location.href = `/apps/user/payments.html?tier=${encodeURIComponent(tierName.toUpperCase())}`;
+    // CORRECCIÓN DE ENRUTAMIENTO: Redirección física calibrada hacia la pasarela real de /billing/
+    window.location.href = `/billing/payments.html?tier=${encodeURIComponent(tierName.toUpperCase())}`;
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
     document.body.classList.add('loaded');
 
-    // Recuperar el pasaporte digital usando la llave declarada en auth_middleware.js
+    // Consumir el token usando la clave unificada del middleware
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (!token) {
         window.location.href = '/apps/start/login.html';
@@ -127,7 +128,7 @@ window.addEventListener('DOMContentLoaded', async () => {
                 const badgePromo = document.getElementById(`badge-promo-${pid}`);
                 if (badgePromo) badgePromo.classList.remove('hidden');
             } else {
-                // Atenuar de forma sutil los planes no activos para priorizar el contraste del adquirido
+                // Base-contrast: Atenuar de forma sutil los planes no activos para priorizar el contratado
                 if (cardEl) cardEl.classList.add('opacity-50');
             }
         });
