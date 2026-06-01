@@ -1,15 +1,14 @@
 // ====================================================================
-// 🛡️ NÚCLEO CORE - CONTROLADOR DEL DOSSIER DE MEMBRESÍAS (PLANES)
+// 🛡️ NÚCLEO CORE - CONTROLADOR AUTOMATIZADO DE CATÁLOGO Y DESCUENTOS
 // ====================================================================
 
 const AUTH_TOKEN_KEY = 'gymen_auth_token';
 
-// Configuración adaptativa de Endpoints perimetrales
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
 /**
- * Redirige al atleta hacia el pipeline de cobro del nivel seleccionado
+ * Transmite la orden de redirección al flujo de cobro del rango seleccionado
  * @param {string} tierName - Identificador del plan ('BASICO', 'PLUS', 'ULTRA')
  */
 function selectTier(tierName) {
@@ -20,80 +19,117 @@ function selectTier(tierName) {
 window.addEventListener('DOMContentLoaded', async () => {
     document.body.classList.add('loaded');
 
-    // 1. Extraer el pasaporte digital (JWT) del almacenamiento local seguro
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (!token) {
-        console.warn("Pasaporte de autenticación ausente. Redirigiendo al perímetro exterior.");
         window.location.href = '/apps/start/login.html';
         return;
     }
 
     try {
-        // 2. Interrogar la fuente única de verdad del Backend Core
-        const res = await fetch(`${API_BASE_URL}/api/profile/me`, {
-            method: 'GET',
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+        // 🚀 PIPELINE DE RED EN PARALELO: Descarga la identidad y las ofertas simultáneamente
+        const [profileRes, catalogRes] = await Promise.all([
+            fetch(`${API_BASE_URL}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE_URL}/api/plans/catalog`, { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+
+        if (!profileRes.ok || !catalogRes.ok) {
+            if (profileRes.status === 401 || profileRes.status === 403) {
+                localStorage.removeItem(AUTH_TOKEN_KEY);
+                window.location.href = '/apps/start/login.html';
+            }
+            throw new Error("Fallo de comunicación perimetral con los endpoints.");
+        }
+
+        const profileData = await profileRes.json();
+        const catalogData = await catalogRes.json();
+
+        const currentLevel = String(profileData.profile.subscription_level || 'BASICO').toUpperCase();
+        const plans = catalogData.plans || [];
+
+        // Clase inmutable de desactivación de botones
+        const disabledBtnClass = "w-full py-5 rounded-2xl bg-white/5 border border-white/10 text-gray-500 font-black text-xs uppercase tracking-[0.2em] cursor-not-allowed text-center transition-all duration-300";
+
+        // 🏗️ ITERADOR ATÓMICO: Inyecta precios y configuraciones dinámicas del Backend
+        plans.forEach(plan => {
+            const pid = plan.id.toUpperCase(); // 'BASICO', 'PLUS', 'ULTRA'
+            
+            const txtTag = document.getElementById(`tag-render-${pid}`);
+            const divPrice = document.getElementById(`price-render-${pid}`);
+            const ulFeatures = document.getElementById(`features-${pid}`);
+            const btnEl = document.getElementById(`btn-${pid}`);
+            const cardEl = document.getElementById(`tier-${pid}`);
+
+            // 1. Asignar Tags de Mercadeo del Servidor
+            if (txtTag) txtTag.textContent = plan.tag;
+
+            // 2. Evaluar y Renderizar Bloque de Descuentos Fijos de Forma Reactiva
+            if (divPrice) {
+                if (plan.is_discounted && plan.base_price_usd > 0) {
+                    divPrice.innerHTML = `
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xs font-bold line-through text-gray-500">$${plan.base_price_usd.toFixed(2)}</span>
+                            <span class="px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-400 font-black text-[7.5px] tracking-wider uppercase border border-sky-500/20">Ahorro Promocional</span>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span class="price-clamp text-white">$${plan.priceUSD.toFixed(2)}</span>
+                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest">/ Mes</span>
+                        </div>
+                    `;
+                } else {
+                    divPrice.innerHTML = `
+                        <div class="flex items-baseline gap-1">
+                            <span class="price-clamp ${pid === 'ULTRA' ? 'text-[#FFC300] drop-shadow-[0_0_15px_rgba(255,195,0,0.2)]' : 'text-white'}">$${plan.priceUSD.toFixed(2)}</span>
+                            ${plan.priceUSD > 0 ? `<span class="text-[9px] font-black text-gray-500 uppercase tracking-widest">/ Mes</span>` : ''}
+                        </div>
+                    `;
+                }
+            }
+
+            // 3. Renderizar Características Dinámicas del Plan
+            if (ulFeatures && plan.features) {
+                ulFeatures.innerHTML = plan.features.map(f => `
+                    <li class="flex items-center gap-3">
+                        <span class="w-1.5 h-1.5 rounded-full ${pid === 'PLUS' ? 'bg-sky-400 shadow-[0_0_8px_#38bdf8]' : pid === 'ULTRA' ? 'bg-[#FFC300] shadow-[0_0_8px_#FFC300]' : 'bg-gray-500'}"></span>
+                        ${f.name}: <span class="text-white">${f.value}</span>
+                    </li>
+                `).join('');
+            }
+
+            // 4. Inyectar Clases de Resplandor Estético Bento desde el Servidor
+            if (cardEl && plan.cardClass) {
+                cardEl.classList.add(plan.cardClass);
+            }
+
+            // 5. Aplicar Clases de Botones Base si no está comprado
+            if (btnEl && plan.btnClass && pid !== currentLevel) {
+                btnEl.className = `${plan.btnClass} w-full py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 transform hover:scale-[1.02]`;
+            }
+
+            // 6. 🔒 LOCK TRANSACCIONAL VISUAL: Congela el plan actual del atleta
+            if (pid === currentLevel) {
+                if (btnEl) {
+                    btnEl.textContent = "Tu Plan Activo";
+                    btnEl.disabled = true;
+                    btnEl.className = disabledBtnClass;
+                    btnEl.removeAttribute('onclick');
+                }
+                if (cardEl) {
+                    cardEl.classList.add('border-[#FFC300]/40', 'bg-[#FFC300]/[0.01]');
+                }
+                
+                // Activar insignias promocionales superiores si corresponden
+                const badgeTop = document.getElementById(`badge-top-${pid}`);
+                if (badgeTop) badgeTop.classList.remove('hidden');
+                
+                const badgePromo = document.getElementById(`badge-promo-${pid}`);
+                if (badgePromo) badgePromo.classList.remove('hidden');
+            } else {
+                // Atenuar de forma sutil los planes no activos para priorizar el contraste del adquirido
+                if (cardEl) cardEl.classList.add('opacity-50');
             }
         });
 
-        if (res.ok) {
-            const data = await res.json();
-            const currentLevel = String(data.profile.subscription_level || 'BASICO').toUpperCase();
-
-            // Mapeo defensivo de elementos del DOM
-            const components = {
-                'BASICO': {
-                    btn: document.getElementById('btn-basico'),
-                    card: document.getElementById('tier-basico'),
-                    activeClass: 'border-white/20 bg-white/[0.02]'
-                },
-                'PLUS': {
-                    btn: document.getElementById('btn-plus'),
-                    card: document.getElementById('tier-plus'),
-                    activeClass: 'border-sky-500/30 bg-sky-500/[0.02] shadow-[0_20px_50px_rgba(56,189,248,0.1)]'
-                },
-                'ULTRA': {
-                    btn: document.getElementById('btn-ultra'),
-                    card: document.getElementById('tier-ultra'),
-                    activeClass: 'tier-card-active'
-                }
-            };
-
-            // Clase inmutable de desactivación estética premium para mantener simetría gruesa
-            const disabledBtnClass = "w-full py-5 rounded-2xl bg-white/5 border border-white/10 text-gray-500 font-black text-xs uppercase tracking-[0.2em] cursor-not-allowed text-center transition-all";
-
-            // 3. Aplicar candados visuales según el nivel de suscripción real verificado por el backend
-            if (components[currentLevel]) {
-                const activeConfig = components[currentLevel];
-                
-                if (activeConfig.btn) {
-                    activeConfig.btn.textContent = "Tu Plan Activo";
-                    activeConfig.btn.disabled = true;
-                    activeConfig.btn.className = disabledBtnClass;
-                    activeConfig.btn.removeAttribute('onclick');
-                }
-                
-                if (activeConfig.card) {
-                    // Inyectar clase de resplandor e inmutabilidad de la Bento-Card
-                    activeConfig.card.classList.add(...activeConfig.activeClass.split(' '));
-                    activeConfig.card.classList.remove('hover:border-white/10');
-                }
-                
-                // Opacidad sutil a los planes alternativos de menor rango para guiar el foco visual del atleta
-                Object.keys(components).forEach(key => {
-                    if (key !== currentLevel && components[key].card) {
-                        components[key].card.classList.add('opacity-40');
-                    }
-                });
-            }
-        } else if (res.status === 401 || res.status === 403) {
-            console.error("Token de autenticación expirado o adulterado.");
-            localStorage.removeItem(AUTH_TOKEN_KEY);
-            window.location.href = '/apps/start/login.html';
-        }
     } catch (error) {
-        console.error("Fallo crítico de red consultando la telemetría de membresías:", error);
+        console.error("Fallo crítico en el pipeline core de sincronización financiera:", error);
     }
 });
