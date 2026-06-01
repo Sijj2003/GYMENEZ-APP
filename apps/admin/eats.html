@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GYMENEZ ADMIN | Consola EATS</title>
+    <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body class="bg-[#030305] text-white selection:bg-yellow-400 selection:text-black min-h-screen flex flex-col font-sans">
+
+    <!-- Notificaciones de Operación -->
+    <div id="admin-toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none border border-white/10"></div>
+
+    <!-- Header de Navegación Core -->
+    <header class="w-full border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <h1 class="text-xl font-black uppercase tracking-tighter">
+                    <span class="text-[#FFC300]">GYM</span><span class="text-white">ENEZ</span>
+                    <span class="text-emerald-500 text-xs font-mono tracking-widest ml-2">CORE_EATS</span>
+                </h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="/apps/admin/dashboard.html" class="px-5 py-2 rounded-full border border-white/10 text-gray-400 hover:text-white font-bold text-[10px] uppercase tracking-widest transition">Dashboard</a>
+                <a href="/apps/admin/users.html" class="px-5 py-2 rounded-full border border-white/10 text-gray-400 hover:text-white font-bold text-[10px] uppercase tracking-widest transition">Atletas</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenedor de Carga Operativa -->
+    <div id="admin-spinner" class="flex-grow flex flex-col items-center justify-center py-20">
+        <div class="w-8 h-8 border-2 border-white/10 border-t-emerald-500 rounded-full animate-spin mb-3"></div>
+        <p class="text-gray-600 text-[9px] font-black uppercase tracking-widest">Indexando Memoria Local...</p>
+    </div>
+
+    <!-- Cuerpo de Control Principal -->
+    <main id="admin-panel-content" class="hidden max-w-7xl mx-auto w-full px-6 py-10 flex-grow flex flex-col">
+        
+        <!-- Pestañas de Navegación del Módulo -->
+        <div class="flex gap-4 border-b border-white/5 mb-8 overflow-x-auto">
+            <button id="admin-tab-foods" onclick="switchAdminEatsTab('foods')" class="px-4 py-3 border-b-2 border-emerald-400 text-emerald-400 font-black uppercase tracking-widest text-[10px] transition-all">🥦 Bóveda de Alimentos (720)</button>
+            <button id="admin-tab-diets" onclick="switchAdminEatsTab('diets')" class="px-4 py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-all">👑 Asignación de Dietas Ultra</button>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- SECCIÓN 1: GESTIÓN DE LA BÓVEDA DE ALIMENTOS             -->
+        <!-- ======================================================== -->
+        <section id="section-foods" class="block space-y-6">
+            <div class="flex flex-col sm:flex-between sm:flex-row gap-4 justify-between items-start sm:items-center bg-white/[0.01] p-4 border border-white/5 rounded-2xl">
+                <div class="w-full sm:max-w-md">
+                    <input type="text" id="admin-food-search" oninput="triggerAdminFoodFilter()" placeholder="Interrogar caché RAM de alimentos..." class="w-full glass-input px-4 py-3 rounded-xl text-xs">
+                </div>
+                <button onclick="openFoodModal(null)" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-black text-[10px] font-black uppercase tracking-widest transition shadow-lg shadow-emerald-500/10">+ Inyectar Alimento</button>
+            </div>
+
+            <!-- Tabla de Datos de Alimentos -->
+            <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden bg-black/20">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="border-b border-white/5 bg-white/[0.02] text-gray-400 font-black uppercase tracking-widest text-[9px]">
+                                <th class="p-4">Alimento</th>
+                                <th class="p-4">Categoría</th>
+                                <th class="p-4 text-center">Calorías</th>
+                                <th class="p-4 text-center">Prot (g)</th>
+                                <th class="p-4 text-center">Carb (g)</th>
+                                <th class="p-4 text-center">Grasa (g)</th>
+                                <th class="p-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-foods-tbody" class="divide-y divide-white/[0.03] font-medium text-gray-300">
+                            <!-- Inyectado dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECCIÓN 2: DIRECTORIO ULTRA (ASIGNACIÓN DE MENÚS)        -->
+        <!-- ======================================================== -->
+        <section id="section-diets" class="hidden w-full">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="admin-ultra-athletes-grid">
+                <!-- Tarjetas de atletas Ultra inyectadas dinámicamente -->
+            </div>
+        </section>
+    </main>
+
+    <!-- ======================================================== -->
+    <!-- MODAL COMPUESTO: FORMULARIO DE ALIMENTO (CREAR/EDITAR)   -->
+    <!-- ======================================================== -->
+    <div id="food-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[999] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="glass-panel w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[32px] border border-white/10 bg-[#09090e] p-6 md:p-8 space-y-6">
+            <div class="flex justify-between items-center border-b border-white/5 pb-4">
+                <h3 id="modal-food-title" class="text-xl font-black uppercase tracking-tighter">Inyectar Alimento a la Bóveda</h3>
+                <button onclick="closeFoodModal()" class="text-gray-500 hover:text-white text-xs uppercase tracking-widest font-black">Cerrar</button>
+            </div>
+
+            <form id="food-form" onsubmit="handleFoodFormSubmit(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="form-food-id">
+                
+                <!-- Campos Primarios -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-500 font-bold uppercase tracking-wider mb-1">Nombre Comercial</label>
+                        <input type="text" id="form-food-name" required class="w-full glass-input p-3 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block text-gray-500 font-bold uppercase tracking-wider mb-1">Categoría Oficial</label>
+                        <select id="form-food-category" required class="w-full glass-input p-3 rounded-xl bg-[#09090e]">
+                            <option value="Proteínas Magras AVB">Proteínas Magras AVB</option>
+                            <option value="Proteínas Grasas AVB">Proteínas Grasas AVB</option>
+                            <option value="Carbohidratos Almidonados">Carbohidratos Almidonados</option>
+                            <option value="Carbohidratos Rápidos y Frutas">Carbohidratos Rápidos y Frutas</option>
+                            <option value="Leguminosas">Leguminosas</option>
+                            <option value="Lípidos y Grasas Esenciales">Lípidos y Grasas Esenciales</option>
+                            <option value="Lácteos y Derivados Proteicos">Lácteos y Derivados Proteicos</option>
+                            <option value="Vegetales Fibrosos">Vegetales Fibrosos</option>
+                            <option value="Suplementación y Ergogénicos">Suplementación y Ergogénicos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Partición de Macros por 100g -->
+                <p class="text-emerald-400 text-[9px] font-black uppercase tracking-widest pt-2 border-t border-white/5">Composición Macronutricional (Por cada 100g)</p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-gray-500 font-bold mb-1">Calorías (kcal)</label>
+                        <input type="number" step="0.01" id="form-food-calories" required class="w-full glass-input p-3 rounded-xl font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-gray-500 font-bold mb-1">Proteínas (g)</label>
+                        <input type="number" step="0.01" id="form-food-proteins" required class="w-full glass-input p-3 rounded-xl font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-gray-500 font-bold mb-1">Carbohidratos (g)</label>
+                        <input type="number" step="0.01" id="form-food-carbs" required class="w-full glass-input p-3 rounded-xl font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-gray-500 font-bold mb-1">Grasas Totales (g)</label>
+                        <input type="number" step="0.01" id="form-food-fats" required class="w-full glass-input p-3 rounded-xl font-mono">
+                    </div>
+                </div>
+
+                <!-- Banderas de Salud e Inmunología -->
+                <p class="text-amber-400 text-[9px] font-black uppercase tracking-widest pt-4 border-t border-white/5">Filtros Inmunológicos y Alérgenos</p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white/[0.01] p-4 border border-white/5 rounded-xl">
+                    <label class="flex items-center gap-2 cursor-pointer text-gray-400 hover:text-white select-none"><input type="checkbox" id="form-food-gluten" class="rounded border-white/10 bg-black text-emerald-500 w-4 h-4"> Contiene Gluten</label>
+                    <label class="flex items-center gap-2 cursor-pointer text-gray-400 hover:text-white select-none"><input type="checkbox" id="form-food-lactose" class="rounded border-white/10 bg-black text-emerald-500 w-4 h-4"> Contiene Lactosa</label>
+                    <label class="flex items-center gap-2 cursor-pointer text-gray-400 hover:text-white select-none"><input type="checkbox" id="form-food-nuts" class="rounded border-white/10 bg-black text-emerald-500 w-4 h-4"> Contiene Frutos Secos</label>
+                    <label class="flex items-center gap-2 cursor-pointer text-gray-400 hover:text-white select-none"><input type="checkbox" id="form-food-sodium" class="rounded border-white/10 bg-black text-emerald-500 w-4 h-4"> Alto en Sodio</label>
+                </div>
+
+                <!-- Botón de Envío -->
+                <div class="pt-4 border-t border-white/5 flex justify-end">
+                    <button type="submit" class="px-8 py-3 rounded-xl bg-[#FFC300] hover:bg-yellow-500 text-black font-black uppercase tracking-widest transition">Sincronizar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODAL DE DIETAS MASTER: CONFIGURACIÓN ULTRA             -->
+    <!-- ======================================================== -->
+    <div id="diet-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[999] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="glass-panel w-full max-w-3xl rounded-[32px] border border-white/10 bg-[#09090e] p-6 md:p-8 space-y-4">
+            <div class="flex justify-between items-center border-b border-white/5 pb-4">
+                <div>
+                    <h3 class="text-xl font-black uppercase tracking-tighter" id="diet-modal-athlete-name">Diseño de Menú</h3>
+                    <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Asignación Manual Exclusiva Plan Ultra</p>
+                </div>
+                <button onclick="closeDietModal()" class="text-gray-500 hover:text-white text-xs uppercase tracking-widest font-black">Cerrar</button>
+            </div>
+
+            <input type="hidden" id="diet-modal-user-id">
+            
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-gray-500 font-bold uppercase tracking-wider mb-1">Título de la Estrategia Semanal</label>
+                    <input type="text" id="diet-modal-title" placeholder="Ej: Fase Reconstitutiva - Bloque Macro C" class="w-full glass-input p-3 rounded-xl">
+                </div>
+                <div>
+                    <label class="block text-gray-500 font-bold uppercase tracking-wider mb-1">Menú Desarrollado y Distribución Diaria</label>
+                    <textarea id="diet-modal-text" rows="12" placeholder="Desayuno:&#10;- 4 Huevos enteros + 80g de Avena...&#10;&#10;Almuerzo:&#10;- 200g Pechuga de Pollo + 150g Arroz..." class="w-full glass-input p-4 rounded-xl font-mono leading-relaxed resize-none"></textarea>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-white/5 flex justify-between items-center">
+                <button onclick="executeDeleteDiet()" class="px-4 py-2 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500/10 text-[9px] font-black uppercase tracking-widest transition">Revocar Dieta</button>
+                <button onclick="executeSaveDiet()" class="px-8 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase tracking-widest transition shadow-lg shadow-emerald-500/10">Publicar en App del Atleta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carga del Validador de Roles y Middleware JS Administrativo -->
+    <script src="/static/js/admin/admin_middleware.js"></script>
+    <script>
+        // Placeholder de enganche estructural para controlar las pestañas visuales del admin
+        function switchAdminEatsTab(tab) {
+            const btnFoods = document.getElementById('admin-tab-foods');
+            const btnDiets = document.getElementById('admin-tab-diets');
+            const secFoods = document.getElementById('section-foods');
+            const secDiets = document.getElementById('section-diets');
+
+            [btnFoods, btnDiets].forEach(b => b.className = "px-4 py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-all");
+            [secFoods, secDiets].forEach(s => s.classList.add('hidden'));
+
+            if (tab === 'foods') {
+                btnFoods.className = "px-4 py-3 border-b-2 border-emerald-400 text-emerald-400 font-black uppercase tracking-widest text-[10px] transition-all";
+                secFoods.classList.remove('hidden');
+            } else {
+                btnDiets.className = "px-4 py-3 border-b-2 border-white text-white font-black uppercase tracking-widest text-[10px] transition-all";
+                secDiets.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
