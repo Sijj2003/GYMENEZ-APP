@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GYMENEZ | Checkout de Élite</title>
+    
+    <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #030305;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        .premium-glass {
+            background: rgba(10, 10, 15, 0.65);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            box-shadow: 0 35px 70px -15px rgba(0, 0, 0, 0.9);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-input {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: white;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-input:focus {
+            border-color: #FFC300;
+            box-shadow: 0 0 15px rgba(255, 195, 0, 0.2);
+            background: rgba(0, 0, 0, 0.8);
+            outline: none;
+        }
+        .fade-in-up {
+            animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .active-tab {
+            border-color: #FFC300 !important;
+            color: #FFC300 !important;
+            background: rgba(255, 195, 0, 0.03);
+        }
+    </style>
+</head>
+<body class="selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col justify-between">
+
+    <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none text-center w-11/12 max-w-[360px] border backdrop-blur-md bg-black/90 border-white/10"></div>
+
+    <div class="fixed inset-0 bg-[url('/static/img/backgrounds/FONDO.png')] bg-cover bg-center opacity-[0.02] -z-10 mix-blend-screen grayscale"></div>
+    <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/70 via-[#030305]/95 to-[#030305] -z-10"></div>
+
+    <header class="w-full border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-black uppercase tracking-tighter block">
+                <span class="text-[#FFC300]">GYM</span><span class="text-white">ENEZ</span>
+                <span class="text-gray-600 text-xs font-mono tracking-widest ml-2">CHECKOUT_CORE</span>
+            </h1>
+            <a href="/billing/planes.html" class="px-5 py-2 rounded-xl border border-white/10 text-gray-300 font-bold text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-all duration-300">
+                Cancelar
+            </a>
+        </div>
+    </header>
+
+    <div id="payment-loader" class="flex-grow flex flex-col items-center justify-center py-20">
+        <div class="w-8 h-8 border-2 border-white/10 border-t-[#FFC300] rounded-full animate-spin mb-3"></div>
+        <p class="text-gray-500 text-[9px] font-black uppercase tracking-widest">Sincronizando Pasarela Criptográfica...</p>
+    </div>
+
+    <main id="payment-workspace" class="hidden max-w-6xl mx-auto w-full px-6 py-8 md:py-12 flex-grow flex-col md:flex-row gap-6 lg:gap-8 items-start fade-in-up">
+        
+        <div class="w-full md:w-7/12 flex flex-col space-y-6">
+            <div class="premium-glass rounded-[28px] p-6 md:p-8 w-full">
+                <h3 class="text-lg font-black uppercase tracking-tighter text-white mb-6">Selecciona tu método de pago</h3>
+                
+                <div class="flex gap-2 border-b border-white/5 mb-6 overflow-x-auto no-scrollbar">
+                    <button id="tab-btn-pago-movil" onclick="switchPaymentMethod('pago-movil')" class="flex-1 py-4 border-b-2 border-transparent text-gray-500 font-black uppercase tracking-widest text-[10px] transition-all whitespace-nowrap text-center">🇻🇪 Pago Móvil</button>
+                    <button id="tab-btn-stripe" onclick="switchPaymentMethod('stripe')" class="flex-1 py-4 border-b-2 border-transparent text-gray-500 font-black uppercase tracking-widest text-[10px] transition-all whitespace-nowrap text-center">💳 Tarjeta Internacional (Stripe)</button>
+                </div>
+
+                <div id="panel-pago-movil" class="hidden space-y-6">
+                    <div class="p-5 rounded-2xl bg-emerald-950/20 border border-emerald-500/20 space-y-3">
+                        <span class="text-[8px] font-black text-emerald-400 uppercase tracking-widest block">Datos Oficiales de Recaudación</span>
+                        <div class="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
+                            <div><p class="text-gray-500 font-bold uppercase text-[9px]">Banco</p><p class="text-white font-black uppercase tracking-tight">BANCAMIGA</p></div>
+                            <div><p class="text-gray-500 font-bold uppercase text-[9px]">Teléfono</p><p class="text-white font-mono font-bold">0414-8780392</p></div>
+                            <div class="col-span-2 border-t border-white/5 pt-2"><p class="text-gray-500 font-bold uppercase text-[9px]">Identificación (RIF/CI)</p><p class="text-white font-mono font-bold">31.103.356</p></div>
+                        </div>
+                    </div>
+
+                    <form id="pago-movil-form" onsubmit="handlePaymentSubmit(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Banco Emisor (Desde dónde pagaste)</label>
+                            <select id="form-bank" required class="w-full glass-input px-4 py-3.5 rounded-xl text-xs font-bold appearance-none cursor-pointer">
+                                <option value="" disabled selected>Selecciona tu banco...</option>
+                                <option value="Banesco">Banesco</option>
+                                <option value="Banco de Venezuela">Banco de Venezuela</option>
+                                <option value="Mercantil">Mercantil</option>
+                                <option value="Provincial">Provincial</option>
+                                <option value="Bancamiga">Bancamiga</option>
+                                <option value="BNC">BNC</option>
+                                <option value="Otro">Otro / Pago Móvil Interbancario</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Número de Referencia (Últimos 6 dígitos)</label>
+                            <input type="text" id="form-reference" required maxlength="8" class="w-full glass-input px-4 py-3.5 rounded-xl text-white text-xs font-mono tracking-widest" placeholder="000000">
+                        </div>
+                        <div class="pt-4">
+                            <button type="submit" id="btn-submit-report" class="w-full py-4 rounded-xl bg-gradient-to-r from-[#FFC300] to-[#eab308] text-black font-black text-[10px] uppercase tracking-[0.2em] shadow-[0_15px_30px_rgba(255,195,0,0.15)] hover:scale-[1.01] transition-all">
+                                Reportar Transferencia Obligatoria
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="panel-stripe" class="hidden flex-col items-center justify-center text-center py-8 space-y-6">
+                    <div class="w-14 h-14 bg-sky-500/10 border border-sky-500/20 text-sky-400 rounded-full flex items-center justify-center text-2xl shadow-lg">💳</div>
+                    <div>
+                        <h4 class="text-white text-base font-black uppercase tracking-tight">Procesamiento Internacional Seguro</h4>
+                        <p class="text-gray-400 text-xs font-medium max-w-sm mx-auto leading-relaxed mt-2">La emisión de links de pago para tarjetas de crédito o débito extranjeras en dólares ($) mediante Stripe está gestionada de forma directa por nuestro bot del Staff central.</p>
+                    </div>
+                    <button onclick="redirectToStripeWhatsapp()" class="px-8 py-4 rounded-xl bg-white text-black font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-sky-500 hover:text-white transition-all duration-300 transform hover:scale-105 flex items-center gap-3">
+                        Solicitar Link vía WhatsApp →
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="w-full md:w-5/12 flex flex-col space-y-4">
+            <div class="premium-glass rounded-[28px] p-6 md:p-8 w-full border-t border-[#FFC300]/20 bg-gradient-to-b from-[#FFC300]/5 to-transparent">
+                <h4 class="text-[10px] font-black text-[#FFC300] uppercase tracking-[0.3em] mb-4">Resumen de Cuenta</h4>
+                
+                <div class="space-y-4 text-xs font-medium divide-y divide-white/5">
+                    <div class="flex justify-between items-center pb-3">
+                        <span class="text-gray-400 uppercase font-bold text-[10px]">Membresía Solicitada</span>
+                        <span id="summary-plan-name" class="text-white font-black uppercase tracking-wider">--</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-3 pb-3">
+                        <span class="text-gray-400 uppercase font-bold text-[10px]">Costo Equivalente</span>
+                        <span id="summary-price-usd" class="text-white font-mono font-bold text-sm">--</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-3 pb-3">
+                        <span class="text-gray-400 uppercase font-bold text-[10px]">Tasa Oficial BCV</span>
+                        <span id="summary-bcv" class="text-gray-500 font-mono font-bold">--</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-3 pt-4 border-t-2 border-dashed border-white/10">
+                        <span class="text-[#FFC300] uppercase font-black tracking-widest text-[11px]">Total a Transferir</span>
+                        <div class="text-right">
+                            <p id="summary-total-bs" class="text-xl font-mono font-black text-[#FFC300] tracking-tight">--</p>
+                            <span class="text-[8px] text-gray-500 font-black uppercase tracking-wider block">Garantizado por el Servidor</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="text-center py-6 border-t border-white/5 bg-[#030305]/90 backdrop-blur-md">
+        <p class="text-[8px] font-bold uppercase tracking-[0.4em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • SECURE GATEWAY HUB</p>
+    </footer>
+
+    <script src="/static/js/auth/auth_middleware.js"></script>
+    <script src="/static/js/billing/payments.js"></script>
+</body>
+</html>
