@@ -7,14 +7,10 @@
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
-// Memoria volátil segura del estado del checkout
 let globalActiveTier = 'PLUS';
 let globalRateBCV = 0.00;
 let globalPriceUSD = 0.00;
 
-/**
- * Inyecta la función de feedback visual transaccional de la marca
- */
 function showUIFeedback(msg, type = 'success') {
     const box = document.getElementById('message-box');
     if (!box) return;
@@ -30,9 +26,6 @@ function showUIFeedback(msg, type = 'success') {
     }, 4000);
 }
 
-/**
- * Conmuta reactivamente los paneles del formulario en la interfaz gráfica
- */
 function switchPaymentMethod(method) {
     const btnPagoMovil = document.getElementById('tab-btn-pago-movil');
     const btnStripe = document.getElementById('tab-btn-stripe');
@@ -136,7 +129,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        // 🛡️ REQUISITO: Verificar de forma preventiva si existe un bloqueo por solicitud pendiente
+        // 🛡️ INTERCEPTOR REQUERIDO: Validar preventivamente la ventana transaccional activa
         const resCheck = await fetch(`${API_BASE_URL}/api/payments/check-status`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -144,22 +137,21 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (resCheck.ok) {
             const dataCheck = await resCheck.json();
             if (dataCheck.has_pending) {
-                // Inyectar atómicamente pantalla de bloqueo Bento Premium
+                // Desactivar spinner de carga de red
                 document.getElementById('payment-loader').classList.add('hidden');
-                const mainWorkspace = document.getElementById('payment-workspace');
-                if (mainWorkspace) {
-                    mainWorkspace.innerHTML = `
-                        <div class="premium-glass rounded-[32px] p-8 md:p-12 text-center max-w-xl mx-auto flex flex-col items-center justify-center space-y-6 fade-in-up w-full col-span-full border-t border-[#FFC300]/20">
-                            <div class="w-16 h-16 bg-[#FFC300]/10 border border-[#FFC300]/30 rounded-full flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(255,195,0,0.1)]">⏳</div>
-                            <h3 class="text-2xl font-black uppercase tracking-tighter text-white">Solicitud en Proceso</h3>
-                            <p class="text-gray-400 text-xs font-medium leading-relaxed uppercase tracking-wide">Tiene una solicitud en proceso. Espere a que sea procesada para realizar otra solicitud.</p>
-                            <a href="/apps/start/inicio.html" class="px-8 py-4 bg-[#FFC300] text-black font-black text-[10px] uppercase tracking-[0.2em] rounded-xl shadow-lg hover:scale-[1.02] transition-all">Volver al Hub</a>
-                        </div>
-                    `;
-                    mainWorkspace.classList.remove('hidden');
-                    mainWorkspace.classList.add('flex');
+                
+                // Disparar de forma cinemática la Ventana Emergente del Protocolo Zero Trust UX
+                const modal = document.getElementById('pending-payment-modal');
+                const content = document.getElementById('pending-modal-content');
+                if (modal && content) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                    setTimeout(() => {
+                        modal.classList.remove('opacity-0');
+                        content.classList.remove('scale-95');
+                    }, 50);
                 }
-                return;
+                return; // Cortocircuito absoluto para ahorrar ancho de banda y mitigar DoW
             }
         }
 
@@ -171,7 +163,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (resRate.ok && dataRate.success) {
             globalRateBCV = parseFloat(dataRate.rate);
             
-            // CORRECCIÓN SINCRO FINANCIERA: ULTRA recalibrado de $25.00 a $9.99 según backend maestro
             globalPriceUSD = globalActiveTier === 'ULTRA' ? 9.99 : 4.99; 
             const totalBs = round(globalPriceUSD * globalRateBCV, 2);
 
@@ -185,7 +176,6 @@ window.addEventListener('DOMContentLoaded', async () => {
             ws.classList.remove('hidden');
             ws.classList.add('flex');
 
-            // CORRECCIÓN DE BUG: 'pago-mobil' cambiado a 'pago-movil' con 'v' para enlazar con la función
             switchPaymentMethod('pago-movil');
         } else {
             showUIFeedback("Incapacidad del Core para certificar la divisa cambiaria.", "error");
