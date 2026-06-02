@@ -13,8 +13,7 @@ let globalRateBCV = 0.00;
 let globalPriceUSD = 0.00;
 
 /**
- * REMEDIACIÓN CRÍTICA: Se inyecta la función de feedback visual faltante 
- * para resolver el ReferenceError en tiempo de ejecución.
+ * Inyecta la función de feedback visual transaccional de la marca
  */
 function showUIFeedback(msg, type = 'success') {
     const box = document.getElementById('message-box');
@@ -137,6 +136,33 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
+        // 🛡️ REQUISITO: Verificar de forma preventiva si existe un bloqueo por solicitud pendiente
+        const resCheck = await fetch(`${API_BASE_URL}/api/payments/check-status`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (resCheck.ok) {
+            const dataCheck = await resCheck.json();
+            if (dataCheck.has_pending) {
+                // Inyectar atómicamente pantalla de bloqueo Bento Premium
+                document.getElementById('payment-loader').classList.add('hidden');
+                const mainWorkspace = document.getElementById('payment-workspace');
+                if (mainWorkspace) {
+                    mainWorkspace.innerHTML = `
+                        <div class="premium-glass rounded-[32px] p-8 md:p-12 text-center max-w-xl mx-auto flex flex-col items-center justify-center space-y-6 fade-in-up w-full col-span-full border-t border-[#FFC300]/20">
+                            <div class="w-16 h-16 bg-[#FFC300]/10 border border-[#FFC300]/30 rounded-full flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(255,195,0,0.1)]">⏳</div>
+                            <h3 class="text-2xl font-black uppercase tracking-tighter text-white">Solicitud en Proceso</h3>
+                            <p class="text-gray-400 text-xs font-medium leading-relaxed uppercase tracking-wide">Tiene una solicitud en proceso. Espere a que sea procesada para realizar otra solicitud.</p>
+                            <a href="/apps/start/inicio.html" class="px-8 py-4 bg-[#FFC300] text-black font-black text-[10px] uppercase tracking-[0.2em] rounded-xl shadow-lg hover:scale-[1.02] transition-all">Volver al Hub</a>
+                        </div>
+                    `;
+                    mainWorkspace.classList.remove('hidden');
+                    mainWorkspace.classList.add('flex');
+                }
+                return;
+            }
+        }
+
         const resRate = await fetch(`${API_BASE_URL}/api/bcv-rate`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -145,7 +171,8 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (resRate.ok && dataRate.success) {
             globalRateBCV = parseFloat(dataRate.rate);
             
-            globalPriceUSD = globalActiveTier === 'ULTRA' ? 25.00 : 4.99; 
+            // CORRECCIÓN SINCRO FINANCIERA: ULTRA recalibrado de $25.00 a $9.99 según backend maestro
+            globalPriceUSD = globalActiveTier === 'ULTRA' ? 9.99 : 4.99; 
             const totalBs = round(globalPriceUSD * globalRateBCV, 2);
 
             document.getElementById('summary-plan-name').textContent = globalActiveTier;
@@ -158,7 +185,8 @@ window.addEventListener('DOMContentLoaded', async () => {
             ws.classList.remove('hidden');
             ws.classList.add('flex');
 
-            switchPaymentMethod('pago-mobil');
+            // CORRECCIÓN DE BUG: 'pago-mobil' cambiado a 'pago-movil' con 'v' para enlazar con la función
+            switchPaymentMethod('pago-movil');
         } else {
             showUIFeedback("Incapacidad del Core para certificar la divisa cambiaria.", "error");
         }
