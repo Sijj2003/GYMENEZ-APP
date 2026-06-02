@@ -13,8 +13,26 @@ let globalRateBCV = 0.00;
 let globalPriceUSD = 0.00;
 
 /**
+ * REMEDIACIÓN CRÍTICA: Se inyecta la función de feedback visual faltante 
+ * para resolver el ReferenceError en tiempo de ejecución.
+ */
+function showUIFeedback(msg, type = 'success') {
+    const box = document.getElementById('message-box');
+    if (!box) return;
+    box.textContent = msg;
+    box.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] transition-all duration-400 text-center border backdrop-blur-md w-11/12 max-w-[360px] ${
+        type === 'success' ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/30' : 'bg-red-950/80 text-red-400 border-red-500/30'
+    }`;
+    box.style.opacity = '1';
+    box.style.transform = 'translate(-50%, 0)';
+    setTimeout(() => {
+        box.style.opacity = '0';
+        box.style.transform = 'translate(-50%, -20px)';
+    }, 4000);
+}
+
+/**
  * Conmuta reactivamente los paneles del formulario en la interfaz gráfica
- * @param {string} method - Identificador de la pestaña ('pago-movil' o 'stripe')
  */
 function switchPaymentMethod(method) {
     const btnPagoMovil = document.getElementById('tab-btn-pago-movil');
@@ -24,7 +42,6 @@ function switchPaymentMethod(method) {
 
     if (!btnPagoMovil || !btnStripe || !pnlPagoMovil || !pnlStripe) return;
 
-    // Resetear clases y estados visuales
     [btnPagoMovil, btnStripe].forEach(b => b.className = "flex-1 py-4 border-b-2 border-transparent text-gray-500 font-black uppercase tracking-widest text-[10px] transition-all text-center");
     
     pnlPagoMovil.classList.add('hidden');
@@ -41,18 +58,11 @@ function switchPaymentMethod(method) {
     }
 }
 
-/**
- * REMEDIACIÓN CRÍTICA: Se corrige la palabra clave 'def' por 'function' (Sintaxis JS V8 estándar).
- * Ejecuta la redirección segura hacia el canal de soporte internacional de Stripe.
- */
 function redirectToStripeWhatsapp() {
     const wsMsg = "Hola, deseo realizar el pago de mi servicio GYMENEZ a traves de TDC/TDD internacional en dolares. solicito link de pago a traves de stripe.";
     window.open(`https://wa.me/584148780392?text=${encodeURIComponent(wsMsg)}`, '_blank');
 }
 
-/**
- * Despacha el reporte de transacción atómica en Bolívares hacia el backend core
- */
 async function handlePaymentSubmit(event) {
     event.preventDefault();
     
@@ -111,7 +121,6 @@ async function handlePaymentSubmit(event) {
     }
 }
 
-// Inicializador del pipeline del checkout al cargar el DOM
 window.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (!token) {
@@ -134,7 +143,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         const dataRate = await resRate.json();
 
         if (resRate.ok && dataRate.success) {
-            // REMEDIACIÓN CRÍTICA: Se sustituye 'float()' por 'parseFloat()' nativo de JS.
             globalRateBCV = parseFloat(dataRate.rate);
             
             globalPriceUSD = globalActiveTier === 'ULTRA' ? 25.00 : 4.99; 
@@ -150,7 +158,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             ws.classList.remove('hidden');
             ws.classList.add('flex');
 
-            switchPaymentMethod('pago-movil');
+            switchPaymentMethod('pago-mobil');
         } else {
             showUIFeedback("Incapacidad del Core para certificar la divisa cambiaria.", "error");
         }
