@@ -2,88 +2,122 @@
 <html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GYMENEZ | Central Pulse</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GYMENEZ | Pulse Chat</title>
     
     <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Estilos modulares core -->
     <link rel="stylesheet" href="/static/css/auth.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
-</head>
-<body class="selection:bg-[#FFC300] selection:text-black overflow-x-hidden min-h-screen flex flex-col bg-[#030305]">
 
-    <!-- Notificaciones flotantes UI -->
+    <style>
+        /* Ajuste de scrollbar minimalista para el chat */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #FFC300; }
+        
+        /* Para evitar el rebote en dispositivos móviles al abrir el teclado */
+        body { overscroll-behavior-y: none; }
+    </style>
+</head>
+<body class="selection:bg-[#FFC300] selection:text-black overflow-hidden min-h-[100dvh] flex flex-col bg-[#030305]">
+
     <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-4 md:px-6 py-2 md:py-3 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none text-center w-11/12 max-w-[350px] border border-white/10"></div>
 
-    <!-- Fondos de Gradiente y Textura de Marca -->
     <div class="fixed inset-0 bg-[url('/static/img/backgrounds/FONDO.png')] bg-cover bg-center opacity-10 -z-10 mix-blend-screen grayscale"></div>
-    <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/40 via-[#030305]/95 to-[#030305] -z-10"></div>
+    <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/60 via-[#030305]/95 to-[#030305] -z-10"></div>
 
-    <!-- Header Universal -->
-    <header class="w-full border-b border-white/5 bg-black/30 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
+    <header class="w-full border-b border-white/5 bg-black/50 backdrop-blur-md z-50 shrink-0">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-3 md:py-4 flex justify-between items-center">
             <div class="flex items-center gap-2 md:gap-3">
                 <h1 class="text-lg md:text-xl font-black uppercase tracking-tighter block">
                     <span class="text-[#FFC300]">GYM</span><span class="text-white">ENEZ</span>
                 </h1>
             </div>
-            <a href="/apps/start/inicio.html" class="px-5 py-2 rounded-full border border-white/10 text-white font-bold text-[9px] md:text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition">
+            <a href="/apps/start/inicio.html" class="px-5 py-2 rounded-full border border-white/10 text-white font-bold text-[9px] md:text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition shadow-sm">
                 Volver al Hub
             </a>
         </div>
     </header>
 
-    <main class="max-w-4xl mx-auto w-full px-4 md:px-6 py-8 md:py-12 flex-grow flex flex-col">
+    <main class="max-w-4xl mx-auto w-full px-0 sm:px-6 py-0 sm:py-6 flex-grow flex flex-col h-[calc(100dvh-60px)] sm:h-auto overflow-hidden relative">
         
-        <!-- Bloque de Encabezado y Soporte -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10 pb-6 border-b border-white/5">
-            <div>
-                <p class="text-[#FFC300] text-[9px] font-black uppercase tracking-[0.4em] mb-1">Centro de Despacho</p>
-                <h2 class="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-none">GYMENEZ <span class="text-white">PULSE</span></h2>
-            </div>
+        <div class="glass-panel flex flex-col flex-grow sm:rounded-[32px] border-x-0 sm:border border-white/5 bg-[#09090e] overflow-hidden relative shadow-2xl">
             
-            <!-- 📞 Botón de Soporte a WhatsApp Rediseñado y Más Grueso -->
-            <a href="https://wa.me/584148780392?text=Hola,%20necesito%20soporte%20técnico%20con%20mi%20cuenta%20de%20GYMENEZ." 
-               target="_blank" 
-               class="inline-flex items-center gap-2.5 bg-emerald-600/10 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/20 px-5 py-3 rounded-xl text-[10px] uppercase font-black tracking-widest shadow-lg transition-all duration-300 transform hover:scale-[1.02]">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.455L0 24zm6.79-4.141l.406.241c1.559.926 3.344 1.415 5.171 1.416 5.58-.001 10.12-4.545 10.124-10.13a9.141 9.141 0 0 0-2.695-6.495 9.191 9.191 0 0 0-6.493-2.696c-5.586 0-10.123 4.542-10.127 10.129-.001 1.896.493 3.75 1.429 5.33l.264.448L3.997 21.3l3.072-.806-.222-.135z"/>
-                </svg>
-                Solicitar Soporte
-            </a>
-        </div>
-
-        <!-- Spinner de Carga Inicial -->
-        <div id="loading-spinner" class="flex flex-col items-center justify-center py-20">
-            <div class="w-10 h-10 border-4 border-white/10 border-t-[#FFC300] rounded-full animate-spin mb-4"></div>
-            <p class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Interceptando Señales...</p>
-        </div>
-
-        <!-- 🔔 CONTENEDOR DINÁMICO DE MENSAJES (Sincronizado por JS) -->
-        <div id="pulse-container" class="hidden flex-col gap-4">
-            <!-- Los mensajes se inyectarán de forma atómica desde el JavaScript -->
-        </div>
-
-        <!-- Estado Vacío (Fallback si no hay notificaciones en la Base de Datos) -->
-        <div id="pulse-empty-state" class="hidden flex-col items-center justify-center text-center py-16 px-4 bg-white/[0.01] border border-white/5 rounded-3xl">
-            <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center border border-white/10 text-gray-400 mb-4">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5a2 2 0 012-2h2m2 0h4a2 2 0 012 2v3m2 4H10"></path></svg>
+            <div class="px-4 sm:px-6 py-4 border-b border-white/5 bg-black/60 flex justify-between items-center z-10 backdrop-blur-md">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-black uppercase tracking-tight text-sm">Soporte GYMENEZ</h3>
+                        <p id="chat-status-text" class="text-[9px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-gray-500" id="status-dot"></span> Inactivo
+                        </p>
+                    </div>
+                </div>
+                <button id="btn-video-call" class="hidden w-10 h-10 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center justify-center hover:bg-sky-500 hover:text-white transition transform hover:scale-105">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                </button>
             </div>
-            <h4 class="text-white text-sm font-black uppercase tracking-widest">Canal Limpio</h4>
-            <p class="text-gray-500 text-xs font-bold uppercase tracking-wide mt-1.5">No hay transmisiones ni alertas activas en este momento.</p>
-        </div>
 
+            <div id="chat-messages-area" class="flex-grow overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar bg-[url('/static/img/backgrounds/FONDO.png')] bg-cover bg-center bg-blend-overlay">
+                
+                <div class="flex justify-center mb-6">
+                    <span class="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[9px] text-gray-400 font-bold uppercase tracking-widest">Módulo Cifrado Activado</span>
+                </div>
+
+                <div class="flex justify-start fade-in-up">
+                    <div class="max-w-[85%] sm:max-w-[70%] bg-white/5 border border-white/10 text-gray-300 p-4 rounded-2xl rounded-tl-sm shadow-md">
+                        <p class="text-xs sm:text-sm font-medium leading-relaxed">Hola. Bienvenido a <strong>GYMENEZ PULSE</strong>. <br><br>Este es tu canal de comunicación directa con el equipo técnico y de preparación física. Para evitar spam y garantizar respuestas rápidas, las sesiones de chat deben ser solicitadas.<br><br>Si necesitas asistencia con tu planificación, solicita atención en el botón inferior.</p>
+                        <span class="text-[8px] text-gray-500 block text-right mt-2 font-mono uppercase font-bold">Mensaje Automático</span>
+                    </div>
+                </div>
+
+                </div>
+
+            <div id="chat-request-overlay" class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-[#050508] via-[#050508]/95 to-transparent flex flex-col items-center justify-end z-20 h-48 border-t border-white/5 transition-all duration-500">
+                <p id="request-status-msg" class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-4 text-center">Para iniciar una conversación, solicita una sesión segura.</p>
+                <button id="btn-request-support" class="btn-gold w-full sm:w-auto sm:min-w-[280px] px-8 py-4 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(255,195,0,0.2)] hover:scale-105 transition-transform flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z"></path></svg>
+                    Solicitar Asistencia
+                </button>
+            </div>
+
+            <div id="chat-input-area" class="hidden p-3 sm:p-4 bg-black/80 border-t border-white/10 z-10 backdrop-blur-md transition-all duration-500">
+                <form id="chat-form" class="flex gap-2 items-end">
+                    <textarea id="chat-input" rows="1" class="w-full bg-white/5 border border-white/10 text-white text-sm p-3.5 rounded-xl focus:border-[#FFC300] focus:bg-black/60 outline-none resize-none custom-scrollbar transition-all" placeholder="Escribe tu mensaje..." required></textarea>
+                    
+                    <button type="submit" class="w-12 h-12 shrink-0 bg-[#FFC300] text-black rounded-xl flex items-center justify-center hover:bg-yellow-400 transition-colors shadow-[0_0_15px_rgba(255,195,0,0.3)] transform hover:scale-105">
+                        <svg class="w-5 h-5 translate-x-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+                    </button>
+                </form>
+            </div>
+
+        </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="text-center py-6 border-t border-white/5 bg-[#030305]/80 backdrop-blur-md mt-auto">
-        <p class="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • PULSE ENGINE</p>
-    </footer>
-
-    <!-- Middleware y Lógica -->
     <script src="/static/js/auth/auth_middleware.js"></script>
     <script src="/static/js/dashboard/pulse.js"></script>
+    
+    <script>
+        const tx = document.getElementById('chat-input');
+        if(tx) {
+            tx.setAttribute('style', 'height:' + (tx.scrollHeight) + 'px;overflow-y:hidden;');
+            tx.addEventListener("input", OnInput, false);
+        }
+        function OnInput() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            // Límite de altura máxima antes de hacer scroll (aprox 4 líneas)
+            if(this.scrollHeight > 120) {
+                this.style.overflowY = 'auto';
+                this.style.height = '120px';
+            } else {
+                this.style.overflowY = 'hidden';
+            }
+        }
+    </script>
 </body>
 </html>
