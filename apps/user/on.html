@@ -240,6 +240,29 @@
         </div>
     </div>
 
+    <div id="paywall-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[10000] hidden flex-col justify-center items-center opacity-0 transition-opacity duration-300 p-4">
+        <div class="glass-panel w-full max-w-md p-8 rounded-[32px] border-t border-[#FFC300]/30 text-center transform scale-95 transition-transform duration-300" id="paywall-content">
+            
+            <div class="w-16 h-16 mx-auto bg-[#FFC300]/10 rounded-full flex items-center justify-center border border-[#FFC300]/30 mb-6 shadow-[0_0_30px_rgba(255,195,0,0.2)]">
+                <span class="text-3xl">🔒</span>
+            </div>
+            
+            <h3 class="text-2xl font-black uppercase tracking-tighter text-white mb-2">Acceso Restringido</h3>
+            <p class="text-gray-400 text-xs font-medium leading-relaxed mb-6">
+                Para reproducir este contenido necesitas una suscripción de nivel <span id="paywall-tier-req" class="text-[#FFC300] font-black">SUPERIOR</span>. Mejora tu plan para desbloquear nuestra academia cinematográfica completa.
+            </p>
+            
+            <div class="flex flex-col gap-3">
+                <a href="/billing/planes.html" class="flex items-center justify-center gap-2 bg-gradient-to-r from-[#FFC300] to-[#eab308] text-black w-full py-4 rounded-xl text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(255,195,0,0.3)] hover:scale-[1.02] transition-transform">
+                    Ver Planes de Suscripción
+                </a>
+                <button onclick="closePaywallModal()" class="w-full py-3 rounded-xl bg-white/5 text-gray-400 border border-white/10 text-[10px] font-black uppercase tracking-widest hover:text-white hover:bg-white/10 transition-colors">
+                    Volver al Catálogo
+                </button>
+            </div>
+        </div>
+    </div>
+
     <footer id="main-footer" class="text-center py-6 border-t border-white/5 bg-[#030305] mt-auto relative z-40">
         <p class="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • TU MEJOR VERSIÓN</p>
     </footer>
