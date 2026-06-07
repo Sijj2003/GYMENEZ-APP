@@ -29,11 +29,10 @@ window.addEventListener('DOMContentLoaded', async () => {
             userTier = data.user_tier;
 
             if (catalogFilms.length > 0) {
-                // Selecciona película aleatoria para Portada (Hero)
                 const randomIndex = Math.floor(Math.random() * catalogFilms.length);
                 const heroFilm = catalogFilms[randomIndex];
                 renderHero(heroFilm);
-                renderRows(); // Pinta los carruseles
+                renderRows();
             }
         }
     } catch (e) {
@@ -42,7 +41,10 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 function renderHero(film) {
-    document.getElementById('hero-cover').src = film.cover_url;
+    // Si la imagen anterior estaba cargada, la desvanecemos y cargamos la nueva
+    const imgElement = document.getElementById('hero-cover');
+    imgElement.src = film.cover_url;
+    
     document.getElementById('hero-title').innerHTML = film.title;
     document.getElementById('hero-desc').textContent = film.synopsis;
     document.getElementById('hero-year').textContent = film.year;
@@ -50,14 +52,13 @@ function renderHero(film) {
 
     const playBtn = document.getElementById('hero-play-btn');
     
-    // Si tiene acceso, lo dejamos ver
-    if (film.has_access && film.chapters.length > 0) {
-        const firstChapter = film.chapters[0];
-        playBtn.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Reproducir`;
+    // El Hero también abre la pestaña Detalles ahora, no el video directo, 
+    // porque necesitamos que el usuario vea la lista de episodios.
+    if (film.has_access) {
+        playBtn.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Ver Capítulos`;
         playBtn.className = "flex items-center gap-3 bg-white text-black px-8 py-3.5 rounded-lg font-black uppercase tracking-widest text-[11px] hover:bg-gray-200 transition transform hover:scale-105 shadow-[0_0_30px_rgba(255,255,255,0.3)]";
-        playBtn.onclick = () => openCustomPlayer(film, firstChapter);
+        playBtn.onclick = () => openDetailsModal(film);
     } else {
-        // 🔒 Si NO tiene acceso, lanza la ventana modal persuasiva
         playBtn.innerHTML = `🔒 MEJORAR PLAN ${film.subscription_tier}`;
         playBtn.className = "flex items-center justify-center gap-3 bg-[#FFC300] text-black px-8 py-3.5 rounded-lg font-black uppercase tracking-widest text-[11px] shadow-[0_0_20px_rgba(255,195,0,0.4)] transition transform hover:scale-105";
         playBtn.onclick = () => showPaywallModal(film.subscription_tier);
@@ -84,8 +85,6 @@ function renderRows() {
         
         let cardsHtml = '';
         filmsInCat.forEach(film => {
-            
-            // Si el backend dictó que no tiene acceso, se le dibuja un candado grande oscuro encima
             const lockOverlay = !film.has_access ? `
                 <div class="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center pointer-events-none group-hover:bg-black/40 transition-colors">
                     <span class="text-4xl mb-2 drop-shadow-xl transform group-hover:scale-110 transition-transform duration-300">🔒</span>
@@ -121,20 +120,103 @@ function renderRows() {
 }
 
 function handleCardClick(film) {
-    // 🔒 SEGURIDAD: Si no tiene acceso, abre el Modal de Ventas
     if (!film.has_access) {
         showPaywallModal(film.subscription_tier); 
         return;
     }
-    
-    // Si tiene acceso, abre el reproductor
-    if (film.chapters && film.chapters.length > 0) {
-        openCustomPlayer(film, film.chapters[0]);
-    }
+    // Si la película tiene acceso, mostramos su ventana de detalles y la LISTA DE EPISODIOS
+    openDetailsModal(film);
 }
 
 // ==========================================
-// 3. CONTROLADORES DEL MODAL PAYWALL
+// 3. MODAL DE DETALLES (LISTA DE CAPÍTULOS)
+// ==========================================
+function openDetailsModal(film) {
+    document.getElementById('details-cover').src = film.cover_url;
+    document.getElementById('details-title').textContent = film.title;
+    document.getElementById('details-year').textContent = film.year;
+    document.getElementById('details-age').textContent = film.age_rating;
+    document.getElementById('details-category').textContent = film.category;
+    document.getElementById('details-synopsis').textContent = film.synopsis;
+    
+    // Color según nivel de suscripción
+    let tierColor = "text-gray-400";
+    if(film.subscription_tier === 'PLUS') tierColor = "text-sky-400";
+    if(film.subscription_tier === 'ULTRA') tierColor = "text-[#FFC300]";
+    
+    const tierEl = document.getElementById('details-tier');
+    tierEl.textContent = film.subscription_tier;
+    tierEl.className = `font-black uppercase tracking-widest bg-white/5 border border-white/10 px-2 py-0.5 rounded ${tierColor}`;
+
+    const playBtn = document.getElementById('details-play-btn');
+    if (film.chapters && film.chapters.length > 0) {
+        playBtn.onclick = () => {
+            closeDetailsModal();
+            openCustomPlayer(film, film.chapters[0]); // El botón Hero del Modal siempre pone el episodio 1
+        };
+    }
+
+    // 🌟 RENDERIZADO DINÁMICO DE TODOS LOS CAPÍTULOS
+    const epsContainer = document.getElementById('details-episodes-list');
+    epsContainer.innerHTML = '';
+    document.getElementById('details-ep-count').textContent = `${(film.chapters || []).length} Episodios`;
+
+    if (film.chapters && film.chapters.length > 0) {
+        film.chapters.forEach((chap) => {
+            const epDiv = document.createElement('div');
+            // Tarjeta individual para cada capítulo en la lista
+            epDiv.className = "flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white/[0.02] hover:bg-white/[0.08] border border-white/5 rounded-xl cursor-pointer transition-colors group";
+            epDiv.onclick = () => {
+                closeDetailsModal();
+                openCustomPlayer(film, chap); // Abrir el reproductor con el capítulo exacto que clickeó
+            };
+
+            epDiv.innerHTML = `
+                <div class="flex items-center gap-4 w-full sm:w-auto">
+                    <div class="text-xl font-black text-gray-600 group-hover:text-red-500 transition-colors w-6 text-center shrink-0">
+                        ${chap.chapter_number}
+                    </div>
+                    <div class="flex-grow">
+                        <h4 class="text-sm font-bold text-white">${chap.title}</h4>
+                        <p class="text-[10px] text-gray-500 line-clamp-2 mt-1 leading-relaxed">${chap.description || 'Sin descripción disponible.'}</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between w-full sm:w-auto mt-3 sm:mt-0">
+                    <span class="text-[10px] font-mono font-bold text-gray-400 mr-4 sm:ml-4 shrink-0">${chap.duration || '--'}</span>
+                    <button class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-white group-hover:bg-white group-hover:text-black transition-colors shrink-0">
+                        <svg class="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                </div>
+            `;
+            epsContainer.appendChild(epDiv);
+        });
+    }
+
+    const modal = document.getElementById('details-modal');
+    const content = document.getElementById('details-modal-content');
+    document.body.style.overflow = 'hidden';
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+    }, 50);
+}
+
+function closeDetailsModal() {
+    const modal = document.getElementById('details-modal');
+    const content = document.getElementById('details-modal-content');
+    document.body.style.overflow = 'auto';
+    modal.classList.add('opacity-0');
+    content.classList.add('scale-95');
+    setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+// ==========================================
+// 4. CONTROLADORES DEL MODAL PAYWALL
 // ==========================================
 function showPaywallModal(requiredTier) {
     const modal = document.getElementById('paywall-modal');
@@ -168,7 +250,7 @@ function closePaywallModal() {
 
 
 // ==========================================
-// 4. MAGIA: CUSTOM YOUTUBE PLAYER API
+// 5. MAGIA: CUSTOM YOUTUBE PLAYER API
 // ==========================================
 function extractYTId(url) {
     if(!url) return null;
