@@ -312,7 +312,7 @@ function resetPlayerUI() {
         if (ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
             vc.classList.add('idle');
         }
-    }, 3000); // 3 segundos exactos
+    }, 5000); // 5 segundos exactos
 }
 
 function onPlayerReady(event) {
