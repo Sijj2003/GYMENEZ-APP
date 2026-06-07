@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GYMENEZ ADMIN | Consola ON (Streaming)</title>
+    <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(220, 38, 38, 0.3); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #dc2626; }
+        
+        .chapter-card {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-[#030305] text-white selection:bg-red-600 selection:text-white min-h-screen flex flex-col font-sans overflow-x-hidden">
+
+    <div id="admin-toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none border border-white/10"></div>
+
+    <header class="w-full border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <h1 class="text-xl font-black uppercase tracking-tighter">
+                    <span class="text-[#FFC300]">GYM</span><span class="text-white">ENEZ</span>
+                    <span class="text-red-500 text-xs font-mono tracking-widest ml-2">CORE_ON</span>
+                </h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="/apps/admin/dashboard.html" class="px-5 py-2 rounded-full border border-white/10 text-gray-400 hover:text-white font-bold text-[10px] uppercase tracking-widest transition">Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <div id="admin-spinner" class="flex-grow flex flex-col items-center justify-center py-20">
+        <div class="w-8 h-8 border-2 border-white/10 border-t-red-600 rounded-full animate-spin mb-3"></div>
+        <p class="text-gray-600 text-[9px] font-black uppercase tracking-widest">Sincronizando Bóveda Cinematográfica...</p>
+    </div>
+
+    <main id="admin-panel-content" class="hidden max-w-7xl mx-auto w-full px-6 py-10 flex-grow flex flex-col">
+        
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 border-b border-white/5 pb-6">
+            <div>
+                <p class="text-red-500 text-[9px] font-black uppercase tracking-[0.4em] mb-1">Director de Contenidos</p>
+                <h2 class="text-3xl font-black text-white uppercase tracking-tighter">Catálogo Streaming</h2>
+            </div>
+            <button onclick="openFilmModal()" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-widest transition shadow-[0_0_20px_rgba(220,38,38,0.3)] transform hover:scale-105">
+                + Inyectar Producción
+            </button>
+        </div>
+
+        <div class="mb-6">
+            <input type="text" id="admin-film-search" oninput="triggerFilmSearch()" placeholder="Buscar por título, categoría o clasificación..." class="w-full glass-input px-5 py-4 rounded-xl text-xs font-medium">
+        </div>
+
+        <div id="films-grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-auto">
+            </div>
+
+    </main>
+
+    <div id="film-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[999] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="glass-panel w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar rounded-[32px] border border-red-500/20 bg-[#07070a] p-6 md:p-8 space-y-6 shadow-[0_0_50px_rgba(220,38,38,0.1)]">
+            
+            <div class="flex justify-between items-center border-b border-white/5 pb-4 sticky top-0 bg-[#07070a] z-20">
+                <div>
+                    <h3 id="modal-film-title" class="text-xl font-black uppercase tracking-tighter text-white">Nueva Producción</h3>
+                    <p class="text-[9px] text-gray-500 font-bold tracking-widest uppercase mt-1">Base de Datos: on_films</p>
+                </div>
+                <button onclick="closeFilmModal()" class="text-gray-500 hover:text-white text-xs uppercase tracking-widest font-black transition">Cerrar</button>
+            </div>
+
+            <form id="film-form" onsubmit="handleFilmSubmit(event)" class="space-y-6 text-xs">
+                <input type="hidden" id="form-film-id">
+                
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-black uppercase text-red-500 tracking-widest border-b border-white/5 pb-2">1. Detalles Generales</h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-500 font-bold uppercase tracking-wider mb-1">Título de la Producción <span class="text-red-500">*</span></label>
+                            <input type="text" id="form-title" required class="w-full glass-input p-3.5 rounded-xl font-bold text-white">
+                        </div>
+                        <div>
+                            <label class="block text-gray-500 font-bold uppercase tracking-wider mb-1">Categoría <span class="text-red-500">*</span></label>
+                            <select id="form-category" required class="w-full glass-input p-3.5 rounded-xl bg-[#09090e] font-bold">
+                                <option value="Serie">Serie</option>
+                                <option value="Película">Película</option>
+                                <option value="Documental">Documental</option>
+                                <option value="Corto">Corto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-gray-500 font-bold uppercase tracking-wider mb-1">Año <span class="text-red-500">*</span></label>
+                            <input type="number" id="form-year" required value="2026" class="w-full glass-input p-3.5 rounded-xl font-mono text-center">
+                        </div>
+                        <div>
+                            <label class="block text-gray-500 font-bold uppercase tracking-wider mb-1">Edad <span class="text-red-500">*</span></label>
+                            <select id="form-age" required class="w-full glass-input p-3.5 rounded-xl bg-[#09090e] text-center font-bold">
+                                <option value="TP">Todo Público</option>
+                                <option value="12+">12+</option>
+                                <option value="16+">16+</option>
+                                <option value="18+">18+</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-[#FFC300] font-bold uppercase tracking-wider mb-1">Nivel de Acceso (Paywall) <span class="text-red-500">*</span></label>
+                            <select id="form-tier" required class="w-full glass-input border-[#FFC300]/30 p-3.5 rounded-xl bg-[#09090e] text-[#FFC300] font-black uppercase tracking-widest text-center">
+                                <option value="BASICO">BÁSICO (Visible para todos)</option>
+                                <option value="PLUS">PLUS (Plus y Ultra)</option>
+                                <option value="ULTRA">ULTRA (Solo Ultra)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-500 font-bold uppercase tracking-wider mb-1">URL de Portada (Thumbnail) <span class="text-red-500">*</span></label>
+                        <input type="url" id="form-cover" required placeholder="https://images.unsplash.com/..." class="w-full glass-input p-3.5 rounded-xl text-sky-400 font-mono text-[10px]">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-500 font-bold uppercase tracking-wider mb-1">URL Trailer Youtube (Opcional)</label>
+                        <input type="url" id="form-trailer" placeholder="https://youtube.com/watch?v=..." class="w-full glass-input p-3.5 rounded-xl text-sky-400 font-mono text-[10px]">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-500 font-bold uppercase tracking-wider mb-1">Sinopsis <span class="text-red-500">*</span></label>
+                        <textarea id="form-synopsis" required rows="3" class="w-full glass-input p-3.5 rounded-xl resize-none leading-relaxed" placeholder="Describe brevemente de qué trata esta producción..."></textarea>
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-4 border-t border-white/5">
+                    <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                        <div>
+                            <h4 class="text-[10px] font-black uppercase text-red-500 tracking-widest">2. Contenido Audiovisual (Capítulos)</h4>
+                            <p class="text-[8px] text-gray-500 font-bold tracking-widest mt-1">Si es película o corto, solo agrega 1 capítulo.</p>
+                        </div>
+                        <button type="button" onclick="addChapterRow()" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition shadow-md border border-white/10">
+                            + Añadir Capítulo
+                        </button>
+                    </div>
+
+                    <div id="chapters-container" class="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                        </div>
+                </div>
+
+                <div class="pt-6 border-t border-white/5 flex justify-end gap-3 sticky bottom-0 bg-[#07070a] py-4 z-20">
+                    <button type="button" onclick="closeFilmModal()" class="px-6 py-3 rounded-xl bg-white/5 text-gray-400 hover:text-white font-black uppercase tracking-widest transition">Cancelar</button>
+                    <button type="submit" id="btn-submit-film" class="px-8 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-[0.15em] transition shadow-[0_0_20px_rgba(220,38,38,0.3)]">Guardar Producción</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/admin/admin_middleware.js"></script>
+    
+    <script>
+        const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+        const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
+        
+        let allFilms = [];
+        let chapterCount = 0;
+
+        function showToast(message, type = 'success') {
+            const box = document.getElementById('admin-toast');
+            box.textContent = message;
+            box.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] transition-all duration-400 text-center border backdrop-blur-md w-11/12 max-w-[360px] ${type === 'success' ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/30' : 'bg-red-950/80 text-red-400 border-red-500/30'}`;
+            box.style.opacity = '1'; box.style.transform = 'translate(-50%, 0)';
+            setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 4000);
+        }
+
+        // ==========================================
+        // LÓGICA DE CAPÍTULOS DINÁMICOS
+        // ==========================================
+        function addChapterRow(data = null) {
+            chapterCount++;
+            const container = document.getElementById('chapters-container');
+            const rowId = `chapter-${Date.now()}-${Math.floor(Math.random()*1000)}`;
+
+            const div = document.createElement('div');
+            div.id = rowId;
+            div.className = "chapter-card bg-black/40 border border-white/5 p-4 rounded-xl relative group hover:border-red-500/30";
+            
+            div.innerHTML = `
+                <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-500 hover:text-red-400 text-lg leading-none font-bold">&times;</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <div class="md:col-span-1">
+                        <label class="block text-[8px] text-gray-500 font-bold uppercase mb-1">Nº</label>
+                        <input type="number" class="chap-num w-full glass-input p-2 rounded-lg text-center font-mono" value="${data ? data.chapter_number : chapterCount}" required min="1">
+                    </div>
+                    <div class="md:col-span-5">
+                        <label class="block text-[8px] text-gray-500 font-bold uppercase mb-1">Título del Capítulo</label>
+                        <input type="text" class="chap-title w-full glass-input p-2 rounded-lg" value="${data ? data.title : ''}" placeholder="Ej: El Despertar" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[8px] text-gray-500 font-bold uppercase mb-1">Duración</label>
+                        <input type="text" class="chap-duration w-full glass-input p-2 rounded-lg text-center" value="${data ? data.duration : ''}" placeholder="Ej: 45m" required>
+                    </div>
+                    <div class="md:col-span-4">
+                        <label class="block text-[8px] text-gray-500 font-bold uppercase mb-1">URL YouTube (Completa)</label>
+                        <input type="url" class="chap-url w-full glass-input p-2 rounded-lg text-[9px] font-mono text-sky-400" value="${data ? data.video_url : ''}" placeholder="https://youtube.com/watch?v=..." required>
+                    </div>
+                    <div class="md:col-span-12">
+                        <label class="block text-[8px] text-gray-500 font-bold uppercase mb-1">Descripción Breve (Opcional)</label>
+                        <input type="text" class="chap-desc w-full glass-input p-2 rounded-lg text-[10px]" value="${data ? (data.description || '') : ''}" placeholder="Resumen del capítulo...">
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function extractChapters() {
+            const rows = document.querySelectorAll('#chapters-container .chapter-card');
+            const chapters = [];
+            rows.forEach(row => {
+                chapters.push({
+                    chapter_number: parseInt(row.querySelector('.chap-num').value),
+                    title: row.querySelector('.chap-title').value.trim(),
+                    duration: row.querySelector('.chap-duration').value.trim(),
+                    video_url: row.querySelector('.chap-url').value.trim(),
+                    description: row.querySelector('.chap-desc').value.trim()
+                });
+            });
+            // Ordenar por número de capítulo
+            return chapters.sort((a, b) => a.chapter_number - b.chapter_number);
+        }
+
+        // ==========================================
+        // GESTIÓN DEL MODAL
+        // ==========================================
+        function openFilmModal(filmData = null) {
+            const modal = document.getElementById('film-modal');
+            document.getElementById('film-form').reset();
+            document.getElementById('chapters-container').innerHTML = '';
+            chapterCount = 0;
+
+            if (filmData) {
+                document.getElementById('modal-film-title').textContent = "Editar Producción";
+                document.getElementById('form-film-id').value = filmData.id;
+                document.getElementById('form-title').value = filmData.title;
+                document.getElementById('form-category').value = filmData.category;
+                document.getElementById('form-year').value = filmData.year;
+                document.getElementById('form-age').value = filmData.age_rating;
+                document.getElementById('form-tier').value = filmData.subscription_tier;
+                document.getElementById('form-cover').value = filmData.cover_url || '';
+                document.getElementById('form-trailer').value = filmData.trailer_url || '';
+                document.getElementById('form-synopsis').value = filmData.synopsis || '';
+                
+                // Cargar capítulos existentes
+                if (filmData.chapters && filmData.chapters.length > 0) {
+                    filmData.chapters.forEach(chap => addChapterRow(chap));
+                } else {
+                    addChapterRow(); // Mínimo 1
+                }
+            } else {
+                document.getElementById('modal-film-title').textContent = "Nueva Producción";
+                document.getElementById('form-film-id').value = "";
+                addChapterRow(); // Añadir fila por defecto al crear
+            }
+
+            modal.classList.remove('hidden', 'pointer-events-none');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closeFilmModal() {
+            const modal = document.getElementById('film-modal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // ==========================================
+        // RENDERIZADO Y BÚSQUEDA
+        // ==========================================
+        function renderFilmsGrid(films) {
+            const container = document.getElementById('films-grid-container');
+            container.innerHTML = '';
+
+            if (films.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-gray-500 font-bold uppercase tracking-widest text-[10px]">No hay producciones en la base de datos.</div>`;
+                return;
+            }
+
+            films.forEach(film => {
+                // Determinar el color del tag según el nivel de suscripción
+                let tierColor = "bg-gray-500";
+                if (film.subscription_tier === 'PLUS') tierColor = "bg-sky-500";
+                if (film.subscription_tier === 'ULTRA') tierColor = "bg-[#FFC300]";
+
+                const safeJson = JSON.stringify(film).replace(/'/g, "&#39;");
+
+                const card = document.createElement('div');
+                card.className = "glass-panel rounded-2xl overflow-hidden group border border-white/5 relative flex flex-col";
+                card.innerHTML = `
+                    <div class="relative w-full aspect-[16/9] overflow-hidden bg-black/50">
+                        <img src="${film.cover_url || 'https://via.placeholder.com/500x280?text=No+Cover'}" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500">
+                        <div class="absolute top-2 left-2 flex gap-1">
+                            <span class="px-2 py-0.5 bg-black/80 backdrop-blur text-white text-[8px] font-black uppercase rounded shadow-lg border border-white/10">${film.category}</span>
+                            <span class="px-2 py-0.5 bg-black/80 backdrop-blur text-white text-[8px] font-black uppercase rounded shadow-lg border border-white/10">${film.age_rating}</span>
+                        </div>
+                        <div class="absolute top-2 right-2 px-2 py-0.5 ${tierColor} text-black text-[8px] font-black uppercase rounded shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+                            ${film.subscription_tier}
+                        </div>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <h4 class="text-base font-black uppercase tracking-tighter text-white mb-1 truncate">${film.title}</h4>
+                        <div class="flex items-center gap-2 text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-3">
+                            <span>${film.year}</span>
+                            <span>•</span>
+                            <span>${(film.chapters || []).length} Capítulos</span>
+                        </div>
+                        <p class="text-[10px] text-gray-500 line-clamp-2 leading-relaxed flex-grow">${film.synopsis}</p>
+                        
+                        <div class="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
+                            <button onclick='openFilmModal(${safeJson})' class="text-[9px] font-black text-white hover:text-red-500 uppercase tracking-widest transition">Editar</button>
+                            <button onclick="deleteFilm('${film.id}', '${film.title.replace(/'/g, "\\'")}')" class="text-[9px] font-black text-red-500 hover:text-red-400 uppercase tracking-widest transition">Purgar</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function triggerFilmSearch() {
+            const term = document.getElementById('admin-film-search').value.toLowerCase().trim();
+            if (!term) {
+                renderFilmsGrid(allFilms);
+                return;
+            }
+            const filtered = allFilms.filter(f => 
+                f.title.toLowerCase().includes(term) || 
+                f.category.toLowerCase().includes(term) ||
+                f.subscription_tier.toLowerCase().includes(term)
+            );
+            renderFilmsGrid(filtered);
+        }
+
+        // ==========================================
+        // LLAMADAS A LA API (Mocked until backend is ready)
+        // ==========================================
+        async function fetchAllFilms() {
+            // Nota para cuando el backend esté listo:
+            // const token = localStorage.getItem('gymen_admin_token');
+            // const res = await fetch(`${API_BASE_URL}/api/admin/on/films`, { headers: { 'Authorization': `Bearer ${token}` } });
+            // const data = await res.json();
+            // allFilms = data.films;
+
+            // MOCK DATA TEMPORAL PARA VISUALIZACIÓN
+            allFilms = [
+                {
+                    id: "mock_1", title: "Tensión Mecánica Perfecta", category: "Documental",
+                    year: 2026, age_rating: "16+", subscription_tier: "PLUS",
+                    cover_url: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=600",
+                    trailer_url: "", synopsis: "Descubre el secreto del reclutamiento motor y cómo evitar lesiones al levantar cargas máximas.",
+                    chapters: [{ chapter_number: 1, title: "El Inicio", duration: "1h 45m", video_url: "https://youtube.com/watch?v=mock", description: "" }]
+                },
+                {
+                    id: "mock_2", title: "Nutrición Celular", category: "Serie",
+                    year: 2026, age_rating: "TP", subscription_tier: "ULTRA",
+                    cover_url: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=600",
+                    trailer_url: "", synopsis: "Serie de 5 capítulos explicando el impacto de los macronutrientes a nivel celular durante el descanso.",
+                    chapters: [
+                        { chapter_number: 1, title: "Proteína", duration: "25m", video_url: "https://youtube.com/watch?v=mock1", description: "" },
+                        { chapter_number: 2, title: "Lípidos", duration: "22m", video_url: "https://youtube.com/watch?v=mock2", description: "" }
+                    ]
+                }
+            ];
+
+            renderFilmsGrid(allFilms);
+            document.getElementById('admin-spinner').classList.add('hidden');
+            document.getElementById('admin-panel-content').classList.remove('hidden');
+        }
+
+        async function handleFilmSubmit(e) {
+            e.preventDefault();
+            const chapters = extractChapters();
+            
+            if (chapters.length === 0) {
+                showToast("Debes añadir al menos 1 capítulo a la producción.", "error");
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit-film');
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
+
+            const payload = {
+                title: document.getElementById('form-title').value.trim(),
+                category: document.getElementById('form-category').value,
+                year: parseInt(document.getElementById('form-year').value),
+                age_rating: document.getElementById('form-age').value,
+                subscription_tier: document.getElementById('form-tier').value,
+                cover_url: document.getElementById('form-cover').value.trim(),
+                trailer_url: document.getElementById('form-trailer').value.trim(),
+                synopsis: document.getElementById('form-synopsis').value.trim(),
+                chapters: chapters
+            };
+
+            const filmId = document.getElementById('form-film-id').value;
+            const isEdit = filmId !== "";
+
+            console.log("PAYLOAD A ENVIAR:", payload);
+            
+            // SIMULACIÓN DE ÉXITO HASTA QUE SE CREE EL BACKEND
+            setTimeout(() => {
+                showToast(isEdit ? "Producción actualizada en ON_FILMS" : "Producción indexada correctamente");
+                closeFilmModal();
+                btn.disabled = false;
+                btn.textContent = 'Guardar Producción';
+                // Recargar data real en el futuro
+            }, 800);
+        }
+
+        function deleteFilm(id, title) {
+            if (!confirm(`⚠️ ¿Deseas eliminar permanentemente "${title}" de la plataforma de Streaming?`)) return;
+            // Lógica de eliminación API
+            showToast("Producción purgada del catálogo.");
+        }
+
+        // INIT
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchAllFilms();
+        });
+    </script>
+</body>
+</html>
