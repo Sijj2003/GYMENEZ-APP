@@ -3,137 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GYMENEZ | Contenido de Élite</title>
+    <title>GYMENEZ ON | Streaming de Élite</title>
     
     <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Estilos modulares esenciales -->
-    <link rel="stylesheet" href="/static/css/auth.css">
-    <link rel="stylesheet" href="/static/css/dashboard.css">
-    <link rel="stylesheet" href="/static/css/goals.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #030305; color: #ffffff; overflow-x: hidden; }
+        
+        /* Ocultar scrollbars nativos para los carruseles estilo Netflix */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Efecto Zoom en Carrusel */
+        .carousel-card {
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s ease;
+        }
+        .carousel-card:hover {
+            transform: scale(1.05) translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(220, 38, 38, 0.2);
+            z-index: 10;
+        }
+
+        /* --- ESTILOS DEL REPRODUCTOR NATIVO CUSTOM --- */
+        .player-controls {
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .video-container:hover .player-controls { opacity: 1; }
+        
+        /* Barra de progreso Netflix style */
+        .progress-bar-container { height: 4px; transition: height 0.2s ease; cursor: pointer; }
+        .progress-bar-container:hover { height: 8px; }
+        .progress-bar-container:hover .progress-thumb { transform: scale(1); }
+        .progress-thumb { transform: scale(0); transition: transform 0.2s ease; }
+
+        /* Animación inicial */
+        .fade-in { animation: fadeIn 1s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
 </head>
-<body class="selection:bg-[#dc2626] selection:text-white overflow-x-hidden min-h-screen flex flex-col bg-[#020203]">
+<body class="selection:bg-red-600 selection:text-white bg-[#030305]">
 
-    <!-- Notificaciones flotantes UI -->
-    <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-4 md:px-6 py-2 md:py-3 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none text-center w-11/12 max-w-[350px] border border-white/10"></div>
-
-    <!-- Fondo de Gradiente Oscuro Base -->
-    <div class="fixed inset-0 bg-gradient-to-b from-[#020203]/50 via-[#020203]/95 to-[#020203] -z-10"></div>
-
-    <!-- Header Universal -->
-    <header class="w-full border-b border-white/5 bg-black/30 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
-            <div class="flex items-center gap-2 md:gap-3">
-                <h1 class="text-lg md:text-xl font-black uppercase tracking-tighter block">
-                    <span class="text-[#FFC300]">GYM</span><span class="text-white">ENEZ</span>
-                </h1>
+    <header class="fixed w-full top-0 z-50 transition-all duration-500 bg-gradient-to-b from-black/80 to-transparent" id="nav-header">
+        <div class="max-w-[1400px] mx-auto px-6 md:px-12 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center cursor-pointer">
+                    <span class="text-white font-[900] text-2xl italic tracking-tighter">GYMENEZ </span>
+                    <span class="text-red-600 font-[900] text-2xl italic tracking-tighter drop-shadow-[0_0_10px_rgba(220,38,38,0.8)]">ON</span>
+                </div>
+                <nav class="hidden md:flex gap-6">
+                    <a href="#" class="text-white text-xs font-bold tracking-widest uppercase hover:text-red-500 transition">Inicio</a>
+                    <a href="#" class="text-gray-400 text-xs font-bold tracking-widest uppercase hover:text-white transition">Biomecánica</a>
+                    <a href="#" class="text-gray-400 text-xs font-bold tracking-widest uppercase hover:text-white transition">Nutrición</a>
+                    <a href="#" class="text-gray-400 text-xs font-bold tracking-widest uppercase hover:text-white transition">Mentalidad</a>
+                    <a href="#" class="text-gray-400 text-xs font-bold tracking-widest uppercase hover:text-white transition">Mi Lista</a>
+                </nav>
             </div>
-            <a href="/apps/start/inicio.html" class="px-5 py-2 rounded-full border border-white/10 text-white font-bold text-[9px] md:text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition">
-                Volver al Hub
-            </a>
+            <div class="flex items-center gap-4">
+                <button class="text-white hover:text-red-500 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </button>
+                <a href="/apps/start/inicio.html" class="w-8 h-8 rounded-full border border-white/20 overflow-hidden hover:border-red-500 transition">
+                    <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=100&auto=format&fit=crop" class="w-full h-full object-cover">
+                </a>
+            </div>
         </div>
     </header>
 
-    <!-- Spinner de Diagnóstico Inicial -->
-    <div id="loading-spinner" class="flex-grow flex flex-col items-center justify-center py-20">
-        <div class="w-10 h-10 border-4 border-white/10 border-t-[#dc2626] rounded-full animate-spin mb-4"></div>
-        <p class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Sincronizando Canal Cinemático...</p>
-    </div>
-
-    <!-- ======================================================== -->
-    <!-- 👑 VISTA PREMIUM: DASHBOARD STREAMING (PLUS / ULTRA)      -->
-    <!-- ======================================================== -->
-    <main id="premium-view" class="hidden max-w-7xl mx-auto w-full px-4 md:px-6 py-8 md:py-12 flex-grow flex-col">
-        <div class="mb-8 md:mb-10 fade-in-up">
-            <p class="text-red-500 text-[9px] font-black uppercase tracking-[0.4em] mb-1">Transmisiones Exclusivas</p>
-            <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none">GYMENEZ <span class="text-white">ON</span></h2>
+    <section class="relative w-full h-[85vh] lg:h-[90vh] flex items-center fade-in">
+        <div class="absolute inset-0 w-full h-full">
+            <img src="https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=2000" class="w-full h-full object-cover object-top filter contrast-125" alt="Masterclass Hero">
+            <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/20 to-transparent"></div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-auto">
-            <!-- Módulo de Video Simulado para Cursos Activos -->
-            <div class="glass-panel rounded-[24px] md:rounded-[32px] overflow-hidden group border-white/5 hover:border-red-500/20 transition-all duration-300">
-                <div class="w-full h-48 bg-gradient-to-br from-red-950/20 to-black relative flex items-center justify-center overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=600" class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-all duration-700 filter grayscale" alt="Streaming cover">
-                    <button class="w-14 h-14 bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-red-600/30 transform group-hover:scale-110 transition-all duration-300 relative z-10">
-                        <svg class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                    </button>
-                </div>
-                <div class="p-6 bg-black/40">
-                    <span class="text-[8px] font-black text-red-500 uppercase tracking-widest mb-1 block">Biomecánica Aplicada</span>
-                    <h4 class="text-lg font-black uppercase tracking-tighter text-white">Máster Clase: Tensión Mecánica Eficiente</h4>
-                    <p class="text-xs text-gray-500 mt-2 leading-relaxed font-medium">Análisis cinemático del reclutamiento motor en patrones multiarticulares complejos.</p>
-                </div>
+        <div class="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-12 mt-20">
+            <span class="flex items-center gap-2 text-red-500 font-black tracking-[0.4em] uppercase text-[10px] mb-4 drop-shadow-md">
+                <img src="/static/img/logos/mini_logo.png" class="w-4 h-4 invert" alt="N" onerror="this.style.display='none'"> 
+                Contenido Original
+            </span>
+            
+            <h1 class="text-5xl md:text-7xl lg:text-8xl font-[900] uppercase tracking-tighter leading-none mb-6 max-w-3xl drop-shadow-2xl">
+                Tensión <br>Mecánica <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-400">Perfecta</span>
+            </h1>
+            
+            <div class="flex items-center gap-4 text-xs font-bold mb-6 text-gray-300 drop-shadow-md">
+                <span class="text-emerald-400 border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 rounded">98% Coincidencia</span>
+                <span>2026</span>
+                <span class="border border-gray-500 px-1.5 py-0.5 rounded text-[10px]">16+</span>
+                <span>1h 45m</span>
+                <span class="px-1.5 py-0.5 border border-white/20 rounded text-[9px] tracking-widest">4K HDR</span>
+            </div>
+
+            <p class="text-sm md:text-base text-gray-300 max-w-xl leading-relaxed mb-8 drop-shadow-md font-medium">
+                Descubre el secreto del reclutamiento motor. En esta masterclass, desglosamos la ciencia detrás del crecimiento muscular y cómo evitar lesiones al levantar cargas máximas.
+            </p>
+
+            <div class="flex flex-wrap items-center gap-4">
+                <button onclick="openCustomPlayer('VIDEO_ID_MOCK')" class="flex items-center gap-3 bg-white text-black px-8 py-3.5 rounded-lg font-black uppercase tracking-widest text-[11px] hover:bg-gray-200 transition transform hover:scale-105 shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Reproducir
+                </button>
+                <button class="flex items-center gap-3 bg-gray-500/40 backdrop-blur-md text-white border border-white/20 px-8 py-3.5 rounded-lg font-black uppercase tracking-widest text-[11px] hover:bg-gray-500/60 transition transform hover:scale-105">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg> Mi Lista
+                </button>
             </div>
         </div>
+    </section>
+
+    <main class="relative z-20 pb-20 -mt-16 md:-mt-24 space-y-12">
+        
+        <section class="max-w-[1400px] mx-auto">
+            <h2 class="px-6 md:px-12 text-lg md:text-xl font-black text-white mb-4 tracking-tighter">Continuar Viendo para Atleta</h2>
+            <div class="px-6 md:px-12 flex gap-4 overflow-x-auto hide-scrollbar pb-8 snap-x snap-mandatory">
+                
+                <div class="carousel-card relative min-w-[280px] md:min-w-[320px] aspect-video rounded-md bg-gray-900 cursor-pointer snap-center group overflow-hidden border border-white/5" onclick="openCustomPlayer('ID')">
+                    <img src="https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=500" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                    <div class="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors flex items-center justify-center">
+                        <div class="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center bg-black/50 backdrop-blur-sm transform scale-90 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(220,38,38,0.5)]">
+                            <svg class="w-5 h-5 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full h-1.5 bg-gray-600">
+                        <div class="h-full bg-red-600" style="width: 65%;"></div>
+                    </div>
+                    <div class="absolute bottom-4 left-4 right-4 text-left pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <h4 class="text-white font-black text-sm uppercase drop-shadow-md">Biomecánica Sentadilla</h4>
+                        <p class="text-gray-300 text-[9px] font-bold">Quedan 15m</p>
+                    </div>
+                </div>
+
+                <div class="carousel-card relative min-w-[280px] md:min-w-[320px] aspect-video rounded-md bg-gray-900 cursor-pointer snap-center group overflow-hidden border border-white/5" onclick="openCustomPlayer('ID')">
+                    <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=500" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                    <div class="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors flex items-center justify-center">
+                        <div class="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center bg-black/50 backdrop-blur-sm transform scale-90 group-hover:scale-110 transition-transform">
+                            <svg class="w-5 h-5 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full h-1.5 bg-gray-600">
+                        <div class="h-full bg-red-600" style="width: 20%;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="max-w-[1400px] mx-auto">
+            <h2 class="px-6 md:px-12 text-lg md:text-xl font-black text-white mb-4 tracking-tighter">Novedades en GYMENEZ EATS</h2>
+            <div class="px-6 md:px-12 flex gap-4 overflow-x-auto hide-scrollbar pb-8 snap-x snap-mandatory">
+                
+                <div class="carousel-card relative min-w-[240px] md:min-w-[280px] aspect-video rounded-md bg-gray-900 cursor-pointer snap-center group overflow-hidden border border-white/5" onclick="openCustomPlayer('ID')">
+                    <img src="https://images.unsplash.com/photo-1555244162-803834f70033?q=80&w=500" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500">
+                    <span class="absolute top-2 left-2 px-2 py-0.5 bg-red-600 text-white font-black text-[8px] uppercase tracking-widest rounded shadow-md z-10">Nuevo</span>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                        <h4 class="text-white font-black text-sm uppercase leading-tight mb-1">Proteína Inteligente</h4>
+                        <div class="flex items-center gap-2 text-[9px] font-bold text-gray-300">
+                            <span class="text-emerald-400">95% Coincidencia</span>
+                            <span class="border border-gray-400 px-1 rounded">12m</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-card relative min-w-[240px] md:min-w-[280px] aspect-video rounded-md bg-gray-800 cursor-pointer snap-center border border-white/5"><img src="https://images.unsplash.com/photo-1493770348161-369560ae357d?q=80&w=500" class="w-full h-full object-cover opacity-70 hover:opacity-100 transition-opacity"></div>
+                <div class="carousel-card relative min-w-[240px] md:min-w-[280px] aspect-video rounded-md bg-gray-800 cursor-pointer snap-center border border-white/5"><img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=500" class="w-full h-full object-cover opacity-70 hover:opacity-100 transition-opacity"></div>
+                <div class="carousel-card relative min-w-[240px] md:min-w-[280px] aspect-video rounded-md bg-gray-800 cursor-pointer snap-center border border-white/5"><img src="https://images.unsplash.com/photo-1543362906-acfc16c67564?q=80&w=500" class="w-full h-full object-cover opacity-70 hover:opacity-100 transition-opacity"></div>
+            </div>
+        </section>
+
     </main>
 
-    <!-- ======================================================== -->
-    <!-- 🎬 VISTA INTERACTIVA MULTICAPA: PAYWALL (SÓLO BÁSICOS)   -->
-    <!-- ======================================================== -->
-    <div id="showcase-view" class="hidden relative w-full h-[550vh] bg-[#010102]">
+    <div id="native-player-overlay" class="fixed inset-0 bg-black z-[10000] hidden flex-col justify-center items-center opacity-0 transition-opacity duration-500">
         
-        <!-- Orbe de Color Líquido Carmesí -->
-        <div id="sc-blur-orb" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] md:w-[500px] md:h-[500px] rounded-full bg-red-600/10 blur-[100px] -z-20 transition-all duration-1000"></div>
-        <div class="fixed inset-0 bg-[url('https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=1800')] bg-cover bg-center opacity-5 -z-30 filter grayscale"></div>
-
-        <!-- Contenedor de Perspectiva Fija -->
-        <div class="sticky top-0 w-full h-screen flex flex-col items-center justify-center p-4 perspective-container overflow-hidden">
+        <div class="relative w-full h-full max-h-screen bg-black video-container flex items-center justify-center group">
             
-            <!-- Bloque de Texto Superior Dinámico -->
-            <div id="sc-text-layer" class="absolute top-20 text-center max-w-xl px-4 transition-all duration-500 z-30">
-                <span class="text-red-500 text-[9px] font-black uppercase tracking-[0.6em] block mb-3">Ecosistema ON</span>
-                <h3 id="sc-title" class="text-3xl md:text-5xl font-[900] uppercase tracking-tighter text-white leading-none">Análisis Cinemático</h3>
-                <p id="sc-desc" class="text-gray-500 text-[10px] md:text-xs uppercase font-bold tracking-[0.25em] mt-3">Biomecánica en Tiempo Real</p>
+            <img src="https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=2000" class="w-full h-full object-cover absolute inset-0 opacity-40">
+            <div class="absolute inset-0 z-10 cursor-pointer" id="click-to-pause-layer"></div>
+
+            <button onclick="closeCustomPlayer()" class="absolute top-8 left-8 z-50 text-white hover:text-red-500 transition-colors bg-black/40 p-3 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </button>
+
+            <div class="absolute top-8 left-24 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <h3 class="text-xl font-black uppercase tracking-tighter text-white drop-shadow-md">Tensión Mecánica Perfecta</h3>
+                <p class="text-[10px] text-gray-300 font-bold uppercase tracking-widest drop-shadow-md">Episodio 1</p>
             </div>
 
-            <!-- Capa Madre 3D (Base del Reproductor) -->
-            <div id="sc-layer-main" class="mock-card-3d absolute glass-panel rounded-[32px] p-6 md:p-10 w-full max-w-sm md:max-w-md min-h-[300px] flex flex-col justify-between border-white/10 z-10">
-                <div>
-                    <span class="text-[8px] font-black text-gray-500 uppercase tracking-widest block mb-1">Análisis de Ejecución</span>
-                    <h4 class="text-xl font-black uppercase tracking-tighter text-white">Vectores de Fuerza</h4>
-                    <p class="text-gray-400 text-[11px] font-medium uppercase tracking-wider mt-4 leading-relaxed">Estudio cinemático computarizado de los ángulos articulares óptimos para maximizar el perfil de resistencia en contracciones musculares complejas.</p>
+            <div class="player-controls absolute bottom-0 left-0 w-full px-8 pb-8 pt-20 z-50 flex flex-col gap-4">
+                
+                <div class="w-full progress-bar-container relative group/progress flex items-center">
+                    <div class="absolute w-full h-full bg-gray-600/50 rounded-full"></div>
+                    <div class="absolute h-full bg-red-600 rounded-full" style="width: 35%;"></div>
+                    <div class="progress-thumb absolute h-4 w-4 bg-red-600 rounded-full shadow-lg" style="left: 35%; margin-left: -8px;"></div>
                 </div>
-                <div class="flex justify-between items-center text-[8px] font-black text-gray-600 uppercase tracking-widest mt-6">
-                    <span>GYMENEZ ON STREAM®</span>
-                    <span class="text-red-500">BIOMECHANICS</span>
+
+                <div class="flex justify-between items-center w-full">
+                    <div class="flex items-center gap-6">
+                        <button class="text-white hover:text-red-500 transition-transform transform hover:scale-110">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                        
+                        <button class="text-white hover:text-gray-300 transition-transform transform hover:scale-110">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z"></path></svg>
+                        </button>
+
+                        <button class="text-white hover:text-gray-300 transition-transform transform hover:scale-110">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.334-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.334-4z"></path></svg>
+                        </button>
+
+                        <div class="flex items-center gap-2 group/vol">
+                            <button class="text-white hover:text-gray-300 transition-transform transform hover:scale-110">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h2.5l5 5V3l-5 5H5z"></path></svg>
+                            </button>
+                            <div class="w-0 overflow-hidden group-hover/vol:w-20 transition-all duration-300 flex items-center">
+                                <input type="range" class="w-full h-1 bg-gray-600 rounded-full appearance-none outline-none accent-red-600 cursor-pointer" value="100">
+                            </div>
+                        </div>
+
+                        <span class="text-gray-300 font-mono text-xs font-bold ml-2">35:14 / 1:45:00</span>
+                    </div>
+
+                    <div class="flex items-center gap-6">
+                        <button class="text-white hover:text-gray-300 transition-transform transform hover:scale-110">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        </button>
+
+                        <button class="text-white hover:text-gray-300 transition-transform transform hover:scale-110">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
-
-            <!-- Capa Flotante Avanzada (Simulación de Reproductor de Video en Alta Tasa) -->
-            <div id="sc-layer-float" class="mock-card-3d absolute glass-panel rounded-2xl p-4 w-60 border-red-500/20 z-20 pointer-events-none" style="background: rgba(220, 38, 38, 0.04); backdrop-filter: blur(12px);">
-                <div class="w-full h-24 bg-black/60 rounded-xl mb-3 overflow-hidden relative flex items-center justify-center border border-white/5">
-                    <svg class="w-8 h-8 text-red-600 filter drop-shadow-[0_0_8px_#dc2626]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                    <div class="absolute bottom-2 left-2 px-1.5 py-0.5 bg-red-600 text-white font-mono text-[7px] font-black rounded tracking-wider">4K HDR</div>
-                </div>
-                <div class="flex justify-between items-center text-[8px] font-black text-gray-500 uppercase tracking-widest">
-                    <span>Frecuencia Muestreo</span>
-                    <span id="sc-fps" class="text-red-500 font-mono font-bold">0 FPS</span>
-                </div>
-            </div>
-
-            <!-- Llamado a la Acción Final (CTA) -->
-            <div id="sc-cta" class="absolute flex flex-col items-center justify-center text-center p-6 transform scale-95 opacity-0 pointer-events-none transition-all duration-700 max-w-md z-30">
-                <div class="w-16 h-16 bg-red-600/10 rounded-full flex items-center justify-center border border-red-600/30 shadow-[0_0_40px_rgba(220,38,38,0.2)] mb-6">
-                    <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                </div>
-                <h3 class="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white">Domina la Ejecución</h3>
-                <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2 max-w-xs leading-relaxed">El catálogo exclusivo de máster clases biomecánicas aplicadas y optimización del perfil de resistencia está reservado para atletas Plus y Ultra.</p>
-                <div class="mt-8 w-full px-4">
-                    <a href="/billing/planes.html" class="btn-gold w-full py-5 md:py-6 rounded-2xl text-xs md:text-sm uppercase font-black tracking-[0.2em] block shadow-[0_0_50px_rgba(255,195,0,0.4)]">Activar Nivel Premium</a>
-                </div>
-            </div>
-
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer id="main-footer" class="text-center py-6 border-t border-white/5 bg-[#020203]/80 backdrop-blur-md mt-auto relative z-40">
-        <p class="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • CINEMATIC BIOMECHANICS</p>
-    </footer>
+    <script>
+        // Efecto del header al hacer scroll
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('nav-header');
+            if (window.scrollY > 50) {
+                header.classList.add('bg-black');
+                header.classList.remove('bg-gradient-to-b', 'from-black/80', 'to-transparent');
+            } else {
+                header.classList.remove('bg-black');
+                header.classList.add('bg-gradient-to-b', 'from-black/80', 'to-transparent');
+            }
+        });
 
-    <!-- Lógica JS -->
-    <script src="/static/js/auth/auth_middleware.js"></script>
-    <script src="/static/js/dashboard/on.js"></script>
+        // Simulación de Apertura del Reproductor Personalizado
+        function openCustomPlayer(videoId) {
+            const player = document.getElementById('native-player-overlay');
+            // Ocultar scroll del body
+            document.body.style.overflow = 'hidden';
+            
+            player.classList.remove('hidden');
+            player.classList.add('flex');
+            // Timeout ligero para que se aplique el display flex antes de la opacidad
+            setTimeout(() => {
+                player.classList.remove('opacity-0');
+            }, 50);
+
+            /* NOTA JS FUTURA: Aquí inicializaremos el player de la API de YouTube. 
+               El div '#click-to-pause-layer' capturará el clic del usuario, bloqueará
+               la interacción directa con Youtube, y vía JS haremos `player.pauseVideo()`.
+            */
+        }
+
+        function closeCustomPlayer() {
+            const player = document.getElementById('native-player-overlay');
+            document.body.style.overflow = 'auto'; // Restaurar scroll
+            
+            player.classList.add('opacity-0');
+            setTimeout(() => {
+                player.classList.remove('flex');
+                player.classList.add('hidden');
+                /* NOTA JS FUTURA: Aquí destruiremos o pausaremos el iframe de YouTube */
+            }, 500); // Esperar que termine la transición de opacidad
+        }
+    </script>
 </body>
 </html>
