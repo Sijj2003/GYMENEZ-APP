@@ -12,6 +12,9 @@ function showToast(message, type = 'success') {
     setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 4000);
 }
 
+// ==========================================
+// 📡 CONSUMO API ADMIN
+// ==========================================
 async function fetchAllFilms() {
     const token = localStorage.getItem('gymen_admin_token');
     try {
@@ -23,42 +26,54 @@ async function fetchAllFilms() {
             renderFilmsGrid(allFilms);
             document.getElementById('admin-spinner').classList.add('hidden');
             document.getElementById('admin-panel-content').classList.remove('hidden');
+        } else {
+            showToast("Error leyendo catálogo", "error");
         }
-    } catch (e) { showToast("Error de conexión con el servidor.", "error"); }
+    } catch (e) {
+        showToast("Error de conexión con Firestore.", "error");
+    }
 }
 
+// ==========================================
+// LÓGICA DE CAPÍTULOS DINÁMICOS (DISEÑO LIMPIO)
+// ==========================================
 function addChapterRow(data = null) {
     chapterCount++;
     const container = document.getElementById('chapters-container');
     const rowId = `chapter-${Date.now()}-${Math.floor(Math.random()*1000)}`;
     const div = document.createElement('div');
     div.id = rowId;
-    div.className = "chapter-card bg-black/40 border border-white/5 p-4 rounded-xl relative group hover:border-red-500/30";
+    
+    // Contenedor del capítulo con buen espacio, bordes suaves y fondo que resalta
+    div.className = "chapter-card bg-white/[0.03] border border-white/10 p-6 rounded-2xl relative group transition-all hover:border-red-500/40 hover:bg-white/[0.05]";
     
     div.innerHTML = `
-        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-500 hover:text-red-400 text-lg leading-none font-bold">&times;</button>
+        <div class="absolute top-4 right-4 opacity-50 hover:opacity-100 transition-opacity">
+            <button type="button" onclick="document.getElementById('${rowId}').remove()" class="w-8 h-8 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-            <div class="md:col-span-1">
-                <label class="block text-[8px] text-gray-500 font-bold uppercase mb-1">Nº</label>
-                <input type="number" class="chap-num w-full glass-input p-2 rounded-lg text-center font-mono" value="${data ? data.chapter_number : chapterCount}" required min="1">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pr-10">
+            <div class="lg:col-span-2">
+                <label class="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2 ml-1">Cap. Nº</label>
+                <input type="number" class="chap-num w-full admin-input p-3.5 rounded-xl text-center font-mono text-sm" value="${data ? data.chapter_number : chapterCount}" required min="1">
             </div>
-            <div class="md:col-span-5">
-                <label class="block text-[8px] text-gray-500 font-bold uppercase mb-1">Título del Capítulo</label>
-                <input type="text" class="chap-title w-full glass-input p-2 rounded-lg" value="${data ? data.title : ''}" placeholder="Ej: El Despertar" required>
+            <div class="lg:col-span-7">
+                <label class="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2 ml-1">Título del Capítulo</label>
+                <input type="text" class="chap-title w-full admin-input p-3.5 rounded-xl text-sm" value="${data ? data.title : ''}" placeholder="Ej: El Despertar" required>
             </div>
-            <div class="md:col-span-2">
-                <label class="block text-[8px] text-gray-500 font-bold uppercase mb-1">Duración</label>
-                <input type="text" class="chap-duration w-full glass-input p-2 rounded-lg text-center" value="${data ? data.duration : ''}" placeholder="Ej: 45m" required>
+            <div class="lg:col-span-3">
+                <label class="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2 ml-1">Duración</label>
+                <input type="text" class="chap-duration w-full admin-input p-3.5 rounded-xl text-center text-sm" value="${data ? data.duration : ''}" placeholder="Ej: 45m" required>
             </div>
-            <div class="md:col-span-4">
-                <label class="block text-[8px] text-gray-500 font-bold uppercase mb-1">URL YouTube</label>
-                <input type="url" class="chap-url w-full glass-input p-2 rounded-lg text-[9px] font-mono text-sky-400" value="${data ? data.video_url : ''}" placeholder="https://youtube.com/watch?v=..." required>
+            <div class="lg:col-span-12">
+                <label class="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2 ml-1">URL YouTube (Enlace completo)</label>
+                <input type="url" class="chap-url w-full admin-input p-3.5 rounded-xl text-xs font-mono text-sky-400" value="${data ? data.video_url : ''}" placeholder="https://youtube.com/watch?v=..." required>
             </div>
-            <div class="md:col-span-12">
-                <label class="block text-[8px] text-gray-500 font-bold uppercase mb-1">Descripción Breve</label>
-                <input type="text" class="chap-desc w-full glass-input p-2 rounded-lg text-[10px]" value="${data ? (data.description || '') : ''}" placeholder="Resumen del capítulo...">
+            <div class="lg:col-span-12">
+                <label class="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2 ml-1">Descripción Breve (Opcional)</label>
+                <input type="text" class="chap-desc w-full admin-input p-3.5 rounded-xl text-sm" value="${data ? (data.description || '') : ''}" placeholder="Resumen corto del contenido de este episodio...">
             </div>
         </div>
     `;
@@ -80,8 +95,13 @@ function extractChapters() {
     return chapters.sort((a, b) => a.chapter_number - b.chapter_number);
 }
 
+// ==========================================
+// GESTIÓN DEL MODAL
+// ==========================================
 function openFilmModal(filmData = null) {
     const modal = document.getElementById('film-modal');
+    const modalBox = document.getElementById('film-modal-box');
+    
     document.getElementById('film-form').reset();
     document.getElementById('chapters-container').innerHTML = '';
     chapterCount = 0;
@@ -95,6 +115,7 @@ function openFilmModal(filmData = null) {
         document.getElementById('form-age').value = filmData.age_rating;
         document.getElementById('form-tier').value = filmData.subscription_tier;
         document.getElementById('form-cover').value = filmData.cover_url || '';
+        document.getElementById('form-trailer').value = filmData.trailer_url || '';
         document.getElementById('form-synopsis').value = filmData.synopsis || '';
         
         if (filmData.chapters && filmData.chapters.length > 0) {
@@ -106,14 +127,25 @@ function openFilmModal(filmData = null) {
         addChapterRow(); 
     }
 
+    // Bloquear scroll del body principal
+    document.body.style.overflow = 'hidden';
+    
     modal.classList.remove('hidden', 'pointer-events-none');
-    setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modalBox.classList.remove('scale-95');
+    }, 10);
 }
 
 function closeFilmModal() {
     const modal = document.getElementById('film-modal');
-    modal.classList.add('opacity-0', 'pointer-events-none');
-    setTimeout(() => modal.classList.add('hidden'), 300);
+    const modalBox = document.getElementById('film-modal-box');
+    
+    document.body.style.overflow = 'auto'; // Restaurar scroll
+    
+    modal.classList.add('opacity-0');
+    modalBox.classList.add('scale-95');
+    setTimeout(() => modal.classList.add('hidden', 'pointer-events-none'), 300);
 }
 
 async function handleFilmSubmit(e) {
@@ -131,6 +163,7 @@ async function handleFilmSubmit(e) {
         age_rating: document.getElementById('form-age').value,
         subscription_tier: document.getElementById('form-tier').value,
         cover_url: document.getElementById('form-cover').value.trim(),
+        trailer_url: document.getElementById('form-trailer').value.trim(),
         synopsis: document.getElementById('form-synopsis').value.trim(),
         chapters: chapters
     };
@@ -167,34 +200,34 @@ function renderFilmsGrid(films) {
     }
 
     films.forEach(film => {
-        let tierColor = "bg-gray-500";
-        if (film.subscription_tier === 'PLUS') tierColor = "bg-sky-500";
-        if (film.subscription_tier === 'ULTRA') tierColor = "bg-[#FFC300]";
+        let tierColor = "bg-gray-500 text-black";
+        if (film.subscription_tier === 'PLUS') tierColor = "bg-sky-500 text-black";
+        if (film.subscription_tier === 'ULTRA') tierColor = "bg-[#FFC300] text-black";
 
         const safeJson = JSON.stringify(film).replace(/'/g, "&#39;");
 
         const card = document.createElement('div');
-        card.className = "glass-panel rounded-2xl overflow-hidden group border border-white/5 relative flex flex-col";
+        card.className = "glass-panel rounded-[24px] overflow-hidden group border border-white/5 relative flex flex-col transition-all duration-300 hover:border-red-500/30 hover:shadow-[0_10px_30px_rgba(220,38,38,0.1)]";
         card.innerHTML = `
             <div class="relative w-full aspect-[16/9] overflow-hidden bg-black/50">
-                <img src="${film.cover_url}" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500">
-                <div class="absolute top-2 left-2 flex gap-1">
-                    <span class="px-2 py-0.5 bg-black/80 text-white text-[8px] font-black uppercase rounded">${film.category}</span>
-                    <span class="px-2 py-0.5 bg-black/80 text-white text-[8px] font-black uppercase rounded">${film.age_rating}</span>
+                <img src="${film.cover_url}" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700">
+                <div class="absolute top-3 left-3 flex gap-1.5">
+                    <span class="px-2 py-1 bg-black/80 backdrop-blur-md text-white text-[8px] font-black uppercase rounded border border-white/10">${film.category}</span>
+                    <span class="px-2 py-1 bg-black/80 backdrop-blur-md text-white text-[8px] font-black uppercase rounded border border-white/10">${film.age_rating}</span>
                 </div>
-                <div class="absolute top-2 right-2 px-2 py-0.5 ${tierColor} text-black text-[8px] font-black uppercase rounded shadow-md">
+                <div class="absolute top-3 right-3 px-3 py-1 ${tierColor} text-[8px] font-black uppercase rounded shadow-lg">
                     ${film.subscription_tier}
                 </div>
             </div>
-            <div class="p-5 flex-grow flex flex-col">
-                <h4 class="text-base font-black uppercase tracking-tighter text-white mb-1 truncate">${film.title}</h4>
-                <div class="flex items-center gap-2 text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-3">
+            <div class="p-6 flex-grow flex flex-col">
+                <h4 class="text-lg font-black uppercase tracking-tighter text-white mb-1 truncate">${film.title}</h4>
+                <div class="flex items-center gap-2 text-[10px] text-red-500 font-bold uppercase tracking-widest mb-3">
                     <span>${film.year}</span><span>•</span><span>${(film.chapters || []).length} Capítulos</span>
                 </div>
-                <p class="text-[10px] text-gray-500 line-clamp-2 leading-relaxed flex-grow">${film.synopsis}</p>
-                <div class="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
-                    <button onclick='openFilmModal(${safeJson})' class="text-[9px] font-black text-white hover:text-red-500 uppercase tracking-widest transition">Editar</button>
-                    <button onclick="deleteFilm('${film.id}', '${film.title.replace(/'/g, "\\'")}')" class="text-[9px] font-black text-red-500 hover:text-red-400 uppercase tracking-widest transition">Purgar</button>
+                <p class="text-[11px] text-gray-400 line-clamp-3 leading-relaxed flex-grow font-medium">${film.synopsis}</p>
+                <div class="mt-6 pt-4 border-t border-white/5 flex justify-between items-center">
+                    <button onclick='openFilmModal(${safeJson})' class="text-[10px] font-black text-white hover:text-red-500 uppercase tracking-widest transition px-2 py-1">Editar</button>
+                    <button onclick="deleteFilm('${film.id}', '${film.title.replace(/'/g, "\\'")}')" class="text-[10px] font-black text-red-500 hover:text-red-400 uppercase tracking-widest transition px-2 py-1">Eliminar</button>
                 </div>
             </div>
         `;
