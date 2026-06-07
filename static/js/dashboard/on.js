@@ -5,6 +5,7 @@ let catalogFilms = [];
 let userTier = 'BASICO';
 let ytPlayer = null; 
 let progressInterval = null; 
+let hideUiTimeout = null; // Controla los 3 segundos de inactividad del reproductor
 
 // ==========================================
 // 1. CARGA INICIAL Y RANDOM HERO
@@ -17,6 +18,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     tag.src = "https://www.youtube.com/iframe_api";
     const firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    // Eventos para auto-ocultar los controles (3 segundos)
+    const overlay = document.getElementById('native-player-overlay');
+    overlay.addEventListener('mousemove', resetPlayerUI);
+    overlay.addEventListener('click', resetPlayerUI);
+    overlay.addEventListener('touchstart', resetPlayerUI);
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/client/on/films`, {
@@ -41,10 +48,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 function renderHero(film) {
-    // Si la imagen anterior estaba cargada, la desvanecemos y cargamos la nueva
-    const imgElement = document.getElementById('hero-cover');
-    imgElement.src = film.cover_url;
-    
+    document.getElementById('hero-cover').src = film.cover_url;
     document.getElementById('hero-title').innerHTML = film.title;
     document.getElementById('hero-desc').textContent = film.synopsis;
     document.getElementById('hero-year').textContent = film.year;
@@ -52,15 +56,13 @@ function renderHero(film) {
 
     const playBtn = document.getElementById('hero-play-btn');
     
-    // El Hero también abre la pestaña Detalles ahora, no el video directo, 
-    // porque necesitamos que el usuario vea la lista de episodios.
     if (film.has_access) {
         playBtn.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Ver Capítulos`;
-        playBtn.className = "flex items-center gap-3 bg-white text-black px-8 py-3.5 rounded-lg font-black uppercase tracking-widest text-[11px] hover:bg-gray-200 transition transform hover:scale-105 shadow-[0_0_30px_rgba(255,255,255,0.3)]";
+        playBtn.className = "flex items-center gap-2 md:gap-3 bg-white text-black px-6 md:px-8 py-3 md:py-3.5 rounded-lg font-black uppercase tracking-widest text-[10px] md:text-[11px] hover:bg-gray-200 transition transform hover:scale-105 shadow-[0_0_30px_rgba(255,255,255,0.3)]";
         playBtn.onclick = () => openDetailsModal(film);
     } else {
         playBtn.innerHTML = `🔒 MEJORAR PLAN ${film.subscription_tier}`;
-        playBtn.className = "flex items-center justify-center gap-3 bg-[#FFC300] text-black px-8 py-3.5 rounded-lg font-black uppercase tracking-widest text-[11px] shadow-[0_0_20px_rgba(255,195,0,0.4)] transition transform hover:scale-105";
+        playBtn.className = "flex items-center justify-center gap-2 md:gap-3 bg-[#FFC300] text-black px-6 md:px-8 py-3 md:py-3.5 rounded-lg font-black uppercase tracking-widest text-[10px] md:text-[11px] shadow-[0_0_20px_rgba(255,195,0,0.4)] transition transform hover:scale-105";
         playBtn.onclick = () => showPaywallModal(film.subscription_tier);
     }
 }
@@ -87,20 +89,21 @@ function renderRows() {
         filmsInCat.forEach(film => {
             const lockOverlay = !film.has_access ? `
                 <div class="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center pointer-events-none group-hover:bg-black/40 transition-colors">
-                    <span class="text-4xl mb-2 drop-shadow-xl transform group-hover:scale-110 transition-transform duration-300">🔒</span>
+                    <span class="text-3xl md:text-4xl mb-2 drop-shadow-xl transform group-hover:scale-110 transition-transform duration-300">🔒</span>
                     <span class="text-[8px] font-black uppercase text-[#FFC300] tracking-widest bg-black/80 px-2.5 py-1 rounded shadow-lg border border-[#FFC300]/30">${film.subscription_tier}</span>
                 </div>
             ` : '';
 
             const safeFilmObj = JSON.stringify(film).replace(/'/g, "&#39;");
 
+            // Modificado: El título tiene un fondo oscuro en la parte inferior para verse SIEMPRE
             cardsHtml += `
-                <div class="carousel-card relative min-w-[240px] md:min-w-[280px] aspect-video rounded-md bg-gray-900 cursor-pointer snap-center group overflow-hidden border border-white/5" onclick='handleCardClick(${safeFilmObj})'>
+                <div class="carousel-card relative min-w-[200px] md:min-w-[280px] aspect-video rounded-md bg-gray-900 cursor-pointer snap-center group overflow-hidden border border-white/5 flex flex-col justify-end" onclick='handleCardClick(${safeFilmObj})'>
                     ${lockOverlay}
-                    <img src="${film.cover_url}" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 z-30">
-                        <h4 class="text-white font-black text-sm uppercase leading-tight mb-1 truncate">${film.title}</h4>
-                        <div class="flex items-center gap-2 text-[9px] font-bold text-gray-300">
+                    <img src="${film.cover_url}" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent p-3 md:p-4 flex flex-col justify-end z-30">
+                        <h4 class="text-white font-black text-xs md:text-sm uppercase leading-tight mb-1 truncate drop-shadow-md">${film.title}</h4>
+                        <div class="flex items-center gap-2 text-[8px] md:text-[9px] font-bold text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <span class="text-red-500">${film.year}</span>
                             <span class="border border-gray-400 px-1 rounded">${film.age_rating}</span>
                         </div>
@@ -110,8 +113,8 @@ function renderRows() {
         });
 
         section.innerHTML = `
-            <h2 class="px-6 md:px-12 text-lg md:text-xl font-black text-white mb-4 tracking-tighter">${cat}s</h2>
-            <div class="px-6 md:px-12 flex gap-4 overflow-x-auto hide-scrollbar pb-8 snap-x snap-mandatory">
+            <h2 class="px-4 md:px-12 text-base md:text-xl font-black text-white mb-3 md:mb-4 tracking-tighter">${cat}s</h2>
+            <div class="px-4 md:px-12 flex gap-3 md:gap-4 overflow-x-auto hide-scrollbar pb-8 snap-x snap-mandatory">
                 ${cardsHtml}
             </div>
         `;
@@ -124,7 +127,6 @@ function handleCardClick(film) {
         showPaywallModal(film.subscription_tier); 
         return;
     }
-    // Si la película tiene acceso, mostramos su ventana de detalles y la LISTA DE EPISODIOS
     openDetailsModal(film);
 }
 
@@ -139,7 +141,6 @@ function openDetailsModal(film) {
     document.getElementById('details-category').textContent = film.category;
     document.getElementById('details-synopsis').textContent = film.synopsis;
     
-    // Color según nivel de suscripción
     let tierColor = "text-gray-400";
     if(film.subscription_tier === 'PLUS') tierColor = "text-sky-400";
     if(film.subscription_tier === 'ULTRA') tierColor = "text-[#FFC300]";
@@ -152,11 +153,10 @@ function openDetailsModal(film) {
     if (film.chapters && film.chapters.length > 0) {
         playBtn.onclick = () => {
             closeDetailsModal();
-            openCustomPlayer(film, film.chapters[0]); // El botón Hero del Modal siempre pone el episodio 1
+            openCustomPlayer(film, film.chapters[0]);
         };
     }
 
-    // 🌟 RENDERIZADO DINÁMICO DE TODOS LOS CAPÍTULOS
     const epsContainer = document.getElementById('details-episodes-list');
     epsContainer.innerHTML = '';
     document.getElementById('details-ep-count').textContent = `${(film.chapters || []).length} Episodios`;
@@ -164,26 +164,25 @@ function openDetailsModal(film) {
     if (film.chapters && film.chapters.length > 0) {
         film.chapters.forEach((chap) => {
             const epDiv = document.createElement('div');
-            // Tarjeta individual para cada capítulo en la lista
             epDiv.className = "flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white/[0.02] hover:bg-white/[0.08] border border-white/5 rounded-xl cursor-pointer transition-colors group";
             epDiv.onclick = () => {
                 closeDetailsModal();
-                openCustomPlayer(film, chap); // Abrir el reproductor con el capítulo exacto que clickeó
+                openCustomPlayer(film, chap);
             };
 
             epDiv.innerHTML = `
-                <div class="flex items-center gap-4 w-full sm:w-auto">
-                    <div class="text-xl font-black text-gray-600 group-hover:text-red-500 transition-colors w-6 text-center shrink-0">
+                <div class="flex items-center gap-3 md:gap-4 w-full sm:w-auto">
+                    <div class="text-lg md:text-xl font-black text-gray-600 group-hover:text-red-500 transition-colors w-6 text-center shrink-0">
                         ${chap.chapter_number}
                     </div>
-                    <div class="flex-grow">
-                        <h4 class="text-sm font-bold text-white">${chap.title}</h4>
-                        <p class="text-[10px] text-gray-500 line-clamp-2 mt-1 leading-relaxed">${chap.description || 'Sin descripción disponible.'}</p>
+                    <div class="flex-grow pr-2">
+                        <h4 class="text-xs md:text-sm font-bold text-white">${chap.title}</h4>
+                        <p class="text-[9px] md:text-[10px] text-gray-500 line-clamp-2 mt-1 leading-relaxed">${chap.description || 'Sin descripción disponible.'}</p>
                     </div>
                 </div>
                 <div class="flex items-center justify-between w-full sm:w-auto mt-3 sm:mt-0">
-                    <span class="text-[10px] font-mono font-bold text-gray-400 mr-4 sm:ml-4 shrink-0">${chap.duration || '--'}</span>
-                    <button class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-white group-hover:bg-white group-hover:text-black transition-colors shrink-0">
+                    <span class="text-[9px] md:text-[10px] font-mono font-bold text-gray-400 mr-4 sm:ml-4 shrink-0">${chap.duration || '--'}</span>
+                    <button class="w-7 h-7 md:w-8 md:h-8 rounded-full border border-white/20 flex items-center justify-center text-white group-hover:bg-white group-hover:text-black transition-colors shrink-0">
                         <svg class="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     </button>
                 </div>
@@ -221,13 +220,10 @@ function closeDetailsModal() {
 function showPaywallModal(requiredTier) {
     const modal = document.getElementById('paywall-modal');
     const content = document.getElementById('paywall-content');
-    
     document.getElementById('paywall-tier-req').textContent = requiredTier;
     document.body.style.overflow = 'hidden';
-    
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-    
     setTimeout(() => {
         modal.classList.remove('opacity-0');
         content.classList.remove('scale-95');
@@ -237,20 +233,17 @@ function showPaywallModal(requiredTier) {
 function closePaywallModal() {
     const modal = document.getElementById('paywall-modal');
     const content = document.getElementById('paywall-content');
-    
     document.body.style.overflow = 'auto';
     modal.classList.add('opacity-0');
     content.classList.add('scale-95');
-    
     setTimeout(() => {
         modal.classList.remove('flex');
         modal.classList.add('hidden');
     }, 300);
 }
 
-
 // ==========================================
-// 5. MAGIA: CUSTOM YOUTUBE PLAYER API
+// 5. MAGIA: CUSTOM YOUTUBE PLAYER API & AUTO-HIDE
 // ==========================================
 function extractYTId(url) {
     if(!url) return null;
@@ -286,6 +279,8 @@ function openCustomPlayer(film, chapter) {
             'onStateChange': onPlayerStateChange
         }
     });
+
+    resetPlayerUI(); // Iniciar reloj de inactividad
 }
 
 function closeCustomPlayer() {
@@ -300,7 +295,24 @@ function closeCustomPlayer() {
         playerOverlay.classList.add('hidden');
         if (ytPlayer) { ytPlayer.destroy(); ytPlayer = null; }
         clearInterval(progressInterval);
+        clearTimeout(hideUiTimeout);
     }, 500);
+}
+
+// LÓGICA DE AUTO-OCULTADO DE BARRAS NEGRAS Y MOUSE (3 SEGUNDOS)
+function resetPlayerUI() {
+    const vc = document.getElementById('video-wrapper-container');
+    if(!vc) return;
+    
+    vc.classList.remove('idle');
+    clearTimeout(hideUiTimeout);
+    
+    hideUiTimeout = setTimeout(() => {
+        // Solo oculta si el video está reproduciéndose
+        if (ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+            vc.classList.add('idle');
+        }
+    }, 3000); // 3 segundos exactos
 }
 
 function onPlayerReady(event) {
@@ -322,25 +334,34 @@ function togglePlay() {
         ytPlayer.playVideo();
         btnIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
     }
+    resetPlayerUI();
 }
 
 function onPlayerStateChange(event) {
     const btnIcon = document.getElementById('play-pause-icon');
+    const vc = document.getElementById('video-wrapper-container');
+
     if (event.data === YT.PlayerState.PLAYING) {
         btnIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+        resetPlayerUI();
     } else {
         btnIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+        // Si está en pausa, nunca ocultes las barras
+        vc.classList.remove('idle');
+        clearTimeout(hideUiTimeout);
     }
 }
 
 function seekRelative(seconds) {
     if (!ytPlayer) return;
     ytPlayer.seekTo(ytPlayer.getCurrentTime() + seconds, true);
+    resetPlayerUI();
 }
 
 function changeVolume(value) {
     if (!ytPlayer) return;
     ytPlayer.setVolume(value);
+    resetPlayerUI();
 }
 
 function updateProgressBar() {
@@ -361,6 +382,7 @@ document.getElementById('progress-bar-clickable').addEventListener('click', func
     const rect = this.getBoundingClientRect();
     const percentage = (e.clientX - rect.left) / rect.width;
     ytPlayer.seekTo(ytPlayer.getDuration() * percentage, true);
+    resetPlayerUI();
 });
 
 function toggleFullScreen() {
@@ -370,6 +392,7 @@ function toggleFullScreen() {
     } else {
         document.exitFullscreen();
     }
+    resetPlayerUI();
 }
 
 function formatTime(seconds) {
