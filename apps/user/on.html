@@ -12,35 +12,24 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #030305; color: #ffffff; overflow-x: hidden; }
         
-        /* Ocultar scrollbars nativos para los carruseles estilo Netflix */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Efecto Zoom en Carrusel */
-        .carousel-card {
-            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s ease;
-        }
-        .carousel-card:hover {
-            transform: scale(1.05) translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(220, 38, 38, 0.2);
-            z-index: 10;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
 
-        /* --- ESTILOS DEL REPRODUCTOR NATIVO CUSTOM --- */
-        .player-controls {
-            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+        .carousel-card { transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s ease; }
+        .carousel-card:hover { transform: scale(1.05) translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(220, 38, 38, 0.2); z-index: 10; }
+
+        .player-controls { background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 50%, transparent 100%); opacity: 0; transition: opacity 0.3s ease; }
         .video-container:hover .player-controls { opacity: 1; }
         
-        /* Barra de progreso Netflix style */
         .progress-bar-container { height: 4px; transition: height 0.2s ease; cursor: pointer; }
         .progress-bar-container:hover { height: 8px; }
         .progress-bar-container:hover .progress-thumb { transform: scale(1); }
         .progress-thumb { transform: scale(0); transition: transform 0.2s ease; }
 
-        /* Animación inicial */
         .fade-in { animation: fadeIn 1s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -54,20 +43,8 @@
                     <span class="text-white font-[900] text-2xl italic tracking-tighter">GYMENEZ </span>
                     <span class="text-red-600 font-[900] text-2xl italic tracking-tighter drop-shadow-[0_0_10px_rgba(220,38,38,0.8)]">ON</span>
                 </div>
-                <nav class="hidden md:flex gap-6">
-                    <a href="#" class="text-white text-xs font-bold tracking-widest uppercase hover:text-red-500 transition">Inicio</a>
-                    <a href="#" class="text-gray-400 text-xs font-bold tracking-widest uppercase hover:text-white transition">Biomecánica</a>
-                    <a href="#" class="text-gray-400 text-xs font-bold tracking-widest uppercase hover:text-white transition">Nutrición</a>
-                    <a href="#" class="text-gray-400 text-xs font-bold tracking-widest uppercase hover:text-white transition">Mentalidad</a>
-                    <a href="#" class="text-gray-400 text-xs font-bold tracking-widest uppercase hover:text-white transition">Mi Lista</a>
-                </nav>
             </div>
-            
             <div class="flex items-center gap-4 md:gap-6">
-                <button class="text-white hover:text-red-500 transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </button>
-                
                 <a href="/apps/start/inicio.html" class="px-5 py-2 rounded-full border border-white/10 text-white font-bold text-[9px] md:text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition shadow-[0_0_15px_rgba(255,255,255,0.05)]">
                     Volver a Fitness
                 </a>
@@ -77,14 +54,13 @@
 
     <section class="relative w-full h-[85vh] lg:h-[90vh] flex items-center fade-in">
         <div class="absolute inset-0 w-full h-full">
-            <img id="hero-cover" src="https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=2000" class="w-full h-full object-cover object-top filter contrast-125 transition-all duration-700" alt="Masterclass Hero">
+            <img id="hero-cover" src="" class="w-full h-full object-cover object-top filter contrast-125 transition-all duration-700" alt="Masterclass Hero">
             <div class="absolute inset-0 bg-gradient-to-r from-black/95 via-black/50 to-transparent"></div>
             <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/20 to-transparent"></div>
         </div>
 
         <div class="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-12 mt-20">
             <span class="flex items-center gap-2 text-red-500 font-black tracking-[0.4em] uppercase text-[10px] mb-4 drop-shadow-md">
-                <img src="/static/img/logos/mini_logo.png" class="w-4 h-4 invert" alt="N" onerror="this.style.display='none'"> 
                 Contenido Original
             </span>
             
@@ -107,23 +83,63 @@
                 <button id="hero-play-btn" class="flex items-center gap-3 bg-white text-black px-8 py-3.5 rounded-lg font-black uppercase tracking-widest text-[11px] hover:bg-gray-200 transition transform hover:scale-105 shadow-[0_0_30px_rgba(255,255,255,0.3)]">
                     <div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div> Cargando
                 </button>
-                <button class="flex items-center gap-3 bg-gray-500/40 backdrop-blur-md text-white border border-white/20 px-8 py-3.5 rounded-lg font-black uppercase tracking-widest text-[11px] hover:bg-gray-500/60 transition transform hover:scale-105">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg> Mi Lista
-                </button>
             </div>
         </div>
     </section>
 
-    <main id="rows-container" class="relative z-20 pb-20 -mt-16 md:-mt-24 space-y-12 min-h-[50vh]">
-        </main>
+    <main id="rows-container" class="relative z-20 pb-20 -mt-16 md:-mt-24 space-y-12 min-h-[50vh]"></main>
+
+    <div id="details-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9000] hidden items-center justify-center p-4 sm:p-6 opacity-0 transition-opacity duration-300 overflow-y-auto custom-scrollbar">
+        <div class="w-full max-w-4xl bg-[#060608] rounded-[24px] overflow-hidden shadow-[0_0_50px_rgba(220,38,38,0.15)] relative transform scale-95 transition-transform duration-300 my-auto" id="details-modal-content">
+            
+            <button onclick="closeDetailsModal()" class="absolute top-4 right-4 z-50 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-colors backdrop-blur-md border border-white/20">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div class="relative w-full h-64 sm:h-80 md:h-96">
+                <img id="details-cover" src="" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#060608] via-[#060608]/40 to-transparent"></div>
+                <div class="absolute bottom-6 left-6 md:left-10 z-10 w-full pr-10">
+                    <h2 id="details-title" class="text-3xl md:text-5xl font-black uppercase tracking-tighter text-white drop-shadow-lg mb-4">Título</h2>
+                    <button id="details-play-btn" class="flex items-center gap-2 bg-white text-black px-6 py-2.5 rounded-lg font-black uppercase tracking-widest text-[10px] hover:bg-gray-200 transition transform hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Reproducir
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6 md:p-10 grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-white/5">
+                <div class="md:col-span-2 space-y-4">
+                    <div class="flex items-center gap-3 text-[10px] font-bold text-gray-300">
+                        <span class="text-emerald-400">98% Match</span>
+                        <span id="details-year">2026</span>
+                        <span id="details-age" class="border border-gray-500 px-1.5 py-0.5 rounded">TP</span>
+                        <span id="details-category" class="text-[#FFC300]">Serie</span>
+                    </div>
+                    <p id="details-synopsis" class="text-sm text-gray-300 leading-relaxed font-medium"></p>
+                </div>
+                
+                <div class="md:col-span-1 space-y-4 text-xs">
+                    <p><span class="text-gray-500">Plan de Acceso:</span> <span id="details-tier" class="font-black text-white uppercase tracking-widest bg-white/10 px-2 py-0.5 rounded block mt-1 w-max">--</span></p>
+                </div>
+
+                <div class="md:col-span-3 mt-4">
+                    <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
+                        <h3 class="text-lg font-black uppercase text-white tracking-widest">Capítulos</h3>
+                        <span id="details-ep-count" class="text-xs text-gray-500 font-bold">0 Episodios</span>
+                    </div>
+                    
+                    <div id="details-episodes-list" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="native-player-overlay" class="fixed inset-0 bg-black z-[10000] hidden flex-col justify-center items-center opacity-0 transition-opacity duration-500">
-        
         <div class="relative w-full h-full max-h-screen bg-black video-container flex items-center justify-center group">
             
-            <div id="yt-player-container" class="absolute inset-0 w-full h-full pointer-events-none"></div>
-            
-            <div class="absolute inset-0 z-10 cursor-pointer" id="click-to-pause-layer"></div>
+            <div class="absolute inset-0 bg-black z-0"></div>
+            <div id="yt-player-container" class="absolute inset-0 w-full h-full pointer-events-none z-10"></div>
+            <div class="absolute inset-0 z-20 cursor-pointer" id="click-to-pause-layer"></div>
 
             <button onclick="closeCustomPlayer()" class="absolute top-8 left-8 z-50 text-white hover:text-red-500 transition-colors bg-black/40 p-3 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
@@ -135,7 +151,6 @@
             </div>
 
             <div class="player-controls absolute bottom-0 left-0 w-full px-8 pb-8 pt-20 z-50 flex flex-col gap-4">
-                
                 <div id="progress-bar-clickable" class="w-full progress-bar-container relative group/progress flex items-center">
                     <div class="absolute w-full h-full bg-gray-600/50 rounded-full"></div>
                     <div id="custom-progress-red" class="absolute h-full bg-red-600 rounded-full" style="width: 0%;"></div>
@@ -147,15 +162,12 @@
                         <button onclick="togglePlay()" class="text-white hover:text-red-500 transition-transform transform hover:scale-110">
                             <svg id="play-pause-icon" class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                         </button>
-                        
                         <button onclick="seekRelative(-10)" class="text-white hover:text-gray-300 transition-transform transform hover:scale-110">
                             <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0111 16V8a1 1 0 00-1.6-.8l-5.333 4z"></path></svg>
                         </button>
-
                         <button onclick="seekRelative(10)" class="text-white hover:text-gray-300 transition-transform transform hover:scale-110">
                             <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.334-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.334-4z"></path></svg>
                         </button>
-
                         <div class="flex items-center gap-2 group/vol">
                             <button class="text-white hover:text-gray-300 transition-transform transform hover:scale-110">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h2.5l5 5V3l-5 5H5z"></path></svg>
@@ -164,15 +176,10 @@
                                 <input type="range" id="custom-vol-input" onchange="changeVolume(this.value)" class="w-full h-1 bg-gray-600 rounded-full appearance-none outline-none accent-red-600 cursor-pointer" value="100">
                             </div>
                         </div>
-
                         <span id="custom-time-display" class="text-gray-300 font-mono text-xs font-bold ml-2">0:00 / 0:00</span>
                     </div>
 
                     <div class="flex items-center gap-6">
-                        <button class="text-white hover:text-gray-300 transition-transform transform hover:scale-110">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        </button>
-
                         <button onclick="toggleFullScreen()" class="text-white hover:text-gray-300 transition-transform transform hover:scale-110">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                         </button>
@@ -184,16 +191,13 @@
 
     <div id="paywall-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[10000] hidden flex-col justify-center items-center opacity-0 transition-opacity duration-300 p-4">
         <div class="glass-panel w-full max-w-md p-8 rounded-[32px] border-t border-[#FFC300]/30 text-center transform scale-95 transition-transform duration-300" id="paywall-content">
-            
             <div class="w-16 h-16 mx-auto bg-[#FFC300]/10 rounded-full flex items-center justify-center border border-[#FFC300]/30 mb-6 shadow-[0_0_30px_rgba(255,195,0,0.2)]">
                 <span class="text-3xl">🔒</span>
             </div>
-            
             <h3 class="text-2xl font-black uppercase tracking-tighter text-white mb-2">Acceso Restringido</h3>
             <p class="text-gray-400 text-xs font-medium leading-relaxed mb-6">
-                Para reproducir este contenido necesitas una suscripción de nivel <span id="paywall-tier-req" class="text-[#FFC300] font-black">SUPERIOR</span>. Mejora tu plan para desbloquear nuestra academia cinematográfica completa.
+                Para reproducir este contenido necesitas una suscripción de nivel <span id="paywall-tier-req" class="text-[#FFC300] font-black">SUPERIOR</span>. Mejora tu plan para desbloquear nuestra academia cinematográfica.
             </p>
-            
             <div class="flex flex-col gap-3">
                 <a href="/billing/planes.html" class="flex items-center justify-center gap-2 bg-gradient-to-r from-[#FFC300] to-[#eab308] text-black w-full py-4 rounded-xl text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(255,195,0,0.3)] hover:scale-[1.02] transition-transform">
                     Ver Planes de Suscripción
@@ -205,14 +209,8 @@
         </div>
     </div>
 
-    <footer id="main-footer" class="text-center py-6 border-t border-white/5 bg-[#030305] mt-auto relative z-40">
-        <p class="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • TU MEJOR VERSIÓN</p>
-    </footer>
-
     <script src="/static/js/auth/auth_middleware.js"></script>
-    <script src="/static/js/dashboard/on.js"></script>
-
-    <script>
+    <script src="/static/js/dashboard/on.js"></script> <script>
         // Efecto del header al hacer scroll
         window.addEventListener('scroll', () => {
             const header = document.getElementById('nav-header');
