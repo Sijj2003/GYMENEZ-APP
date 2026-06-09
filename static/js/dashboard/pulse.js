@@ -82,7 +82,15 @@ async function authenticateWithFirebase() {
 
 function listenToChatStatus() {
     onSnapshot(doc(db, "chats", currentUserId), (docSnap) => {
-        currentChatStatus = docSnap.exists() ? docSnap.data().estado : "inactivo";
+        if (docSnap.exists()) {
+            currentChatStatus = docSnap.data().estado;
+            // 🔥 NUEVO: Apagar el radar si el usuario entra a la pantalla de Pulse
+            if (docSnap.data().unread_user) {
+                setDoc(doc(db, "chats", currentUserId), { unread_user: false }, { merge: true }).catch(e=>{});
+            }
+        } else {
+            currentChatStatus = "inactivo";
+        }
         updateUIBasedOnStatus();
     });
 }
