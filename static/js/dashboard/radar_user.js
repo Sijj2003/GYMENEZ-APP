@@ -53,7 +53,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         </div>
         <div>
             <h4 class="text-white text-xs font-black uppercase tracking-widest">Soporte Central</h4>
-            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">Tienes un Pulse cifrado</p>
+            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">Tienes un Pulse Message</p>
         </div>
     </div>`;
     document.body.insertAdjacentHTML('beforeend', toastHTML);
