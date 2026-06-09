@@ -22,17 +22,7 @@ let currentUserId = null;
 let currentChatStatus = "inactivo"; 
 let lastMessageCount = 0;
 let messagesUnsubscribe = null;
-
-const ui = {
-    overlay: document.getElementById('chat-request-overlay'),
-    inputArea: document.getElementById('chat-input-area'),
-    statusText: document.getElementById('chat-status-text'),
-    btnRequest: document.getElementById('btn-request-support'),
-    reqMsg: document.getElementById('request-status-msg'),
-    messagesArea: document.getElementById('chat-messages-area'),
-    chatForm: document.getElementById('chat-form'),
-    chatInput: document.getElementById('chat-input')
-};
+let ui = {}; // Memoria de selectores perezosos
 
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
@@ -101,52 +91,34 @@ function listenToChatStatus() {
 
 function updateUIBasedOnStatus() {
     const badgeText = document.getElementById('system-badge-text');
-    const actionBarClosed = document.getElementById('chat-action-bar-closed');
 
     if (currentChatStatus === "inactivo" || currentChatStatus === "cerrado") {
-        ui.overlay.classList.remove('opacity-0', 'pointer-events-none');
-        ui.inputArea.classList.add('hidden');
-        if (actionBarClosed) actionBarClosed.classList.remove('hidden'); // Revelar barra de soporte
-        ui.btnRequest.textContent = "Abrir Ticket Seguro";
-        ui.btnRequest.disabled = false;
-        ui.reqMsg.textContent = currentChatStatus === "cerrado" ? "Tu preparador ha cerrado el ticket de asistencia." : "La línea está cerrada. Solicita un ticket para abrir comunicación.";
-        ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-gray-500 rounded-full"></span> Historial de Sesión`;
+        if (ui.overlay) ui.overlay.classList.remove('opacity-0', 'pointer-events-none', 'hidden');
+        if (ui.inputArea) ui.inputArea.classList.add('hidden');
+        if (ui.actionBarClosed) ui.actionBarClosed.classList.add('hidden'); // 🔥 Oculto mientras la cortina difuminada está activa
+        if (ui.btnRequest) { ui.btnRequest.textContent = "Abrir Ticket Seguro"; ui.btnRequest.disabled = false; }
+        if (ui.reqMsg) ui.reqMsg.textContent = currentChatStatus === "cerrado" ? "Tu preparador ha cerrado el ticket de asistencia." : "La línea está cerrada. Solicita un ticket para abrir comunicación.";
+        if (ui.statusText) ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-gray-500 rounded-full"></span> Línea en Reposo`;
         if (badgeText) badgeText.textContent = "Últimos 30 Mensajes (Lectura)";
     } 
     else if (currentChatStatus === "espera") {
-        ui.overlay.classList.remove('opacity-0', 'pointer-events-none');
-        ui.inputArea.classList.add('hidden');
-        if (actionBarClosed) actionBarClosed.classList.add('hidden');
-        ui.btnRequest.textContent = "Ubicando Preparador...";
-        ui.btnRequest.disabled = true;
-        ui.reqMsg.textContent = "Ticket emitido. Mantén esta pantalla abierta.";
-        ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span> En Espera`;
+        if (ui.overlay) ui.overlay.classList.remove('opacity-0', 'pointer-events-none', 'hidden');
+        if (ui.inputArea) ui.inputArea.classList.add('hidden');
+        if (ui.actionBarClosed) ui.actionBarClosed.classList.add('hidden'); // Oculto en espera
+        if (ui.btnRequest) { ui.btnRequest.textContent = "Ubicando Preparador..."; ui.btnRequest.disabled = true; }
+        if (ui.reqMsg) ui.reqMsg.textContent = "Ticket emitido. Mantén esta pantalla abierta.";
+        if (ui.statusText) ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span> En Espera`;
         if (badgeText) badgeText.textContent = "Historial Limitado (Cola de Espera)";
     } 
     else if (currentChatStatus === "activo") {
-        ui.overlay.classList.add('opacity-0', 'pointer-events-none');
-        ui.overlay.classList.add('hidden'); 
-        ui.inputArea.classList.remove('hidden');
-        if (actionBarClosed) actionBarClosed.classList.add('hidden'); // Esconder barra
-        ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Conectado`;
+        if (ui.overlay) ui.overlay.classList.add('opacity-0', 'pointer-events-none', 'hidden');
+        if (ui.inputArea) ui.inputArea.classList.remove('hidden');
+        if (ui.actionBarClosed) ui.actionBarClosed.classList.add('hidden'); 
+        if (ui.statusText) ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Conectado`;
         if (badgeText) badgeText.textContent = "Pulse Message Activo";
         scrollToBottom();
     }
 }
-
-ui.btnRequest.addEventListener('click', async () => {
-    if (!currentUserId) return;
-    ui.btnRequest.textContent = "Procesando..."; ui.btnRequest.disabled = true;
-    try {
-        const session = JSON.parse(localStorage.getItem('userSession'));
-        await setDoc(doc(db, "chats", currentUserId), {
-            estado: "espera", actualizado: serverTimestamp(),
-            atleta_nombre: `${session.name || ''} ${session.last_name || ''}`.trim(),
-            ultimo_mensaje: "🔴 Ticket abierto."
-        }, { merge: true });
-        playUISound('send');
-    } catch (e) { ui.btnRequest.textContent = "Error. Reintentar"; ui.btnRequest.disabled = false; }
-});
 
 function listenToMessages() {
     if (messagesUnsubscribe) messagesUnsubscribe(); 
@@ -154,23 +126,21 @@ function listenToMessages() {
     const msgsRef = collection(db, "chats", currentUserId, "mensajes");
     let q;
 
-    // 🔥 ADAPTACIÓN CRIPTOGRÁFICA: Si está activo descarga todo el streaming, si no, limita a 30 interacciones
     if (currentChatStatus === "activo") {
         q = query(msgsRef, orderBy("fecha", "asc"));
     } else {
-        q = query(msgsRef, orderBy("fecha", "asc"), limitToLast(30)); 
+        q = query(msgsRef, orderBy("fecha", "asc"), limitToLast(30)); // 🔥 Ampliado a 30 interacciones
     }
 
     messagesUnsubscribe = onSnapshot(q, (snapshot) => {
-        const area = document.getElementById('chat-messages-area');
-        if (!area) return;
+        if (!ui.messagesArea) return;
 
-        const systemMsg = area.children[0] ? area.children[0].outerHTML : `
+        const systemMsg = ui.messagesArea.children[0] ? ui.messagesArea.children[0].outerHTML : `
             <div class="flex justify-center my-4 shrink-0">
                 <span id="system-badge-text" class="px-3 py-1 bg-white/10 backdrop-blur text-white rounded-full text-[9px] font-black tracking-widest uppercase">Pulse Message</span>
             </div>`;
         
-        // 🔥 CONTROL INMUTABLE ANTI-PARPADEO: Construimos la cadena en memoria ram y modificamos el DOM una sola vez
+        // 🔥 PREVENCIÓN TOTAL DE PARPADEO: Construimos la cadena en memoria ram y modificamos el DOM una sola vez
         let fullHTML = systemMsg;
         let currentCount = 0;
 
@@ -197,7 +167,7 @@ function listenToMessages() {
             fullHTML += msgHTML;
         });
 
-        area.innerHTML = fullHTML;
+        ui.messagesArea.innerHTML = fullHTML;
 
         if (currentCount > lastMessageCount && currentChatStatus === "activo") { playUISound('receive'); }
         lastMessageCount = currentCount;
@@ -205,36 +175,71 @@ function listenToMessages() {
     });
 }
 
-ui.chatForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const texto = ui.chatInput.value.trim();
-    if (!texto || !currentUserId || currentChatStatus !== "activo") return;
-
-    ui.chatInput.value = ''; ui.chatInput.style.height = 'auto';
-
-    try {
-        await addDoc(collection(db, "chats", currentUserId, "mensajes"), {
-            texto: texto, remitente: "atleta", fecha: serverTimestamp()
-        });
-        await setDoc(doc(db, "chats", currentUserId), {
-            ultimo_mensaje: texto, actualizado: serverTimestamp(), unread_admin: true
-        }, { merge: true });
-        
-        playUISound('send');
-    } catch (e) { }
-});
-
-ui.chatInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ui.chatForm.dispatchEvent(new Event('submit')); }
-});
-
-function scrollToBottom() { setTimeout(() => { ui.messagesArea.scrollTop = ui.messagesArea.scrollHeight; }, 50); }
-function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
-
 window.addEventListener('DOMContentLoaded', async () => {
+    // Inicializar selectores del ecosistema de forma segura
+    ui = {
+        overlay: document.getElementById('chat-request-overlay'),
+        inputArea: document.getElementById('chat-input-area'),
+        statusText: document.getElementById('chat-status-text'),
+        btnRequest: document.getElementById('btn-request-support'),
+        reqMsg: document.getElementById('request-status-msg'),
+        messagesArea: document.getElementById('chat-messages-area'),
+        chatForm: document.getElementById('chat-form'),
+        chatInput: document.getElementById('chat-input'),
+        actionBarClosed: document.getElementById('chat-action-bar-closed'),
+        btnViewHistory: document.getElementById('btn-view-history'),
+        btnShowOverlay: document.getElementById('btn-show-overlay')
+    };
+
     const isAuthenticated = await authenticateWithFirebase();
     if (isAuthenticated) { 
         listenToChatStatus(); 
         listenToMessages(); 
+
+        // 🔥 CONTROL COMPUESTO DE COMPUERTAS DE NAVEGACIÓN INTERNA
+        if (ui.btnViewHistory) {
+            ui.btnViewHistory.addEventListener('click', () => {
+                ui.overlay.classList.add('hidden'); // Ocultar cortina
+                if (ui.actionBarClosed) ui.actionBarClosed.classList.remove('hidden'); // Mostrar píldora de ticket
+                setTimeout(() => { ui.messagesArea.scrollTop = ui.messagesArea.scrollHeight; }, 50);
+            });
+        }
+
+        if (ui.btnShowOverlay) {
+            ui.btnShowOverlay.addEventListener('click', () => {
+                ui.overlay.classList.remove('hidden'); // Volver a bloquear con la cortina
+                if (ui.actionBarClosed) ui.actionBarClosed.classList.add('hidden'); // Esconder píldora
+            });
+        }
     }
 });
+
+if (ui.chatForm) {
+    ui.chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const texto = ui.chatInput.value.trim();
+        if (!texto || !currentUserId || currentChatStatus !== "activo") return;
+
+        ui.chatInput.value = ''; ui.chatInput.style.height = 'auto';
+
+        try {
+            await addDoc(collection(db, "chats", currentUserId, "mensajes"), {
+                texto: texto, remitente: "atleta", fecha: serverTimestamp()
+            });
+            await setDoc(doc(db, "chats", currentUserId), {
+                ultimo_mensaje: texto, actualizado: serverTimestamp(), unread_admin: true
+            }, { merge: true });
+            
+            playUISound('send');
+        } catch (e) { }
+    });
+}
+
+if (ui.chatInput) {
+    ui.chatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ui.chatForm.dispatchEvent(new Event('submit')); }
+    });
+}
+
+function scrollToBottom() { setTimeout(() => { if (ui.messagesArea) ui.messagesArea.scrollTop = ui.messagesArea.scrollHeight; }, 50); }
+function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
