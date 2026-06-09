@@ -16,8 +16,11 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Motor de audio en espera (Evita el bloqueo estricto del navegador)
 let audioCtx = null;
+let lastNotificationState = ""; 
+let targetUserId = null;   // 🔥 Memoria para saber a quién redirigir
+let targetUserName = null; // 🔥 Memoria para el nombre
+
 function playDing() {
     try {
         if (!audioCtx) {
@@ -35,25 +38,84 @@ function playDing() {
         gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
         osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.2);
-    } catch(e) { console.warn("Audio bloqueado por falta de interacción previa."); }
+    } catch(e) {}
+}
+
+// Inyección de la UI Flotante optimizada con redirección inteligente al hacer click
+const toastHTML = `
+<div id="radar-toast-admin" class="fixed top-6 right-6 z-[9999] flex items-center gap-3 bg-[#060608]/90 backdrop-blur-2xl border border-sky-500/20 p-3.5 pr-12 rounded-[24px] shadow-[0_20px_50px_rgba(14,165,233,0.15)] transition-all duration-500 select-none touch-none animate-fade-in" style="transform: translateX(160vw); max-width: 340px; width: calc(100vw - 48px);">
+    <div id="radar-action-trigger" class="flex items-center gap-3 flex-grow cursor-pointer overflow-hidden">
+        <div class="w-10 h-10 bg-gradient-to-tr from-sky-500 to-sky-400 rounded-[16px] flex items-center justify-center text-white shadow-[0_0_20px_rgba(14,165,233,0.3)] shrink-0 animate-pulse">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        </div>
+        <div class="overflow-hidden">
+            <h4 class="text-white text-[11px] font-black uppercase tracking-widest truncate">Radar Pulse</h4>
+            <p class="text-sky-400 text-[10px] font-bold uppercase tracking-widest mt-0.5 truncate" id="radar-admin-text">Alerta de tráfico</p>
+        </div>
+    </div>
+    <button id="radar-admin-close-btn" class="absolute right-3.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 text-xs transition-all font-sans">✕</button>
+</div>`;
+document.body.insertAdjacentHTML('beforeend', toastHTML);
+
+let startX = 0, startY = 0, currentX = 0, currentY = 0;
+const toastEl = document.getElementById('radar-toast-admin');
+
+// AGREGAR EVENTO DE CLICK REDIRECCIONADOR AL CUERPO DE LA NOTIFICACIÓN
+document.getElementById('radar-action-trigger').addEventListener('click', () => {
+    // Si ya estamos en la pantalla de pulse, abrimos el chat inmediatamente
+    if (window.location.pathname.includes('pulse.html')) {
+        if (typeof window.openChatWindow === 'function' && targetUserId) {
+            window.openChatWindow(targetUserId, targetUserName);
+            toastEl.style.transform = 'translateX(160vw)';
+        }
+    } else {
+        // Si estamos en otra pantalla, redirigimos guardando variables temporales para que pulse.js las abra al cargar
+        localStorage.setItem('gymen_pending_open_id', targetUserId);
+        localStorage.setItem('gymen_pending_open_name', targetUserName);
+        window.location.href = '/apps/admin/pulse.html';
+    }
+});
+
+toastEl.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    toastEl.style.transition = 'none';
+});
+
+toastEl.addEventListener('touchmove', (e) => {
+    currentX = e.touches[0].clientX - startX;
+    currentY = e.touches[0].clientY - startY;
+    let moveX = currentX > 0 ? currentX : 0;
+    let moveY = currentY < 0 ? currentY : 0;
+    
+    if (Math.abs(currentX) > Math.abs(currentY)) {
+        toastEl.style.transform = `translateX(${moveX}px)`;
+    } else {
+        toastEl.style.transform = `translateY(${moveY}px)`;
+    }
+});
+
+toastEl.addEventListener('touchend', () => {
+    toastEl.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+    if (currentX > 100 || currentY < -60) {
+        dismissToastManual();
+    } else {
+        toastEl.style.transform = 'translateX(0)';
+    }
+    startX = startY = currentX = currentY = 0;
+});
+
+document.getElementById('radar-admin-close-btn').addEventListener('click', dismissToastManual);
+
+function dismissToastManual() {
+    toastEl.style.transform = 'translateX(160vw)';
+    const currentText = document.getElementById('radar-admin-text').textContent;
+    if (currentText) lastNotificationState = currentText; 
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('gymen_admin_token');
     if (!token) return;
-
-    // Inyección de la UI Flotante con CSS Puro para la animación
-    const toastHTML = `
-    <div id="radar-toast-admin" class="fixed top-6 right-6 z-[9999] flex items-center gap-3 bg-[#060608]/95 backdrop-blur-xl border border-sky-500/30 p-3 pr-6 rounded-2xl shadow-[0_10px_40px_rgba(14,165,233,0.2)] cursor-pointer hover:bg-white/5 transition-all" style="transform: translateX(150vw); transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);" onclick="window.location.href='/apps/admin/pulse.html'">
-        <div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] animate-pulse">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-        </div>
-        <div>
-            <h4 class="text-white text-xs font-black uppercase tracking-widest">Radar Pulse</h4>
-            <p class="text-sky-400 text-[10px] font-bold uppercase tracking-widest mt-0.5" id="radar-admin-text">Atleta requiere asistencia</p>
-        </div>
-    </div>`;
-    document.body.insertAdjacentHTML('beforeend', toastHTML);
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/pulse/token`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -71,16 +133,35 @@ window.addEventListener('DOMContentLoaded', async () => {
 
                 if (!snapshot.empty) {
                     const count = snapshot.size;
+                    let stateText = "";
+                    
+                    // 🌟 EXTRACCIÓN DINÁMICA DE IDENTIDADES EN EL RADAR
+                    if (count === 1) {
+                        // Si hay un solo chat sin leer, extraemos los datos específicos de ese atleta
+                        const recentDoc = snapshot.docs[0];
+                        targetUserId = recentDoc.id;
+                        targetUserName = recentDoc.data().atleta_nombre || "Atleta";
+                        stateText = `${targetUserName} escribió...`;
+                    } else {
+                        // Si hay varios atletas simultáneos, mostramos un resumen global del tráfico
+                        const firstDoc = snapshot.docs[0];
+                        targetUserId = firstDoc.id;
+                        targetUserName = firstDoc.data().atleta_nombre || "Atleta";
+                        stateText = `${count} atletas en espera`;
+                    }
+
+                    if (stateText === lastNotificationState) return;
+
                     if (count > unreadCount) playDing();
                     unreadCount = count;
                     
-                    document.getElementById('radar-admin-text').textContent = `${count} atleta(s) a la espera`;
-                    toast.style.transform = 'translateX(0)'; // Deslizar hacia adentro
+                    document.getElementById('radar-admin-text').textContent = stateText;
+                    toastEl.style.transform = 'translateX(0)';
                 } else {
                     unreadCount = 0;
-                    toast.style.transform = 'translateX(150vw)'; // Ocultar
+                    toastEl.style.transform = 'translateX(160vw)';
                 }
             });
         }
-    } catch(e) { console.error("Error de Radar Admin:", e); }
+    } catch(e) {}
 });
