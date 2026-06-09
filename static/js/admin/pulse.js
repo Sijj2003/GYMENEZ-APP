@@ -299,10 +299,11 @@ window.markAsActive = async function() {
     if (!activeChatUserId) return;
     try {
         await setDoc(doc(db, "chats", activeChatUserId), {
-            estado: "activo", 
-            actualizado: serverTimestamp(), 
-            ultimo_mensaje: "🟢 Operador en sala.",
-            atleta_nombre: activeChatUserName
+            estado: "activo",
+            ultimo_mensaje: "Tú: " + texto, 
+            actualizado: serverTimestamp(),
+            atleta_nombre: activeChatUserName,
+            unread_user: true // 🔥 NUEVO: Enciende el radar del atleta en toda la app
         }, { merge: true });
     } catch(e) {}
 }
