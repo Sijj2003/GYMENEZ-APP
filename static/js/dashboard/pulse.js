@@ -21,7 +21,7 @@ const db = getFirestore(app);
 let currentUserId = null;
 let currentChatStatus = "inactivo"; 
 let lastMessageCount = 0;
-let messagesUnsubscribe = null; // Memoria para limpiar el recolector y evitar leaks
+let messagesUnsubscribe = null;
 
 const ui = {
     overlay: document.getElementById('chat-request-overlay'),
@@ -93,7 +93,6 @@ function listenToChatStatus() {
         
         updateUIBasedOnStatus();
 
-        // 🔥 RE-INDEXACIÓN DE RADARES: Si el estado cambia, recalculamos el query de mensajes
         if (oldStatus !== currentChatStatus) {
             listenToMessages();
         }
@@ -102,18 +101,22 @@ function listenToChatStatus() {
 
 function updateUIBasedOnStatus() {
     const badgeText = document.getElementById('system-badge-text');
+    const actionBarClosed = document.getElementById('chat-action-bar-closed');
+
     if (currentChatStatus === "inactivo" || currentChatStatus === "cerrado") {
         ui.overlay.classList.remove('opacity-0', 'pointer-events-none');
         ui.inputArea.classList.add('hidden');
+        if (actionBarClosed) actionBarClosed.classList.remove('hidden'); // Revelar barra de soporte
         ui.btnRequest.textContent = "Abrir Ticket Seguro";
         ui.btnRequest.disabled = false;
         ui.reqMsg.textContent = currentChatStatus === "cerrado" ? "Tu preparador ha cerrado el ticket de asistencia." : "La línea está cerrada. Solicita un ticket para abrir comunicación.";
         ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-gray-500 rounded-full"></span> Historial de Sesión`;
-        if (badgeText) badgeText.textContent = "Últimos 10 Mensajes (Lectura)";
+        if (badgeText) badgeText.textContent = "Últimos 30 Mensajes (Lectura)";
     } 
     else if (currentChatStatus === "espera") {
         ui.overlay.classList.remove('opacity-0', 'pointer-events-none');
         ui.inputArea.classList.add('hidden');
+        if (actionBarClosed) actionBarClosed.classList.add('hidden');
         ui.btnRequest.textContent = "Ubicando Preparador...";
         ui.btnRequest.disabled = true;
         ui.reqMsg.textContent = "Ticket emitido. Mantén esta pantalla abierta.";
@@ -122,8 +125,9 @@ function updateUIBasedOnStatus() {
     } 
     else if (currentChatStatus === "activo") {
         ui.overlay.classList.add('opacity-0', 'pointer-events-none');
-        ui.overlay.classList.add('hidden'); // Destruir la cortina por completo
+        ui.overlay.classList.add('hidden'); 
         ui.inputArea.classList.remove('hidden');
+        if (actionBarClosed) actionBarClosed.classList.add('hidden'); // Esconder barra
         ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Conectado`;
         if (badgeText) badgeText.textContent = "Pulse Message Activo";
         scrollToBottom();
@@ -145,23 +149,29 @@ ui.btnRequest.addEventListener('click', async () => {
 });
 
 function listenToMessages() {
-    if (messagesUnsubscribe) messagesUnsubscribe(); // Cancelar suscripción previa
+    if (messagesUnsubscribe) messagesUnsubscribe(); 
 
     const msgsRef = collection(db, "chats", currentUserId, "mensajes");
     let q;
 
-    // 🔥 COMPORTAMIENTO INTELECTUAL ADAPTATIVO: Si está activo descarga todo, si está cerrado limita a 10
+    // 🔥 ADAPTACIÓN CRIPTOGRÁFICA: Si está activo descarga todo el streaming, si no, limita a 30 interacciones
     if (currentChatStatus === "activo") {
         q = query(msgsRef, orderBy("fecha", "asc"));
     } else {
-        q = query(msgsRef, orderBy("fecha", "asc"), limitToLast(10));
+        q = query(msgsRef, orderBy("fecha", "asc"), limitToLast(30)); 
     }
 
     messagesUnsubscribe = onSnapshot(q, (snapshot) => {
         const area = document.getElementById('chat-messages-area');
-        const systemMsg = area.children[0] ? area.children[0].outerHTML : '';
-        area.innerHTML = systemMsg;
+        if (!area) return;
+
+        const systemMsg = area.children[0] ? area.children[0].outerHTML : `
+            <div class="flex justify-center my-4 shrink-0">
+                <span id="system-badge-text" class="px-3 py-1 bg-white/10 backdrop-blur text-white rounded-full text-[9px] font-black tracking-widest uppercase">Pulse Message</span>
+            </div>`;
         
+        // 🔥 CONTROL INMUTABLE ANTI-PARPADEO: Construimos la cadena en memoria ram y modificamos el DOM una sola vez
+        let fullHTML = systemMsg;
         let currentCount = 0;
 
         snapshot.forEach((doc) => {
@@ -184,8 +194,10 @@ function listenToMessages() {
                     </div>
                 </div>
             `;
-            area.insertAdjacentHTML('beforeend', msgHTML);
+            fullHTML += msgHTML;
         });
+
+        area.innerHTML = fullHTML;
 
         if (currentCount > lastMessageCount && currentChatStatus === "activo") { playUISound('receive'); }
         lastMessageCount = currentCount;
