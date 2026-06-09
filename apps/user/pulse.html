@@ -1,102 +1,60 @@
 <!DOCTYPE html>
-<html lang="es" class="scroll-smooth">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GYMENEZ | Pulse Chat Premium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GYMENEZ | Pulse Chat</title>
     <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/static/css/auth.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <style>
-        body { overscroll-behavior-y: none; background-color: #020204; }
+        .custom-scrollbar::-webkit-scrollbar { width: 0px; } /* Chat ultralimpio sin scroll visible */
+        body { overscroll-behavior-y: none; background-color: #000; }
         
-        /* Ocultar barra de scroll nativa */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Orbe Fluido Animado Estilo iOS Mesh */
-        .ios-blur-orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(140px);
-            mix-blend-mode: screen;
-            opacity: 0.12;
-            z-index: -10;
-            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
-            will-change: transform, background-color;
-        }
-
-        /* Animación de entrada física elástica para burbujas de iMessage */
-        .message-bubble { 
-            animation: iosPopIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
-            will-change: transform, opacity;
-        }
-        @keyframes iosPopIn { 
-            0% { opacity: 0; transform: translateY(16px) scale(0.96); } 
-            100% { opacity: 1; transform: translateY(0) scale(1); } 
-        }
-
-        /* Loader Cinéfilo de Haptics */
-        @keyframes ringSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .haptic-ring { animation: ringSpin 2.5s linear infinite; }
+        /* Animaciones iMessage */
+        .message-bubble { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUp { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="selection:bg-[#FFC300] selection:text-black overflow-hidden h-[100dvh] flex flex-col relative text-white pb-safe">
+<body class="selection:bg-[#FFC300] selection:text-black overflow-hidden h-[100dvh] flex flex-col relative">
 
-    <div id="orb-dynamic-1" class="ios-blur-orb w-[380px] h-[380px] md:w-[600px] md:h-[600px] top-[-10%] left-[-10%] bg-sky-500"></div>
-    <div id="orb-dynamic-2" class="ios-blur-orb w-[320px] h-[320px] md:w-[500px] md:h-[500px] bottom-[10%] right-[-10%] bg-neutral-700"></div>
+    <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 pointer-events-none text-center border"></div>
 
-    <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 pointer-events-none text-center border backdrop-blur-xl bg-black/80 transition-all duration-500"></div>
-
-    <header class="w-full bg-[#030305]/40 backdrop-blur-2xl border-b border-white/5 pt-4 pb-4 px-6 fixed top-0 z-50 flex justify-between items-center">
-        <div class="flex items-center gap-3">
-            <div class="relative flex items-center justify-center">
-                <span id="status-dot-glow" class="absolute w-2.5 h-2.5 bg-gray-500 rounded-full transition-all duration-700 shadow-[0_0_10px_rgba(156,163,175,0.6)]"></span>
-                <span id="status-dot-pulse" class="absolute w-2.5 h-2.5 bg-gray-500 rounded-full animate-ping opacity-75"></span>
-            </div>
-            <div class="pl-4">
-                <h1 class="text-base font-black uppercase tracking-tighter leading-none flex items-center gap-1">
-                    GYMENEZ <span class="text-[#FFC300] tracking-normal font-mono font-bold text-xs bg-white/5 border border-white/10 px-1.5 py-0.5 rounded ml-1">PULSE</span>
-                </h1>
-                <p id="chat-status-text" class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Sincronizando radar...</p>
-            </div>
+    <header class="absolute top-0 w-full bg-gradient-to-b from-black/80 to-transparent pt-4 pb-10 px-6 z-50 flex justify-between items-start pointer-events-none">
+        <div>
+            <h1 class="text-xl font-black uppercase tracking-tighter block pointer-events-auto shadow-sm">
+                <span class="text-[#FFC300]">GYM</span><span class="text-white">ENEZ</span>
+            </h1>
+            <p id="chat-status-text" class="text-[9px] text-gray-300 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-gray-500 rounded-full"></span> Conectando...</p>
         </div>
-        
-        <button onclick="if(history.length > 1) { history.back(); } else { window.location.href='/apps/start/inicio.html'; }" class="w-9 h-9 rounded-full bg-white/5 backdrop-blur-xl flex items-center justify-center text-gray-400 border border-white/10 hover:bg-white/10 hover:text-white active:scale-90 transition-all duration-300">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
+        <a href="/apps/start/inicio.html" class="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white pointer-events-auto border border-white/20">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </a>
     </header>
 
     <main class="flex-grow flex flex-col h-full w-full max-w-2xl mx-auto relative pt-20 pb-24">
         
-        <div id="chat-messages-area" class="flex-grow overflow-y-auto no-scrollbar px-5 space-y-4 flex flex-col pt-6">
-            <div class="flex justify-center my-2 shrink-0">
-                <span id="system-badge-text" class="px-4 py-1.5 bg-white/[0.03] border border-white/5 backdrop-blur-xl text-gray-400 rounded-full text-[8px] font-black tracking-[0.2em] uppercase shadow-sm">Canal de Enlace Cifrado</span>
+        <div id="chat-messages-area" class="flex-grow overflow-y-auto px-4 space-y-3 custom-scrollbar flex flex-col">
+            <div class="flex justify-center my-4">
+                <span class="px-3 py-1 bg-white/10 backdrop-blur text-white rounded-full text-[9px] font-bold tracking-widest uppercase">iMessage Encriptado</span>
             </div>
         </div>
 
-        <div id="chat-request-overlay" class="absolute inset-0 z-20 bg-black/20 backdrop-blur-xl flex flex-col items-center justify-center p-6 transition-all duration-500">
-            <div class="glass-panel p-8 rounded-[36px] w-full max-w-sm border border-white/10 bg-[#060609]/70 text-center shadow-2xl relative overflow-hidden">
-                <div class="absolute -top-10 -left-10 w-32 h-32 bg-[#FFC300]/5 rounded-full blur-2xl"></div>
-                
-                <div class="w-14 h-14 mx-auto bg-gradient-to-tr from-[#111] to-[#1a1a1f] border border-white/10 rounded-2xl flex items-center justify-center shadow-xl mb-5 relative">
-                    <div id="haptic-loading-ring" class="absolute inset-1.5 border border-dashed border-gray-600 rounded-xl haptic-ring hidden"></div>
-                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                </div>
-                
-                <h3 class="text-lg font-black uppercase text-white tracking-tighter mb-1.5">Línea de Enlace</h3>
-                <p id="request-status-msg" class="text-[11px] text-gray-400 font-medium uppercase tracking-wide px-2 mb-6 leading-relaxed">Estableciendo conexión perimetral con tu panel...</p>
-                
-                <button id="btn-request-support" class="btn-gold w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_12px_24px_rgba(255,195,0,0.15)] active:scale-95 duration-300 transition-all">Abrir Ticket Seguro</button>
+        <div id="chat-request-overlay" class="absolute inset-0 z-20 bg-black/60 backdrop-blur-lg flex flex-col items-center justify-center p-6 transition-all duration-500">
+            <div class="w-16 h-16 bg-[#FFC300]/10 rounded-full flex items-center justify-center border border-[#FFC300]/30 mb-6">
+                <svg class="w-8 h-8 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
             </div>
+            <h3 class="text-2xl font-black uppercase text-white tracking-tighter mb-2">Soporte Central</h3>
+            <p id="request-status-msg" class="text-xs text-gray-400 font-medium text-center max-w-xs mb-8">La línea está cerrada. Solicita un ticket para abrir comunicación directa con tu preparador.</p>
+            <button id="btn-request-support" class="btn-gold w-full max-w-xs py-4 rounded-[18px] text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(255,195,0,0.2)] transition-transform active:scale-95">Abrir Ticket Seguro</button>
         </div>
 
-        <div id="chat-input-area" class="hidden absolute bottom-5 left-4 right-4 z-30">
-            <form id="chat-form" class="flex gap-2.5 items-end bg-[#141419]/70 backdrop-blur-2xl border border-white/10 p-2 rounded-[28px] shadow-2xl">
-                <textarea id="chat-input" rows="1" class="flex-grow bg-transparent text-white text-[14px] font-medium px-4 py-2.5 outline-none resize-none no-scrollbar leading-snug placeholder-gray-500 focus:placeholder-gray-600 transition-colors" placeholder="Mensaje Pulse..." required></textarea>
-                <button type="submit" class="w-10 h-10 shrink-0 bg-[#FFC300] hover:bg-yellow-400 text-black rounded-full flex items-center justify-center active:scale-90 shadow-md transition-all duration-300">
-                    <svg class="w-4 h-4 translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+        <div id="chat-input-area" class="hidden absolute bottom-4 left-4 right-4 z-30">
+            <form id="chat-form" class="flex gap-2 items-end bg-[#1c1c1e]/90 backdrop-blur-xl border border-white/10 p-1.5 rounded-[24px] shadow-2xl">
+                <textarea id="chat-input" rows="1" class="flex-grow bg-transparent text-white text-sm px-4 py-3 outline-none resize-none custom-scrollbar leading-snug" placeholder="Pulse Message..." required></textarea>
+                <button type="submit" class="w-10 h-10 shrink-0 bg-[#FFC300] text-black rounded-[20px] flex items-center justify-center transition-transform active:scale-90 shadow-md">
+                    <svg class="w-4 h-4 translate-x-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
                 </button>
             </form>
         </div>
@@ -106,12 +64,13 @@
     <script src="/static/js/auth/auth_middleware.js"></script>
     <script type="module" src="/static/js/dashboard/pulse.js"></script>
     <script>
-        const textarea = document.getElementById('chat-input');
-        if(textarea) {
-            textarea.addEventListener("input", function() {
+        // Auto-rezise fluido del textarea
+        const tx = document.getElementById('chat-input');
+        if(tx) {
+            tx.addEventListener("input", function() {
                 this.style.height = 'auto';
                 this.style.height = (this.scrollHeight) + 'px';
-                if(this.scrollHeight > 120) { this.style.overflowY = 'auto'; this.style.height = '120px'; } 
+                if(this.scrollHeight > 100) { this.style.overflowY = 'auto'; this.style.height = '100px'; } 
                 else { this.style.overflowY = 'hidden'; }
             }, false);
         }
