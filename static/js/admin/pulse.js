@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { getFirestore, collection, query, orderBy, onSnapshot, doc, setDoc, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
@@ -19,13 +19,16 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentFilter = 'espera'; 
-let activeChatUserId = null;   
+let activeChatUserId = null;
+let activeChatUserName = 'Atleta';
 let messagesUnsubscribe = null;
 let chatDocUnsubscribe = null; 
-let searchTerm = ''; // 🔥 Buscador
-let lastMessageCount = 0; // 🔥 Memoria para sonidos
+let searchTerm = ''; 
+let lastMessageCount = 0; 
 
-// 🎵 SINTETIZADOR DE AUDIO PREMIUM (Sin archivos externos)
+let globalChatsMemory = [];
+let allSystemUsers = [];
+
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContext();
 
@@ -36,15 +39,15 @@ function playUISound(type) {
     osc.connect(gainNode);
     gainNode.connect(audioCtx.destination);
     
-    if (type === 'receive') { // Tono suave y elegante de iMessage/Slack
+    if (type === 'receive') { 
+        // El mismo sonido suave y elegante del usuario
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.15);
         gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
         gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-        osc.start(audioCtx.currentTime);
-        osc.stop(audioCtx.currentTime + 0.3);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+        osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.2);
     }
 }
 
@@ -52,11 +55,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('gymen_admin_token');
     if (!token) { window.location.href = '/apps/admin/login.html'; return; }
     
-    // Conectar el buscador
     document.getElementById('admin-chat-search').addEventListener('input', (e) => {
         searchTerm = e.target.value.toLowerCase().trim();
-        listenToAllChats(); // Re-renderizar lista
+        renderSidebar(); 
     });
+
+    // Cargar la lista maestra de usuarios para el buscador
+    fetch(`${API_BASE_URL}/api/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(data => { if(data.success) allSystemUsers = data.users; })
+        .catch(e => console.error("Error obteniendo usuarios", e));
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/pulse/token`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -70,8 +78,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (e) { alert("Falla de red."); }
 });
-
-let globalChatsMemory = [];
 
 function listenToAllChats() {
     const chatsRef = collection(db, "chats");
@@ -87,7 +93,7 @@ function listenToAllChats() {
             if (data.unread_admin) hasNewUnread = true;
         });
 
-        if (hasNewUnread) playUISound('receive'); // 🎵 Sonido si hay un ticket en rojo
+        if (hasNewUnread) playUISound('receive'); 
         renderSidebar();
     });
 }
@@ -96,20 +102,29 @@ function renderSidebar() {
     const container = document.getElementById('chats-list-container');
     container.innerHTML = '';
     let found = false;
+    let displayedIds = new Set();
 
+    // 1. Mostrar chats que tienen historial
     globalChatsMemory.forEach((chatData) => {
-        // Lógica del filtro y buscador
-        if (chatData.estado !== currentFilter) return;
-        if (searchTerm && !(chatData.atleta_nombre || '').toLowerCase().includes(searchTerm)) return;
+        if (searchTerm) {
+            if (!(chatData.atleta_nombre || '').toLowerCase().includes(searchTerm)) return;
+        } else {
+            if (currentFilter === 'historial') {
+                if (chatData.estado !== 'cerrado' && chatData.estado !== 'inactivo') return;
+            } else {
+                if (chatData.estado !== currentFilter) return;
+            }
+        }
 
         found = true;
+        displayedIds.add(chatData.id);
         const isUnread = chatData.unread_admin ? `<div class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></div>` : ``;
         const isActive = activeChatUserId === chatData.id ? 'active' : '';
         const timeString = chatData.actualizado ? chatData.actualizado.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
 
         const item = document.createElement('div');
         item.className = `chat-list-item p-3 rounded-xl cursor-pointer hover:bg-white/5 flex justify-between items-center ${isActive}`;
-        item.onclick = () => openChatWindow(chatData.id);
+        item.onclick = () => openChatWindow(chatData.id, chatData.atleta_nombre);
 
         item.innerHTML = `
             <div class="flex-grow pr-2 overflow-hidden">
@@ -124,6 +139,33 @@ function renderSidebar() {
         container.appendChild(item);
     });
 
+    // 2. Si hay buscador activo, añadir usuarios que NUNCA han usado el chat
+    if (searchTerm) {
+        allSystemUsers.forEach(u => {
+            if (displayedIds.has(u.id)) return;
+            const fullName = `${u.name} ${u.last_name || ''}`.trim();
+            if (fullName.toLowerCase().includes(searchTerm)) {
+                found = true;
+                const isActive = activeChatUserId === u.id ? 'active' : '';
+                
+                const item = document.createElement('div');
+                item.className = `chat-list-item p-3 rounded-xl cursor-pointer hover:bg-white/5 flex justify-between items-center ${isActive}`;
+                item.onclick = () => openChatWindow(u.id, fullName);
+
+                item.innerHTML = `
+                    <div class="flex-grow pr-2 overflow-hidden">
+                        <div class="flex justify-between items-start mb-0.5">
+                            <h4 class="text-[11px] font-black text-gray-400 uppercase truncate">${fullName}</h4>
+                            <span class="text-[9px] font-bold text-gray-600 ml-2 shrink-0">Nuevo</span>
+                        </div>
+                        <p class="text-[10px] text-gray-600 font-medium truncate">Toca para iniciar conversación</p>
+                    </div>
+                `;
+                container.appendChild(item);
+            }
+        });
+    }
+
     if (!found) {
         container.innerHTML = `<div class="p-6 text-center text-gray-600 font-bold uppercase tracking-widest text-[9px]">Sin resultados.</div>`;
     }
@@ -131,20 +173,33 @@ function renderSidebar() {
 
 window.filterChats = function(status) {
     currentFilter = status;
-    const tabE = document.getElementById('tab-espera');
-    const tabA = document.getElementById('tab-activo');
-    if(status === 'espera') {
-        tabE.className = "flex-1 py-1.5 bg-amber-500/10 text-amber-500 rounded text-[9px] font-bold uppercase transition-all";
-        tabA.className = "flex-1 py-1.5 text-gray-500 hover:text-white rounded text-[9px] font-bold uppercase transition-all";
-    } else {
-        tabA.className = "flex-1 py-1.5 bg-sky-500/10 text-sky-400 rounded text-[9px] font-bold uppercase transition-all";
-        tabE.className = "flex-1 py-1.5 text-gray-500 hover:text-white rounded text-[9px] font-bold uppercase transition-all";
+    searchTerm = '';
+    document.getElementById('admin-chat-search').value = '';
+
+    const tabs = {
+        'espera': document.getElementById('tab-espera'),
+        'activo': document.getElementById('tab-activo'),
+        'historial': document.getElementById('tab-historial')
+    };
+
+    Object.values(tabs).forEach(t => {
+        if(t) t.className = "flex-1 py-1.5 text-gray-500 hover:text-white rounded text-[9px] font-bold uppercase transition-all";
+    });
+
+    if(status === 'espera' && tabs['espera']) {
+        tabs['espera'].className = "flex-1 py-1.5 bg-amber-500/10 text-amber-500 rounded text-[9px] font-bold uppercase transition-all";
+    } else if(status === 'activo' && tabs['activo']) {
+        tabs['activo'].className = "flex-1 py-1.5 bg-sky-500/10 text-sky-400 rounded text-[9px] font-bold uppercase transition-all";
+    } else if(status === 'historial' && tabs['historial']) {
+        tabs['historial'].className = "flex-1 py-1.5 bg-purple-500/10 text-purple-400 rounded text-[9px] font-bold uppercase transition-all";
     }
     renderSidebar();
 }
 
-function openChatWindow(userId) {
+function openChatWindow(userId, userName) {
     activeChatUserId = userId;
+    activeChatUserName = userName || 'Atleta';
+    
     document.getElementById('empty-chat-state').classList.add('hidden');
     document.getElementById('active-chat-container').classList.remove('hidden');
     document.getElementById('active-chat-container').classList.add('flex');
@@ -152,14 +207,23 @@ function openChatWindow(userId) {
     if (chatDocUnsubscribe) chatDocUnsubscribe();
 
     chatDocUnsubscribe = onSnapshot(doc(db, "chats", userId), (docSnap) => {
-        if (!docSnap.exists()) return;
-        const liveChatData = docSnap.data();
-
-        document.getElementById('current-chat-name').textContent = liveChatData.atleta_nombre || 'Atleta';
         const acceptBtn = document.getElementById('btn-accept-chat');
         const statusText = document.getElementById('current-chat-status');
         const chatInput = document.getElementById('admin-chat-input');
         const sendBtn = document.getElementById('admin-send-btn');
+        
+        document.getElementById('current-chat-name').textContent = activeChatUserName;
+
+        if (!docSnap.exists()) {
+            statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-gray-600 inline-block mr-1"></span> Sin Historial`;
+            statusText.className = "text-gray-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
+            acceptBtn.classList.add('hidden');
+            chatInput.disabled = false; sendBtn.disabled = false;
+            chatInput.placeholder = "Escribe para abrir un nuevo canal con este atleta...";
+            return;
+        }
+
+        const liveChatData = docSnap.data();
 
         if (liveChatData.estado === 'espera') {
             statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> En Cola de Espera`;
@@ -174,15 +238,16 @@ function openChatWindow(userId) {
             chatInput.disabled = false; sendBtn.disabled = false;
             chatInput.placeholder = "iMessage (Seguro)...";
         } else {
-            statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span> Desconectado`;
+            statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span> Historial de Chat`;
             statusText.className = "text-gray-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
             acceptBtn.classList.add('hidden');
-            chatInput.disabled = true; sendBtn.disabled = true;
-            chatInput.placeholder = "Canal cerrado.";
+            // Al estar cerrado, le permitimos al admin escribir para reactivarlo
+            chatInput.disabled = false; sendBtn.disabled = false;
+            chatInput.placeholder = "Escribe un mensaje para reabrir el canal...";
         }
     });
 
-    updateDoc(doc(db, "chats", userId), { unread_admin: false }).catch(e=>{});
+    setDoc(doc(db, "chats", userId), { unread_admin: false }, { merge: true }).catch(e=>{});
 
     if (messagesUnsubscribe) messagesUnsubscribe();
     
@@ -201,7 +266,6 @@ function openChatWindow(userId) {
             let timeString = "";
             if (msg.fecha) timeString = msg.fecha.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            // 🔥 Burbujas estilo iMessage
             const msgHTML = isMe ? `
                 <div class="flex justify-end message-bubble">
                     <div class="max-w-[70%] bg-sky-600 text-white px-4 py-2.5 rounded-[20px] rounded-br-[4px] shadow-sm">
@@ -225,31 +289,39 @@ function openChatWindow(userId) {
 
         setTimeout(() => area.scrollTop = area.scrollHeight, 50);
     });
+    
     renderSidebar();
 }
 
 window.markAsActive = async function() {
     if (!activeChatUserId) return;
     try {
-        await updateDoc(doc(db, "chats", activeChatUserId), {
-            estado: "activo", actualizado: serverTimestamp(), ultimo_mensaje: "🟢 Operador en sala."
-        });
+        await setDoc(doc(db, "chats", activeChatUserId), {
+            estado: "activo", 
+            actualizado: serverTimestamp(), 
+            ultimo_mensaje: "🟢 Operador en sala.",
+            atleta_nombre: activeChatUserName
+        }, { merge: true });
     } catch(e) {}
 }
 
 window.closeCurrentSession = async function() {
     if (!activeChatUserId) return;
-    if (!confirm("¿Archivar este ticket?")) return;
+    if (!confirm("¿Cerrar el canal? El historial de mensajes se mantendrá guardado.")) return;
     try {
-        await updateDoc(doc(db, "chats", activeChatUserId), {
-            estado: "cerrado", actualizado: serverTimestamp(), ultimo_mensaje: "🔴 Ticket cerrado."
-        });
+        await setDoc(doc(db, "chats", activeChatUserId), {
+            estado: "cerrado", 
+            actualizado: serverTimestamp(), 
+            ultimo_mensaje: "🔴 Canal cerrado."
+        }, { merge: true });
+        
         activeChatUserId = null;
         if(messagesUnsubscribe) messagesUnsubscribe();
         if(chatDocUnsubscribe) chatDocUnsubscribe(); 
         document.getElementById('empty-chat-state').classList.remove('hidden');
         document.getElementById('active-chat-container').classList.add('hidden');
         document.getElementById('active-chat-container').classList.remove('flex');
+        renderSidebar();
     } catch(e) {}
 }
 
@@ -265,9 +337,14 @@ document.getElementById('admin-chat-form').addEventListener('submit', async (e) 
         await addDoc(collection(db, "chats", activeChatUserId, "mensajes"), {
             texto: texto, remitente: "admin", fecha: serverTimestamp()
         });
-        await updateDoc(doc(db, "chats", activeChatUserId), {
-            ultimo_mensaje: "Tú: " + texto, actualizado: serverTimestamp()
-        });
+        
+        // Al enviar un mensaje, forzamos la sala a estado activo para que le llegue la notificación al atleta
+        await setDoc(doc(db, "chats", activeChatUserId), {
+            estado: "activo",
+            ultimo_mensaje: "Tú: " + texto, 
+            actualizado: serverTimestamp(),
+            atleta_nombre: activeChatUserName
+        }, { merge: true });
     } catch (e) {}
 });
 
