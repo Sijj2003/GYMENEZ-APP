@@ -10,7 +10,7 @@ import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, a
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
-// 🔥 CONFIGURACIÓN CORREGIDA: Apuntando al proyecto oficial GYMENEZAPP
+// CONFIGURACIÓN OFICIAL: Proyecto GYMENEZAPP
 const firebaseConfig = {
   apiKey: "AIzaSyC7ESvLhYTydAn_ZjHVSkebTC-BhvnbzIw",
   authDomain: "gymenezapp.firebaseapp.com",
@@ -27,7 +27,8 @@ const db = getFirestore(app);
 
 let currentFilter = 'espera'; // Filtro de bandeja de entrada: 'espera' o 'activo'
 let activeChatUserId = null;   // ID del atleta con la transmisión abierta
-let messagesUnsubscribe = null;// Memoria del limpiador de eventos en tiempo real
+let messagesUnsubscribe = null;// Memoria del limpiador de eventos de mensajes
+let chatDocUnsubscribe = null; // 🔥 NUEVO: Memoria del limpiador de estado de la sala en vivo
 
 // ==========================================
 // 1. CONEXIÓN INICIAL DE SEGURIDAD (ADMIN)
@@ -37,27 +38,26 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (!token) { window.location.href = '/apps/admin/login.html'; return; }
 
     try {
-        // 🔥 CORRECCIÓN CLAVE: Pasamos el token EXPLÍCITAMENTE para evitar carreras con el middleware
+        // Solicitamos el Pase VIP firmado al Servidor Core de PythonAnywhere de forma explícita
         const res = await fetch(`${API_BASE_URL}/api/pulse/token`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
         
         if (res.ok && data.success) {
-            // Autenticación segura y silenciosa en los servidores de Google
             await signInWithCustomToken(auth, data.firebase_token);
             
             // Apagar cortina de carga visual de la consola
             document.getElementById('pulse-loader').style.opacity = '0';
             setTimeout(() => document.getElementById('pulse-loader').classList.add('hidden'), 500);
             
-            // Encender radares globales de monitorización de salas
+            // Encender radares globales de la bandeja lateral
             listenToAllChats();
         } else {
             alert("Error crítico emitiendo pasaporte digital Pulse Admin.");
         }
     } catch (e) {
-        alert("Falla de comunicación perimetral con el Servidor Core.");
+        alert("Falla de communication perimetral con el Servidor Core.");
     }
 });
 
@@ -66,7 +66,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 // ==========================================
 function listenToAllChats() {
     const chatsRef = collection(db, "chats");
-    const q = query(chatsRef, orderBy("actualizado", "desc")); // Última actividad primero
+    const q = query(chatsRef, orderBy("actualizado", "desc")); 
 
     onSnapshot(q, (snapshot) => {
         const container = document.getElementById('chats-list-container');
@@ -78,19 +78,16 @@ function listenToAllChats() {
             const chatData = docSnap.data();
             const userId = docSnap.id;
 
-            // Filtrar según la pestaña seleccionada (En espera / Activos)
             if (chatData.estado === currentFilter) {
                 found = true;
                 
-                // Alerta de notificación visual parpadeante si hay mensajes sin leer
                 const isUnread = chatData.unread_admin ? `<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse mt-1 shadow-[0_0_10px_#ef4444]"></span>` : ``;
-                
                 const isActive = activeChatUserId === userId ? 'active' : '';
                 const timeString = chatData.actualizado ? chatData.actualizado.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
 
                 const item = document.createElement('div');
                 item.className = `chat-list-item p-4 border-b border-white/5 cursor-pointer hover:bg-white/[0.02] flex justify-between ${isActive}`;
-                item.onclick = () => openChatWindow(userId, chatData);
+                item.onclick = () => openChatWindow(userId);
 
                 item.innerHTML = `
                     <div class="flex-grow pr-2 overflow-hidden">
@@ -114,51 +111,67 @@ function listenToAllChats() {
     });
 }
 
-// Expuesto globalmente para interactuar con los botones del HTML
 window.filterChats = function(status) {
     currentFilter = status;
     listenToAllChats();
 }
 
 // ==========================================
-// 3. APERTURA DE CANAL ESPECÍFICO DE TEXTO
+// 3. APERTURA DE CANAL EN TIEMPO REAL REELÉCTRICO
 // ==========================================
-function openChatWindow(userId, chatData) {
+function openChatWindow(userId) {
     activeChatUserId = userId;
     
-    // Control estructural de layouts
+    // Control estructural inmediato de layouts
     document.getElementById('empty-chat-state').classList.add('hidden');
     document.getElementById('active-chat-container').classList.remove('hidden');
     document.getElementById('active-chat-container').classList.add('flex');
     
-    document.getElementById('current-chat-name').textContent = chatData.atleta_nombre || 'Atleta';
-    
-    const acceptBtn = document.getElementById('btn-accept-chat');
-    const statusText = document.getElementById('current-chat-status');
-    const chatInput = document.getElementById('admin-chat-input');
-    const sendBtn = document.getElementById('admin-send-btn');
+    // 🔥 CORRECCIÓN CRÍTICA: Apagar escuchador del documento previo si existía
+    if (chatDocUnsubscribe) chatDocUnsubscribe();
 
-    // Manejo adaptativo de la UI según el flujo del ticket
-    if (chatData.estado === 'espera') {
-        statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Esperando Aprobación`;
-        statusText.className = "text-amber-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
-        acceptBtn.classList.remove('hidden');
-        chatInput.disabled = true;
-        sendBtn.disabled = true;
-        chatInput.placeholder = "Acepta la solicitud para abrir transmisión...";
-    } else {
-        statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Transmisión Activa`;
-        statusText.className = "text-emerald-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
-        acceptBtn.classList.add('hidden');
-        chatInput.disabled = false;
-        sendBtn.disabled = false;
-        chatInput.placeholder = "Escribe un mensaje al atleta...";
-    }
+    // 🔥 ENLACE DE SEMÁFORO EN VIVO: Escuchamos los cambios del estado de la sala en tiempo real
+    chatDocUnsubscribe = onSnapshot(doc(db, "chats", userId), (docSnap) => {
+        if (!docSnap.exists()) return;
+        const liveChatData = docSnap.data();
 
-    // Purgar marcador de lectura silenciosamente en Firebase
+        document.getElementById('current-chat-name').textContent = liveChatData.atleta_nombre || 'Atleta';
+        
+        const acceptBtn = document.getElementById('btn-accept-chat');
+        const statusText = document.getElementById('current-chat-status');
+        const chatInput = document.getElementById('admin-chat-input');
+        const sendBtn = document.getElementById('admin-send-btn');
+
+        if (liveChatData.estado === 'espera') {
+            statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Esperando Aprobación`;
+            statusText.className = "text-amber-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
+            acceptBtn.classList.remove('hidden');
+            chatInput.disabled = true;
+            sendBtn.disabled = true;
+            chatInput.placeholder = "Acepta la solicitud para abrir transmisión...";
+        } 
+        else if (liveChatData.estado === 'activo') {
+            statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Transmisión Activa`;
+            statusText.className = "text-emerald-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
+            acceptBtn.classList.add('hidden'); // Se esconde al instante sin recargar
+            chatInput.disabled = false;        // Se habilita al instante
+            sendBtn.disabled = false;
+            chatInput.placeholder = "Escribe un mensaje al atleta...";
+        } 
+        else if (liveChatData.estado === 'cerrado') {
+            statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-gray-600 inline-block mr-1"></span> Canal Cerrado`;
+            statusText.className = "text-gray-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
+            acceptBtn.classList.add('hidden');
+            chatInput.disabled = true;
+            sendBtn.disabled = true;
+            chatInput.placeholder = "Esta sesión de chat ha sido finalizada.";
+        }
+    });
+
+    // Purgar marcador de no leídos en Firebase
     updateDoc(doc(db, "chats", userId), { unread_admin: false }).catch(e=>{});
 
-    // Rematricular el recolector de burbujas en tiempo real evitando fugas de memoria
+    // Rematricular el recolector de burbujas en tiempo real
     if (messagesUnsubscribe) messagesUnsubscribe();
     
     const msgsRef = collection(db, "chats", userId, "mensajes");
@@ -193,11 +206,8 @@ function openChatWindow(userId, chatData) {
             area.insertAdjacentHTML('beforeend', msgHTML);
         });
 
-        // Autoscroll inteligente al fondo de la conversación
         setTimeout(() => area.scrollTop = area.scrollHeight, 50);
     });
-
-    listenToAllChats();
 }
 
 // ==========================================
@@ -225,9 +235,11 @@ window.closeCurrentSession = async function() {
             ultimo_mensaje: "🔴 Sesión dada por terminada."
         });
         
-        // Purgar UI local y apagar listeners concurrentes
+        // Purgar UI local y apagar los escuchadores activos
         activeChatUserId = null;
         if(messagesUnsubscribe) messagesUnsubscribe();
+        if(chatDocUnsubscribe) chatDocUnsubscribe(); // Apagamos el escuchador del documento
+
         document.getElementById('empty-chat-state').classList.remove('hidden');
         document.getElementById('active-chat-container').classList.add('hidden');
         document.getElementById('active-chat-container').classList.remove('flex');
@@ -248,14 +260,12 @@ document.getElementById('admin-chat-form').addEventListener('submit', async (e) 
     input.style.height = 'auto';
 
     try {
-        // 1. Despachar bloque del mensaje a la subcolección inmutable
         await addDoc(collection(db, "chats", activeChatUserId, "mensajes"), {
             texto: texto,
             remitente: "admin",
             fecha: serverTimestamp()
         });
         
-        // 2. Actualizar metadatos de la sala principal
         await updateDoc(doc(db, "chats", activeChatUserId), {
             ultimo_mensaje: "Tú: " + texto,
             actualizado: serverTimestamp()
@@ -265,7 +275,6 @@ document.getElementById('admin-chat-form').addEventListener('submit', async (e) 
     }
 });
 
-// Enviar con tecla Enter estándar de mensajería (Evitando saltos de línea innecesarios)
 document.getElementById('admin-chat-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -273,7 +282,6 @@ document.getElementById('admin-chat-input').addEventListener('keydown', function
     }
 });
 
-// Sanitizador XSS inmutable contra inyecciones maliciosas de scripts en código
 function escapeHTML(str) {
     return str.replace(/[&<>'"]/g, 
         tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
