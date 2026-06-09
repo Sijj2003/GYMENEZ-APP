@@ -3,19 +3,19 @@ const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https:/
 
 let catalogFilms = [];
 let userTier = 'BASICO';
-let userAnalytics = {}; // 🧠 MEMORIA: Guarda el progreso del usuario
+let userAnalytics = {}; 
 let ytPlayer = null; 
 let progressInterval = null; 
-let hideUiTimeout = null; // Controla los 5 segundos de inactividad del reproductor
-let currentPlayingFilm = null; // 🌟 Memoria de la serie que se está viendo
-let currentPlayingChapter = null; // 🌟 Memoria del capítulo actual
+let hideUiTimeout = null; 
+let currentPlayingFilm = null; 
+let currentPlayingChapter = null; 
 
 // ==========================================
 // 1. CARGA INICIAL Y RANDOM HERO
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
-    // Si tienes AUTH_TOKEN_KEY global, úsalo, sino usa el string
-    const token = typeof AUTH_TOKEN_KEY !== 'undefined' ? localStorage.getItem(AUTH_TOKEN_KEY) : (localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token'));
+    // Solo comprobamos existencia para no cargar si no está logueado
+    const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token');
     if (!token) { window.location.href = '/apps/start/login.html'; return; }
 
     const tag = document.createElement('script');
@@ -23,17 +23,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     const firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-    // Eventos para auto-ocultar los controles
     const overlay = document.getElementById('native-player-overlay');
     overlay.addEventListener('mousemove', resetPlayerUI);
     overlay.addEventListener('click', resetPlayerUI);
     overlay.addEventListener('touchstart', resetPlayerUI);
 
     try {
-        // 🧠 Descarga paralela: Catálogo de Películas + Historial del Usuario
+        // 🔥 CORRECCIÓN 401: Dejamos que el auth_middleware inyecte el Token solo.
         const [resFilms, resAnalytics] = await Promise.all([
-            fetch(`${API_BASE_URL}/api/client/on/films`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${API_BASE_URL}/api/client/on/analytics`, { headers: { 'Authorization': `Bearer ${token}` } })
+            fetch(`${API_BASE_URL}/api/client/on/films`),
+            fetch(`${API_BASE_URL}/api/client/on/analytics`)
         ]);
         
         const dataFilms = await resFilms.json();
@@ -43,7 +42,6 @@ window.addEventListener('DOMContentLoaded', async () => {
             catalogFilms = dataFilms.films;
             userTier = dataFilms.user_tier;
             
-            // Si el backend devolvió el historial, lo guardamos en memoria local
             if (dataAnalytics.success && dataAnalytics.analytics) {
                 userAnalytics = dataAnalytics.analytics.history || {};
             }
@@ -107,10 +105,8 @@ function renderRows() {
                 </div>
             ` : '';
 
-            // 🧠 COMPROBAR PROGRESO GLOBAL DE LA SERIE PARA LA MINIATURA
             let progressHtml = '';
             if (film.chapters && film.chapters.length > 0) {
-                // Buscamos si hay progreso en el capítulo 1 para mostrar la barrita en el menú general
                 const historyKey = `${film.id}_${film.chapters[0].chapter_number}`;
                 const historyData = userAnalytics[historyKey];
                 
@@ -183,7 +179,6 @@ function openDetailsModal(film) {
     if (film.chapters && film.chapters.length > 0) {
         let capToPlay = film.chapters[0];
         
-        // 🧠 El botón principal cambia si ya habías empezado
         const historyKey = `${film.id}_${capToPlay.chapter_number}`;
         if (userAnalytics[historyKey] && userAnalytics[historyKey].last_position > 0 && !userAnalytics[historyKey].completed) {
             playBtn.innerHTML = `<svg class="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Reanudar`;
@@ -192,7 +187,7 @@ function openDetailsModal(film) {
         }
 
         playBtn.onclick = () => {
-            closeDetailsModal(true); // El 'true' evita que devuelva el scroll al body antes de tiempo
+            closeDetailsModal(true); 
             openCustomPlayer(film, capToPlay);
         };
     }
@@ -204,7 +199,6 @@ function openDetailsModal(film) {
     if (film.chapters && film.chapters.length > 0) {
         film.chapters.forEach((chap) => {
             
-            // 🧠 Comprobar progreso específico de este capítulo
             const chapHistoryKey = `${film.id}_${chap.chapter_number}`;
             const chapData = userAnalytics[chapHistoryKey];
             let chapProgressHtml = '';
@@ -313,26 +307,23 @@ function extractYTId(url) {
     return (match && match[2].length === 11) ? match[2] : null;
 }
 
-// 🧠 FUNCIÓN PARA ASENTAR EL PROGRESO EN LA BASE DE DATOS
+// 🧠 FUNCIÓN PARA ASENTAR EL PROGRESO (CORRECCIÓN 401 AL QUITAR HEADERS)
 async function syncProgressToCloud() {
     if (!ytPlayer || !currentPlayingFilm || !currentPlayingChapter) return;
     try {
         const currentTime = ytPlayer.getCurrentTime();
         const duration = ytPlayer.getDuration();
         
-        // Actualizamos nuestra memoria local para pintar la UI de inmediato
         const historyKey = `${currentPlayingFilm.id}_${currentPlayingChapter.chapter_number}`;
         if(!userAnalytics[historyKey]) userAnalytics[historyKey] = {};
         userAnalytics[historyKey].last_position = currentTime;
         userAnalytics[historyKey].duration = duration;
         userAnalytics[historyKey].completed = (currentTime >= duration - 15);
 
-        const token = typeof AUTH_TOKEN_KEY !== 'undefined' ? localStorage.getItem(AUTH_TOKEN_KEY) : (localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token'));
-        
-        // Disparo asíncrono al backend
+        // 🔥 CORRECCIÓN 401: Dejamos que el auth_middleware inyecte el Token solo
         await fetch(`${API_BASE_URL}/api/client/on/analytics`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 film_id: currentPlayingFilm.id,
                 chapter_number: currentPlayingChapter.chapter_number,
@@ -347,7 +338,7 @@ function openCustomPlayer(film, chapter) {
     const ytId = extractYTId(chapter.video_url);
     if (!ytId) return;
 
-    currentPlayingFilm = film; // Guardamos en memoria activa
+    currentPlayingFilm = film; 
     currentPlayingChapter = chapter;
 
     document.getElementById('player-film-title').textContent = film.title;
@@ -378,7 +369,7 @@ function openCustomPlayer(film, chapter) {
 }
 
 function closeCustomPlayer() {
-    syncProgressToCloud(); // 🧠 Guardamos el progreso antes de destruir todo
+    syncProgressToCloud(); 
 
     const playerOverlay = document.getElementById('native-player-overlay');
     
@@ -392,9 +383,8 @@ function closeCustomPlayer() {
         clearInterval(progressInterval);
         clearTimeout(hideUiTimeout);
 
-        renderRows(); // Actualizamos la vista principal por si hay nuevas barras rojas
+        renderRows(); 
 
-        // 🌟 TRANSICIÓN MÁGICA: Reabre los detalles de la serie en vez del menú principal
         if (currentPlayingFilm) {
             openDetailsModal(currentPlayingFilm);
         } else {
@@ -403,7 +393,6 @@ function closeCustomPlayer() {
     }, 500);
 }
 
-// LÓGICA DE AUTO-OCULTADO DE BARRAS NEGRAS Y MOUSE (5 SEGUNDOS)
 function resetPlayerUI() {
     const vc = document.getElementById('video-wrapper-container');
     if(!vc) return;
@@ -419,11 +408,9 @@ function resetPlayerUI() {
 }
 
 function onPlayerReady(event) {
-    // 🧠 REANUDACIÓN AUTOMÁTICA
     const historyKey = `${currentPlayingFilm.id}_${currentPlayingChapter.chapter_number}`;
     const savedData = userAnalytics[historyKey];
     
-    // Si quedó a medias, saltamos directo a ese segundo
     if (savedData && savedData.last_position > 0 && !savedData.completed) {
         event.target.seekTo(savedData.last_position, true);
     }
@@ -461,7 +448,6 @@ function onPlayerStateChange(event) {
         vc.classList.remove('idle');
         clearTimeout(hideUiTimeout);
         
-        // 🧠 GUARDADO AL PAUSAR O TERMINAR
         if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
             syncProgressToCloud();
         }
