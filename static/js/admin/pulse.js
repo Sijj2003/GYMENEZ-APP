@@ -75,7 +75,26 @@ window.addEventListener('DOMContentLoaded', async () => {
             await signInWithCustomToken(auth, data.firebase_token);
             document.getElementById('pulse-loader').style.opacity = '0';
             setTimeout(() => document.getElementById('pulse-loader').classList.add('hidden'), 500);
+            
+            // 1. Encendemos los radares normales de monitorización de salas
             listenToAllChats();
+
+            // ====================================================================
+            // 🔥 REDIRECCIÓN PREMIUM DESDE EL RADAR (PEGADO AQUÍ)
+            // ====================================================================
+            const pendingOpenId = localStorage.getItem('gymen_pending_open_id');
+            const pendingOpenName = localStorage.getItem('gymen_pending_open_name');
+            if (pendingOpenId) {
+                // Borramos la memoria temporal inmediatamente
+                localStorage.removeItem('gymen_pending_open_id');
+                localStorage.removeItem('gymen_pending_open_name');
+                // Forzamos la apertura automática de la ventana de chat
+                setTimeout(() => {
+                    openChatWindow(pendingOpenId, pendingOpenName);
+                }, 600); // 600ms de retraso para esperar que Firebase inicialice la bandeja operativa
+            }
+            // ====================================================================
+
         }
     } catch (e) { alert("Falla de red."); }
 });
