@@ -40,7 +40,6 @@ function playUISound(type) {
     gainNode.connect(audioCtx.destination);
     
     if (type === 'receive') { 
-        // El mismo sonido suave y elegante del usuario
         osc.type = 'sine';
         osc.frequency.setValueAtTime(500, audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.15);
@@ -60,7 +59,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         renderSidebar(); 
     });
 
-    // Cargar la lista maestra de usuarios para el buscador
+    // 🌟 DESCARGAR A TODOS LOS ATLETAS PARA EL DIRECTORIO
     fetch(`${API_BASE_URL}/api/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } })
         .then(res => res.json())
         .then(data => { if(data.success) allSystemUsers = data.users; })
@@ -102,67 +101,69 @@ function renderSidebar() {
     const container = document.getElementById('chats-list-container');
     container.innerHTML = '';
     let found = false;
-    let displayedIds = new Set();
 
-    // 1. Mostrar chats que tienen historial
-    globalChatsMemory.forEach((chatData) => {
-        if (searchTerm) {
-            if (!(chatData.atleta_nombre || '').toLowerCase().includes(searchTerm)) return;
-        } else {
-            if (currentFilter === 'historial') {
-                if (chatData.estado !== 'cerrado' && chatData.estado !== 'inactivo') return;
-            } else {
-                if (chatData.estado !== currentFilter) return;
-            }
-        }
-
-        found = true;
-        displayedIds.add(chatData.id);
-        const isUnread = chatData.unread_admin ? `<div class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></div>` : ``;
-        const isActive = activeChatUserId === chatData.id ? 'active' : '';
-        const timeString = chatData.actualizado ? chatData.actualizado.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-
-        const item = document.createElement('div');
-        item.className = `chat-list-item p-3 rounded-xl cursor-pointer hover:bg-white/5 flex justify-between items-center ${isActive}`;
-        item.onclick = () => openChatWindow(chatData.id, chatData.atleta_nombre);
-
-        item.innerHTML = `
-            <div class="flex-grow pr-2 overflow-hidden">
-                <div class="flex justify-between items-start mb-0.5">
-                    <h4 class="text-[11px] font-black text-white uppercase truncate">${chatData.atleta_nombre || 'Atleta'}</h4>
-                    <span class="text-[9px] font-bold text-gray-600 ml-2 shrink-0">${timeString}</span>
-                </div>
-                <p class="text-[10px] text-gray-500 font-medium truncate">${chatData.ultimo_mensaje || ''}</p>
-            </div>
-            <div class="flex flex-col items-end shrink-0 pl-2">${isUnread}</div>
-        `;
-        container.appendChild(item);
-    });
-
-    // 2. Si hay buscador activo, añadir usuarios que NUNCA han usado el chat
-    if (searchTerm) {
+    // 🔥 SI ESTAMOS EN "DIRECTORIO" O BUSCANDO, MOSTRAMOS LA BASE DE DATOS COMPLETA
+    if (currentFilter === 'directorio' || searchTerm !== '') {
         allSystemUsers.forEach(u => {
-            if (displayedIds.has(u.id)) return;
             const fullName = `${u.name} ${u.last_name || ''}`.trim();
-            if (fullName.toLowerCase().includes(searchTerm)) {
-                found = true;
-                const isActive = activeChatUserId === u.id ? 'active' : '';
-                
-                const item = document.createElement('div');
-                item.className = `chat-list-item p-3 rounded-xl cursor-pointer hover:bg-white/5 flex justify-between items-center ${isActive}`;
-                item.onclick = () => openChatWindow(u.id, fullName);
+            if (searchTerm && !fullName.toLowerCase().includes(searchTerm)) return;
 
-                item.innerHTML = `
-                    <div class="flex-grow pr-2 overflow-hidden">
-                        <div class="flex justify-between items-start mb-0.5">
-                            <h4 class="text-[11px] font-black text-gray-400 uppercase truncate">${fullName}</h4>
-                            <span class="text-[9px] font-bold text-gray-600 ml-2 shrink-0">Nuevo</span>
-                        </div>
-                        <p class="text-[10px] text-gray-600 font-medium truncate">Toca para iniciar conversación</p>
-                    </div>
-                `;
-                container.appendChild(item);
+            found = true;
+            // Buscar si este atleta ya tiene un historial de chat en Firebase
+            const existingChat = globalChatsMemory.find(c => c.id === u.id);
+            
+            const isUnread = (existingChat && existingChat.unread_admin) ? `<div class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></div>` : ``;
+            const isActive = activeChatUserId === u.id ? 'active' : '';
+            
+            let timeString = '';
+            let lastMsg = 'Toca para iniciar conversación';
+
+            if (existingChat) {
+                timeString = existingChat.actualizado ? existingChat.actualizado.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                lastMsg = existingChat.ultimo_mensaje || '';
             }
+
+            const item = document.createElement('div');
+            item.className = `chat-list-item p-3 rounded-xl cursor-pointer hover:bg-white/5 flex justify-between items-center ${isActive}`;
+            item.onclick = () => openChatWindow(u.id, fullName);
+
+            item.innerHTML = `
+                <div class="flex-grow pr-2 overflow-hidden">
+                    <div class="flex justify-between items-start mb-0.5">
+                        <h4 class="text-[11px] font-black ${existingChat ? 'text-white' : 'text-gray-400'} uppercase truncate">${fullName}</h4>
+                        <span class="text-[9px] font-bold text-gray-600 ml-2 shrink-0">${timeString || 'NUEVO'}</span>
+                    </div>
+                    <p class="text-[10px] text-gray-500 font-medium truncate">${lastMsg}</p>
+                </div>
+                <div class="flex flex-col items-end shrink-0 pl-2">${isUnread}</div>
+            `;
+            container.appendChild(item);
+        });
+    } else {
+        // 🔥 SI ESTAMOS EN "ESPERA" O "ACTIVOS", SOLO MOSTRAMOS LOS QUE EXISTEN EN FIREBASE
+        globalChatsMemory.forEach((chatData) => {
+            if (chatData.estado !== currentFilter) return;
+
+            found = true;
+            const isUnread = chatData.unread_admin ? `<div class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></div>` : ``;
+            const isActive = activeChatUserId === chatData.id ? 'active' : '';
+            const timeString = chatData.actualizado ? chatData.actualizado.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+
+            const item = document.createElement('div');
+            item.className = `chat-list-item p-3 rounded-xl cursor-pointer hover:bg-white/5 flex justify-between items-center ${isActive}`;
+            item.onclick = () => openChatWindow(chatData.id, chatData.atleta_nombre);
+
+            item.innerHTML = `
+                <div class="flex-grow pr-2 overflow-hidden">
+                    <div class="flex justify-between items-start mb-0.5">
+                        <h4 class="text-[11px] font-black text-white uppercase truncate">${chatData.atleta_nombre || 'Atleta'}</h4>
+                        <span class="text-[9px] font-bold text-gray-600 ml-2 shrink-0">${timeString}</span>
+                    </div>
+                    <p class="text-[10px] text-gray-500 font-medium truncate">${chatData.ultimo_mensaje || ''}</p>
+                </div>
+                <div class="flex flex-col items-end shrink-0 pl-2">${isUnread}</div>
+            `;
+            container.appendChild(item);
         });
     }
 
@@ -179,7 +180,7 @@ window.filterChats = function(status) {
     const tabs = {
         'espera': document.getElementById('tab-espera'),
         'activo': document.getElementById('tab-activo'),
-        'historial': document.getElementById('tab-historial')
+        'directorio': document.getElementById('tab-directorio')
     };
 
     Object.values(tabs).forEach(t => {
@@ -190,8 +191,8 @@ window.filterChats = function(status) {
         tabs['espera'].className = "flex-1 py-1.5 bg-amber-500/10 text-amber-500 rounded text-[9px] font-bold uppercase transition-all";
     } else if(status === 'activo' && tabs['activo']) {
         tabs['activo'].className = "flex-1 py-1.5 bg-sky-500/10 text-sky-400 rounded text-[9px] font-bold uppercase transition-all";
-    } else if(status === 'historial' && tabs['historial']) {
-        tabs['historial'].className = "flex-1 py-1.5 bg-purple-500/10 text-purple-400 rounded text-[9px] font-bold uppercase transition-all";
+    } else if(status === 'directorio' && tabs['directorio']) {
+        tabs['directorio'].className = "flex-1 py-1.5 bg-purple-500/10 text-purple-400 rounded text-[9px] font-bold uppercase transition-all";
     }
     renderSidebar();
 }
@@ -214,6 +215,7 @@ function openChatWindow(userId, userName) {
         
         document.getElementById('current-chat-name').textContent = activeChatUserName;
 
+        // Si el chat nunca ha existido (Canal virgen)
         if (!docSnap.exists()) {
             statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-gray-600 inline-block mr-1"></span> Sin Historial`;
             statusText.className = "text-gray-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
@@ -236,12 +238,12 @@ function openChatWindow(userId, userName) {
             statusText.className = "text-emerald-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
             acceptBtn.classList.add('hidden'); 
             chatInput.disabled = false; sendBtn.disabled = false;
-            chatInput.placeholder = "Pulse Message...";
+            chatInput.placeholder = "Mensaje (Cifrado)...";
         } else {
-            statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span> Historial de Chat`;
+            statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span> Canal Cerrado`;
             statusText.className = "text-gray-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
             acceptBtn.classList.add('hidden');
-            // Al estar cerrado, le permitimos al admin escribir para reactivarlo
+            // Al estar cerrado, le permitimos al admin escribir para reabrirlo a la fuerza
             chatInput.disabled = false; sendBtn.disabled = false;
             chatInput.placeholder = "Escribe un mensaje para reabrir el canal...";
         }
