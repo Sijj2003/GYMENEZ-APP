@@ -2,55 +2,57 @@
 // 🛡️ NÚCLEO ZERO TRUST FRONTEND - MIDDLEWARE DE AUTENTICACIÓN
 // ====================================================================
 
-const AUTH_TOKEN_KEY = 'gymen_auth_token';
-const DEVICE_ID_KEY = 'gymen_device_id';
+// Usamos 'var' en lugar de 'const' para evitar bloqueos si el script se carga 2 veces por accidente
+var AUTH_TOKEN_KEY = 'gymen_auth_token';
+var DEVICE_ID_KEY = 'gymen_device_id';
 
-// 1. Asegurar que el terminal (dispositivo) tenga una huella digital única
 let localDeviceId = localStorage.getItem(DEVICE_ID_KEY);
 if (!localDeviceId) {
     localDeviceId = crypto.randomUUID();
     localStorage.setItem(DEVICE_ID_KEY, localDeviceId);
 }
 
-// 2. Sobrescribir el método nativo 'fetch' para interceptar todas las llamadas a la API
-const originalFetch = window.fetch;
+// Blindaje: Solo sobrescribimos el fetch nativo si no lo hemos hecho antes
+if (!window.originalFetch) {
+    window.originalFetch = window.fetch;
 
-window.fetch = async function(...args) {
-    let [resource, config] = args;
-    config = config || {};
-    config.headers = config.headers || {};
-    
-    // Inyectar el pasaporte digital (Token JWT) siguiendo el estándar Bearer
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    // Ejecutar la petición original
-    const response = await originalFetch(resource, config);
-    const url = typeof resource === 'string' ? resource : resource.url;
-    
-    // 3. Evaluar la respuesta del Backend Core
-    // Si el backend dice que el token expiró, es inválido o el usuario fue bloqueado (401 o 403)
-    // Se ignora esta regla si la petición es hacia las rutas de login para no crear bucles.
-    if ((response.status === 401 || response.status === 403) && !url.includes('/api/login') && !url.includes('/api/auth/')) {
+    window.fetch = async function(...args) {
+        let [resource, config] = args;
+        const url = typeof resource === 'string' ? resource : resource.url;
         
-        // Extraemos el posible mensaje de error del backend para ser más precisos (Opcional)
-        let errorMsg = 'Tu sesión ha finalizado por seguridad. Vuelve a ingresar.';
-        try {
-            const data = await response.clone().json();
-            if (data.error) errorMsg = data.error;
-        } catch (e) {
-            // Falla silenciosa si no se puede parsear
+        config = config || {};
+        config.headers = config.headers || {};
+        
+        // 🔥 LISTA BLANCA: Solo inyectamos el Token si la URL va dirigida a TU API (/api/)
+        const isGymenezApi = url.includes('/api/');
+
+        if (isGymenezApi) {
+            const token = localStorage.getItem(AUTH_TOKEN_KEY);
+            if (token) {
+                config.headers['Authorization'] = `Bearer ${token}`;
+            }
         }
+        
+        const response = await window.originalFetch(resource, config);
+        
+        // Solo expulsamos al usuario si el error 401/403 viene de TU API (y no de Firebase u otros)
+        if (isGymenezApi && (response.status === 401 || response.status === 403) && !url.includes('/api/login') && !url.includes('/api/auth/')) {
+            
+            let errorMsg = 'Tu sesión ha finalizado por seguridad. Vuelve a ingresar.';
+            try {
+                const data = await response.clone().json();
+                if (data.error) errorMsg = data.error;
+            } catch (e) {
+                // Falla silenciosa si no se puede parsear
+            }
 
-        ejecutarPurgaLocal(errorMsg);
-    }
-    
-    return response;
-};
+            ejecutarPurgaLocal(errorMsg);
+        }
+        
+        return response;
+    };
+}
 
-// 4. Función de Purga Inmutable
 function ejecutarPurgaLocal(mensaje) {
     // Destruir rastro de credenciales en el navegador
     localStorage.removeItem('userSession');
