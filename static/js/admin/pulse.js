@@ -37,9 +37,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (!token) { window.location.href = '/apps/admin/login.html'; return; }
 
     try {
-        // Solicitamos el Pase VIP firmado al Servidor Core de PythonAnywhere
-        // (El admin_middleware inyectará automáticamente las cabeceras Bearer por la regla /api/)
-        const res = await fetch(`${API_BASE_URL}/api/pulse/token`);
+        // 🔥 CORRECCIÓN CLAVE: Pasamos el token EXPLÍCITAMENTE para evitar carreras con el middleware
+        const res = await fetch(`${API_BASE_URL}/api/pulse/token`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         const data = await res.json();
         
         if (res.ok && data.success) {
