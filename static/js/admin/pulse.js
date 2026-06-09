@@ -30,24 +30,27 @@ let globalChatsMemory = [];
 let allSystemUsers = [];
 
 const AudioContext = window.AudioContext || window.webkitAudioContext;
-const audioCtx = new AudioContext();
+let audioCtx = null;
 
 function playUISound(type) {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    
-    if (type === 'receive') { 
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(500, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.15);
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-        osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.2);
-    }
+    try {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        if (type === 'receive') { 
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.15);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+            osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.2);
+        }
+    } catch(e) {}
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -59,7 +62,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         renderSidebar(); 
     });
 
-    // 🌟 DESCARGAR A TODOS LOS ATLETAS PARA EL DIRECTORIO
     fetch(`${API_BASE_URL}/api/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } })
         .then(res => res.json())
         .then(data => { if(data.success) allSystemUsers = data.users; })
@@ -82,6 +84,7 @@ function listenToAllChats() {
     const chatsRef = collection(db, "chats");
     const q = query(chatsRef, orderBy("actualizado", "desc")); 
 
+    // Agregamos el manejador de errores silencioso
     onSnapshot(q, (snapshot) => {
         globalChatsMemory = [];
         let hasNewUnread = false;
@@ -94,24 +97,22 @@ function listenToAllChats() {
 
         if (hasNewUnread) playUISound('receive'); 
         renderSidebar();
-    });
+    }, (error) => console.warn("Escuchador principal silencioso."));
 }
 
 function renderSidebar() {
     const container = document.getElementById('chats-list-container');
     container.innerHTML = '';
     let found = false;
+    let displayedIds = new Set();
 
-    // 🔥 SI ESTAMOS EN "DIRECTORIO" O BUSCANDO, MOSTRAMOS LA BASE DE DATOS COMPLETA
     if (currentFilter === 'directorio' || searchTerm !== '') {
         allSystemUsers.forEach(u => {
             const fullName = `${u.name} ${u.last_name || ''}`.trim();
             if (searchTerm && !fullName.toLowerCase().includes(searchTerm)) return;
 
             found = true;
-            // Buscar si este atleta ya tiene un historial de chat en Firebase
             const existingChat = globalChatsMemory.find(c => c.id === u.id);
-            
             const isUnread = (existingChat && existingChat.unread_admin) ? `<div class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></div>` : ``;
             const isActive = activeChatUserId === u.id ? 'active' : '';
             
@@ -140,7 +141,6 @@ function renderSidebar() {
             container.appendChild(item);
         });
     } else {
-        // 🔥 SI ESTAMOS EN "ESPERA" O "ACTIVOS", SOLO MOSTRAMOS LOS QUE EXISTEN EN FIREBASE
         globalChatsMemory.forEach((chatData) => {
             if (chatData.estado !== currentFilter) return;
 
@@ -215,7 +215,6 @@ function openChatWindow(userId, userName) {
         
         document.getElementById('current-chat-name').textContent = activeChatUserName;
 
-        // Si el chat nunca ha existido (Canal virgen)
         if (!docSnap.exists()) {
             statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-gray-600 inline-block mr-1"></span> Sin Historial`;
             statusText.className = "text-gray-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
@@ -238,16 +237,15 @@ function openChatWindow(userId, userName) {
             statusText.className = "text-emerald-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
             acceptBtn.classList.add('hidden'); 
             chatInput.disabled = false; sendBtn.disabled = false;
-            chatInput.placeholder = "Mensaje (Cifrado)...";
+            chatInput.placeholder = "Pulse Message...";
         } else {
             statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span> Canal Cerrado`;
             statusText.className = "text-gray-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
             acceptBtn.classList.add('hidden');
-            // Al estar cerrado, le permitimos al admin escribir para reabrirlo a la fuerza
             chatInput.disabled = false; sendBtn.disabled = false;
             chatInput.placeholder = "Escribe un mensaje para reabrir el canal...";
         }
-    });
+    }, (error) => console.warn("Escuchador de sala silenciado."));
 
     setDoc(doc(db, "chats", userId), { unread_admin: false }, { merge: true }).catch(e=>{});
 
@@ -290,7 +288,7 @@ function openChatWindow(userId, userName) {
         lastMessageCount = currentCount;
 
         setTimeout(() => area.scrollTop = area.scrollHeight, 50);
-    });
+    }, (error) => console.warn("Escuchador de mensajes silenciado."));
     
     renderSidebar();
 }
@@ -299,11 +297,11 @@ window.markAsActive = async function() {
     if (!activeChatUserId) return;
     try {
         await setDoc(doc(db, "chats", activeChatUserId), {
-            estado: "activo",
-            ultimo_mensaje: "Tú: " + texto, 
-            actualizado: serverTimestamp(),
+            estado: "activo", 
+            actualizado: serverTimestamp(), 
+            ultimo_mensaje: "🟢 Operador en sala.",
             atleta_nombre: activeChatUserName,
-            unread_user: true // 🔥 NUEVO: Enciende el radar del atleta en toda la app
+            unread_user: true // 🔥 Radar encendido para el atleta
         }, { merge: true });
     } catch(e) {}
 }
@@ -311,21 +309,28 @@ window.markAsActive = async function() {
 window.closeCurrentSession = async function() {
     if (!activeChatUserId) return;
     if (!confirm("¿Cerrar el canal? El historial de mensajes se mantendrá guardado.")) return;
+    
+    const targetId = activeChatUserId;
+    activeChatUserId = null; // Bloquea la UI para evitar cruces
+    
+    // 🔥 APAGAMOS los escuchadores ANTES de cambiar el estado (Elimina el Permission-Denied)
+    if(messagesUnsubscribe) messagesUnsubscribe();
+    if(chatDocUnsubscribe) chatDocUnsubscribe(); 
+    
+    document.getElementById('empty-chat-state').classList.remove('hidden');
+    document.getElementById('active-chat-container').classList.add('hidden');
+    document.getElementById('active-chat-container').classList.remove('flex');
+    renderSidebar();
+
     try {
-        await setDoc(doc(db, "chats", activeChatUserId), {
+        await setDoc(doc(db, "chats", targetId), {
             estado: "cerrado", 
             actualizado: serverTimestamp(), 
             ultimo_mensaje: "🔴 Canal cerrado."
         }, { merge: true });
-        
-        activeChatUserId = null;
-        if(messagesUnsubscribe) messagesUnsubscribe();
-        if(chatDocUnsubscribe) chatDocUnsubscribe(); 
-        document.getElementById('empty-chat-state').classList.remove('hidden');
-        document.getElementById('active-chat-container').classList.add('hidden');
-        document.getElementById('active-chat-container').classList.remove('flex');
-        renderSidebar();
-    } catch(e) {}
+    } catch(e) {
+        console.warn("Cierre de sesión asíncrono realizado.");
+    }
 }
 
 document.getElementById('admin-chat-form').addEventListener('submit', async (e) => {
@@ -341,14 +346,14 @@ document.getElementById('admin-chat-form').addEventListener('submit', async (e) 
             texto: texto, remitente: "admin", fecha: serverTimestamp()
         });
         
-        // Al enviar un mensaje, forzamos la sala a estado activo para que le llegue la notificación al atleta
         await setDoc(doc(db, "chats", activeChatUserId), {
             estado: "activo",
             ultimo_mensaje: "Tú: " + texto, 
             actualizado: serverTimestamp(),
-            atleta_nombre: activeChatUserName
+            atleta_nombre: activeChatUserName,
+            unread_user: true // 🔥 Radar encendido para el atleta
         }, { merge: true });
-    } catch (e) {}
+    } catch (e) { console.error("Error inyectando mensaje:", e); }
 });
 
 document.getElementById('admin-chat-input').addEventListener('keydown', function(e) {
