@@ -3,16 +3,19 @@ const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https:/
 
 let catalogFilms = [];
 let userTier = 'BASICO';
+let userAnalytics = {}; // 🧠 MEMORIA: Guarda el progreso del usuario
 let ytPlayer = null; 
 let progressInterval = null; 
-let hideUiTimeout = null; 
-let currentPlayingFilm = null; // 🌟 NUEVA VARIABLE: Memoria de la serie que se está viendo
+let hideUiTimeout = null; // Controla los 5 segundos de inactividad del reproductor
+let currentPlayingFilm = null; // 🌟 Memoria de la serie que se está viendo
+let currentPlayingChapter = null; // 🌟 Memoria del capítulo actual
 
 // ==========================================
 // 1. CARGA INICIAL Y RANDOM HERO
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    // Si tienes AUTH_TOKEN_KEY global, úsalo, sino usa el string
+    const token = typeof AUTH_TOKEN_KEY !== 'undefined' ? localStorage.getItem(AUTH_TOKEN_KEY) : (localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token'));
     if (!token) { window.location.href = '/apps/start/login.html'; return; }
 
     const tag = document.createElement('script');
@@ -27,14 +30,23 @@ window.addEventListener('DOMContentLoaded', async () => {
     overlay.addEventListener('touchstart', resetPlayerUI);
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/client/on/films`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await res.json();
+        // 🧠 Descarga paralela: Catálogo de Películas + Historial del Usuario
+        const [resFilms, resAnalytics] = await Promise.all([
+            fetch(`${API_BASE_URL}/api/client/on/films`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE_URL}/api/client/on/analytics`, { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+        
+        const dataFilms = await resFilms.json();
+        const dataAnalytics = await resAnalytics.json();
 
-        if (res.ok && data.success) {
-            catalogFilms = data.films;
-            userTier = data.user_tier;
+        if (dataFilms.success) {
+            catalogFilms = dataFilms.films;
+            userTier = dataFilms.user_tier;
+            
+            // Si el backend devolvió el historial, lo guardamos en memoria local
+            if (dataAnalytics.success && dataAnalytics.analytics) {
+                userAnalytics = dataAnalytics.analytics.history || {};
+            }
 
             if (catalogFilms.length > 0) {
                 const randomIndex = Math.floor(Math.random() * catalogFilms.length);
@@ -95,6 +107,23 @@ function renderRows() {
                 </div>
             ` : '';
 
+            // 🧠 COMPROBAR PROGRESO GLOBAL DE LA SERIE PARA LA MINIATURA
+            let progressHtml = '';
+            if (film.chapters && film.chapters.length > 0) {
+                // Buscamos si hay progreso en el capítulo 1 para mostrar la barrita en el menú general
+                const historyKey = `${film.id}_${film.chapters[0].chapter_number}`;
+                const historyData = userAnalytics[historyKey];
+                
+                if (historyData && historyData.last_position > 0 && historyData.duration > 0 && !historyData.completed) {
+                    const percentage = (historyData.last_position / historyData.duration) * 100;
+                    progressHtml = `
+                        <div class="absolute bottom-0 left-0 w-full h-1 bg-gray-700 z-40">
+                            <div class="h-full bg-red-600" style="width: ${percentage}%;"></div>
+                        </div>
+                    `;
+                }
+            }
+
             const safeFilmObj = JSON.stringify(film).replace(/'/g, "&#39;");
 
             cardsHtml += `
@@ -108,6 +137,7 @@ function renderRows() {
                             <span class="border border-gray-400 px-1 rounded">${film.age_rating}</span>
                         </div>
                     </div>
+                    ${progressHtml}
                 </div>
             `;
         });
@@ -151,9 +181,19 @@ function openDetailsModal(film) {
 
     const playBtn = document.getElementById('details-play-btn');
     if (film.chapters && film.chapters.length > 0) {
+        let capToPlay = film.chapters[0];
+        
+        // 🧠 El botón principal cambia si ya habías empezado
+        const historyKey = `${film.id}_${capToPlay.chapter_number}`;
+        if (userAnalytics[historyKey] && userAnalytics[historyKey].last_position > 0 && !userAnalytics[historyKey].completed) {
+            playBtn.innerHTML = `<svg class="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Reanudar`;
+        } else {
+            playBtn.innerHTML = `<svg class="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Reproducir`;
+        }
+
         playBtn.onclick = () => {
-            closeDetailsModal(true); // Pasamos 'true' para no devolver el scroll aún
-            openCustomPlayer(film, film.chapters[0]);
+            closeDetailsModal(true); // El 'true' evita que devuelva el scroll al body antes de tiempo
+            openCustomPlayer(film, capToPlay);
         };
     }
 
@@ -163,10 +203,28 @@ function openDetailsModal(film) {
 
     if (film.chapters && film.chapters.length > 0) {
         film.chapters.forEach((chap) => {
+            
+            // 🧠 Comprobar progreso específico de este capítulo
+            const chapHistoryKey = `${film.id}_${chap.chapter_number}`;
+            const chapData = userAnalytics[chapHistoryKey];
+            let chapProgressHtml = '';
+            
+            if (chapData) {
+                if (chapData.completed) {
+                    chapProgressHtml = `<span class="text-[8px] text-emerald-400 font-bold uppercase tracking-widest mt-1 block">Visto ✅</span>`;
+                } else if (chapData.last_position > 0) {
+                    const pct = (chapData.last_position / chapData.duration) * 100;
+                    chapProgressHtml = `
+                        <div class="w-full max-w-[100px] h-1 bg-gray-700 mt-2 rounded overflow-hidden">
+                            <div class="h-full bg-red-600" style="width: ${pct}%;"></div>
+                        </div>`;
+                }
+            }
+
             const epDiv = document.createElement('div');
             epDiv.className = "flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white/[0.02] hover:bg-white/[0.08] border border-white/5 rounded-xl cursor-pointer transition-colors group";
             epDiv.onclick = () => {
-                closeDetailsModal(true); // Pasamos 'true' para no devolver el scroll aún
+                closeDetailsModal(true); 
                 openCustomPlayer(film, chap);
             };
 
@@ -178,6 +236,7 @@ function openDetailsModal(film) {
                     <div class="flex-grow pr-2">
                         <h4 class="text-xs md:text-sm font-bold text-white">${chap.title}</h4>
                         <p class="text-[9px] md:text-[10px] text-gray-500 line-clamp-2 mt-1 leading-relaxed">${chap.description || 'Sin descripción disponible.'}</p>
+                        ${chapProgressHtml}
                     </div>
                 </div>
                 <div class="flex items-center justify-between w-full sm:w-auto mt-3 sm:mt-0">
@@ -202,14 +261,11 @@ function openDetailsModal(film) {
     }, 50);
 }
 
-// Recibe "keepScrollLocked" si vamos hacia el reproductor
 function closeDetailsModal(keepScrollLocked = false) {
     const modal = document.getElementById('details-modal');
     const content = document.getElementById('details-modal-content');
     
-    if (!keepScrollLocked) {
-        document.body.style.overflow = 'auto'; // Solo restaura scroll si cerramos para volver al inicio
-    }
+    if(!keepScrollLocked) { document.body.style.overflow = 'auto'; }
     
     modal.classList.add('opacity-0');
     content.classList.add('scale-95');
@@ -248,7 +304,7 @@ function closePaywallModal() {
 }
 
 // ==========================================
-// 5. MAGIA: CUSTOM YOUTUBE PLAYER API & AUTO-HIDE
+// 5. MAGIA: CUSTOM YOUTUBE PLAYER API & ANALYTICS
 // ==========================================
 function extractYTId(url) {
     if(!url) return null;
@@ -257,17 +313,48 @@ function extractYTId(url) {
     return (match && match[2].length === 11) ? match[2] : null;
 }
 
+// 🧠 FUNCIÓN PARA ASENTAR EL PROGRESO EN LA BASE DE DATOS
+async function syncProgressToCloud() {
+    if (!ytPlayer || !currentPlayingFilm || !currentPlayingChapter) return;
+    try {
+        const currentTime = ytPlayer.getCurrentTime();
+        const duration = ytPlayer.getDuration();
+        
+        // Actualizamos nuestra memoria local para pintar la UI de inmediato
+        const historyKey = `${currentPlayingFilm.id}_${currentPlayingChapter.chapter_number}`;
+        if(!userAnalytics[historyKey]) userAnalytics[historyKey] = {};
+        userAnalytics[historyKey].last_position = currentTime;
+        userAnalytics[historyKey].duration = duration;
+        userAnalytics[historyKey].completed = (currentTime >= duration - 15);
+
+        const token = typeof AUTH_TOKEN_KEY !== 'undefined' ? localStorage.getItem(AUTH_TOKEN_KEY) : (localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token'));
+        
+        // Disparo asíncrono al backend
+        await fetch(`${API_BASE_URL}/api/client/on/analytics`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+                film_id: currentPlayingFilm.id,
+                chapter_number: currentPlayingChapter.chapter_number,
+                last_position: currentTime,
+                duration: duration
+            })
+        });
+    } catch(e) { console.error("No se pudo guardar el progreso."); }
+}
+
 function openCustomPlayer(film, chapter) {
     const ytId = extractYTId(chapter.video_url);
     if (!ytId) return;
 
-    currentPlayingFilm = film; // 🌟 Guardamos la película en memoria activa
+    currentPlayingFilm = film; // Guardamos en memoria activa
+    currentPlayingChapter = chapter;
 
     document.getElementById('player-film-title').textContent = film.title;
     document.getElementById('player-chapter-title').textContent = `${chapter.chapter_number}. ${chapter.title}`;
 
     const playerOverlay = document.getElementById('native-player-overlay');
-    document.body.style.overflow = 'hidden'; // Asegura que no se pueda scrollear el fondo
+    document.body.style.overflow = 'hidden'; 
     
     playerOverlay.classList.remove('hidden');
     playerOverlay.classList.add('flex');
@@ -287,10 +374,12 @@ function openCustomPlayer(film, chapter) {
         }
     });
 
-    resetPlayerUI(); // Iniciar reloj de inactividad
+    resetPlayerUI(); 
 }
 
 function closeCustomPlayer() {
+    syncProgressToCloud(); // 🧠 Guardamos el progreso antes de destruir todo
+
     const playerOverlay = document.getElementById('native-player-overlay');
     
     if (ytPlayer) ytPlayer.pauseVideo();
@@ -303,16 +392,18 @@ function closeCustomPlayer() {
         clearInterval(progressInterval);
         clearTimeout(hideUiTimeout);
 
-        // 🌟 MAGIA: Si tenemos una película en memoria, reabrimos el modal de detalles
+        renderRows(); // Actualizamos la vista principal por si hay nuevas barras rojas
+
+        // 🌟 TRANSICIÓN MÁGICA: Reabre los detalles de la serie en vez del menú principal
         if (currentPlayingFilm) {
             openDetailsModal(currentPlayingFilm);
         } else {
-            document.body.style.overflow = 'auto'; // Si no, restauramos el scroll y a la pantalla principal
+            document.body.style.overflow = 'auto'; 
         }
     }, 500);
 }
 
-// LÓGICA DE AUTO-OCULTADO DE BARRAS NEGRAS Y MOUSE (5 SEGUNDOS COMO PEDISTE)
+// LÓGICA DE AUTO-OCULTADO DE BARRAS NEGRAS Y MOUSE (5 SEGUNDOS)
 function resetPlayerUI() {
     const vc = document.getElementById('video-wrapper-container');
     if(!vc) return;
@@ -321,14 +412,22 @@ function resetPlayerUI() {
     clearTimeout(hideUiTimeout);
     
     hideUiTimeout = setTimeout(() => {
-        // Solo oculta si el video está reproduciéndose
         if (ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
             vc.classList.add('idle');
         }
-    }, 5000); // 5 segundos de gracia para ocultar
+    }, 5000); 
 }
 
 function onPlayerReady(event) {
+    // 🧠 REANUDACIÓN AUTOMÁTICA
+    const historyKey = `${currentPlayingFilm.id}_${currentPlayingChapter.chapter_number}`;
+    const savedData = userAnalytics[historyKey];
+    
+    // Si quedó a medias, saltamos directo a ese segundo
+    if (savedData && savedData.last_position > 0 && !savedData.completed) {
+        event.target.seekTo(savedData.last_position, true);
+    }
+
     event.target.playVideo();
     const volInput = document.getElementById('custom-vol-input');
     event.target.setVolume(volInput.value);
@@ -359,9 +458,13 @@ function onPlayerStateChange(event) {
         resetPlayerUI();
     } else {
         btnIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
-        // Si está en pausa, nunca ocultes las barras
         vc.classList.remove('idle');
         clearTimeout(hideUiTimeout);
+        
+        // 🧠 GUARDADO AL PAUSAR O TERMINAR
+        if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+            syncProgressToCloud();
+        }
     }
 }
 
