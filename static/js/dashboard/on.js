@@ -5,7 +5,8 @@ let catalogFilms = [];
 let userTier = 'BASICO';
 let ytPlayer = null; 
 let progressInterval = null; 
-let hideUiTimeout = null; // Controla los 3 segundos de inactividad del reproductor
+let hideUiTimeout = null; 
+let currentPlayingFilm = null; // 🌟 NUEVA VARIABLE: Memoria de la serie que se está viendo
 
 // ==========================================
 // 1. CARGA INICIAL Y RANDOM HERO
@@ -19,7 +20,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     const firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-    // Eventos para auto-ocultar los controles (3 segundos)
+    // Eventos para auto-ocultar los controles
     const overlay = document.getElementById('native-player-overlay');
     overlay.addEventListener('mousemove', resetPlayerUI);
     overlay.addEventListener('click', resetPlayerUI);
@@ -96,7 +97,6 @@ function renderRows() {
 
             const safeFilmObj = JSON.stringify(film).replace(/'/g, "&#39;");
 
-            // Modificado: El título tiene un fondo oscuro en la parte inferior para verse SIEMPRE
             cardsHtml += `
                 <div class="carousel-card relative min-w-[200px] md:min-w-[280px] aspect-video rounded-md bg-gray-900 cursor-pointer snap-center group overflow-hidden border border-white/5 flex flex-col justify-end" onclick='handleCardClick(${safeFilmObj})'>
                     ${lockOverlay}
@@ -152,7 +152,7 @@ function openDetailsModal(film) {
     const playBtn = document.getElementById('details-play-btn');
     if (film.chapters && film.chapters.length > 0) {
         playBtn.onclick = () => {
-            closeDetailsModal();
+            closeDetailsModal(true); // Pasamos 'true' para no devolver el scroll aún
             openCustomPlayer(film, film.chapters[0]);
         };
     }
@@ -166,7 +166,7 @@ function openDetailsModal(film) {
             const epDiv = document.createElement('div');
             epDiv.className = "flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white/[0.02] hover:bg-white/[0.08] border border-white/5 rounded-xl cursor-pointer transition-colors group";
             epDiv.onclick = () => {
-                closeDetailsModal();
+                closeDetailsModal(true); // Pasamos 'true' para no devolver el scroll aún
                 openCustomPlayer(film, chap);
             };
 
@@ -202,10 +202,15 @@ function openDetailsModal(film) {
     }, 50);
 }
 
-function closeDetailsModal() {
+// Recibe "keepScrollLocked" si vamos hacia el reproductor
+function closeDetailsModal(keepScrollLocked = false) {
     const modal = document.getElementById('details-modal');
     const content = document.getElementById('details-modal-content');
-    document.body.style.overflow = 'auto';
+    
+    if (!keepScrollLocked) {
+        document.body.style.overflow = 'auto'; // Solo restaura scroll si cerramos para volver al inicio
+    }
+    
     modal.classList.add('opacity-0');
     content.classList.add('scale-95');
     setTimeout(() => {
@@ -256,11 +261,13 @@ function openCustomPlayer(film, chapter) {
     const ytId = extractYTId(chapter.video_url);
     if (!ytId) return;
 
+    currentPlayingFilm = film; // 🌟 Guardamos la película en memoria activa
+
     document.getElementById('player-film-title').textContent = film.title;
     document.getElementById('player-chapter-title').textContent = `${chapter.chapter_number}. ${chapter.title}`;
 
     const playerOverlay = document.getElementById('native-player-overlay');
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden'; // Asegura que no se pueda scrollear el fondo
     
     playerOverlay.classList.remove('hidden');
     playerOverlay.classList.add('flex');
@@ -285,7 +292,6 @@ function openCustomPlayer(film, chapter) {
 
 function closeCustomPlayer() {
     const playerOverlay = document.getElementById('native-player-overlay');
-    document.body.style.overflow = 'auto';
     
     if (ytPlayer) ytPlayer.pauseVideo();
     
@@ -296,10 +302,17 @@ function closeCustomPlayer() {
         if (ytPlayer) { ytPlayer.destroy(); ytPlayer = null; }
         clearInterval(progressInterval);
         clearTimeout(hideUiTimeout);
+
+        // 🌟 MAGIA: Si tenemos una película en memoria, reabrimos el modal de detalles
+        if (currentPlayingFilm) {
+            openDetailsModal(currentPlayingFilm);
+        } else {
+            document.body.style.overflow = 'auto'; // Si no, restauramos el scroll y a la pantalla principal
+        }
     }, 500);
 }
 
-// LÓGICA DE AUTO-OCULTADO DE BARRAS NEGRAS Y MOUSE (3 SEGUNDOS)
+// LÓGICA DE AUTO-OCULTADO DE BARRAS NEGRAS Y MOUSE (5 SEGUNDOS COMO PEDISTE)
 function resetPlayerUI() {
     const vc = document.getElementById('video-wrapper-container');
     if(!vc) return;
@@ -312,7 +325,7 @@ function resetPlayerUI() {
         if (ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
             vc.classList.add('idle');
         }
-    }, 5000); // 5 segundos exactos
+    }, 5000); // 5 segundos de gracia para ocultar
 }
 
 function onPlayerReady(event) {
