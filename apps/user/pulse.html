@@ -48,7 +48,7 @@
             <h3 class="text-2xl font-black uppercase text-white tracking-tighter mb-2">Soporte Central</h3>
             <p id="request-status-msg" class="text-xs text-gray-400 font-medium text-center max-w-xs mb-8">La línea está cerrada. Solicita un ticket para abrir comunicación directa con tu preparador.</p>
             <button id="btn-request-support" class="btn-gold w-full max-w-xs py-4 rounded-[18px] text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(255,195,0,0.2)] transition-transform active:scale-95">Abrir Ticket Seguro</button>
-            <button onclick="document.getElementById('chat-request-overlay').classList.add('hidden')" class="mt-4 text-gray-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors">Revisar Historial Reciente</button>
+            <button id="btn-view-history" class="mt-4 text-gray-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors">Revisar Historial Reciente</button>
         </div>
 
         <div id="chat-input-area" class="hidden absolute bottom-4 left-4 right-4 z-30">
@@ -63,7 +63,7 @@
         <div id="chat-action-bar-closed" class="hidden absolute bottom-4 left-4 right-4 z-30">
             <div class="flex justify-between items-center bg-[#1c1c1e]/95 backdrop-blur-2xl border border-white/10 p-3 px-5 rounded-[24px] shadow-2xl">
                 <span class="text-gray-400 text-[10px] font-black uppercase tracking-widest">Modo Historial Activo</span>
-                <button onclick="document.getElementById('chat-request-overlay').classList.remove('hidden')" class="px-5 py-2.5 bg-[#FFC300] text-black text-[10px] font-black uppercase tracking-widest rounded-full transition-transform active:scale-95 shadow-md shadow-[0_0_15px_rgba(255,195,0,0.3)]">Solicitar Ticket</button>
+                <button id="btn-show-overlay" class="px-5 py-2.5 bg-[#FFC300] text-black text-[10px] font-black uppercase tracking-widest rounded-full transition-transform active:scale-95 shadow-md shadow-[0_0_15px_rgba(255,195,0,0.3)]">Solicitar Ticket</button>
             </div>
         </div>
 
