@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, collection, query, orderBy, addDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { getFirestore, doc, onSnapshot, collection, query, orderBy, limitToLast, addDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
@@ -21,6 +21,7 @@ const db = getFirestore(app);
 let currentUserId = null;
 let currentChatStatus = "inactivo"; 
 let lastMessageCount = 0;
+let messagesUnsubscribe = null; // Memoria para limpiar escuchador de burbujas
 
 const ui = {
     overlay: document.getElementById('chat-request-overlay'),
@@ -33,34 +34,32 @@ const ui = {
     chatInput: document.getElementById('chat-input')
 };
 
-// 🎵 SINTETIZADOR DE AUDIO (Bloop suave)
 const AudioContext = window.AudioContext || window.webkitAudioContext;
-const audioCtx = new AudioContext();
+let audioCtx = null;
 
 function playUISound(type) {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    
-    if (type === 'send') { // Pop agudo
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.05);
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.01);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-        osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.05);
-    } else if (type === 'receive') { // Ding suave
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(500, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.15);
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-        osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.2);
-    }
+    try {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        if (type === 'send') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.05);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.05);
+        } else if (type === 'receive') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.15);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+            osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.2);
+        }
+    } catch(e) {}
 }
 
 async function authenticateWithFirebase() {
@@ -82,19 +81,35 @@ async function authenticateWithFirebase() {
 
 function listenToChatStatus() {
     onSnapshot(doc(db, "chats", currentUserId), (docSnap) => {
-        currentChatStatus = docSnap.exists() ? docSnap.data().estado : "inactivo";
+        const oldStatus = currentChatStatus;
+        if (docSnap.exists()) {
+            currentChatStatus = docSnap.data().estado;
+            if (docSnap.data().unread_user) {
+                setDoc(doc(db, "chats", currentUserId), { unread_user: false }, { merge: true }).catch(e=>{});
+            }
+        } else {
+            currentChatStatus = "inactivo";
+        }
+        
         updateUIBasedOnStatus();
+
+        // 🔥 RE-INDEXACIÓN DE RADARES: Si el estado cambia, recalculamos el escuchador de mensajes
+        if (oldStatus !== currentChatStatus) {
+            listenToMessages();
+        }
     });
 }
 
 function updateUIBasedOnStatus() {
+    const badgeText = document.getElementById('system-badge-text');
     if (currentChatStatus === "inactivo" || currentChatStatus === "cerrado") {
         ui.overlay.classList.remove('opacity-0', 'pointer-events-none');
         ui.inputArea.classList.add('hidden');
         ui.btnRequest.textContent = "Abrir Ticket Seguro";
         ui.btnRequest.disabled = false;
         ui.reqMsg.textContent = currentChatStatus === "cerrado" ? "Tu preparador ha cerrado el ticket de asistencia." : "La línea está cerrada. Solicita un ticket para abrir comunicación.";
-        ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-gray-500 rounded-full"></span> Desconectado`;
+        ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-gray-500 rounded-full"></span> Historial de Sesión`;
+        if (badgeText) badgeText.textContent = "Últimos 10 Mensajes (Lectura)";
     } 
     else if (currentChatStatus === "espera") {
         ui.overlay.classList.remove('opacity-0', 'pointer-events-none');
@@ -103,11 +118,14 @@ function updateUIBasedOnStatus() {
         ui.btnRequest.disabled = true;
         ui.reqMsg.textContent = "Ticket emitido. Mantén esta pantalla abierta.";
         ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span> En Espera`;
+        if (badgeText) badgeText.textContent = "Historial Limitado (Cola de Espera)";
     } 
     else if (currentChatStatus === "activo") {
         ui.overlay.classList.add('opacity-0', 'pointer-events-none');
+        ui.overlay.classList.add('hidden'); // Ocultar por completo la cortina
         ui.inputArea.classList.remove('hidden');
         ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Conectado`;
+        if (badgeText) badgeText.textContent = "Canal Cifrado Activo";
         scrollToBottom();
     }
 }
@@ -127,9 +145,24 @@ ui.btnRequest.addEventListener('click', async () => {
 });
 
 function listenToMessages() {
-    onSnapshot(query(collection(db, "chats", currentUserId, "mensajes"), orderBy("fecha", "asc")), (snapshot) => {
-        const systemMsg = Array.from(ui.messagesArea.children)[0].outerHTML;
-        ui.messagesArea.innerHTML = systemMsg;
+    if (messagesUnsubscribe) messagesUnsubscribe(); // Apagar el escuchador previo
+
+    const msgsRef = collection(db, "chats", currentUserId, "mensajes");
+    let q;
+
+    // 🔥 PARCHE DE COMPORTAMIENTO ADAPTATIVO: Si está activo ve todo, si no, solo las últimas 10 burbujas
+    if (currentChatStatus === "activo") {
+        q = query(msgsRef, orderBy("fecha", "asc"));
+    } else {
+        q = query(msgsRef, orderBy("fecha", "asc"), limitToLast(10));
+    }
+
+    messagesUnsubscribe = onSnapshot(q, (snapshot) => {
+        // Almacenar el mensaje de sistema inicial (Canal Cifrado Encriptado)
+        const area = document.getElementById('chat-messages-area');
+        const systemMsg = area.children[0] ? area.children[0].outerHTML : '';
+        area.innerHTML = systemMsg;
+        
         let currentCount = 0;
 
         snapshot.forEach((doc) => {
@@ -138,7 +171,6 @@ function listenToMessages() {
             const isMe = msg.remitente === "atleta";
             let timeString = msg.fecha ? msg.fecha.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-            // 🔥 Burbujas estilo iMessage
             const msgHTML = isMe ? `
                 <div class="flex justify-end message-bubble">
                     <div class="max-w-[75%] bg-[#FFC300] text-black px-4 py-2 rounded-[20px] rounded-br-[4px] shadow-sm relative">
@@ -153,10 +185,10 @@ function listenToMessages() {
                     </div>
                 </div>
             `;
-            ui.messagesArea.insertAdjacentHTML('beforeend', msgHTML);
+            area.insertAdjacentHTML('beforeend', msgHTML);
         });
 
-        if (currentCount > lastMessageCount) { playUISound('receive'); }
+        if (currentCount > lastMessageCount && currentChatStatus === "activo") { playUISound('receive'); }
         lastMessageCount = currentCount;
         scrollToBottom();
     });
@@ -177,7 +209,7 @@ ui.chatForm.addEventListener('submit', async (e) => {
             ultimo_mensaje: texto, actualizado: serverTimestamp(), unread_admin: true
         }, { merge: true });
         
-        playUISound('send'); // 🎵 Sonido de envío de iMessage
+        playUISound('send');
     } catch (e) { }
 });
 
@@ -190,5 +222,8 @@ function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;'
 
 window.addEventListener('DOMContentLoaded', async () => {
     const isAuthenticated = await authenticateWithFirebase();
-    if (isAuthenticated) { listenToChatStatus(); listenToMessages(); }
+    if (isAuthenticated) { 
+        listenToChatStatus(); 
+        listenToMessages(); 
+    }
 });
