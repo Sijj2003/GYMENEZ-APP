@@ -1,16 +1,10 @@
-// ====================================================================
-// NÚCLEO DE ASISTENCIA CORE - GYMENEZ PULSE ADMIN (FIREBASE V12 MODULAR)
-// ====================================================================
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
 import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-// Configuración de Endpoints adaptativos
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
-// CONFIGURACIÓN OFICIAL: Proyecto GYMENEZAPP
 const firebaseConfig = {
   apiKey: "AIzaSyC7ESvLhYTydAn_ZjHVSkebTC-BhvnbzIw",
   authDomain: "gymenezapp.firebaseapp.com",
@@ -20,158 +14,176 @@ const firebaseConfig = {
   appId: "1:257686887231:web:ca6c5ccabe33a1625b918a"
 };
 
-// Inicialización de servicios globales de Google
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentFilter = 'espera'; // Filtro de bandeja de entrada: 'espera' o 'activo'
-let activeChatUserId = null;   // ID del atleta con la transmisión abierta
-let messagesUnsubscribe = null;// Memoria del limpiador de eventos de mensajes
-let chatDocUnsubscribe = null; // 🔥 NUEVO: Memoria del limpiador de estado de la sala en vivo
+let currentFilter = 'espera'; 
+let activeChatUserId = null;   
+let messagesUnsubscribe = null;
+let chatDocUnsubscribe = null; 
+let searchTerm = ''; // 🔥 Buscador
+let lastMessageCount = 0; // 🔥 Memoria para sonidos
 
-// ==========================================
-// 1. CONEXIÓN INICIAL DE SEGURIDAD (ADMIN)
-// ==========================================
+// 🎵 SINTETIZADOR DE AUDIO PREMIUM (Sin archivos externos)
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioContext();
+
+function playUISound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    if (type === 'receive') { // Tono suave y elegante de iMessage/Slack
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 0.3);
+    }
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('gymen_admin_token');
     if (!token) { window.location.href = '/apps/admin/login.html'; return; }
+    
+    // Conectar el buscador
+    document.getElementById('admin-chat-search').addEventListener('input', (e) => {
+        searchTerm = e.target.value.toLowerCase().trim();
+        listenToAllChats(); // Re-renderizar lista
+    });
 
     try {
-        // Solicitamos el Pase VIP firmado al Servidor Core de PythonAnywhere de forma explícita
-        const res = await fetch(`${API_BASE_URL}/api/pulse/token`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const res = await fetch(`${API_BASE_URL}/api/pulse/token`, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await res.json();
         
         if (res.ok && data.success) {
             await signInWithCustomToken(auth, data.firebase_token);
-            
-            // Apagar cortina de carga visual de la consola
             document.getElementById('pulse-loader').style.opacity = '0';
             setTimeout(() => document.getElementById('pulse-loader').classList.add('hidden'), 500);
-            
-            // Encender radares globales de la bandeja lateral
             listenToAllChats();
-        } else {
-            alert("Error crítico emitiendo pasaporte digital Pulse Admin.");
         }
-    } catch (e) {
-        alert("Falla de communication perimetral con el Servidor Core.");
-    }
+    } catch (e) { alert("Falla de red."); }
 });
 
-// ==========================================
-// 2. MONITOREAR BANDEJA DE ENTRADA (RADARES)
-// ==========================================
+let globalChatsMemory = [];
+
 function listenToAllChats() {
     const chatsRef = collection(db, "chats");
     const q = query(chatsRef, orderBy("actualizado", "desc")); 
 
     onSnapshot(q, (snapshot) => {
-        const container = document.getElementById('chats-list-container');
-        container.innerHTML = '';
-        
-        let found = false;
+        globalChatsMemory = [];
+        let hasNewUnread = false;
 
         snapshot.forEach((docSnap) => {
-            const chatData = docSnap.data();
-            const userId = docSnap.id;
-
-            if (chatData.estado === currentFilter) {
-                found = true;
-                
-                const isUnread = chatData.unread_admin ? `<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse mt-1 shadow-[0_0_10px_#ef4444]"></span>` : ``;
-                const isActive = activeChatUserId === userId ? 'active' : '';
-                const timeString = chatData.actualizado ? chatData.actualizado.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-
-                const item = document.createElement('div');
-                item.className = `chat-list-item p-4 border-b border-white/5 cursor-pointer hover:bg-white/[0.02] flex justify-between ${isActive}`;
-                item.onclick = () => openChatWindow(userId);
-
-                item.innerHTML = `
-                    <div class="flex-grow pr-2 overflow-hidden">
-                        <div class="flex justify-between items-start mb-1">
-                            <h4 class="text-xs font-black text-white uppercase truncate">${chatData.atleta_nombre || 'Atleta Anónimo'}</h4>
-                            <span class="text-[8px] font-mono text-gray-500 ml-2 shrink-0">${timeString}</span>
-                        </div>
-                        <p class="text-[10px] text-gray-400 truncate">${chatData.ultimo_mensaje || 'Sin transmisión de texto'}</p>
-                    </div>
-                    <div class="flex flex-col items-end">
-                        ${isUnread}
-                    </div>
-                `;
-                container.appendChild(item);
-            }
+            const data = docSnap.data();
+            globalChatsMemory.push({ id: docSnap.id, ...data });
+            if (data.unread_admin) hasNewUnread = true;
         });
 
-        if (!found) {
-            container.innerHTML = `<div class="p-6 text-center text-gray-600 font-bold uppercase tracking-widest text-[9px]">Bandeja vacía en esta frecuencia.</div>`;
-        }
+        if (hasNewUnread) playUISound('receive'); // 🎵 Sonido si hay un ticket en rojo
+        renderSidebar();
     });
+}
+
+function renderSidebar() {
+    const container = document.getElementById('chats-list-container');
+    container.innerHTML = '';
+    let found = false;
+
+    globalChatsMemory.forEach((chatData) => {
+        // Lógica del filtro y buscador
+        if (chatData.estado !== currentFilter) return;
+        if (searchTerm && !(chatData.atleta_nombre || '').toLowerCase().includes(searchTerm)) return;
+
+        found = true;
+        const isUnread = chatData.unread_admin ? `<div class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></div>` : ``;
+        const isActive = activeChatUserId === chatData.id ? 'active' : '';
+        const timeString = chatData.actualizado ? chatData.actualizado.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+
+        const item = document.createElement('div');
+        item.className = `chat-list-item p-3 rounded-xl cursor-pointer hover:bg-white/5 flex justify-between items-center ${isActive}`;
+        item.onclick = () => openChatWindow(chatData.id);
+
+        item.innerHTML = `
+            <div class="flex-grow pr-2 overflow-hidden">
+                <div class="flex justify-between items-start mb-0.5">
+                    <h4 class="text-[11px] font-black text-white uppercase truncate">${chatData.atleta_nombre || 'Atleta'}</h4>
+                    <span class="text-[9px] font-bold text-gray-600 ml-2 shrink-0">${timeString}</span>
+                </div>
+                <p class="text-[10px] text-gray-500 font-medium truncate">${chatData.ultimo_mensaje || ''}</p>
+            </div>
+            <div class="flex flex-col items-end shrink-0 pl-2">${isUnread}</div>
+        `;
+        container.appendChild(item);
+    });
+
+    if (!found) {
+        container.innerHTML = `<div class="p-6 text-center text-gray-600 font-bold uppercase tracking-widest text-[9px]">Sin resultados.</div>`;
+    }
 }
 
 window.filterChats = function(status) {
     currentFilter = status;
-    listenToAllChats();
+    const tabE = document.getElementById('tab-espera');
+    const tabA = document.getElementById('tab-activo');
+    if(status === 'espera') {
+        tabE.className = "flex-1 py-1.5 bg-amber-500/10 text-amber-500 rounded text-[9px] font-bold uppercase transition-all";
+        tabA.className = "flex-1 py-1.5 text-gray-500 hover:text-white rounded text-[9px] font-bold uppercase transition-all";
+    } else {
+        tabA.className = "flex-1 py-1.5 bg-sky-500/10 text-sky-400 rounded text-[9px] font-bold uppercase transition-all";
+        tabE.className = "flex-1 py-1.5 text-gray-500 hover:text-white rounded text-[9px] font-bold uppercase transition-all";
+    }
+    renderSidebar();
 }
 
-// ==========================================
-// 3. APERTURA DE CANAL EN TIEMPO REAL REELÉCTRICO
-// ==========================================
 function openChatWindow(userId) {
     activeChatUserId = userId;
-    
-    // Control estructural inmediato de layouts
     document.getElementById('empty-chat-state').classList.add('hidden');
     document.getElementById('active-chat-container').classList.remove('hidden');
     document.getElementById('active-chat-container').classList.add('flex');
     
-    // 🔥 CORRECCIÓN CRÍTICA: Apagar escuchador del documento previo si existía
     if (chatDocUnsubscribe) chatDocUnsubscribe();
 
-    // 🔥 ENLACE DE SEMÁFORO EN VIVO: Escuchamos los cambios del estado de la sala en tiempo real
     chatDocUnsubscribe = onSnapshot(doc(db, "chats", userId), (docSnap) => {
         if (!docSnap.exists()) return;
         const liveChatData = docSnap.data();
 
         document.getElementById('current-chat-name').textContent = liveChatData.atleta_nombre || 'Atleta';
-        
         const acceptBtn = document.getElementById('btn-accept-chat');
         const statusText = document.getElementById('current-chat-status');
         const chatInput = document.getElementById('admin-chat-input');
         const sendBtn = document.getElementById('admin-send-btn');
 
         if (liveChatData.estado === 'espera') {
-            statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Esperando Aprobación`;
+            statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> En Cola de Espera`;
             statusText.className = "text-amber-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
             acceptBtn.classList.remove('hidden');
-            chatInput.disabled = true;
-            sendBtn.disabled = true;
-            chatInput.placeholder = "Acepta la solicitud para abrir transmisión...";
-        } 
-        else if (liveChatData.estado === 'activo') {
-            statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Transmisión Activa`;
+            chatInput.disabled = true; sendBtn.disabled = true;
+            chatInput.placeholder = "Sala bloqueada hasta intervención...";
+        } else if (liveChatData.estado === 'activo') {
+            statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Conexión Establecida`;
             statusText.className = "text-emerald-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
-            acceptBtn.classList.add('hidden'); // Se esconde al instante sin recargar
-            chatInput.disabled = false;        // Se habilita al instante
-            sendBtn.disabled = false;
-            chatInput.placeholder = "Escribe un mensaje al atleta...";
-        } 
-        else if (liveChatData.estado === 'cerrado') {
-            statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-gray-600 inline-block mr-1"></span> Canal Cerrado`;
+            acceptBtn.classList.add('hidden'); 
+            chatInput.disabled = false; sendBtn.disabled = false;
+            chatInput.placeholder = "iMessage (Seguro)...";
+        } else {
+            statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span> Desconectado`;
             statusText.className = "text-gray-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
             acceptBtn.classList.add('hidden');
-            chatInput.disabled = true;
-            sendBtn.disabled = true;
-            chatInput.placeholder = "Esta sesión de chat ha sido finalizada.";
+            chatInput.disabled = true; sendBtn.disabled = true;
+            chatInput.placeholder = "Canal cerrado.";
         }
     });
 
-    // Purgar marcador de no leídos en Firebase
     updateDoc(doc(db, "chats", userId), { unread_admin: false }).catch(e=>{});
 
-    // Rematricular el recolector de burbujas en tiempo real
     if (messagesUnsubscribe) messagesUnsubscribe();
     
     const msgsRef = collection(db, "chats", userId, "mensajes");
@@ -180,99 +192,83 @@ function openChatWindow(userId) {
     messagesUnsubscribe = onSnapshot(q, (snapshot) => {
         const area = document.getElementById('messages-area');
         area.innerHTML = ''; 
+        let currentCount = 0;
 
         snapshot.forEach((msgDoc) => {
+            currentCount++;
             const msg = msgDoc.data();
             const isMe = msg.remitente === "admin";
-            
-            let timeString = "--:--";
+            let timeString = "";
             if (msg.fecha) timeString = msg.fecha.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+            // 🔥 Burbujas estilo iMessage
             const msgHTML = isMe ? `
-                <div class="flex justify-end mb-3">
-                    <div class="max-w-[75%] bg-sky-600 text-white p-3 rounded-2xl rounded-tr-sm shadow-md border border-sky-500/10">
-                        <p class="text-xs font-medium whitespace-pre-wrap break-words leading-relaxed">${escapeHTML(msg.texto)}</p>
-                        <span class="text-[8px] text-sky-200 block text-right mt-1 font-mono font-bold">${timeString}</span>
+                <div class="flex justify-end message-bubble">
+                    <div class="max-w-[70%] bg-sky-600 text-white px-4 py-2.5 rounded-[20px] rounded-br-[4px] shadow-sm">
+                        <p class="text-[13px] font-medium whitespace-pre-wrap leading-snug">${escapeHTML(msg.texto)}</p>
+                        <span class="text-[8px] text-sky-200 block text-right mt-1 font-bold">${timeString}</span>
                     </div>
                 </div>
             ` : `
-                <div class="flex justify-start mb-3">
-                    <div class="max-w-[75%] bg-white/5 border border-white/5 text-gray-200 p-3 rounded-2xl rounded-tl-sm shadow-md">
-                        <p class="text-xs font-medium whitespace-pre-wrap break-words leading-relaxed">${escapeHTML(msg.texto)}</p>
-                        <span class="text-[8px] text-gray-500 block text-right mt-1 font-mono font-bold">${timeString}</span>
+                <div class="flex justify-start message-bubble">
+                    <div class="max-w-[70%] bg-[#1c1c1e] border border-white/5 text-gray-100 px-4 py-2.5 rounded-[20px] rounded-bl-[4px] shadow-sm">
+                        <p class="text-[13px] font-medium whitespace-pre-wrap leading-snug">${escapeHTML(msg.texto)}</p>
+                        <span class="text-[8px] text-gray-500 block text-left mt-1 font-bold">${timeString}</span>
                     </div>
                 </div>
             `;
             area.insertAdjacentHTML('beforeend', msgHTML);
         });
 
+        if (currentCount > lastMessageCount) { playUISound('receive'); }
+        lastMessageCount = currentCount;
+
         setTimeout(() => area.scrollTop = area.scrollHeight, 50);
     });
+    renderSidebar();
 }
 
-// ==========================================
-// 4. ACCIONES OPERATIVAS DE CONTROL TÁCTICO
-// ==========================================
 window.markAsActive = async function() {
     if (!activeChatUserId) return;
     try {
         await updateDoc(doc(db, "chats", activeChatUserId), {
-            estado: "activo",
-            actualizado: serverTimestamp(),
-            ultimo_mensaje: "🟢 Servidor Central se ha unido a la sesión."
+            estado: "activo", actualizado: serverTimestamp(), ultimo_mensaje: "🟢 Operador en sala."
         });
-    } catch(e) { alert("Error de enlace al autorizar la sala."); }
+    } catch(e) {}
 }
 
 window.closeCurrentSession = async function() {
     if (!activeChatUserId) return;
-    if (!confirm("¿Cerrar permanentemente este canal y archivar ticket?")) return;
-    
+    if (!confirm("¿Archivar este ticket?")) return;
     try {
         await updateDoc(doc(db, "chats", activeChatUserId), {
-            estado: "cerrado",
-            actualizado: serverTimestamp(),
-            ultimo_mensaje: "🔴 Sesión dada por terminada."
+            estado: "cerrado", actualizado: serverTimestamp(), ultimo_mensaje: "🔴 Ticket cerrado."
         });
-        
-        // Purgar UI local y apagar los escuchadores activos
         activeChatUserId = null;
         if(messagesUnsubscribe) messagesUnsubscribe();
-        if(chatDocUnsubscribe) chatDocUnsubscribe(); // Apagamos el escuchador del documento
-
+        if(chatDocUnsubscribe) chatDocUnsubscribe(); 
         document.getElementById('empty-chat-state').classList.remove('hidden');
         document.getElementById('active-chat-container').classList.add('hidden');
         document.getElementById('active-chat-container').classList.remove('flex');
-
-    } catch(e) { alert("Error de desvinculación."); }
+    } catch(e) {}
 }
 
-// ==========================================
-// 5. PIPELINE INYECTOR DE MENSAJES (SUBMIT)
-// ==========================================
 document.getElementById('admin-chat-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const input = document.getElementById('admin-chat-input');
     const texto = input.value.trim();
     if (!texto || !activeChatUserId) return;
 
-    input.value = '';
-    input.style.height = 'auto';
+    input.value = ''; input.style.height = 'auto';
 
     try {
         await addDoc(collection(db, "chats", activeChatUserId, "mensajes"), {
-            texto: texto,
-            remitente: "admin",
-            fecha: serverTimestamp()
+            texto: texto, remitente: "admin", fecha: serverTimestamp()
         });
-        
         await updateDoc(doc(db, "chats", activeChatUserId), {
-            ultimo_mensaje: "Tú: " + texto,
-            actualizado: serverTimestamp()
+            ultimo_mensaje: "Tú: " + texto, actualizado: serverTimestamp()
         });
-    } catch (e) {
-        console.error("Fallo inyectando paquete de datos:", e);
-    }
+    } catch (e) {}
 });
 
 document.getElementById('admin-chat-input').addEventListener('keydown', function(e) {
@@ -283,7 +279,5 @@ document.getElementById('admin-chat-input').addEventListener('keydown', function
 });
 
 function escapeHTML(str) {
-    return str.replace(/[&<>'"]/g, 
-        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-    );
+    return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
 }
