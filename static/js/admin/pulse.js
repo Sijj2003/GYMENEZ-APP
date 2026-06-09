@@ -1,58 +1,71 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+// ====================================================================
+// NÚCLEO DE ASISTENCIA CORE - GYMENEZ PULSE ADMIN (FIREBASE V12 MODULAR)
+// ====================================================================
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+// Configuración de Endpoints adaptativos
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
+// 🔥 CONFIGURACIÓN CORREGIDA: Apuntando al proyecto oficial GYMENEZAPP
 const firebaseConfig = {
-  apiKey: "AIzaSyCzUol2mfmhZdtBeOQCZ9AfccE3UyoyTWw",
-  authDomain: "gymenez-pulse.firebaseapp.com",
-  projectId: "gymenez-pulse",
-  storageBucket: "gymenez-pulse.firebasestorage.app",
-  messagingSenderId: "1068954624936",
-  appId: "1:1068954624936:web:233c93beab502c999cb39d"
+  apiKey: "AIzaSyC7ESvLhYTydAn_ZjHVSkebTC-BhvnbzIw",
+  authDomain: "gymenezapp.firebaseapp.com",
+  projectId: "gymenezapp",
+  storageBucket: "gymenezapp.firebasestorage.app",
+  messagingSenderId: "257686887231",
+  appId: "1:257686887231:web:ca6c5ccabe33a1625b918a"
 };
 
+// Inicialización de servicios globales de Google
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentFilter = 'espera'; // 'espera' o 'activo'
-let activeChatUserId = null;
-let messagesUnsubscribe = null;
+let currentFilter = 'espera'; // Filtro de bandeja de entrada: 'espera' o 'activo'
+let activeChatUserId = null;   // ID del atleta con la transmisión abierta
+let messagesUnsubscribe = null;// Memoria del limpiador de eventos en tiempo real
 
 // ==========================================
-// 1. CONEXIÓN INICIAL DEL ADMIN
+// 1. CONEXIÓN INICIAL DE SEGURIDAD (ADMIN)
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('gymen_admin_token');
     if (!token) { window.location.href = '/apps/admin/login.html'; return; }
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/pulse/token`, { headers: { 'Authorization': `Bearer ${token}` } });
+        // Solicitamos el Pase VIP firmado al Servidor Core de PythonAnywhere
+        // (El admin_middleware inyectará automáticamente las cabeceras Bearer por la regla /api/)
+        const res = await fetch(`${API_BASE_URL}/api/pulse/token`);
         const data = await res.json();
         
         if (res.ok && data.success) {
+            // Autenticación segura y silenciosa en los servidores de Google
             await signInWithCustomToken(auth, data.firebase_token);
+            
+            // Apagar cortina de carga visual de la consola
             document.getElementById('pulse-loader').style.opacity = '0';
             setTimeout(() => document.getElementById('pulse-loader').classList.add('hidden'), 500);
             
+            // Encender radares globales de monitorización de salas
             listenToAllChats();
         } else {
-            alert("Error obteniendo pase de seguridad Pulse.");
+            alert("Error crítico emitiendo pasaporte digital Pulse Admin.");
         }
     } catch (e) {
-        alert("Falla de red con el Servidor Core.");
+        alert("Falla de comunicación perimetral con el Servidor Core.");
     }
 });
 
 // ==========================================
-// 2. ESCUCHAR TODOS LOS RADARES (CHATS)
+// 2. MONITOREAR BANDEJA DE ENTRADA (RADARES)
 // ==========================================
 function listenToAllChats() {
     const chatsRef = collection(db, "chats");
-    const q = query(chatsRef, orderBy("actualizado", "desc")); // Los más recientes primero
+    const q = query(chatsRef, orderBy("actualizado", "desc")); // Última actividad primero
 
     onSnapshot(q, (snapshot) => {
         const container = document.getElementById('chats-list-container');
@@ -64,12 +77,12 @@ function listenToAllChats() {
             const chatData = docSnap.data();
             const userId = docSnap.id;
 
-            // Solo mostrar si coincide con el filtro y no está cerrado o inactivo
+            // Filtrar según la pestaña seleccionada (En espera / Activos)
             if (chatData.estado === currentFilter) {
                 found = true;
                 
-                // Si el mensaje lo envió el atleta, marcamos notificación
-                const isUnread = chatData.unread_admin ? `<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse mt-1"></span>` : ``;
+                // Alerta de notificación visual parpadeante si hay mensajes sin leer
+                const isUnread = chatData.unread_admin ? `<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse mt-1 shadow-[0_0_10px_#ef4444]"></span>` : ``;
                 
                 const isActive = activeChatUserId === userId ? 'active' : '';
                 const timeString = chatData.actualizado ? chatData.actualizado.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
@@ -81,10 +94,10 @@ function listenToAllChats() {
                 item.innerHTML = `
                     <div class="flex-grow pr-2 overflow-hidden">
                         <div class="flex justify-between items-start mb-1">
-                            <h4 class="text-xs font-black text-white uppercase truncate">${chatData.atleta_nombre || 'Atleta'}</h4>
+                            <h4 class="text-xs font-black text-white uppercase truncate">${chatData.atleta_nombre || 'Atleta Anónimo'}</h4>
                             <span class="text-[8px] font-mono text-gray-500 ml-2 shrink-0">${timeString}</span>
                         </div>
-                        <p class="text-[10px] text-gray-400 truncate">${chatData.ultimo_mensaje || 'Sin mensajes'}</p>
+                        <p class="text-[10px] text-gray-400 truncate">${chatData.ultimo_mensaje || 'Sin transmisión de texto'}</p>
                     </div>
                     <div class="flex flex-col items-end">
                         ${isUnread}
@@ -95,56 +108,56 @@ function listenToAllChats() {
         });
 
         if (!found) {
-            container.innerHTML = `<div class="p-6 text-center text-gray-600 font-bold uppercase tracking-widest text-[9px]">No hay radares en esta bandeja.</div>`;
+            container.innerHTML = `<div class="p-6 text-center text-gray-600 font-bold uppercase tracking-widest text-[9px]">Bandeja vacía en esta frecuencia.</div>`;
         }
     });
 }
 
-// Expuesto al HTML para cambiar de pestaña (En espera / Activos)
+// Expuesto globalmente para interactuar con los botones del HTML
 window.filterChats = function(status) {
     currentFilter = status;
     listenToAllChats();
 }
 
 // ==========================================
-// 3. ABRIR VENTANA DE CHAT
+// 3. APERTURA DE CANAL ESPECÍFICO DE TEXTO
 // ==========================================
 function openChatWindow(userId, chatData) {
     activeChatUserId = userId;
     
-    // UI Updates
+    // Control estructural de layouts
     document.getElementById('empty-chat-state').classList.add('hidden');
     document.getElementById('active-chat-container').classList.remove('hidden');
     document.getElementById('active-chat-container').classList.add('flex');
     
     document.getElementById('current-chat-name').textContent = chatData.atleta_nombre || 'Atleta';
     
-    // Estado del Header y Botón "Aceptar"
     const acceptBtn = document.getElementById('btn-accept-chat');
     const statusText = document.getElementById('current-chat-status');
     const chatInput = document.getElementById('admin-chat-input');
     const sendBtn = document.getElementById('admin-send-btn');
 
+    // Manejo adaptativo de la UI según el flujo del ticket
     if (chatData.estado === 'espera') {
         statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Esperando Aprobación`;
         statusText.className = "text-amber-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
         acceptBtn.classList.remove('hidden');
         chatInput.disabled = true;
         sendBtn.disabled = true;
-        chatInput.placeholder = "Acepta la solicitud para escribir...";
+        chatInput.placeholder = "Acepta la solicitud para abrir transmisión...";
     } else {
-        statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Sesión Activa`;
+        statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Transmisión Activa`;
         statusText.className = "text-emerald-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
         acceptBtn.classList.add('hidden');
         chatInput.disabled = false;
         sendBtn.disabled = false;
-        chatInput.placeholder = "Escribe al atleta...";
+        chatInput.placeholder = "Escribe un mensaje al atleta...";
     }
 
-    // Limpiar notificaciones de "No leídos" en Firebase
+    // Purgar marcador de lectura silenciosamente en Firebase
     updateDoc(doc(db, "chats", userId), { unread_admin: false }).catch(e=>{});
 
-    // Rematricular Escuchador de Mensajes
+    // Rematricular el recolector de burbujas en tiempo real evitando fugas de memoria
     if (messagesUnsubscribe) messagesUnsubscribe();
     
     const msgsRef = collection(db, "chats", userId, "mensajes");
@@ -152,7 +165,7 @@ function openChatWindow(userId, chatData) {
 
     messagesUnsubscribe = onSnapshot(q, (snapshot) => {
         const area = document.getElementById('messages-area');
-        area.innerHTML = ''; // Limpiamos
+        area.innerHTML = ''; 
 
         snapshot.forEach((msgDoc) => {
             const msg = msgDoc.data();
@@ -163,14 +176,14 @@ function openChatWindow(userId, chatData) {
 
             const msgHTML = isMe ? `
                 <div class="flex justify-end mb-3">
-                    <div class="max-w-[75%] bg-sky-600 text-white p-3 rounded-2xl rounded-tr-sm shadow-md">
+                    <div class="max-w-[75%] bg-sky-600 text-white p-3 rounded-2xl rounded-tr-sm shadow-md border border-sky-500/10">
                         <p class="text-xs font-medium whitespace-pre-wrap break-words leading-relaxed">${escapeHTML(msg.texto)}</p>
                         <span class="text-[8px] text-sky-200 block text-right mt-1 font-mono font-bold">${timeString}</span>
                     </div>
                 </div>
             ` : `
                 <div class="flex justify-start mb-3">
-                    <div class="max-w-[75%] bg-white/10 border border-white/5 text-gray-200 p-3 rounded-2xl rounded-tl-sm shadow-md">
+                    <div class="max-w-[75%] bg-white/5 border border-white/5 text-gray-200 p-3 rounded-2xl rounded-tl-sm shadow-md">
                         <p class="text-xs font-medium whitespace-pre-wrap break-words leading-relaxed">${escapeHTML(msg.texto)}</p>
                         <span class="text-[8px] text-gray-500 block text-right mt-1 font-mono font-bold">${timeString}</span>
                     </div>
@@ -179,16 +192,15 @@ function openChatWindow(userId, chatData) {
             area.insertAdjacentHTML('beforeend', msgHTML);
         });
 
-        // Scroll al fondo
+        // Autoscroll inteligente al fondo de la conversación
         setTimeout(() => area.scrollTop = area.scrollHeight, 50);
     });
 
-    // Repintar lista para el highlight
     listenToAllChats();
 }
 
 // ==========================================
-// 4. ACCIONES DEL ADMIN
+// 4. ACCIONES OPERATIVAS DE CONTROL TÁCTICO
 // ==========================================
 window.markAsActive = async function() {
     if (!activeChatUserId) return;
@@ -196,35 +208,34 @@ window.markAsActive = async function() {
         await updateDoc(doc(db, "chats", activeChatUserId), {
             estado: "activo",
             actualizado: serverTimestamp(),
-            ultimo_mensaje: "🟢 El administrador se ha unido al chat."
+            ultimo_mensaje: "🟢 Servidor Central se ha unido a la sesión."
         });
-        // La UI se actualizará automáticamente gracias al listener
-    } catch(e) { alert("Error al aceptar el chat."); }
+    } catch(e) { alert("Error de enlace al autorizar la sala."); }
 }
 
 window.closeCurrentSession = async function() {
     if (!activeChatUserId) return;
-    if (!confirm("¿Deseas dar por terminada y cerrada esta sesión de soporte?")) return;
+    if (!confirm("¿Cerrar permanentemente este canal y archivar ticket?")) return;
     
     try {
         await updateDoc(doc(db, "chats", activeChatUserId), {
             estado: "cerrado",
             actualizado: serverTimestamp(),
-            ultimo_mensaje: "🔴 Sesión finalizada por el Administrador."
+            ultimo_mensaje: "🔴 Sesión dada por terminada."
         });
         
-        // Limpiar UI
+        // Purgar UI local y apagar listeners concurrentes
         activeChatUserId = null;
         if(messagesUnsubscribe) messagesUnsubscribe();
         document.getElementById('empty-chat-state').classList.remove('hidden');
         document.getElementById('active-chat-container').classList.add('hidden');
         document.getElementById('active-chat-container').classList.remove('flex');
 
-    } catch(e) { alert("Error cerrando sesión."); }
+    } catch(e) { alert("Error de desvinculación."); }
 }
 
 // ==========================================
-// 5. ENVÍO DE MENSAJES
+// 5. PIPELINE INYECTOR DE MENSAJES (SUBMIT)
 // ==========================================
 document.getElementById('admin-chat-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -236,24 +247,24 @@ document.getElementById('admin-chat-form').addEventListener('submit', async (e) 
     input.style.height = 'auto';
 
     try {
-        // 1. Guardar mensaje
+        // 1. Despachar bloque del mensaje a la subcolección inmutable
         await addDoc(collection(db, "chats", activeChatUserId, "mensajes"), {
             texto: texto,
             remitente: "admin",
             fecha: serverTimestamp()
         });
         
-        // 2. Actualizar último mensaje (Pero NO marcamos unread_admin porque lo envia el admin)
+        // 2. Actualizar metadatos de la sala principal
         await updateDoc(doc(db, "chats", activeChatUserId), {
             ultimo_mensaje: "Tú: " + texto,
             actualizado: serverTimestamp()
         });
     } catch (e) {
-        console.error("Fallo al enviar mensaje:", e);
+        console.error("Fallo inyectando paquete de datos:", e);
     }
 });
 
-// Enviar con Enter
+// Enviar con tecla Enter estándar de mensajería (Evitando saltos de línea innecesarios)
 document.getElementById('admin-chat-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -261,6 +272,7 @@ document.getElementById('admin-chat-input').addEventListener('keydown', function
     }
 });
 
+// Sanitizador XSS inmutable contra inyecciones maliciosas de scripts en código
 function escapeHTML(str) {
     return str.replace(/[&<>'"]/g, 
         tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
