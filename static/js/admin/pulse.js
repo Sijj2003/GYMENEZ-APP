@@ -236,7 +236,7 @@ function openChatWindow(userId, userName) {
             statusText.className = "text-emerald-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
             acceptBtn.classList.add('hidden'); 
             chatInput.disabled = false; sendBtn.disabled = false;
-            chatInput.placeholder = "iMessage (Seguro)...";
+            chatInput.placeholder = "Pulse Message...";
         } else {
             statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span> Historial de Chat`;
             statusText.className = "text-gray-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
