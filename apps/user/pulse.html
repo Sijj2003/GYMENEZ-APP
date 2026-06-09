@@ -99,7 +99,7 @@
     </main>
 
     <script src="/static/js/auth/auth_middleware.js"></script>
-    <script src="/static/js/dashboard/pulse.js"></script>
+    <script type="module" src="/static/js/dashboard/pulse.js"></script>
     
     <script>
         const tx = document.getElementById('chat-input');
@@ -110,7 +110,6 @@
         function OnInput() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
-            // Límite de altura máxima antes de hacer scroll (aprox 4 líneas)
             if(this.scrollHeight > 120) {
                 this.style.overflowY = 'auto';
                 this.style.height = '120px';
@@ -119,8 +118,5 @@
             }
         }
     </script>
-
-    <script src="/static/js/auth/auth_middleware.js"></script>
-    <script type="module" src="/static/js/dashboard/pulse.js"></script>
 </body>
 </html>
