@@ -1,10 +1,10 @@
 // ====================================================================
-// NÚCLEO DE MENSAJERÍA - GYMENEZ PULSE (FIREBASE V10 MODULAR)
+// NÚCLEO DE MENSAJERÍA - GYMENEZ PULSE (FIREBASE V12 MODULAR)
 // ====================================================================
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, collection, query, orderBy, addDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import { getFirestore, doc, onSnapshot, collection, query, orderBy, addDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 // ==========================================
 // CONFIGURACIÓN CENTRAL
@@ -12,15 +12,14 @@ import { getFirestore, doc, onSnapshot, collection, query, orderBy, addDoc, serv
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
-// Credenciales Oficiales del Proyecto GYMENEZ PULSE
+// Credenciales Oficiales del Proyecto GYMENEZAPP
 const firebaseConfig = {
-  apiKey: "AIzaSyCzUol2mfmhZdtBeOQCZ9AfccE3UyoyTWw",
-  authDomain: "gymenez-pulse.firebaseapp.com",
-  projectId: "gymenez-pulse",
-  storageBucket: "gymenez-pulse.firebasestorage.app",
-  messagingSenderId: "1068954624936",
-  appId: "1:1068954624936:web:233c93beab502c999cb39d",
-  measurementId: "G-0D3WLFF45P"
+  apiKey: "AIzaSyC7ESvLhYTydAn_ZjHVSkebTC-BhvnbzIw",
+  authDomain: "gymenezapp.firebaseapp.com",
+  projectId: "gymenezapp",
+  storageBucket: "gymenezapp.firebasestorage.app",
+  messagingSenderId: "257686887231",
+  appId: "1:257686887231:web:ca6c5ccabe33a1625b918a"
 };
 
 // Inicialización de Servicios
@@ -157,7 +156,6 @@ ui.btnRequest.addEventListener('click', async () => {
             ultimo_mensaje: "🔴 Solicitó asistencia"
         }, { merge: true });
         
-        // No es necesario actualizar la UI manualmente; el onSnapshot lo hará al detectar el cambio
     } catch (e) {
         console.error("Error al solicitar sesión:", e);
         ui.reqMsg.textContent = "Error al intentar contactar al servidor.";
@@ -219,25 +217,23 @@ ui.chatForm.addEventListener('submit', async (e) => {
     const texto = ui.chatInput.value.trim();
     if (!texto || !currentUserId || currentChatStatus !== "activo") return;
 
-    // Resetear caja de texto (estética tipo WhatsApp)
+    // Resetear caja de texto
     ui.chatInput.value = '';
     ui.chatInput.style.height = 'auto';
 
     try {
         const messagesRef = collection(db, "chats", currentUserId, "mensajes");
         
-        // 1. Guardar el mensaje en la subcolección
         await addDoc(messagesRef, {
             texto: texto,
             remitente: "atleta",
             fecha: serverTimestamp()
         });
         
-        // 2. Actualizar la "hora de última actividad" para que el Admin lo vea de primero en su lista
         await setDoc(doc(db, "chats", currentUserId), {
             ultimo_mensaje: texto,
             actualizado: serverTimestamp(),
-            unread_admin: true // Indicador para que le suene al administrador
+            unread_admin: true
         }, { merge: true });
         
     } catch (e) {
@@ -245,7 +241,6 @@ ui.chatForm.addEventListener('submit', async (e) => {
     }
 });
 
-// Enviar con "Enter" (Shift+Enter hace salto de línea)
 ui.chatInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -279,14 +274,10 @@ function escapeHTML(str) {
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
     const spinner = document.getElementById('loading-spinner');
-    
-    // Quitar cortina oscura general del body
     document.body.classList.add('loaded');
 
-    // Autenticar con PythonAnywhere + Firebase
     const isAuthenticated = await authenticateWithFirebase();
     
-    // Apagar spinner
     if (spinner) spinner.classList.add('hidden');
 
     if (isAuthenticated) {
