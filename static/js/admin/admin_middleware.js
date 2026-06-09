@@ -2,32 +2,40 @@
 // 🛡️ NÚCLEO ZERO TRUST ADMIN - MIDDLEWARE DE AUTENTICACIÓN
 // ====================================================================
 
-const ADMIN_TOKEN_KEY = 'gymen_admin_token';
+// Usamos 'var' en lugar de 'const' para evitar bloqueos si el script se carga 2 veces por accidente
+var ADMIN_TOKEN_KEY = 'gymen_admin_token';
 
-// 1. Sobrescribir el método nativo 'fetch' para inyectar la firma del Administrador
-const originalFetch = window.fetch;
+// 1. Sobrescribir el método nativo 'fetch' solo si no se ha hecho antes
+if (!window.originalFetch) {
+    window.originalFetch = window.fetch;
 
-window.fetch = async function(...args) {
-    let [resource, config] = args;
-    config = config || {};
-    config.headers = config.headers || {};
-    
-    // Inyectar el pasaporte digital (Token JWT de Admin)
-    const token = localStorage.getItem(ADMIN_TOKEN_KEY);
-    if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    const response = await originalFetch(resource, config);
-    const url = typeof resource === 'string' ? resource : resource.url;
-    
-    // 2. Si el servidor rechaza el token (401/403) y NO estamos en la ruta de login
-    if ((response.status === 401 || response.status === 403) && !url.includes('/api/admin/login')) {
-        ejecutarPurgaAdmin("Credenciales de administrador inválidas o expiradas.");
-    }
-    
-    return response;
-};
+    window.fetch = async function(...args) {
+        let [resource, config] = args;
+        const url = typeof resource === 'string' ? resource : resource.url;
+
+        config = config || {};
+        config.headers = config.headers || {};
+        
+        // 🔥 LISTA BLANCA: Solo inyectamos el Token de Admin si la URL va dirigida a TU API (/api/)
+        const isGymenezApi = url.includes('/api/');
+
+        if (isGymenezApi) {
+            const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+            if (token) {
+                config.headers['Authorization'] = `Bearer ${token}`;
+            }
+        }
+        
+        const response = await window.originalFetch(resource, config);
+        
+        // 2. Evaluar expulsión solo si el rechazo 401/403 viene de TU API
+        if (isGymenezApi && (response.status === 401 || response.status === 403) && !url.includes('/api/admin/login')) {
+            ejecutarPurgaAdmin("Credenciales de administrador inválidas o expiradas.");
+        }
+        
+        return response;
+    };
+}
 
 // 3. Función de Purga Inmutable
 function ejecutarPurgaAdmin(mensaje) {
