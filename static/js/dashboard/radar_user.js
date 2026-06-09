@@ -16,8 +16,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Motor de audio en espera (Evita el bloqueo estricto del navegador)
 let audioCtx = null;
+let lastNotifiedMsg = localStorage.getItem('gymen_last_radar_msg') || ""; 
+
 function playDing() {
     try {
         if (!audioCtx) {
@@ -35,7 +36,68 @@ function playDing() {
         gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
         osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.3);
-    } catch(e) { console.warn("Audio bloqueado por falta de interacción previa."); }
+    } catch(e) {}
+}
+
+// Inyección de la interfaz táctil Premium con botón de cierre integrado
+const toastHTML = `
+<div id="radar-toast" class="fixed top-6 right-6 z-[9999] flex items-center gap-3 bg-[#0a0a0f]/90 backdrop-blur-2xl border border-white/10 p-3.5 pr-12 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.9)] transition-all duration-500 select-none touch-none" style="transform: translateX(160vw); max-width: 340px; width: calc(100vw - 48px);">
+    <div onclick="window.location.href='/apps/user/pulse.html'" class="w-10 h-10 bg-gradient-to-tr from-[#FFC300] to-[#FFD700] rounded-[16px] flex items-center justify-center text-black shadow-[0_0_20px_rgba(255,195,0,0.3)] shrink-0 cursor-pointer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z"></path></svg>
+    </div>
+    <div onclick="window.location.href='/apps/user/pulse.html'" class="flex-grow overflow-hidden cursor-pointer">
+        <h4 class="text-white text-[11px] font-black uppercase tracking-widest truncate">Pulse Center</h4>
+        <p id="radar-user-preview" class="text-gray-400 text-[10px] font-medium tracking-wide truncate mt-0.5">Mensaje entrante...</p>
+    </div>
+    <button id="radar-close-btn" class="absolute right-3.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 text-xs transition-all font-sans">✕</button>
+</div>`;
+document.body.insertAdjacentHTML('beforeend', toastHTML);
+
+// LÓGICA DE GESTOS TÁCTILES (SWIPE TO DISMISS)
+let startX = 0, startY = 0, currentX = 0, currentY = 0;
+const toastEl = document.getElementById('radar-toast');
+
+toastEl.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    toastEl.style.transition = 'none';
+});
+
+toastEl.addEventListener('touchmove', (e) => {
+    currentX = e.touches[0].clientX - startX;
+    currentY = e.touches[0].clientY - startY;
+    
+    // Solo permitir mover hacia la derecha (valores positivos) o hacia arriba (valores negativos)
+    let moveX = currentX > 0 ? currentX : 0;
+    let moveY = currentY < 0 ? currentY : 0;
+    
+    if (Math.abs(currentX) > Math.abs(currentY)) {
+        toastEl.style.transform = `translateX(${moveX}px)`;
+    } else {
+        toastEl.style.transform = `translateY(${moveY}px)`;
+    }
+});
+
+toastEl.addEventListener('touchend', () => {
+    toastEl.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+    if (currentX > 100 || currentY < -60) {
+        dismissToastManual();
+    } else {
+        toastEl.style.transform = 'translateX(0)';
+    }
+    startX = startY = currentX = currentY = 0;
+});
+
+document.getElementById('radar-close-btn').addEventListener('click', dismissToastManual);
+
+function dismissToastManual() {
+    toastEl.style.transform = 'translateX(160vw)';
+    // Al cerrar manualmente, marcamos el último mensaje como "leído localmente" para silenciarlo
+    const currentPreview = document.getElementById('radar-user-preview').textContent;
+    if (currentPreview) {
+        lastNotifiedMsg = currentPreview;
+        localStorage.setItem('gymen_last_radar_msg', lastNotifiedMsg);
+    }
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -45,38 +107,29 @@ window.addEventListener('DOMContentLoaded', async () => {
     
     const userId = JSON.parse(sessionStr).id || JSON.parse(sessionStr)._id;
 
-    // Inyección de la UI Flotante con CSS Puro para la animación
-    const toastHTML = `
-    <div id="radar-toast" class="fixed top-6 right-6 z-[9999] flex items-center gap-3 bg-[#1c1c1e]/95 backdrop-blur-xl border border-white/10 p-3 pr-6 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] cursor-pointer hover:bg-[#2c2c2e] transition-all" style="transform: translateX(150vw); transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);" onclick="window.location.href='/apps/user/pulse.html'">
-        <div class="w-10 h-10 bg-[#FFC300] rounded-full flex items-center justify-center text-black shadow-[0_0_15px_rgba(255,195,0,0.5)]">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z"></path></svg>
-        </div>
-        <div>
-            <h4 class="text-white text-xs font-black uppercase tracking-widest">Soporte Central</h4>
-            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">Tienes un Pulse Message</p>
-        </div>
-    </div>`;
-    document.body.insertAdjacentHTML('beforeend', toastHTML);
-
     try {
         const res = await fetch(`${API_BASE_URL}/api/pulse/token`, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await res.json();
         if (res.ok && data.success) {
             await signInWithCustomToken(auth, data.firebase_token);
             
-            let lastMsg = "";
             onSnapshot(doc(db, "chats", userId), (docSnap) => {
-                const toast = document.getElementById('radar-toast');
-                if (!toast) return;
-                
                 if (docSnap.exists() && docSnap.data().unread_user) {
-                    const currentMsg = docSnap.data().ultimo_mensaje;
-                    if (currentMsg !== lastMsg) { playDing(); lastMsg = currentMsg; }
-                    toast.style.transform = 'translateX(0)'; // Deslizar hacia adentro
+                    const rawMsg = docSnap.data().ultimo_mensaje || "";
+                    const sanitizedMsg = rawMsg.replace("Tú: ", "").trim();
+
+                    // 🛡️ REGLA CONTROLADORA ANTI-DUPLICADOS SILENCIOSA
+                    if (sanitizedMsg === lastNotifiedMsg) {
+                        return; 
+                    }
+
+                    document.getElementById('radar-user-preview').textContent = sanitizedMsg;
+                    playDing();
+                    toastEl.style.transform = 'translateX(0)';
                 } else {
-                    toast.style.transform = 'translateX(150vw)'; // Ocultar
+                    toastEl.style.transform = 'translateX(160vw)';
                 }
             });
         }
-    } catch(e) { console.error("Error de Radar:", e); }
+    } catch(e) {}
 });
