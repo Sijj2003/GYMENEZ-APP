@@ -3,147 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GYMENEZ | Consola de Gestión</title>
+    <title>GYMENEZ OS | Consola de Gestión Unificada</title>
     <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/auth.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
+    <style>
+        /* Optimizaciones OS Core */
+        body { overflow: hidden; } /* Bloquea el scroll general. Todo vive en el frame */
+        
+        /* Sidebar y Topbar Glassmorphism Premium */
+        .os-sidebar { background: rgba(5, 5, 8, 0.6); backdrop-filter: blur(40px); border-right: 1px solid rgba(255, 255, 255, 0.05); }
+        .os-topbar { background: linear-gradient(to bottom, rgba(3,3,5,0.9), rgba(3,3,5,0)); backdrop-filter: blur(15px); pointer-events: none; }
+        
+        /* Navegación Lateral */
+        .nav-item { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; }
+        .nav-item.active { background: rgba(255, 195, 0, 0.1); border-color: rgba(255, 195, 0, 0.3); color: #FFC300; box-shadow: inset 4px 0 0 #FFC300; }
+        .nav-item:hover:not(.active) { background: rgba(255, 255, 255, 0.05); color: white; }
+
+        /* Visor de Iframe Dinámico */
+        #module-viewer { transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .viewer-hidden { opacity: 0; transform: scale(0.98) translateY(20px); pointer-events: none; z-index: -1; }
+        .viewer-visible { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; z-index: 40; }
+        
+        /* Scrollbars Ocultos para UI Limpia */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
-<body class="selection:bg-[#FFC300] selection:text-black overflow-x-hidden min-h-screen flex flex-col bg-[#030305]">
+<body class="selection:bg-[#FFC300] selection:text-black w-screen h-screen flex bg-[#030305]">
 
-    <div class="fixed inset-0 bg-[url('/static/img/backgrounds/FONDO.png')] bg-cover bg-center opacity-5 -z-10 mix-blend-screen grayscale"></div>
-    <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/50 via-[#030305]/95 to-[#030305] -z-10"></div>
+    <div class="fixed inset-0 bg-[url('/static/img/backgrounds/FONDO.png')] bg-cover bg-center opacity-5 mix-blend-screen grayscale pointer-events-none -z-20"></div>
+    <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/50 via-[#030305]/95 to-[#030305] pointer-events-none -z-10"></div>
+    <div class="fixed top-0 left-1/2 transform -translate-x-1/2 w-[50vw] h-[20vh] bg-[#FFC300]/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
-    <header class="w-full border-b border-white/5 bg-black/30 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
-            <div class="flex items-center gap-2 md:gap-3">
-                <div class="w-2 h-2 bg-[#FFC300] rounded-full shadow-[0_0_10px_#FFC300] animate-pulse"></div>
-                <h1 class="text-lg md:text-xl font-black uppercase tracking-tighter block">
-                    GYMENEZ <span class="text-white">CORE</span>
+    <aside class="os-sidebar w-20 lg:w-64 h-full flex flex-col justify-between py-6 z-50 flex-shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
+        <div class="overflow-y-auto no-scrollbar pb-6">
+            
+            <div class="px-4 lg:px-8 mb-8 flex items-center justify-center lg:justify-start cursor-pointer group" onclick="goHome()">
+                <div class="w-10 h-10 rounded-xl bg-[#FFC300] flex items-center justify-center shadow-[0_0_15px_#FFC300] lg:mr-3 flex-shrink-0 transition-transform group-hover:scale-105">
+                    <span class="text-black font-black text-xl leading-none mt-0.5 tracking-tighter">G</span>
+                </div>
+                <h1 class="hidden lg:block text-xl font-black uppercase tracking-tighter text-white">
+                    GYMENEZ <span class="text-[#FFC300]">OS</span>
                 </h1>
             </div>
-            
-            <div class="flex items-center gap-3 md:gap-4">
-                <div class="hidden md:block text-right mr-2">
-                    <p id="admin-name-display" class="text-[10px] md:text-xs font-bold text-white uppercase tracking-widest">Cargando...</p>
-                    <p class="text-[8px] md:text-[9px] text-[#FFC300] font-black uppercase tracking-[0.3em]">System Administrator</p>
-                </div>
-                <button id="logout-btn" class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+
+            <nav class="flex flex-col gap-1.5 px-3">
+                <button onclick="goHome()" id="nav-home" class="nav-item active flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-400 font-bold text-[11px] uppercase tracking-widest border border-transparent outline-none">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    <span class="hidden lg:block mt-0.5">Centro Comando</span>
                 </button>
-            </div>
-        </div>
-    </header>
+                
+                <p class="hidden lg:block px-5 text-[8px] font-black text-gray-600 uppercase tracking-[0.3em] mt-6 mb-2">Ecosistema Base</p>
+                
+                <button onclick="loadModule('/apps/admin/users.html', 'nav-users')" id="nav-users" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-400 font-bold text-[11px] uppercase tracking-widest border border-transparent outline-none">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <span class="hidden lg:block mt-0.5">Atletas</span>
+                </button>
+                
+                <button onclick="loadModule('/apps/admin/routines.html', 'nav-routines')" id="nav-routines" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-400 font-bold text-[11px] uppercase tracking-widest border border-transparent outline-none">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    <span class="hidden lg:block mt-0.5">Bóveda Fitness</span>
+                </button>
 
-    <!-- Contenedor Principal de la Consola (Bento Grid 100% Unificado) -->
-    <main class="relative z-10 max-w-7xl mx-auto w-full px-4 md:px-6 py-8 md:py-12 flex-grow fade-in-up">
+                <button onclick="loadModule('/apps/admin/eats.html', 'nav-eats')" id="nav-eats" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-400 font-bold text-[11px] uppercase tracking-widest border border-transparent outline-none">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="hidden lg:block mt-0.5">GYMENEZ Eats</span>
+                </button>
+
+                <button onclick="loadModule('/apps/admin/on.html', 'nav-on')" id="nav-on" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-400 font-bold text-[11px] uppercase tracking-widest border border-transparent outline-none">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="hidden lg:block mt-0.5">GYMENEZ ON</span>
+                </button>
+
+                <p class="hidden lg:block px-5 text-[8px] font-black text-gray-600 uppercase tracking-[0.3em] mt-6 mb-2">Operaciones</p>
+
+                <button onclick="loadModule('/apps/admin/billing.html', 'nav-billing')" id="nav-billing" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-400 font-bold text-[11px] uppercase tracking-widest border border-transparent outline-none">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="hidden lg:block mt-0.5">Caja y Pagos</span>
+                </button>
+
+                <button onclick="loadModule('/apps/admin/pulse.html', 'nav-pulse')" id="nav-pulse" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-400 font-bold text-[11px] uppercase tracking-widest border border-transparent outline-none">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                    <span class="hidden lg:block mt-0.5">Pulse Center</span>
+                </button>
+
+                <button onclick="loadModule('/apps/admin/metrics.html', 'nav-metrics')" id="nav-metrics" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-400 font-bold text-[11px] uppercase tracking-widest border border-transparent outline-none">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    <span class="hidden lg:block mt-0.5">Laboratorio (Biolab)</span>
+                </button>
+
+                <button onclick="loadModule('/apps/admin/trainers.html', 'nav-trainers')" id="nav-trainers" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-400 font-bold text-[11px] uppercase tracking-widest border border-transparent outline-none">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20h5v-2a3 3 0 00-5.356-1.857M7 20H2v-2a3 3 0 015.356-1.857"></path></svg>
+                    <span class="hidden lg:block mt-0.5">Staff Táctico</span>
+                </button>
+            </nav>
+        </div>
+
+        <div class="px-3 flex justify-center lg:justify-start">
+            <button id="logout-btn" class="w-full flex items-center justify-center lg:justify-start gap-4 px-4 py-3.5 rounded-xl text-red-500 font-bold text-[11px] uppercase tracking-widest bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white transition group outline-none">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span class="hidden lg:block mt-0.5">Desconectar Sistema</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col h-full relative overflow-hidden">
         
-        <!-- Encabezado de Operaciones -->
-        <div class="mb-8 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
-            <div>
-                <p class="text-gray-500 text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] mb-1 md:mb-2">Centro de Operaciones Globales</p>
-                <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter leading-none break-words">
-                    Consola <span class="text-[#FFC300]">Gestión.</span>
-                </h2>
+        <header class="os-topbar w-full absolute top-0 z-40 py-4 px-6 md:px-10 flex justify-between items-center h-[72px]">
+            <div class="flex items-center gap-3">
+                <div id="active-module-title" class="hidden pointer-events-auto">
+                    <button onclick="goHome()" class="px-4 py-1.5 rounded-full bg-white/10 text-white hover:bg-[#FFC300] hover:text-black font-bold text-[9px] uppercase tracking-widest transition shadow-[0_0_15px_rgba(255,195,0,0.1)] flex items-center gap-2 border border-white/5 hover:border-[#FFC300]">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        Volver a Inicio
+                    </button>
+                </div>
             </div>
-            <div class="px-4 py-2 md:px-5 md:py-3 rounded-xl md:rounded-2xl bg-[#FFC300]/5 border border-[#FFC300]/10 inline-block self-start md:self-auto">
-                <p class="text-[7px] md:text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Status Sistema</p>
-                <p class="text-[9px] md:text-[10px] font-bold text-[#FFC300] flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-[#FFC300]"></span> ONLINE Y SEGURO</p>
-            </div>
-        </div>
-
-        <!-- REJILLA DE TARJETAS BENTO-GRID 100% UNIFICADA (ESTILO INTEGRAL CINEMÁTICO) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             
-            <!-- CARD 1: EXPEDIENTES DE USUARIOS (CIAN LAYER) -->
-            <a href="/apps/admin/users.html" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-sky-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px]">
-                <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
-                <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_#0ea5e9]"></span>
-                        <span class="text-[8px] md:text-[9px] font-black text-sky-400 uppercase tracking-[0.2em] block">Control de Cuentas</span>
-                    </div>
-                    <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">SISTEMA <span class="text-sky-400">USUARIOS</span></h3>
-                    <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
-                        Gestión de atletas, perfiles activos, niveles de acceso y bloqueos de seguridad perimetral →
-                    </p>
+            <div class="flex items-center gap-3 text-right pointer-events-auto">
+                <div class="hidden md:block">
+                    <p id="admin-name-display" class="text-[10px] md:text-xs font-black text-white uppercase tracking-widest drop-shadow-md">Cargando...</p>
+                    <p class="text-[8px] md:text-[9px] text-[#FFC300] font-black uppercase tracking-[0.3em] drop-shadow-md">Admin Master</p>
                 </div>
-            </a>
-
-            <!-- CARD 2: PROGRAMAS Y RUTINAS (PÚRPURA LAYER) -->
-            <a href="/apps/admin/routines.html" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-purple-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px]">
-                <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
-                <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]"></span>
-                        <span class="text-[8px] md:text-[9px] font-black text-purple-400 uppercase tracking-[0.2em] block">Planificación Táctica</span>
-                    </div>
-                    <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">MACROCICLOS <span class="text-purple-400">RUTINAS</span></h3>
-                    <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
-                        Control de contenido físico, dosificación de bloques de fuerza y pool de 100 esenciales →
-                    </p>
+                <div class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shadow-lg">
+                    <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                 </div>
-            </a>
+            </div>
+        </header>
 
-            <!-- CARD 3: STAFF / COACHES (NARANJA LAYER) -->
-            <a href="/apps/admin/trainers.html" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-orange-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px]">
-                <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
-                <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_#f97316]"></span>
-                        <span class="text-[8px] md:text-[9px] font-black text-orange-400 uppercase tracking-[0.2em] block">Dirección de Equipo</span>
+        <main id="home-dashboard" class="absolute inset-0 w-full h-full overflow-y-auto no-scrollbar pt-[88px] pb-12 px-6 md:px-10 transition-all duration-500 opacity-100 transform scale-100 z-10">
+            <div class="max-w-7xl mx-auto w-full">
+                
+                <div class="mb-8 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <p class="text-gray-500 text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] mb-2 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#FFC300] shadow-[0_0_10px_#FFC300] animate-pulse"></span> Sistema Encriptado Activo
+                        </p>
+                        <h2 class="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter leading-none text-white drop-shadow-lg">
+                            Centro <span class="text-[#FFC300]">Comando.</span>
+                        </h2>
                     </div>
-                    <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">ORGANIZACIÓN <span class="text-orange-400">STAFF</span></h3>
-                    <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
-                        Directorio del equipo técnico, roles asignados y credenciales de entrenadores →
-                    </p>
                 </div>
-            </a>
 
-            <!-- CARD 4: LABORATORIO BIOMÉTRICO (GOLD LAYER) -->
-            <a href="/apps/admin/metrics.html" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-[#FFC300]/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px]">
-                <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
-                <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-[#FFC300] shadow-[0_0_8px_#FFC300]"></span>
-                        <span class="text-[8px] md:text-[9px] font-black text-[#FFC300] uppercase tracking-[0.2em] block">Telemetría de Atletas</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                    
+                    <div onclick="loadModule('/apps/admin/users.html', 'nav-users')" class="group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-sky-500/50 bg-[#0a0a0f]/80 backdrop-blur-md transition-all duration-500 flex flex-col justify-end min-h-[200px] cursor-pointer shadow-xl">
+                        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
+                        <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_#0ea5e9]"></span>
+                                <span class="text-[8px] md:text-[9px] font-black text-sky-400 uppercase tracking-[0.2em]">Control de Cuentas</span>
+                            </div>
+                            <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">SISTEMA <span class="text-sky-400">USUARIOS</span></h3>
+                            <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">Abre módulo de gestión de biometría y bloqueos →</p>
+                        </div>
                     </div>
-                    <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">GYMENEZ <span class="text-[#FFC300]">BIOLAB</span></h3>
-                    <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
-                        Monitorear composición corporal, perímetros de fuerza y objetivos macrociclo →
-                    </p>
-                </div>
-            </a>
 
-            <!-- CARD 5: GESTIÓN DE NUTRICIÓN REAL (EMERALD LAYER) -->
-            <a href="/apps/admin/eats.html" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-emerald-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px]">
-                <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
-                <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
-                        <span class="text-[8px] md:text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em] block">Bóveda & Dietas</span>
+                    <div onclick="loadModule('/apps/admin/routines.html', 'nav-routines')" class="group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-purple-500/50 bg-[#0a0a0f]/80 backdrop-blur-md transition-all duration-500 flex flex-col justify-end min-h-[200px] cursor-pointer shadow-xl">
+                        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
+                        <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]"></span>
+                                <span class="text-[8px] md:text-[9px] font-black text-purple-400 uppercase tracking-[0.2em]">Ingeniería Física</span>
+                            </div>
+                            <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">BÓVEDA <span class="text-purple-400">FITNESS</span></h3>
+                            <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">Abre constructor de macrociclos y ejercicios →</p>
+                        </div>
                     </div>
-                    <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">GYMENEZ <span class="text-emerald-500">EATS</span></h3>
-                    <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
-                        Administrar base de 720 alimentos y asignar menús texto a miembros Ultra →
-                    </p>
+
+                    <div onclick="loadModule('/apps/admin/eats.html', 'nav-eats')" class="group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-emerald-500/50 bg-[#0a0a0f]/80 backdrop-blur-md transition-all duration-500 flex flex-col justify-end min-h-[200px] cursor-pointer shadow-xl">
+                        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
+                        <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+                                <span class="text-[8px] md:text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em]">Bóveda Bioquímica</span>
+                            </div>
+                            <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">GYMENEZ <span class="text-emerald-500">EATS</span></h3>
+                            <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">Abre módulo de control nutricional y diccionarios →</p>
+                        </div>
+                    </div>
+
+                    <div onclick="loadModule('/apps/admin/metrics.html', 'nav-metrics')" class="group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-[#FFC300]/50 bg-[#0a0a0f]/80 backdrop-blur-md transition-all duration-500 flex flex-col justify-end min-h-[200px] cursor-pointer shadow-xl">
+                        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
+                        <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#FFC300] shadow-[0_0_8px_#FFC300]"></span>
+                                <span class="text-[8px] md:text-[9px] font-black text-[#FFC300] uppercase tracking-[0.2em]">Telemetría Médica</span>
+                            </div>
+                            <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">GYMENEZ <span class="text-[#FFC300]">BIOLAB</span></h3>
+                            <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">Abre módulo de medidas antropométricas →</p>
+                        </div>
+                    </div>
+                    
+                    <div onclick="loadModule('/apps/admin/on.html', 'nav-on')" class="group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-red-600/50 bg-[#0a0a0f]/80 backdrop-blur-md transition-all duration-500 flex flex-col justify-end min-h-[200px] cursor-pointer shadow-xl lg:col-span-2">
+                        <div class="absolute inset-0 bg-gradient-to-r from-red-900/20 to-transparent opacity-50 transition-opacity group-hover:opacity-100"></div>
+                        <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2 flex items-center justify-between">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
+                                    <span class="text-[8px] md:text-[9px] font-black text-red-400 uppercase tracking-[0.2em]">Cultura Audiovisual</span>
+                                </div>
+                                <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">GYMENEZ <span class="text-red-500">ON</span></h3>
+                                <p class="text-[10px] text-gray-400 mt-1 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors max-w-sm">
+                                    Gestión de masterclasses, contenido exclusivo y educación técnica audiovisual →
+                                </p>
+                            </div>
+                            <div class="hidden sm:block text-red-500/20 group-hover:text-red-500/50 transition-colors">
+                                <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path fill-rule="evenodd" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" clip-rule="evenodd"/></svg>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-            </a>
+            </div>
 
-        </div>
-    </main>
+            <div id="module-viewer" class="absolute inset-0 w-full h-full bg-[#030305] viewer-hidden flex flex-col">
+                <div id="transition-loader" class="absolute inset-0 bg-[#030305] backdrop-blur-xl z-[60] flex flex-col items-center justify-center transition-opacity duration-300 opacity-100">
+                    <div class="relative w-16 h-16 mb-4">
+                        <div class="absolute inset-0 border-4 border-white/10 rounded-full"></div>
+                        <div class="absolute inset-0 border-4 border-[#FFC300] rounded-full border-t-transparent animate-spin"></div>
+                    </div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.4em] text-white animate-pulse">Abriendo Módulo...</p>
+                </div>
+                <iframe id="app-frame" class="w-full flex-1 border-none outline-none bg-transparent pt-[72px]" src="about:blank"></iframe>
+            </div>
 
-    <footer class="text-center py-6 border-t border-white/5 mt-auto bg-[#030305]/80 backdrop-blur-md">
-        <p class="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • SYSTEM CORE</p>
-    </footer>
+        </main>
+    </div>
 
     <script src="/static/js/admin/admin_middleware.js"></script>
     <script src="/static/js/admin/dashboard.js"></script>
     <script type="module" src="/static/js/admin/radar_admin.js"></script>
+    
+    <script>
+        // ----------------------------------------------------
+        // LÓGICA DEL SISTEMA OPERATIVO (Single Page Experience)
+        // ----------------------------------------------------
+        const homeDashboard = document.getElementById('home-dashboard');
+        const moduleViewer = document.getElementById('module-viewer');
+        const appFrame = document.getElementById('app-frame');
+        const loader = document.getElementById('transition-loader');
+        const activeModuleTitle = document.getElementById('active-module-title');
+        
+        function setActiveNav(navId) {
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active');
+                el.classList.add('text-gray-400');
+            });
+            const activeEl = document.getElementById(navId);
+            if(activeEl) {
+                activeEl.classList.add('active');
+                activeEl.classList.remove('text-gray-400');
+            }
+        }
+
+        window.goHome = function() {
+            setActiveNav('nav-home');
+            
+            // Ocultar botón Volver
+            activeModuleTitle.classList.add('hidden');
+
+            // Ocultar Visor, Mostrar Dashboard
+            moduleViewer.classList.replace('viewer-visible', 'viewer-hidden');
+            homeDashboard.style.opacity = '1';
+            homeDashboard.style.transform = 'scale(1)';
+            homeDashboard.style.pointerEvents = 'auto';
+            
+            // Limpiar iframe para liberar memoria RAM del navegador
+            setTimeout(() => { appFrame.src = 'about:blank'; }, 400);
+        };
+
+        window.loadModule = function(url, navId) {
+            setActiveNav(navId);
+            
+            // Mostrar Loader y Visor
+            moduleViewer.classList.replace('viewer-hidden', 'viewer-visible');
+            loader.classList.remove('opacity-0');
+            loader.style.pointerEvents = 'auto';
+
+            // Ocultar Dashboard Principal
+            homeDashboard.style.opacity = '0';
+            homeDashboard.style.transform = 'scale(0.95)';
+            homeDashboard.style.pointerEvents = 'none';
+
+            // Mostrar el botón de volver en el header
+            activeModuleTitle.classList.remove('hidden');
+
+            // Inyectar URL en el Iframe
+            appFrame.src = url;
+
+            // Escuchar carga completa del Iframe
+            appFrame.onload = function() {
+                // Si está en 'about:blank', no quitamos el loader (ocurre al ir al home)
+                if(appFrame.src.includes('about:blank')) return;
+                
+                // Transición suave al terminar de cargar
+                setTimeout(() => {
+                    loader.classList.add('opacity-0');
+                    loader.style.pointerEvents = 'none';
+                }, 300); // Pequeño retraso para dar sensación premium
+            };
+        };
+    </script>
 </body>
 </html>
