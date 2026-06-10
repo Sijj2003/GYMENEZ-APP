@@ -16,7 +16,7 @@
         /* Contenedor del Dashboard Base */
         .dashboard-container { height: 100vh; overflow-y: auto; }
         
-        /* Visor de Módulos (Iframe Dinámico) */
+        /* Visor de Módulos (Multitarea) */
         #module-viewer { transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; }
         .viewer-hidden { transform: translateY(100%); opacity: 0; pointer-events: none; }
         .viewer-visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
@@ -66,13 +66,13 @@
                 </div>
                 <div class="px-4 py-2 md:px-5 md:py-3 rounded-xl md:rounded-2xl bg-[#FFC300]/5 border border-[#FFC300]/10 inline-block self-start md:self-auto shadow-[0_0_20px_rgba(255,195,0,0.05)]">
                     <p class="text-[7px] md:text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Status Sistema</p>
-                    <p class="text-[9px] md:text-[10px] font-bold text-[#FFC300] flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-[#FFC300]"></span> ONLINE Y SEGURO</p>
+                    <p class="text-[9px] md:text-[10px] font-bold text-[#FFC300] flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-[#FFC300]"></span> ONLINE Y MULTITAREA</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 
-                <div onclick="openModule('/apps/admin/users.html', 'Sistema de Usuarios')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-sky-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
+                <div onclick="openModule('/apps/admin/users.html', 'Sistema de Usuarios', 'nav-users')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-sky-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
                     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
                     <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
@@ -87,7 +87,7 @@
                     </div>
                 </div>
 
-                <div onclick="openModule('/apps/admin/routines.html', 'Ingeniería Física')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-purple-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
+                <div onclick="openModule('/apps/admin/routines.html', 'Ingeniería Física', 'nav-routines')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-purple-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
                     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
                     <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
@@ -102,7 +102,7 @@
                     </div>
                 </div>
 
-                <div onclick="openModule('/apps/admin/trainers.html', 'Organización Staff')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-orange-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
+                <div onclick="openModule('/apps/admin/trainers.html', 'Organización Staff', 'nav-trainers')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-orange-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
                     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
                     <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
@@ -117,7 +117,7 @@
                     </div>
                 </div>
 
-                <div onclick="openModule('/apps/admin/metrics.html', 'Telemetría Biolab')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-[#FFC300]/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
+                <div onclick="openModule('/apps/admin/metrics.html', 'Telemetría Biolab', 'nav-metrics')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-[#FFC300]/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
                     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
                     <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
@@ -132,7 +132,7 @@
                     </div>
                 </div>
 
-                <div onclick="openModule('/apps/admin/eats.html', 'Bóveda Bioquímica')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-emerald-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
+                <div onclick="openModule('/apps/admin/eats.html', 'Bóveda Bioquímica', 'nav-eats')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-emerald-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
                     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
                     <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
@@ -147,7 +147,7 @@
                     </div>
                 </div>
 
-                <div onclick="openModule('/apps/admin/on.html', 'Cultura Audiovisual')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-red-600/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
+                <div onclick="openModule('/apps/admin/on.html', 'Cultura Audiovisual', 'nav-on')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-red-600/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
                     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
                     <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
@@ -162,7 +162,7 @@
                     </div>
                 </div>
 
-                <div onclick="openModule('/apps/admin/pulse.html', 'Comunicaciones')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-blue-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
+                <div onclick="openModule('/apps/admin/pulse.html', 'Comunicaciones', 'nav-pulse')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-blue-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
                     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
                     <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
@@ -177,7 +177,7 @@
                     </div>
                 </div>
 
-                <div onclick="openModule('/apps/admin/billing.html', 'Auditoría Fiscal')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-gray-300/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer sm:col-span-2 lg:col-span-2">
+                <div onclick="openModule('/apps/admin/billing.html', 'Auditoría Fiscal', 'nav-billing')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-gray-300/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer sm:col-span-2 lg:col-span-2">
                     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1621504450181-5d356f61d307?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
                     <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2 flex justify-between items-end">
@@ -190,9 +190,6 @@
                             <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors max-w-sm">
                                 Validar referencias bancarias, aprobar transacciones de suscripción y exportar CSV →
                             </p>
-                        </div>
-                        <div class="hidden sm:block text-gray-500/30 group-hover:text-gray-300/50 transition-colors">
-                            <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
                         </div>
                     </div>
                 </div>
@@ -224,7 +221,8 @@
             </div>
         </div>
 
-        <iframe id="app-frame" class="w-full flex-grow border-none bg-transparent" src="about:blank"></iframe>
+        <div id="iframe-container" class="w-full flex-grow relative bg-transparent">
+            </div>
     </div>
 
     <script src="/static/js/admin/admin_middleware.js"></script>
@@ -232,15 +230,21 @@
     <script type="module" src="/static/js/admin/radar_admin.js"></script>
 
     <script>
-        // Lógica OS: Deslizamiento vertical estilo App Nativa (Infalible)
+        // =================================================================
+        // LÓGICA OS MULTITAREA AVANZADA (Persistencia y Garbage Collector)
+        // =================================================================
+        
+        const CACHE_TIME_MS = 12 * 60 * 1000; // 12 minutos de memoria viva
+        const moduleCache = {}; // Objeto para guardar { navId: { iframe: Node, lastAccessed: timestamp } }
+        
         const viewer = document.getElementById('module-viewer');
-        const frame = document.getElementById('app-frame');
+        const iframeContainer = document.getElementById('iframe-container');
         const titleEl = document.getElementById('module-title');
         const loader = document.getElementById('module-loader');
         const dashboard = document.getElementById('home-dashboard');
 
-        window.openModule = function(url, title) {
-            // 1. Preparar UI
+        window.openModule = function(url, title, navId) {
+            // 1. Preparar Interfaz de Transición
             titleEl.textContent = title;
             loader.classList.remove('opacity-0');
             
@@ -248,22 +252,57 @@
             viewer.classList.remove('viewer-hidden');
             viewer.classList.add('viewer-visible');
             
-            // Efecto de empuje hacia atrás en el dashboard
+            // Efecto de profundidad en el dashboard
             dashboard.style.transform = "scale(0.97)";
             dashboard.style.opacity = "0.4";
+            dashboard.style.pointerEvents = "none";
             dashboard.style.transition = "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)";
             
-            // 3. Cargar URL en el Iframe
-            frame.src = url;
+            // 3. Ocultar todos los iframes almacenados actualmente
+            Object.values(moduleCache).forEach(mod => {
+                mod.iframe.style.display = 'none';
+            });
 
-            // 4. Ocultar spinner cuando el contenido reporte que ya cargó
-            frame.onload = function() {
-                if(frame.src.includes('about:blank')) return;
+            const now = Date.now();
+
+            // 4. LÓGICA DE CACHÉ: ¿La aplicación ya estaba abierta y es válida?
+            if (moduleCache[navId] && (now - moduleCache[navId].lastAccessed < CACHE_TIME_MS)) {
+                // Existe y está dentro del tiempo límite -> Traer al frente
+                moduleCache[navId].lastAccessed = now; // Renovar el tiempo
+                moduleCache[navId].iframe.style.display = 'block';
                 
-                setTimeout(() => {
-                    loader.classList.add('opacity-0');
-                }, 300);
-            };
+                // Ocultar spinner de inmediato porque el contenido ya está renderizado
+                setTimeout(() => { loader.classList.add('opacity-0'); }, 150);
+                
+            } else {
+                // 5. La app no existe o expiró -> Hay que (re)crearla
+                
+                // Si existía pero expiró, la destruimos del DOM primero
+                if (moduleCache[navId]) {
+                    iframeContainer.removeChild(moduleCache[navId].iframe);
+                }
+                
+                // Crear el nuevo Iframe
+                const iframe = document.createElement('iframe');
+                iframe.className = "absolute inset-0 w-full h-full border-none bg-transparent";
+                iframe.src = url;
+                
+                // Ocultar spinner cuando termine de cargar
+                iframe.onload = function() {
+                    setTimeout(() => {
+                        loader.classList.add('opacity-0');
+                    }, 300);
+                };
+                
+                // Inyectar en el contenedor general
+                iframeContainer.appendChild(iframe);
+                
+                // Guardar en la RAM local
+                moduleCache[navId] = {
+                    iframe: iframe,
+                    lastAccessed: now
+                };
+            }
         };
 
         window.closeModule = function() {
@@ -274,12 +313,30 @@
             // 2. Restaurar dashboard
             dashboard.style.transform = "scale(1)";
             dashboard.style.opacity = "1";
+            dashboard.style.pointerEvents = "auto";
             
-            // 3. Limpiar la memoria del iframe una vez que esté oculto
-            setTimeout(() => {
-                frame.src = 'about:blank';
-            }, 500); // Esperar a que termine la animación css
+            // Nota: NO destruimos el iframe, se queda viviendo en moduleCache
         };
+
+        // =================================================================
+        // GARBAGE COLLECTOR (Recolector de Basura Silencioso)
+        // =================================================================
+        // Cada minuto, revisamos si algún módulo lleva inactivo más de 12 min.
+        // Si es así, lo destruimos para no ralentizar el navegador del usuario.
+        setInterval(() => {
+            const now = Date.now();
+            for (const navId in moduleCache) {
+                if (now - moduleCache[navId].lastAccessed >= CACHE_TIME_MS) {
+                    const iframeToDestroy = moduleCache[navId].iframe;
+                    if(iframeToDestroy && iframeToDestroy.parentNode) {
+                        iframeToDestroy.parentNode.removeChild(iframeToDestroy);
+                    }
+                    delete moduleCache[navId];
+                    console.log(`[OS Core] Módulo limpiado por inactividad (>12m): ${navId}`);
+                }
+            }
+        }, 60000); 
+
     </script>
 </body>
 </html>
