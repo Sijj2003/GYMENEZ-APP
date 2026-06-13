@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <g fill="#FFC300">
+    <!-- Apex Exterior Principal -->
+    <path d="M256,60 L460,412 L380,412 L256,190 L132,412 L52,412 Z"/>
+    <!-- Núcleo de Enfoque Interior -->
+    <path d="M256,260 L330,382 L290,382 L256,320 L222,382 L182,382 Z" opacity="0.85"/>
+  </g>
+</svg>
