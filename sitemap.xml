@@ -1,42 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Página Principal (Prioridad Máxima) -->
   <url>
-    <loc>https://gymenez.com/</loc>
+    <loc>https://www.gymenez.com/</loc>
     <lastmod>2026-06-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
-  <!-- Rutas de Registro y Acceso -->
   <url>
-    <loc>https://gymenez.com/apps/auth/register.html</loc>
+    <loc>https://www.gymenez.com/apps/auth/register.html</loc>
     <lastmod>2026-06-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://gymenez.com/apps/start/login.html</loc>
+    <loc>https://www.gymenez.com/apps/start/login.html</loc>
     <lastmod>2026-06-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
-  <!-- Páginas de Información (Pilares del servicio) -->
   <url>
-    <loc>https://gymenez.com/information/fitness.html</loc>
+    <loc>https://www.gymenez.com/information/fitness.html</loc>
     <lastmod>2026-06-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://gymenez.com/information/eats.html</loc>
+    <loc>https://www.gymenez.com/information/eats.html</loc>
     <lastmod>2026-06-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://gymenez.com/information/on.html</loc>
+    <loc>https://www.gymenez.com/information/on.html</loc>
     <lastmod>2026-06-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
