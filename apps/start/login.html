@@ -121,6 +121,64 @@
         </div>
     </div>
 
+    <div id="recovery-center-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-[2000] p-4 opacity-0 transition-opacity duration-300">
+        <div class="glass-panel p-6 md:p-10 w-full max-w-md mx-auto rounded-[24px] md:rounded-[32px] border-t border-[#FFC300]/30 relative overflow-hidden min-h-[380px] flex flex-col">
+            <button onclick="closeRecoveryModal()" class="absolute top-5 right-5 text-gray-500 hover:text-white text-2xl leading-none transition-colors z-50">&times;</button>
+            
+            <div id="recovery-view-menu" class="flex-grow flex flex-col justify-center transition-all duration-300">
+                <h3 class="text-2xl font-black mb-2 text-white text-center uppercase tracking-widest">Asistencia</h3>
+                <p class="text-gray-400 text-[10px] text-center mb-8 uppercase tracking-wider">Selecciona el protocolo requerido</p>
+                
+                <div class="space-y-3">
+                    <button onclick="switchRecoveryView('forgot-request')" class="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-[#FFC300] hover:text-black hover:border-[#FFC300] transition-all">Olvidé mi Clave</button>
+                    <button onclick="switchRecoveryView('unlock-request')" class="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-sky-500 hover:text-white hover:border-sky-500 transition-all">Desbloquear Usuario</button>
+                    <a href="https://wa.me/584148780392?text=Hola%20Soporte%20GYMENEZ,%20necesito%20ayuda%20con%20mi%20cuenta." target="_blank" class="block text-center w-full py-4 rounded-xl bg-white/5 border border-white/10 text-gray-400 font-bold text-[10px] uppercase tracking-widest hover:bg-emerald-600 hover:text-white hover:border-emerald-500 transition-all">Contactar Soporte</a>
+                </div>
+            </div>
+
+            <div id="recovery-view-forgot-request" class="hidden flex-grow flex flex-col justify-center transition-all duration-300">
+                <h3 class="text-lg font-black mb-1 text-white text-center uppercase tracking-widest text-[#FFC300]">Recuperar Clave</h3>
+                <p class="text-gray-400 text-[9px] text-center mb-6 uppercase tracking-wider">Ingresa tu correo para recibir un PIN</p>
+                <form id="form-forgot-request" class="space-y-4">
+                    <input type="email" id="forgot-email" placeholder="atleta@gymenez.com" class="w-full glass-input px-4 py-4 rounded-xl text-white text-xs font-medium" required>
+                    <button type="submit" id="btn-forgot-request" class="btn-gold w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em]">Enviar Código</button>
+                    <button type="button" onclick="switchRecoveryView('menu')" class="w-full text-center text-[9px] font-bold text-gray-500 hover:text-white uppercase tracking-widest pt-2">Atrás</button>
+                </form>
+            </div>
+
+            <div id="recovery-view-forgot-reset" class="hidden flex-grow flex flex-col justify-center transition-all duration-300">
+                <h3 class="text-lg font-black mb-1 text-white text-center uppercase tracking-widest text-[#FFC300]">Actualizar Clave</h3>
+                <p class="text-gray-400 text-[9px] text-center mb-4 uppercase tracking-wider">Ingresa el código y define tu clave</p>
+                <form id="form-forgot-reset" class="space-y-4">
+                    <input type="text" id="forgot-code" maxlength="6" placeholder="CÓDIGO (6 DÍGITOS)" class="w-full glass-input px-4 py-3 rounded-xl text-center text-[#FFC300] text-sm font-mono tracking-[0.3em]" required>
+                    <input type="password" id="forgot-pass1" placeholder="Nueva Contraseña" class="w-full glass-input px-4 py-3 rounded-xl text-center text-white text-xs font-mono" minlength="6" required>
+                    <input type="password" id="forgot-pass2" placeholder="Repetir Contraseña" class="w-full glass-input px-4 py-3 rounded-xl text-center text-white text-xs font-mono" minlength="6" required>
+                    <button type="submit" id="btn-forgot-reset" class="btn-gold w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em]">Confirmar Cambio</button>
+                </form>
+            </div>
+
+            <div id="recovery-view-unlock-request" class="hidden flex-grow flex flex-col justify-center transition-all duration-300">
+                <h3 class="text-lg font-black mb-1 text-white text-center uppercase tracking-widest text-sky-400">Desbloqueo</h3>
+                <p class="text-gray-400 text-[9px] text-center mb-6 uppercase tracking-wider">Valida tu identidad bloqueada</p>
+                <form id="form-unlock-request" class="space-y-4">
+                    <input type="email" id="unlock-email" placeholder="Correo" class="w-full glass-input px-4 py-3.5 rounded-xl text-white text-xs font-medium" required>
+                    <input type="password" id="unlock-pass" placeholder="Contraseña" class="w-full glass-input px-4 py-3.5 rounded-xl text-white text-xs font-mono" required>
+                    <button type="submit" id="btn-unlock-request" class="w-full py-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-black text-[10px] uppercase tracking-widest transition-all">Verificar e Inyectar Shield</button>
+                    <button type="button" onclick="switchRecoveryView('menu')" class="w-full text-center text-[9px] font-bold text-gray-500 hover:text-white uppercase tracking-widest pt-2">Atrás</button>
+                </form>
+            </div>
+
+            <div id="recovery-view-unlock-verify" class="hidden flex-grow flex flex-col justify-center transition-all duration-300">
+                <h3 class="text-lg font-black mb-1 text-white text-center uppercase tracking-widest text-sky-400">Validar Shield</h3>
+                <p class="text-gray-400 text-[9px] text-center mb-6 uppercase tracking-wider">Ingresa el código enviado a tu correo</p>
+                <form id="form-unlock-verify" class="space-y-4">
+                    <input type="text" id="unlock-code" maxlength="6" placeholder="······" class="w-full max-w-[200px] mx-auto block px-2 py-4 text-center text-3xl tracking-[0.4em] rounded-xl glass-input text-sky-400 font-mono" required>
+                    <button type="submit" id="btn-unlock-verify" class="w-full py-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-black text-[10px] uppercase tracking-widest transition-all">Liberar Cuenta</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
     <footer class="relative z-10 py-8 text-center border-t border-white/5 opacity-0 transition-all duration-1000 delay-500" id="main-footer">
         <p class="text-[9px] font-bold uppercase tracking-[0.5em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • EL ESTÁNDAR DE EXCELENCIA</p>
     </footer>
