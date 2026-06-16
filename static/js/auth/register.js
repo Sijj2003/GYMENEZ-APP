@@ -28,7 +28,7 @@ window.addEventListener('load', () => {
     }, 1000);
 });
 
-// Mostrar feedback visual
+// Mostrar feedback visual estándar
 function showUIFeedback(message, type = 'error') {
     const box = document.getElementById('message-box');
     if(!box) return;
@@ -52,6 +52,19 @@ function showUIFeedback(message, type = 'error') {
         box.style.opacity = '0';
         box.style.transform = 'translate(-50%, -20px)';
     }, 4000);
+}
+
+// Utilidad universal para abrir/cerrar modales suavemente
+function toggleModal(id, show) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (show) {
+        el.classList.remove('hidden');
+        setTimeout(() => el.classList.remove('opacity-0'), 10);
+    } else {
+        el.classList.add('opacity-0');
+        setTimeout(() => el.classList.add('hidden'), 300);
+    }
 }
 
 // Formateador de Fecha de Nacimiento
@@ -80,14 +93,13 @@ function validateFields(step) {
     if (step === 1) {
         const name = document.getElementById('reg-name').value.trim();
         const lastname = document.getElementById('reg-lastname').value.trim();
-        const emailRaw = document.getElementById('reg-email').value; // Captura cruda sin trim para evaluar espacios
+        const emailRaw = document.getElementById('reg-email').value;
 
         if (!name || !letterRegex.test(name) || !lastname || !letterRegex.test(lastname)) {
             showUIFeedback("Nombre y Apellido solo deben contener letras.", "error");
             return false;
         }
 
-        // 🔒 REGLA 1 FRONTEND: Prohibición inmediata de espacios
         if (emailRaw.includes(' ')) {
             showUIFeedback("El correo electrónico no puede contener espacios.", "error");
             return false;
@@ -99,7 +111,6 @@ function validateFields(step) {
             return false;
         }
 
-        // 🔒 REGLA 2 FRONTEND: Espejo de verificación estructural de dominios
         const emailParts = email.split('@');
         if (emailParts.length !== 2) {
             showUIFeedback("Estructura de correo electrónico inválida.", "error");
@@ -143,13 +154,11 @@ function validateFields(step) {
 }
 
 function goToStep(nextStep) {
-    // Si avanza, validar. Si retrocede, no validar.
     if (nextStep > activeStep && !validateFields(activeStep)) return;
 
     const currentSection = document.getElementById(`step-section-${activeStep}`);
     const nextSection = document.getElementById(`step-section-${nextStep}`);
     
-    // Animación de salida
     currentSection.style.opacity = '0';
     currentSection.style.transform = nextStep > activeStep ? 'translateX(-20px)' : 'translateX(20px)';
     document.getElementById(`dot-${activeStep}`).classList.remove('active');
@@ -158,7 +167,6 @@ function goToStep(nextStep) {
         currentSection.classList.add('hidden');
         nextSection.classList.remove('hidden');
         
-        // Animación de entrada
         setTimeout(() => {
             nextSection.style.opacity = '1';
             nextSection.style.transform = 'translateX(0)';
@@ -176,7 +184,6 @@ function goToStep(nextStep) {
     }, 400);
 }
 
-// Asignar eventos de navegación
 document.getElementById('btn-next-1').addEventListener('click', () => goToStep(2));
 document.getElementById('btn-prev-2').addEventListener('click', () => goToStep(1));
 document.getElementById('btn-next-2').addEventListener('click', () => goToStep(3));
@@ -221,13 +228,22 @@ document.getElementById('multi-step-form').addEventListener('submit', async (e) 
 
         const data = await response.json();
 
-        // AQUÍ VA LA LÓGICA QUE ME SOLICITASTE
         if (response.ok && data.success) {
             triggerCinematicSetup(athleteName);
         } else {
-            // Captura estricta para IP bloqueada por inundación de registros
+            // 🛡️ REGLA: Si la IP ha superado los 10 registros por hora
             if (response.status === 429) {
-                showUIFeedback(data.error || "Límite de registros alcanzado. Contacta a soporte.", "error");
+                // Desplegamos la ventanita estética
+                toggleModal('rate-limit-modal', true);
+                
+                // Auto-Cierre en 10 Segundos exactos
+                setTimeout(() => {
+                    const modal = document.getElementById('rate-limit-modal');
+                    if (!modal.classList.contains('hidden')) {
+                        toggleModal('rate-limit-modal', false);
+                    }
+                }, 10000);
+                
                 btn.disabled = false;
                 btn.textContent = "Activar Perfil";
                 return;
@@ -249,14 +265,12 @@ function triggerCinematicSetup(name) {
     const container = document.getElementById('register-container');
     const setup = document.getElementById('setup-screen');
 
-    // Desvanece el formulario
     container.style.opacity = '0';
     container.style.transform = 'scale(0.95)';
 
     setTimeout(() => {
         container.classList.add('hidden');
         setup.classList.remove('hidden');
-        // Muestra la pantalla negra de setup
         setTimeout(() => {
             setup.classList.remove('opacity-0');
             runSequence(name);
@@ -276,16 +290,15 @@ function runSequence(name) {
     steps.forEach(s => {
         setTimeout(() => {
             const msgElement = document.getElementById('setup-message');
-            msgElement.classList.add('opacity-0', 'blur-[6px]'); // Ocultar con blur
+            msgElement.classList.add('opacity-0', 'blur-[6px]');
             
             setTimeout(() => {
                 msgElement.textContent = s.text;
                 msgElement.classList.remove('opacity-0', 'blur-[6px]');
                 msgElement.classList.add('opacity-100', 'blur-0');
-            }, 300); // 300ms de transición
+            }, 300);
         }, s.time);
     });
 
-    // Redirigir al login después de la secuencia
     setTimeout(() => window.location.href = '/apps/start/login.html', 8800);
 }
