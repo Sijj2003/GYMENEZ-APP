@@ -19,20 +19,22 @@ window.addEventListener('load', () => {
     setTimeout(() => {
         preloader.style.display = 'none';
         document.body.classList.add('loaded');
-        document.body.style.overflow = 'auto'; 
+        document.body.style.overflow = 'auto'; // Permitir scroll si es necesario
         
+        // Revelar Nav y Footer
         nav.classList.remove('opacity-0', '-translate-y-4');
         footer.classList.remove('opacity-0');
         footer.classList.add('opacity-40');
     }, 1000);
 });
 
-// Mostrar feedback visual
+// Mostrar feedback visual estándar
 function showUIFeedback(message, type = 'error') {
     const box = document.getElementById('message-box');
     if(!box) return;
     box.textContent = message;
     
+    // Limpiar clases previas
     box.className = 'fixed top-6 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] transition-all duration-400 text-center border backdrop-blur-md w-11/12 max-w-[360px]';
     
     if(type === 'success') {
@@ -41,16 +43,18 @@ function showUIFeedback(message, type = 'error') {
         box.classList.add('bg-red-950/80', 'text-red-400', 'border-red-500/30');
     }
     
+    // Animar entrada
     box.style.opacity = '1';
     box.style.transform = 'translate(-50%, 0)';
     
+    // Animar salida
     setTimeout(() => {
         box.style.opacity = '0';
         box.style.transform = 'translate(-50%, -20px)';
     }, 4000);
 }
 
-// Utilidad para abrir/cerrar modales
+// Utilidad universal para abrir/cerrar modales suavemente
 function toggleModal(id, show) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -115,9 +119,12 @@ function validateFields(step) {
 
         const domainPart = emailParts[1];
         const ALLOWED_DOMAINS = [
-            'gmail.com', 'hotmail.com', 'hotmail.es', 'windowslive.com',
-            'outlook.com', 'outlook.es', 'proton.me', 'protonmail.com',
-            'yahoo.com', 'yahoo.es', 'ymail.com', 'icloud.com'
+            'gmail.com',
+            'hotmail.com', 'hotmail.es', 'windowslive.com',
+            'outlook.com', 'outlook.es',
+            'proton.me', 'protonmail.com',
+            'yahoo.com', 'yahoo.es', 'ymail.com',
+            'icloud.com'
         ];
 
         if (!ALLOWED_DOMAINS.includes(domainPart)) {
@@ -177,6 +184,7 @@ function goToStep(nextStep) {
     }, 400);
 }
 
+// Asignar eventos de navegación por clics nativos
 document.getElementById('btn-next-1').addEventListener('click', () => goToStep(2));
 document.getElementById('btn-prev-2').addEventListener('click', () => goToStep(1));
 document.getElementById('btn-next-2').addEventListener('click', () => goToStep(3));
@@ -184,42 +192,51 @@ document.getElementById('btn-prev-3').addEventListener('click', () => goToStep(2
 
 
 // ======================================================================
-// 🚀 CAPA DE SEGURIDAD 1: INTERCEPTOR DE LA TECLA ENTER
+// 🚀 CONTROL TOTAL DEL FLUJO DEL TECLADO Y FORMULARIO (Enter = Siguiente)
 // ======================================================================
+
+// 1. Bloqueamos cualquier intento de envío del navegador (sea por Enter, click en el teclado del móvil, etc.)
+document.getElementById('multi-step-form').addEventListener('submit', function(e) {
+    e.preventDefault(); 
+    
+    // Si intentan enviar el formulario, mapeamos la acción al botón amarillo del paso actual
+    if (activeStep === 1) {
+        document.getElementById('btn-next-1').click();
+    } else if (activeStep === 2) {
+        document.getElementById('btn-next-2').click();
+    } else if (activeStep === 3) {
+        ejecutarRegistroAlBackend();
+    }
+});
+
+// 2. Interceptamos explícitamente la tecla Enter en cualquier campo de texto
 document.getElementById('multi-step-form').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
-        e.preventDefault(); // Bloquea el envío automático del navegador inmediatamente
+        e.preventDefault(); // Evitamos que salte de línea o envíe cosas raras
         
-        // Simula presionar el botón "Continuar" según el paso en el que esté
         if (activeStep === 1) {
-            goToStep(2);
+            document.getElementById('btn-next-1').click();
         } else if (activeStep === 2) {
-            goToStep(3);
+            document.getElementById('btn-next-2').click();
         } else if (activeStep === 3) {
-            document.getElementById('btn-submit').click(); // Envía si está en el último
+            ejecutarRegistroAlBackend();
         }
     }
 });
 
-
-// --- API Y REGISTRO ---
-
-document.getElementById('multi-step-form').addEventListener('submit', async (e) => {
-    e.preventDefault(); // SIEMPRE bloqueamos el recargo de página
-    
-    // ======================================================================
-    // 🚀 CAPA DE SEGURIDAD 2: BLINDAJE CONTRA TECLADOS DE MÓVILES ("Ir/Next")
-    // ======================================================================
-    if (activeStep === 1) {
-        goToStep(2);
-        return; // Corta la ejecución del registro
+// 3. Conectamos el botón final de envío a nuestra función manual
+document.getElementById('btn-submit').addEventListener('click', function(e) {
+    e.preventDefault();
+    if (activeStep === 3) {
+        ejecutarRegistroAlBackend();
     }
-    if (activeStep === 2) {
-        goToStep(3);
-        return; // Corta la ejecución del registro
-    }
+});
 
-    // --- SÓLO SI ESTAMOS EN EL PASO 3 PROCEDEMOS A VALIDAR CONTRASEÑA Y REGISTRAR ---
+
+// ======================================================================
+// --- LÓGICA DE REGISTRO AL SERVIDOR EXTRAÍDA ---
+// ======================================================================
+async function ejecutarRegistroAlBackend() {
     const password = document.getElementById('reg-password').value;
     if(password.length < 6 || password.length > 18) {
         showUIFeedback("La contraseña debe contener entre 6 y 18 caracteres.", "error");
@@ -257,14 +274,19 @@ document.getElementById('multi-step-form').addEventListener('submit', async (e) 
         if (response.ok && data.success) {
             triggerCinematicSetup(athleteName);
         } else {
+            // 🛡️ REGLA: Si la IP ha superado los 10 registros por hora
             if (response.status === 429) {
+                // Desplegamos la ventanita estética
                 toggleModal('rate-limit-modal', true);
+                
+                // Auto-Cierre en 10 Segundos exactos
                 setTimeout(() => {
                     const modal = document.getElementById('rate-limit-modal');
                     if (!modal.classList.contains('hidden')) {
                         toggleModal('rate-limit-modal', false);
                     }
                 }, 10000);
+                
                 btn.disabled = false;
                 btn.textContent = "Activar Perfil";
                 return;
@@ -279,7 +301,7 @@ document.getElementById('multi-step-form').addEventListener('submit', async (e) 
         btn.disabled = false;
         btn.textContent = "Activar Perfil";
     }
-});
+}
 
 // --- CINEMÁTICA FINAL ---
 function triggerCinematicSetup(name) {
