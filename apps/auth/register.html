@@ -21,16 +21,13 @@
     <nav class="relative w-full z-40 py-6 px-6 md:px-12 flex justify-between items-center transition-all duration-1000 opacity-0 transform -translate-y-4" id="main-nav">
         
         <div class="flex items-center gap-5 md:gap-6">
-            
             <div class="flex items-center cursor-pointer group shrink-0" onclick="window.location.href='/index.html'">
                 <span class="text-[#FFC300] font-[900] text-2xl md:text-3xl italic tracking-tighter transition-transform group-hover:scale-105">GYM</span>
                 <span class="text-white font-[900] text-2xl md:text-3xl italic tracking-tighter">ENEZ</span>
             </div>
-            
             <a href="/index.html" class="text-gray-400 hover:text-white transition-colors text-[10px] font-black uppercase tracking-widest whitespace-nowrap shrink-0 pt-1">
                 Regresar
             </a>
-            
         </div>
 
         <div class="flex items-center shrink-0">
@@ -135,6 +132,20 @@
         </div>
         <h2 id="setup-message" class="text-2xl md:text-4xl font-black text-white uppercase tracking-tighter max-w-lg transition-all duration-700 transform scale-95 opacity-0 filter blur-[6px]">Iniciando</h2>
         <p class="text-gray-600 text-[9px] font-black uppercase tracking-[0.5em] mt-8">Ecosistema GYMENEZ PERFORMANCE</p>
+    </div>
+
+    <div id="rate-limit-modal" class="hidden fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl opacity-0 transition-opacity duration-300">
+        <div class="glass-panel relative w-full max-w-md mx-auto p-6 md:p-10 rounded-[24px] md:rounded-[36px] text-center border-t border-red-500/30 shadow-[0_0_40px_rgba(220,38,38,0.2)]">
+            <button onclick="toggleModal('rate-limit-modal', false)" class="absolute top-5 right-5 text-gray-500 hover:text-white text-2xl leading-none transition-colors">&times;</button>
+            <div class="w-16 h-16 mx-auto bg-red-500/10 rounded-full flex items-center justify-center border border-red-500/20 mb-6">
+                <span class="text-3xl">⏳</span>
+            </div>
+            <h3 class="text-2xl font-black mb-2 text-white tracking-tighter uppercase">Límite Alcanzado</h3>
+            <p class="text-[10px] text-gray-400 mb-6 font-medium leading-relaxed">Has superado el máximo de registros permitidos temporalmente. Intenta de nuevo más tarde.</p>
+            <a href="https://wa.me/584148780392?text=Hola%20Soporte%20GYMENEZ,%20tengo%20un%20problema%20con%20el%20límite%20de%20registros." target="_blank" class="block w-full py-4 rounded-xl bg-gradient-to-r from-[#FFC300] to-[#eab308] text-black font-black text-[10px] uppercase tracking-widest shadow-[0_15px_30px_rgba(255,195,0,0.15)] hover:scale-[1.02] transition-all">
+                Contactar Soporte (WhatsApp)
+            </a>
+        </div>
     </div>
 
     <footer class="relative z-10 py-8 text-center border-t border-white/5 opacity-0 transition-all duration-1000 delay-500" id="main-footer">
