@@ -78,7 +78,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Nacimiento</label>
-                            <input type="text" id="reg-dob" required class="w-full glass-input px-5 py-4 rounded-xl text-xs font-mono" placeholder="DD/MM/YYYY" maxlength="10">
+                            <input type="text" id="reg-dob" inputmode="numeric" pattern="[0-9]*" required class="w-full glass-input px-5 py-4 rounded-xl text-xs font-mono" placeholder="DD/MM/YYYY" maxlength="10">
                         </div>
                         <div>
                             <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Sexo Biológico</label>
@@ -100,7 +100,7 @@
                                 <option value="0416">0416</option>
                                 <option value="0426">0426</option>
                             </select>
-                            <input type="text" id="reg-phone-num" required minlength="7" maxlength="7" class="flex-1 glass-input px-5 py-4 rounded-xl text-xs font-mono" placeholder="1234567">
+                            <input type="tel" id="reg-phone-num" inputmode="numeric" pattern="[0-9]*" required minlength="7" maxlength="7" class="flex-1 glass-input px-5 py-4 rounded-xl text-xs font-mono" placeholder="1234567">
                         </div>
                     </div>
                     <div class="grid grid-cols-3 gap-3 pt-6">
