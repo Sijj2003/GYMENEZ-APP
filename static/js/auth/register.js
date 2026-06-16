@@ -184,10 +184,32 @@ function goToStep(nextStep) {
     }, 400);
 }
 
+// Asignar eventos de navegación por clics
 document.getElementById('btn-next-1').addEventListener('click', () => goToStep(2));
 document.getElementById('btn-prev-2').addEventListener('click', () => goToStep(1));
 document.getElementById('btn-next-2').addEventListener('click', () => goToStep(3));
 document.getElementById('btn-prev-3').addEventListener('click', () => goToStep(2));
+
+// ======================================================================
+// 🚀 CORRECCIÓN: CONTROL DE TECLA ENTER (PREVENIR ENVÍO PREMATURO)
+// ======================================================================
+document.getElementById('multi-step-form').addEventListener('keydown', function(e) {
+    // Si el usuario presiona Enter dentro del formulario
+    if (e.key === 'Enter') {
+        e.preventDefault(); // Bloquear el envío por defecto automático del navegador
+        
+        // Simular el comportamiento del botón "Continuar" según el paso actual
+        if (activeStep === 1) {
+            goToStep(2);
+        } else if (activeStep === 2) {
+            goToStep(3);
+        } else if (activeStep === 3) {
+            // Si ya estamos en el paso 3, disparamos el botón de enviar intencionalmente
+            document.getElementById('btn-submit').click();
+        }
+    }
+});
+
 
 // --- API Y REGISTRO ---
 
