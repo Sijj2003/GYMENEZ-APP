@@ -19,22 +19,20 @@ window.addEventListener('load', () => {
     setTimeout(() => {
         preloader.style.display = 'none';
         document.body.classList.add('loaded');
-        document.body.style.overflow = 'auto'; // Permitir scroll si es necesario
+        document.body.style.overflow = 'auto'; 
         
-        // Revelar Nav y Footer
         nav.classList.remove('opacity-0', '-translate-y-4');
         footer.classList.remove('opacity-0');
         footer.classList.add('opacity-40');
     }, 1000);
 });
 
-// Mostrar feedback visual estándar
+// Mostrar feedback visual
 function showUIFeedback(message, type = 'error') {
     const box = document.getElementById('message-box');
     if(!box) return;
     box.textContent = message;
     
-    // Limpiar clases previas
     box.className = 'fixed top-6 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] transition-all duration-400 text-center border backdrop-blur-md w-11/12 max-w-[360px]';
     
     if(type === 'success') {
@@ -43,18 +41,16 @@ function showUIFeedback(message, type = 'error') {
         box.classList.add('bg-red-950/80', 'text-red-400', 'border-red-500/30');
     }
     
-    // Animar entrada
     box.style.opacity = '1';
     box.style.transform = 'translate(-50%, 0)';
     
-    // Animar salida
     setTimeout(() => {
         box.style.opacity = '0';
         box.style.transform = 'translate(-50%, -20px)';
     }, 4000);
 }
 
-// Utilidad universal para abrir/cerrar modales suavemente
+// Utilidad para abrir/cerrar modales
 function toggleModal(id, show) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -119,12 +115,9 @@ function validateFields(step) {
 
         const domainPart = emailParts[1];
         const ALLOWED_DOMAINS = [
-            'gmail.com',
-            'hotmail.com', 'hotmail.es', 'windowslive.com',
-            'outlook.com', 'outlook.es',
-            'proton.me', 'protonmail.com',
-            'yahoo.com', 'yahoo.es', 'ymail.com',
-            'icloud.com'
+            'gmail.com', 'hotmail.com', 'hotmail.es', 'windowslive.com',
+            'outlook.com', 'outlook.es', 'proton.me', 'protonmail.com',
+            'yahoo.com', 'yahoo.es', 'ymail.com', 'icloud.com'
         ];
 
         if (!ALLOWED_DOMAINS.includes(domainPart)) {
@@ -184,36 +177,49 @@ function goToStep(nextStep) {
     }, 400);
 }
 
-// Asignar eventos de navegación por clics
 document.getElementById('btn-next-1').addEventListener('click', () => goToStep(2));
 document.getElementById('btn-prev-2').addEventListener('click', () => goToStep(1));
 document.getElementById('btn-next-2').addEventListener('click', () => goToStep(3));
 document.getElementById('btn-prev-3').addEventListener('click', () => goToStep(2));
 
-// Prevención directa en los inputs para navegadores de escritorio
-const allInputs = document.querySelectorAll('#multi-step-form input, #multi-step-form select');
-allInputs.forEach(input => {
-    input.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-        }
-    });
-});
 
 // ======================================================================
-// 🚀 CORRECCIÓN DEFINITIVA: BLINDAJE DEL EVENTO SUBMIT (Móvil y Escritorio)
+// 🚀 CAPA DE SEGURIDAD 1: INTERCEPTOR DE LA TECLA ENTER
 // ======================================================================
-document.getElementById('multi-step-form').addEventListener('submit', async (e) => {
-    e.preventDefault(); // Bloqueamos el envío SIEMPRE por defecto
-    
-    // Si el navegador disparó el "Enter/Ir" y no estamos en la contraseña, forzamos el avance y CORTAMOS la ejecución.
-    if (activeStep !== 3) {
-        if (activeStep === 1) goToStep(2);
-        else if (activeStep === 2) goToStep(3);
-        return; // ¡Crucial! Evita que se ejecute la lógica del Backend de abajo.
+document.getElementById('multi-step-form').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault(); // Bloquea el envío automático del navegador inmediatamente
+        
+        // Simula presionar el botón "Continuar" según el paso en el que esté
+        if (activeStep === 1) {
+            goToStep(2);
+        } else if (activeStep === 2) {
+            goToStep(3);
+        } else if (activeStep === 3) {
+            document.getElementById('btn-submit').click(); // Envía si está en el último
+        }
     }
+});
+
+
+// --- API Y REGISTRO ---
+
+document.getElementById('multi-step-form').addEventListener('submit', async (e) => {
+    e.preventDefault(); // SIEMPRE bloqueamos el recargo de página
     
-    // --- SI LLEGAMOS AQUÍ, ES PORQUE ESTAMOS EN EL PASO 3 Y ES UN ENVÍO REAL ---
+    // ======================================================================
+    // 🚀 CAPA DE SEGURIDAD 2: BLINDAJE CONTRA TECLADOS DE MÓVILES ("Ir/Next")
+    // ======================================================================
+    if (activeStep === 1) {
+        goToStep(2);
+        return; // Corta la ejecución del registro
+    }
+    if (activeStep === 2) {
+        goToStep(3);
+        return; // Corta la ejecución del registro
+    }
+
+    // --- SÓLO SI ESTAMOS EN EL PASO 3 PROCEDEMOS A VALIDAR CONTRASEÑA Y REGISTRAR ---
     const password = document.getElementById('reg-password').value;
     if(password.length < 6 || password.length > 18) {
         showUIFeedback("La contraseña debe contener entre 6 y 18 caracteres.", "error");
@@ -251,19 +257,14 @@ document.getElementById('multi-step-form').addEventListener('submit', async (e) 
         if (response.ok && data.success) {
             triggerCinematicSetup(athleteName);
         } else {
-            // 🛡️ REGLA: Si la IP ha superado los 10 registros por hora
             if (response.status === 429) {
-                // Desplegamos la ventanita estética
                 toggleModal('rate-limit-modal', true);
-                
-                // Auto-Cierre en 10 Segundos exactos
                 setTimeout(() => {
                     const modal = document.getElementById('rate-limit-modal');
                     if (!modal.classList.contains('hidden')) {
                         toggleModal('rate-limit-modal', false);
                     }
                 }, 10000);
-                
                 btn.disabled = false;
                 btn.textContent = "Activar Perfil";
                 return;
