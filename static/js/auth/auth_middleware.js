@@ -23,13 +23,18 @@ if (!window.originalFetch) {
         config = config || {};
         config.headers = config.headers || {};
         
-        // 🔥 LISTA BLANCA: Solo inyectamos el Token si la URL va dirigida a TU API (/api/)
+        // 🔥 LISTA BLANCA: Solo inyectamos credenciales si la URL va dirigida a TU API (/api/)
         const isGymenezApi = url.includes('/api/');
 
         if (isGymenezApi) {
             const token = localStorage.getItem(AUTH_TOKEN_KEY);
+            const deviceId = localStorage.getItem(DEVICE_ID_KEY); // Capturamos el Device ID
+            
             if (token) {
                 config.headers['Authorization'] = `Bearer ${token}`;
+            }
+            if (deviceId) {
+                config.headers['X-Device-ID'] = deviceId; // 🛡️ Inyectamos la llave del Shield
             }
         }
         
