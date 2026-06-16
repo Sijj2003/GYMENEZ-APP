@@ -2,8 +2,6 @@
 // 🛡️ NÚCLEO CORE - ARCHITECTURA CONTROLADORA DEL CHECKOUT DE PAGOS
 // ====================================================================
 
-// El identificador AUTH_TOKEN_KEY es heredado desde auth_middleware.js de forma global.
-
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
@@ -25,6 +23,11 @@ function showUIFeedback(msg, type = 'success') {
         box.style.transform = 'translate(-50%, -20px)';
     }, 4000);
 }
+
+// 🛡️ Sanitización Estricta: Obligar a que la referencia sea SOLO NÚMEROS (4 a 8 dígitos)
+document.getElementById('form-reference')?.addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, ''); // Elimina cualquier carácter que no sea un número
+});
 
 function switchPaymentMethod(method) {
     const btnPagoMovil = document.getElementById('tab-btn-pago-movil');
@@ -63,8 +66,9 @@ async function handlePaymentSubmit(event) {
     const bankVal = document.getElementById('form-bank').value;
     const refVal = document.getElementById('form-reference').value.trim();
 
-    if (!bankVal || !refVal) {
-        showUIFeedback("Por favor, complete los datos requeridos del Pago Móvil.", "error");
+    // Verificación de longitud segura
+    if (!bankVal || !refVal || refVal.length < 4) {
+        showUIFeedback("Por favor, ingrese un número de referencia válido.", "error");
         return;
     }
 
@@ -129,18 +133,21 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        // 🛡️ INTERCEPTOR REQUERIDO: Validar preventivamente la ventana transaccional activa
-        const resCheck = await fetch(`${API_BASE_URL}/api/payments/check-status`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // 🚀 PIPELINE EN PARALELO: Traemos Estado, Tasa BCV y CATÁLOGO DE PRECIOS a la vez
+        const headers = { 'Authorization': `Bearer ${token}` };
         
+        const [resCheck, resRate, resCatalog] = await Promise.all([
+            fetch(`${API_BASE_URL}/api/payments/check-status`, { headers }),
+            fetch(`${API_BASE_URL}/api/bcv-rate`, { headers }),
+            fetch(`${API_BASE_URL}/api/plans/catalog`, { headers })
+        ]);
+        
+        // 1. Candado de Prevención: Si ya hay un pago en revisión
         if (resCheck.ok) {
             const dataCheck = await resCheck.json();
             if (dataCheck.has_pending) {
-                // Desactivar spinner de carga de red
                 document.getElementById('payment-loader').classList.add('hidden');
                 
-                // Disparar de forma cinemática la Ventana Emergente del Protocolo Zero Trust UX
                 const modal = document.getElementById('pending-payment-modal');
                 const content = document.getElementById('pending-modal-content');
                 if (modal && content) {
@@ -151,21 +158,25 @@ window.addEventListener('DOMContentLoaded', async () => {
                         content.classList.remove('scale-95');
                     }, 50);
                 }
-                return; // Cortocircuito absoluto para ahorrar ancho de banda y mitigar DoW
+                return; // Cortocircuito absoluto
             }
         }
 
-        const resRate = await fetch(`${API_BASE_URL}/api/bcv-rate`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // 2. Extraer y Validar Catálogo de Precios y Tasa BCV
         const dataRate = await resRate.json();
+        const dataCatalog = await resCatalog.json();
 
-        if (resRate.ok && dataRate.success) {
+        if (resRate.ok && dataRate.success && resCatalog.ok && dataCatalog.success) {
             globalRateBCV = parseFloat(dataRate.rate);
             
-            globalPriceUSD = globalActiveTier === 'ULTRA' ? 9.99 : 4.99; 
+            // 🛡️ BÚSQUEDA DINÁMICA: Ya no hay precios hardcodeados, vienen del Backend
+            const selectedPlanData = dataCatalog.plans.find(p => p.id === globalActiveTier);
+            if (!selectedPlanData) throw new Error("Plan seleccionado no existe en el catálogo.");
+            
+            globalPriceUSD = parseFloat(selectedPlanData.priceUSD);
             const totalBs = round(globalPriceUSD * globalRateBCV, 2);
 
+            // Inyección al DOM
             document.getElementById('summary-plan-name').textContent = globalActiveTier;
             document.getElementById('summary-price-usd').textContent = `$${globalPriceUSD.toFixed(2)}`;
             document.getElementById('summary-bcv').textContent = `${globalRateBCV.toFixed(2)} Bs / USD`;
