@@ -199,7 +199,6 @@ document.getElementById('multi-step-form').addEventListener('submit', async (e) 
     btn.disabled = true;
     btn.textContent = "VALIDANDO...";
 
-    // Generar CI temporal para el backend (ya que el registro no lo pide inicialmente)
     const ciPlaceholder = `V-TEMP-${Date.now().toString().slice(-6)}`; 
     
     const payload = {
@@ -220,18 +219,20 @@ document.getElementById('multi-step-form').addEventListener('submit', async (e) 
             body: JSON.stringify(payload)
         });
 
-        if (response.status === 429) {
-            showUIFeedback("Múltiples intentos detectados. Espera 60 segundos.", "error");
-            btn.disabled = false;
-            btn.textContent = "Activar Perfil";
-            return;
-        }
-
         const data = await response.json();
 
+        // AQUÍ VA LA LÓGICA QUE ME SOLICITASTE
         if (response.ok && data.success) {
             triggerCinematicSetup(athleteName);
         } else {
+            // Captura estricta para IP bloqueada por inundación de registros
+            if (response.status === 429) {
+                showUIFeedback(data.error || "Límite de registros alcanzado. Contacta a soporte.", "error");
+                btn.disabled = false;
+                btn.textContent = "Activar Perfil";
+                return;
+            }
+
             showUIFeedback(data.error || "No se pudo procesar el alta.", "error");
             btn.disabled = false;
             btn.textContent = "Activar Perfil";
