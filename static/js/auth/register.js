@@ -190,32 +190,30 @@ document.getElementById('btn-prev-2').addEventListener('click', () => goToStep(1
 document.getElementById('btn-next-2').addEventListener('click', () => goToStep(3));
 document.getElementById('btn-prev-3').addEventListener('click', () => goToStep(2));
 
-// ======================================================================
-// 🚀 CORRECCIÓN: CONTROL DE TECLA ENTER (PREVENIR ENVÍO PREMATURO)
-// ======================================================================
-document.getElementById('multi-step-form').addEventListener('keydown', function(e) {
-    // Si el usuario presiona Enter dentro del formulario
-    if (e.key === 'Enter') {
-        e.preventDefault(); // Bloquear el envío por defecto automático del navegador
-        
-        // Simular el comportamiento del botón "Continuar" según el paso actual
-        if (activeStep === 1) {
-            goToStep(2);
-        } else if (activeStep === 2) {
-            goToStep(3);
-        } else if (activeStep === 3) {
-            // Si ya estamos en el paso 3, disparamos el botón de enviar intencionalmente
-            document.getElementById('btn-submit').click();
+// Prevención directa en los inputs para navegadores de escritorio
+const allInputs = document.querySelectorAll('#multi-step-form input, #multi-step-form select');
+allInputs.forEach(input => {
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
         }
-    }
+    });
 });
 
-
-// --- API Y REGISTRO ---
-
+// ======================================================================
+// 🚀 CORRECCIÓN DEFINITIVA: BLINDAJE DEL EVENTO SUBMIT (Móvil y Escritorio)
+// ======================================================================
 document.getElementById('multi-step-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Bloqueamos el envío SIEMPRE por defecto
     
+    // Si el navegador disparó el "Enter/Ir" y no estamos en la contraseña, forzamos el avance y CORTAMOS la ejecución.
+    if (activeStep !== 3) {
+        if (activeStep === 1) goToStep(2);
+        else if (activeStep === 2) goToStep(3);
+        return; // ¡Crucial! Evita que se ejecute la lógica del Backend de abajo.
+    }
+    
+    // --- SI LLEGAMOS AQUÍ, ES PORQUE ESTAMOS EN EL PASO 3 Y ES UN ENVÍO REAL ---
     const password = document.getElementById('reg-password').value;
     if(password.length < 6 || password.length > 18) {
         showUIFeedback("La contraseña debe contener entre 6 y 18 caracteres.", "error");
