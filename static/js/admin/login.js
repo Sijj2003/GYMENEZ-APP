@@ -44,14 +44,12 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
         const data = await res.json();
 
         if (res.status === 202 && data.requires_2fa) {
-            // El backend aprobó la clave pero requiere 2FA
             btn.disabled = false;
             btn.textContent = 'Verificar Credenciales';
             // Mostrar Modal 2FA
             document.getElementById('2fa-modal').classList.remove('hidden');
             document.getElementById('otp-input').focus();
         } else if (res.ok && data.success) {
-            // Caso donde no se requiriera 2FA (por si acaso)
             localStorage.setItem('adminSession', JSON.stringify(data.admin));
             localStorage.setItem(ADMIN_TOKEN_KEY, data.admin.token);
             window.location.href = '/apps/admin/dashboard.html';
@@ -67,12 +65,16 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
     }
 });
 
-// 2. SEGUNDO PASO: Verificar Código 2FA
+// 2. SEGUNDO PASO: Verificar Código 2FA con Auto-Cierre
 document.getElementById('btn-verify-2fa').addEventListener('click', async () => {
-    const otpCode = document.getElementById('otp-input').value.trim();
+    const otpInput = document.getElementById('otp-input');
+    const otpCode = otpInput.value.trim();
     const btn = document.getElementById('btn-verify-2fa');
+    const modal = document.getElementById('2fa-modal');
     
     if (otpCode.length !== 6) {
+        modal.classList.add('hidden'); // Auto-cierre
+        otpInput.value = '';
         showUIFeedback("El código debe tener 6 dígitos.", "error");
         return;
     }
@@ -93,15 +95,27 @@ document.getElementById('btn-verify-2fa').addEventListener('click', async () => 
             localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
             window.location.href = '/apps/admin/dashboard.html';
         } else {
-            showUIFeedback(data.error || 'Código 2FA incorrecto.', 'error');
+            // 🔥 CIERRE AUTOMÁTICO EN CASO DE ERROR
+            modal.classList.add('hidden');
+            otpInput.value = '';
             btn.disabled = false;
             btn.textContent = 'Acceder al Core';
+            showUIFeedback(data.error || 'Código 2FA incorrecto.', 'error');
         }
     } catch (err) {
-        showUIFeedback('Falla de conexión al verificar 2FA.', 'error');
+        // 🔥 CIERRE AUTOMÁTICO EN CASO DE ERROR DE RED
+        modal.classList.add('hidden');
+        otpInput.value = '';
         btn.disabled = false;
         btn.textContent = 'Acceder al Core';
+        showUIFeedback('Falla de conexión al verificar 2FA.', 'error');
     }
+});
+
+// 3. BOTÓN DE CIERRE (X)
+document.getElementById('btn-close-2fa').addEventListener('click', () => {
+    document.getElementById('2fa-modal').classList.add('hidden');
+    document.getElementById('otp-input').value = '';
 });
 
 // Sanitización del input OTP
