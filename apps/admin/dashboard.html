@@ -11,22 +11,42 @@
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <style>
         /* Bloquea el scroll general para que la app se sienta nativa */
-        body { overflow: hidden; } 
+        body { overflow: hidden; background-color: #000; } 
         
-        /* Contenedor del Dashboard Base */
-        .dashboard-container { height: 100vh; overflow-y: auto; }
+        /* Contenedor del Dashboard Base con 3D Perspective */
+        body { perspective: 1000px; }
+        .dashboard-container { 
+            height: 100vh; 
+            overflow-y: auto; 
+            background-color: #030305;
+            transition: transform 0.6s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.6s ease, filter 0.6s ease;
+            transform-origin: top center;
+            will-change: transform, opacity, filter;
+        }
         
-        /* Visor de Módulos (Multitarea) */
-        #module-viewer { transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; }
+        /* Visor de Módulos (Estilo iOS Sheet) */
+        #module-viewer { 
+            transition: transform 0.6s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.4s ease; 
+            border-top-left-radius: 32px;
+            border-top-right-radius: 32px;
+            box-shadow: 0 -20px 80px rgba(0,0,0,0.9);
+            will-change: transform, opacity;
+        }
         .viewer-hidden { transform: translateY(100%); opacity: 0; pointer-events: none; }
         .viewer-visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
         
+        /* Aceleración por hardware para Iframes fluidos en móvil */
+        #iframe-container {
+            -webkit-overflow-scrolling: touch;
+            transform: translateZ(0);
+        }
+
         /* Ocultar barra de scroll para limpieza visual */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="selection:bg-[#FFC300] selection:text-black w-screen h-screen flex flex-col bg-[#030305]">
+<body class="selection:bg-[#FFC300] selection:text-black w-screen h-screen flex flex-col">
 
     <div class="fixed inset-0 bg-[url('/static/img/backgrounds/FONDO.png')] bg-cover bg-center opacity-5 mix-blend-screen grayscale pointer-events-none -z-20"></div>
     <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/50 via-[#030305]/95 to-[#030305] pointer-events-none -z-10"></div>
@@ -60,7 +80,7 @@
             <div class="mb-8 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
                 <div>
                     <p class="text-gray-500 text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] mb-1 md:mb-2">Centro de Operaciones Globales</p>
-                    <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter leading-none break-words">
+                    <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter leading-none break-words text-white">
                         Consola <span class="text-[#FFC300]">Gestión.</span>
                     </h2>
                 </div>
@@ -70,7 +90,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-20">
                 
                 <div onclick="openModule('/apps/admin/users.html', 'Sistema de Usuarios', 'nav-users')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-sky-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
                     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
@@ -188,7 +208,7 @@
                             </div>
                             <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">FACTURACIÓN <span class="text-gray-400">FISCAL</span></h3>
                             <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors max-w-sm">
-                                Validar referencias bancarias, aprobar transacciones de suscripción y exportar CSV →
+                                Validar referencias bancarias, aprobar transacciones de suscripción y gestionar facturación →
                             </p>
                         </div>
                     </div>
@@ -196,15 +216,11 @@
 
             </div>
         </main>
-
-        <footer class="text-center py-6 border-t border-white/5 mt-auto bg-[#030305]/80 backdrop-blur-md flex-shrink-0">
-            <p class="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • SYSTEM CORE</p>
-        </footer>
     </div>
 
     <div id="module-viewer" class="fixed inset-0 z-[100] bg-[#030305] flex flex-col viewer-hidden">
         
-        <div class="w-full h-[70px] border-b border-white/10 bg-[#0a0a0f]/90 backdrop-blur-xl flex justify-between items-center px-4 md:px-8 flex-shrink-0 z-[110]">
+        <div class="w-full h-[70px] border-b border-white/10 bg-[#0a0a0f]/90 backdrop-blur-2xl flex justify-between items-center px-4 md:px-8 flex-shrink-0 z-[110] rounded-t-[32px]">
             <div class="flex items-center gap-4">
                 <button onclick="closeModule()" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white border border-white/10 transition transform hover:scale-105 active:scale-95 shadow-lg">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
@@ -222,7 +238,7 @@
         </div>
 
         <div id="iframe-container" class="w-full flex-grow relative bg-transparent">
-            </div>
+        </div>
     </div>
 
     <script src="/static/js/admin/admin_middleware.js"></script>
@@ -235,7 +251,7 @@
         // =================================================================
         
         const CACHE_TIME_MS = 12 * 60 * 1000; // 12 minutos de memoria viva
-        const moduleCache = {}; // Objeto para guardar { navId: { iframe: Node, lastAccessed: timestamp } }
+        const moduleCache = {}; 
         
         const viewer = document.getElementById('module-viewer');
         const iframeContainer = document.getElementById('iframe-container');
@@ -248,15 +264,15 @@
             titleEl.textContent = title;
             loader.classList.remove('opacity-0');
             
-            // 2. Animación de subida tipo iOS
+            // 2. Animación de subida "Sheet" (Nivel Cupertino)
             viewer.classList.remove('viewer-hidden');
             viewer.classList.add('viewer-visible');
             
-            // Efecto de profundidad en el dashboard
-            dashboard.style.transform = "scale(0.97)";
-            dashboard.style.opacity = "0.4";
+            // Efecto de profundidad 3D en el dashboard de fondo
+            dashboard.style.transform = "scale(0.95) translateY(-10px) rotateX(2deg)";
+            dashboard.style.opacity = "0.3";
+            dashboard.style.filter = "blur(4px)";
             dashboard.style.pointerEvents = "none";
-            dashboard.style.transition = "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)";
             
             // 3. Ocultar todos los iframes almacenados actualmente
             Object.values(moduleCache).forEach(mod => {
@@ -267,37 +283,28 @@
 
             // 4. LÓGICA DE CACHÉ: ¿La aplicación ya estaba abierta y es válida?
             if (moduleCache[navId] && (now - moduleCache[navId].lastAccessed < CACHE_TIME_MS)) {
-                // Existe y está dentro del tiempo límite -> Traer al frente
-                moduleCache[navId].lastAccessed = now; // Renovar el tiempo
+                moduleCache[navId].lastAccessed = now; 
                 moduleCache[navId].iframe.style.display = 'block';
                 
-                // Ocultar spinner de inmediato porque el contenido ya está renderizado
                 setTimeout(() => { loader.classList.add('opacity-0'); }, 150);
-                
             } else {
                 // 5. La app no existe o expiró -> Hay que (re)crearla
-                
-                // Si existía pero expiró, la destruimos del DOM primero
                 if (moduleCache[navId]) {
                     iframeContainer.removeChild(moduleCache[navId].iframe);
                 }
                 
-                // Crear el nuevo Iframe
                 const iframe = document.createElement('iframe');
                 iframe.className = "absolute inset-0 w-full h-full border-none bg-transparent";
                 iframe.src = url;
                 
-                // Ocultar spinner cuando termine de cargar
                 iframe.onload = function() {
                     setTimeout(() => {
                         loader.classList.add('opacity-0');
                     }, 300);
                 };
                 
-                // Inyectar en el contenedor general
                 iframeContainer.appendChild(iframe);
                 
-                // Guardar en la RAM local
                 moduleCache[navId] = {
                     iframe: iframe,
                     lastAccessed: now
@@ -310,19 +317,16 @@
             viewer.classList.remove('viewer-visible');
             viewer.classList.add('viewer-hidden');
             
-            // 2. Restaurar dashboard
-            dashboard.style.transform = "scale(1)";
+            // 2. Restaurar dashboard frontal
+            dashboard.style.transform = "scale(1) translateY(0) rotateX(0)";
             dashboard.style.opacity = "1";
+            dashboard.style.filter = "none";
             dashboard.style.pointerEvents = "auto";
-            
-            // Nota: NO destruimos el iframe, se queda viviendo en moduleCache
         };
 
         // =================================================================
         // GARBAGE COLLECTOR (Recolector de Basura Silencioso)
         // =================================================================
-        // Cada minuto, revisamos si algún módulo lleva inactivo más de 12 min.
-        // Si es así, lo destruimos para no ralentizar el navegador del usuario.
         setInterval(() => {
             const now = Date.now();
             for (const navId in moduleCache) {
