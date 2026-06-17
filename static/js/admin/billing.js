@@ -102,7 +102,6 @@ document.getElementById('totp-input')?.addEventListener('input', function() {
     this.value = this.value.replace(/\D/g, ''); 
 });
 
-// ✅ Enviar la firma 2FA al Backend para aprobar
 async function executePaymentVerification() {
     const otpCode = document.getElementById('totp-input').value;
     const btn = document.getElementById('btn-totp-verify');
@@ -126,23 +125,27 @@ async function executePaymentVerification() {
             body: JSON.stringify({
                 payment_id: pendingPaymentId,
                 status: pendingActionStatus,
-                otp_code: otpCode // 🛡️ ENVIAMOS LA FIRMA DE GOOGLE AL SERVIDOR
+                otp_code: otpCode
             })
         });
 
+        // 🔍 DEBUG: Esto nos ayudará a ver qué responde el servidor
         const data = await res.json();
+        console.log("Respuesta del servidor:", data); 
 
         if (res.ok && data.success) {
-            showAdminToast(`Transacción ejecutada con éxito.`);
+            showAdminToast(`Transacción ejecutada con éxito: ${data.action}`);
             closeTOTPModal();
-            fetchPendingPayments(); // Refrescamos la tabla para que el pago desaparezca
+            fetchPendingPayments();
         } else {
+            // Esto mostrará el error real en tu pantalla (en lugar de quedarse en silencio)
             showAdminToast(data.error || "Fallo en la auditoría.", "error");
             btn.disabled = false;
             btn.textContent = "Confirmar Operación";
         }
     } catch (e) {
-        showAdminToast("Falla de red.", "error");
+        console.error("Error en la petición:", e);
+        showAdminToast("Falla de red o conexión al Core.", "error");
         btn.disabled = false;
         btn.textContent = "Confirmar Operación";
     }
