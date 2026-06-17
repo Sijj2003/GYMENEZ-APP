@@ -1,3 +1,6 @@
+// ====================================================================
+// ⚙️ CONFIGURACIÓN DE NÚCLEO FINANCIERO
+// ====================================================================
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
@@ -6,6 +9,7 @@ let pendingActionStatus = null;
 
 function showAdminToast(message, type = 'success') {
     const box = document.getElementById('admin-toast');
+    if(!box) return;
     box.textContent = message;
     box.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] transition-all duration-400 text-center border backdrop-blur-md w-11/12 max-w-[360px] ${type === 'success' ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/30' : 'bg-red-950/80 text-red-400 border-red-500/30'}`;
     box.style.opacity = '1'; box.style.transform = 'translate(-50%, 0)';
@@ -64,29 +68,26 @@ async function fetchPendingPayments() {
     }
 }
 
-// 🔐 Abrir Bóveda TOTP al hacer click en Aprobar/Rechazar
+// 🔐 Abrir Bóveda TOTP
 function processPayment(paymentId, actionStatus) {
     pendingPaymentId = paymentId;
     pendingActionStatus = actionStatus;
     
     document.getElementById('totp-input').value = '';
     const modal = document.getElementById('totp-modal');
-    const content = document.getElementById('totp-content');
     
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     setTimeout(() => {
         modal.classList.remove('opacity-0');
-        content.classList.remove('scale-95');
         document.getElementById('totp-input').focus();
     }, 50);
 }
 
+// Función de cierre unificada para el modal (Exit)
 function closeTOTPModal() {
     const modal = document.getElementById('totp-modal');
-    const content = document.getElementById('totp-content');
     modal.classList.add('opacity-0');
-    content.classList.add('scale-95');
     setTimeout(() => {
         modal.classList.remove('flex');
         modal.classList.add('hidden');
@@ -97,17 +98,15 @@ function closeTOTPModal() {
     }, 300);
 }
 
-// Filtro anti-letras estricto
-document.getElementById('totp-input')?.addEventListener('input', function() {
-    this.value = this.value.replace(/\D/g, ''); 
-});
-
+// Validación y Ejecución
 async function executePaymentVerification() {
     const otpCode = document.getElementById('totp-input').value;
     const btn = document.getElementById('btn-totp-verify');
     
     if (otpCode.length !== 6) {
-        showAdminToast("El código debe tener exactamente 6 dígitos.", "error");
+        // Al fallar validación, cerramos modal para limpiar vista y mostrar error
+        closeTOTPModal();
+        showAdminToast("El código debe tener 6 dígitos.", "error");
         return;
     }
 
@@ -130,29 +129,30 @@ async function executePaymentVerification() {
         });
 
         const data = await res.json();
-        console.log("Respuesta del servidor:", data); 
 
         if (res.ok && data.success) {
             showAdminToast(`Transacción ejecutada con éxito.`);
-            closeTOTPModal(); // Cierra en éxito
+            closeTOTPModal();
             fetchPendingPayments();
         } else {
-            // 🔥 AQUÍ ESTÁ EL CAMBIO:
-            // 1. Cerramos el modal para que el error en el Toast quede a la vista
             closeTOTPModal();
-            
-            // 2. Mostramos el error
             showAdminToast(data.error || "Fallo en la auditoría.", "error");
         }
     } catch (e) {
-        console.error("Error en la petición:", e);
-        // También cerramos en caso de error de red
         closeTOTPModal();
         showAdminToast("Falla de red o conexión al Core.", "error");
     }
 }
 
-// Inicializar tabla al entrar
+// Eventos Globales de Inicialización
 window.addEventListener('DOMContentLoaded', () => {
     fetchPendingPayments();
+    
+    // Botón X de cierre en el modal (si añades el botón en el HTML)
+    const closeBtn = document.getElementById('btn-close-totp');
+    if(closeBtn) closeBtn.addEventListener('click', closeTOTPModal);
+
+    document.getElementById('totp-input')?.addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, ''); 
+    });
 });
