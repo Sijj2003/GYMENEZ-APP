@@ -1,10 +1,15 @@
+// ====================================================================
+// ⚙️ CONFIGURACIÓN DE API E IDENTIDAD DE RED
+// ====================================================================
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 const ADMIN_TOKEN_KEY = 'gymen_admin_token';
 
+// Variable global para persistir el email entre pasos del login
+let loginEmailTemp = "";
+
 window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('loaded');
-    // Si ya es admin, pasa directo al dashboard
     if (localStorage.getItem('adminSession') && localStorage.getItem(ADMIN_TOKEN_KEY)) {
         window.location.href = '/apps/admin/dashboard.html';
     }
@@ -20,24 +25,33 @@ function showUIFeedback(message, type = 'error') {
     setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 4000);
 }
 
+// 1. PRIMER PASO: Validar Credenciales
 document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('login-btn');
-    const emailField = document.getElementById('login-email').value.trim();
+    loginEmailTemp = document.getElementById('login-email').value.trim();
     const passwordField = document.getElementById('login-password').value;
 
     btn.disabled = true;
-    btn.textContent = 'AUTENTICANDO...';
+    btn.textContent = 'VALIDANDO...';
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: emailField, password: passwordField })
+            body: JSON.stringify({ email: loginEmailTemp, password: passwordField })
         });
         const data = await res.json();
 
-        if (res.ok && data.success) {
+        if (res.status === 202 && data.requires_2fa) {
+            // El backend aprobó la clave pero requiere 2FA
+            btn.disabled = false;
+            btn.textContent = 'Verificar Credenciales';
+            // Mostrar Modal 2FA
+            document.getElementById('2fa-modal').classList.remove('hidden');
+            document.getElementById('otp-input').focus();
+        } else if (res.ok && data.success) {
+            // Caso donde no se requiriera 2FA (por si acaso)
             localStorage.setItem('adminSession', JSON.stringify(data.admin));
             localStorage.setItem(ADMIN_TOKEN_KEY, data.admin.token);
             window.location.href = '/apps/admin/dashboard.html';
@@ -51,4 +65,46 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
         btn.disabled = false;
         btn.textContent = 'Verificar Credenciales';
     }
+});
+
+// 2. SEGUNDO PASO: Verificar Código 2FA
+document.getElementById('btn-verify-2fa').addEventListener('click', async () => {
+    const otpCode = document.getElementById('otp-input').value.trim();
+    const btn = document.getElementById('btn-verify-2fa');
+    
+    if (otpCode.length !== 6) {
+        showUIFeedback("El código debe tener 6 dígitos.", "error");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "ACCEDIENDO...";
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/verify-2fa`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: loginEmailTemp, otp_code: otpCode })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            localStorage.setItem('adminSession', JSON.stringify(data.admin));
+            localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
+            window.location.href = '/apps/admin/dashboard.html';
+        } else {
+            showUIFeedback(data.error || 'Código 2FA incorrecto.', 'error');
+            btn.disabled = false;
+            btn.textContent = 'Acceder al Core';
+        }
+    } catch (err) {
+        showUIFeedback('Falla de conexión al verificar 2FA.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Acceder al Core';
+    }
+});
+
+// Sanitización del input OTP
+document.getElementById('otp-input').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '');
 });
