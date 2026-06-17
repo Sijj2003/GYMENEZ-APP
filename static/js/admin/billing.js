@@ -125,29 +125,30 @@ async function executePaymentVerification() {
             body: JSON.stringify({
                 payment_id: pendingPaymentId,
                 status: pendingActionStatus,
-                otp_code: otpCode
+                otp_code: otpCode 
             })
         });
 
-        // 🔍 DEBUG: Esto nos ayudará a ver qué responde el servidor
         const data = await res.json();
         console.log("Respuesta del servidor:", data); 
 
         if (res.ok && data.success) {
-            showAdminToast(`Transacción ejecutada con éxito: ${data.action}`);
-            closeTOTPModal();
+            showAdminToast(`Transacción ejecutada con éxito.`);
+            closeTOTPModal(); // Cierra en éxito
             fetchPendingPayments();
         } else {
-            // Esto mostrará el error real en tu pantalla (en lugar de quedarse en silencio)
+            // 🔥 AQUÍ ESTÁ EL CAMBIO:
+            // 1. Cerramos el modal para que el error en el Toast quede a la vista
+            closeTOTPModal();
+            
+            // 2. Mostramos el error
             showAdminToast(data.error || "Fallo en la auditoría.", "error");
-            btn.disabled = false;
-            btn.textContent = "Confirmar Operación";
         }
     } catch (e) {
         console.error("Error en la petición:", e);
+        // También cerramos en caso de error de red
+        closeTOTPModal();
         showAdminToast("Falla de red o conexión al Core.", "error");
-        btn.disabled = false;
-        btn.textContent = "Confirmar Operación";
     }
 }
 
