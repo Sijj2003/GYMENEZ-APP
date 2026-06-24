@@ -75,8 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Simular el evento de carga para la primera vista por defecto
-    if(frame.src) {
-        frame.onload();
-    }
+    // 5. Arranque inicial del Sistema Operativo
+    window.addEventListener('load', () => {
+        if (navLinks.length > 0) {
+            // Simulamos un clic en el primer módulo (Directorio) para que haga el ruteo automático
+            navLinks[0].click();
+        }
+    });
 });
