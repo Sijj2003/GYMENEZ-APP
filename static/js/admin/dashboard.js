@@ -55,23 +55,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Receptor de Carga Exitosa
     // Cuando el iframe termina de descargar el módulo (ej: routines.html), levantamos la cortina
     frame.addEventListener('load', () => {
-        // Desvanecer el loader
-        loader.classList.add('opacity-0');
-        // Mostrar el iframe suavemente
-        frame.classList.remove('opacity-0');
-        
-        // Retirar el loader del DOM tras la transición para no bloquear clics
-        setTimeout(() => {
-            loader.classList.add('hidden');
-        }, 500);
+        // Solo quitamos el loader si el src no está vacío
+        if (frame.src && frame.src !== window.location.href) {
+            // Desvanecer el loader
+            loader.classList.add('opacity-0');
+            // Mostrar el iframe suavemente
+            frame.classList.remove('opacity-0');
+            
+            // Retirar el loader del DOM tras la transición para no bloquear clics
+            setTimeout(() => {
+                loader.classList.add('hidden');
+            }, 500);
+        }
     });
 
-    // 4. Lógica de Cierre de Sesión Seguro
+    // 4. Lógica de Cierre de Sesión Seguro (Ruta Corregida)
     btnLogout.addEventListener('click', () => {
         // Confirmación nativa ligera
         if(confirm('¿Cerrar la sesión administrativa?')) {
-            localStorage.removeItem('admin_token'); // O donde guardes tu JWT actual
-            window.location.href = '/admin/login';
+            localStorage.removeItem('adminSession'); 
+            localStorage.removeItem('gymen_admin_token'); 
+            window.location.href = '/apps/admin/login.html'; // <- RUTA CORREGIDA AQUÍ
         }
     });
 
