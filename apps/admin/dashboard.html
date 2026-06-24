@@ -1,346 +1,81 @@
 <!DOCTYPE html>
-<html lang="es" class="scroll-smooth">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GYMENEZ OS | Consola de Gestión Unificada</title>
-    <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
+    <title>Gymenez OS | Command Center</title>
+    <!-- Tailwind CSS (Asegúrate de tener tu CDN o build aquí) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/auth.css">
-    <link rel="stylesheet" href="/static/css/dashboard.css">
     <style>
-        /* Bloquea el scroll general para que la app se sienta nativa */
-        body { overflow: hidden; background-color: #000; } 
-        
-        /* Contenedor del Dashboard Base con 3D Perspective */
-        body { perspective: 1000px; }
-        .dashboard-container { 
-            height: 100vh; 
-            overflow-y: auto; 
-            background-color: #030305;
-            transition: transform 0.6s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.6s ease, filter 0.6s ease;
-            transform-origin: top center;
-            will-change: transform, opacity, filter;
-        }
-        
-        /* Visor de Módulos (Estilo iOS Sheet) */
-        #module-viewer { 
-            transition: transform 0.6s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.4s ease; 
-            border-top-left-radius: 32px;
-            border-top-right-radius: 32px;
-            box-shadow: 0 -20px 80px rgba(0,0,0,0.9);
-            will-change: transform, opacity;
-        }
-        .viewer-hidden { transform: translateY(100%); opacity: 0; pointer-events: none; }
-        .viewer-visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
-        
-        /* Aceleración por hardware para Iframes fluidos en móvil */
-        #iframe-container {
-            -webkit-overflow-scrolling: touch;
-            transform: translateZ(0);
-        }
-
-        /* Ocultar barra de scroll para limpieza visual */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Tipografía y scrollbar invisible estilo Apple */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #050505; }
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="selection:bg-[#FFC300] selection:text-black w-screen h-screen flex flex-col">
+<body class="text-white h-screen w-screen overflow-hidden flex selection:bg-[#FFC300] selection:text-black">
 
-    <div class="fixed inset-0 bg-[url('/static/img/backgrounds/FONDO.png')] bg-cover bg-center opacity-5 mix-blend-screen grayscale pointer-events-none -z-20"></div>
-    <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/50 via-[#030305]/95 to-[#030305] pointer-events-none -z-10"></div>
-    <div class="fixed top-0 left-1/2 transform -translate-x-1/2 w-[50vw] h-[20vh] bg-[#FFC300]/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
-
-    <div class="dashboard-container w-full relative z-10 flex flex-col no-scrollbar" id="home-dashboard">
+    <!-- 🍎 SIDEBAR: Menú de Navegación del "Sistema Operativo" -->
+    <nav class="w-20 md:w-64 h-full bg-[#111111]/80 backdrop-blur-2xl border-r border-white/5 flex flex-col justify-between pt-8 pb-6 transition-all duration-300 z-50">
         
-        <header class="w-full border-b border-white/5 bg-black/30 backdrop-blur-md sticky top-0 z-50 flex-shrink-0">
-            <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
-                <div class="flex items-center gap-2 md:gap-3">
-                    <div class="w-2 h-2 bg-[#FFC300] rounded-full shadow-[0_0_10px_#FFC300] animate-pulse"></div>
-                    <h1 class="text-lg md:text-xl font-black uppercase tracking-tighter block">
-                        GYMENEZ <span class="text-white">CORE</span>
-                    </h1>
-                </div>
-                
-                <div class="flex items-center gap-3 md:gap-4">
-                    <div class="hidden md:block text-right mr-2">
-                        <p id="admin-name-display" class="text-[10px] md:text-xs font-bold text-white uppercase tracking-widest">Cargando...</p>
-                        <p class="text-[8px] md:text-[9px] text-[#FFC300] font-black uppercase tracking-[0.3em]">System Administrator</p>
-                    </div>
-                    <button id="logout-btn" class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                    </button>
-                </div>
+        <!-- Logo / Marca -->
+        <div class="flex items-center justify-center md:justify-start md:px-8 mb-10">
+            <div class="w-10 h-10 bg-gradient-to-br from-[#FFC300] to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-[#FFC300]/20">
+                <span class="font-black text-black text-xl tracking-tighter">G</span>
             </div>
-        </header>
-
-        <main class="relative z-10 max-w-7xl mx-auto w-full px-4 md:px-6 py-8 md:py-12 flex-grow fade-in-up">
-            
-            <div class="mb-8 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
-                <div>
-                    <p class="text-gray-500 text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] mb-1 md:mb-2">Centro de Operaciones Globales</p>
-                    <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter leading-none break-words text-white">
-                        Consola <span class="text-[#FFC300]">Gestión.</span>
-                    </h2>
-                </div>
-                <div class="px-4 py-2 md:px-5 md:py-3 rounded-xl md:rounded-2xl bg-[#FFC300]/5 border border-[#FFC300]/10 inline-block self-start md:self-auto shadow-[0_0_20px_rgba(255,195,0,0.05)]">
-                    <p class="text-[7px] md:text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Status Sistema</p>
-                    <p class="text-[9px] md:text-[10px] font-bold text-[#FFC300] flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-[#FFC300]"></span> ONLINE Y MULTITAREA</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-20">
-                
-                <div onclick="openModule('/apps/admin/users.html', 'Sistema de Usuarios', 'nav-users')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-sky-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
-                    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                    <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_#0ea5e9]"></span>
-                            <span class="text-[8px] md:text-[9px] font-black text-sky-400 uppercase tracking-[0.2em] block">Control de Cuentas</span>
-                        </div>
-                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">SISTEMA <span class="text-sky-400">USUARIOS</span></h3>
-                        <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
-                            Gestión de atletas, perfiles activos, niveles de acceso y bloqueos de seguridad perimetral →
-                        </p>
-                    </div>
-                </div>
-
-                <div onclick="openModule('/apps/admin/routines.html', 'Ingeniería Física', 'nav-routines')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-purple-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
-                    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                    <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]"></span>
-                            <span class="text-[8px] md:text-[9px] font-black text-purple-400 uppercase tracking-[0.2em] block">Planificación Táctica</span>
-                        </div>
-                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">MACROCICLOS <span class="text-purple-400">RUTINAS</span></h3>
-                        <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
-                            Control de contenido físico, dosificación de bloques de fuerza y pool de 100 esenciales →
-                        </p>
-                    </div>
-                </div>
-
-                <div onclick="openModule('/apps/admin/trainers.html', 'Organización Staff', 'nav-trainers')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-orange-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
-                    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                    <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_#f97316]"></span>
-                            <span class="text-[8px] md:text-[9px] font-black text-orange-400 uppercase tracking-[0.2em] block">Dirección de Equipo</span>
-                        </div>
-                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">ORGANIZACIÓN <span class="text-orange-400">STAFF</span></h3>
-                        <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
-                            Directorio del equipo técnico, roles asignados y credenciales de entrenadores →
-                        </p>
-                    </div>
-                </div>
-
-                <div onclick="openModule('/apps/admin/metrics.html', 'Telemetría Biolab', 'nav-metrics')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-[#FFC300]/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
-                    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                    <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-[#FFC300] shadow-[0_0_8px_#FFC300]"></span>
-                            <span class="text-[8px] md:text-[9px] font-black text-[#FFC300] uppercase tracking-[0.2em] block">Telemetría de Atletas</span>
-                        </div>
-                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">GYMENEZ <span class="text-[#FFC300]">BIOLAB</span></h3>
-                        <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
-                            Monitorear composición corporal, perímetros de fuerza y objetivos macrociclo →
-                        </p>
-                    </div>
-                </div>
-
-                <div onclick="openModule('/apps/admin/eats.html', 'Bóveda Bioquímica', 'nav-eats')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-emerald-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
-                    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                    <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
-                            <span class="text-[8px] md:text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em] block">Bóveda & Dietas</span>
-                        </div>
-                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">GYMENEZ <span class="text-emerald-500">EATS</span></h3>
-                        <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
-                            Administrar base de 720 alimentos y asignar macros a miembros Ultra →
-                        </p>
-                    </div>
-                </div>
-
-                <div onclick="openModule('/apps/admin/on.html', 'Cultura Audiovisual', 'nav-on')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-red-600/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
-                    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                    <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-red-600 shadow-[0_0_8px_#dc2626]"></span>
-                            <span class="text-[8px] md:text-[9px] font-black text-red-500 uppercase tracking-[0.2em] block">Cultura Deportiva</span>
-                        </div>
-                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">GYMENEZ <span class="text-red-600">ON</span></h3>
-                        <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
-                            Gestión de masterclasses, contenido exclusivo y educación técnica →
-                        </p>
-                    </div>
-                </div>
-
-                <div onclick="openModule('/apps/admin/pulse.html', 'Comunicaciones', 'nav-pulse')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-blue-500/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer">
-                    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                    <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]"></span>
-                            <span class="text-[8px] md:text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] block">Comunicaciones</span>
-                        </div>
-                        <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">PULSE <span class="text-blue-500">CENTER</span></h3>
-                        <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors">
-                            Emisión de alertas push, mensajería directa y notificaciones a usuarios →
-                        </p>
-                    </div>
-                </div>
-
-                <div onclick="openModule('/apps/admin/billing.html', 'Auditoría Fiscal', 'nav-billing')" class="glass-panel group relative overflow-hidden rounded-[28px] p-6 border border-white/5 hover:border-gray-300/50 transition-all duration-500 flex flex-col justify-end min-h-[180px] lg:min-h-[220px] cursor-pointer sm:col-span-2 lg:col-span-2">
-                    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1621504450181-5d356f61d307?q=80&w=600')] bg-cover bg-center opacity-10 filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-20 group-hover:scale-105"></div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent"></div>
-                    <div class="relative z-10 transform transition-transform duration-300 group-hover:-translate-y-2 flex justify-between items-end">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="w-1.5 h-1.5 rounded-full bg-gray-300 shadow-[0_0_8px_#d1d5db]"></span>
-                                <span class="text-[8px] md:text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] block">Caja y Pagos</span>
-                            </div>
-                            <h3 class="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">FACTURACIÓN <span class="text-gray-400">FISCAL</span></h3>
-                            <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-relaxed group-hover:text-white transition-colors max-w-sm">
-                                Validar referencias bancarias, aprobar transacciones de suscripción y gestionar facturación →
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </main>
-    </div>
-
-    <div id="module-viewer" class="fixed inset-0 z-[100] bg-[#030305] flex flex-col viewer-hidden">
-        
-        <div class="w-full h-[70px] border-b border-white/10 bg-[#0a0a0f]/90 backdrop-blur-2xl flex justify-between items-center px-4 md:px-8 flex-shrink-0 z-[110] rounded-t-[32px]">
-            <div class="flex items-center gap-4">
-                <button onclick="closeModule()" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white border border-white/10 transition transform hover:scale-105 active:scale-95 shadow-lg">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                </button>
-                <div>
-                    <p class="text-[8px] font-black text-gray-500 uppercase tracking-[0.3em]">Modo Ventana Activo</p>
-                    <h2 id="module-title" class="text-sm md:text-base font-black text-white uppercase tracking-widest drop-shadow-md">Cargando...</h2>
-                </div>
-            </div>
-            
-            <div id="module-loader" class="flex items-center gap-3 bg-[#FFC300]/10 px-4 py-2 rounded-full border border-[#FFC300]/20 transition-opacity duration-300">
-                <div class="w-3.5 h-3.5 border-2 border-[#FFC300] border-t-transparent rounded-full animate-spin"></div>
-                <span class="text-[9px] font-bold text-[#FFC300] uppercase tracking-widest hidden sm:block">Conectando</span>
-            </div>
+            <span class="hidden md:block ml-4 font-black tracking-widest uppercase text-sm">Gymenez OS</span>
         </div>
 
-        <div id="iframe-container" class="w-full flex-grow relative bg-transparent">
-        </div>
-    </div>
+        <!-- Enlaces a las "Apps" (Módulos) -->
+        <div class="flex-1 flex flex-col gap-2 px-3 md:px-4">
+            
+            <!-- App: Directorio 360 -->
+            <button data-url="/admin/users" class="os-nav-link active group flex items-center p-3 md:p-4 rounded-xl transition-all duration-300 bg-white/10 border border-white/10 hover:bg-white/10 relative overflow-hidden">
+                <svg class="w-6 h-6 text-white group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <span class="hidden md:block ml-4 font-semibold text-xs tracking-widest uppercase">Directorio 360</span>
+            </button>
 
-    <script src="/static/js/admin/admin_middleware.js"></script>
+            <!-- App: Laboratorio Físico (Rutinas/Ejercicios) -->
+            <button data-url="/admin/routines" class="os-nav-link group flex items-center p-3 md:p-4 rounded-xl transition-all duration-300 border border-transparent hover:bg-white/5 relative overflow-hidden">
+                <svg class="w-6 h-6 text-gray-500 group-hover:text-[#FFC300] group-hover:scale-110 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                <span class="hidden md:block ml-4 font-semibold text-xs tracking-widest uppercase text-gray-400 group-hover:text-white transition-colors">Laboratorio</span>
+            </button>
+
+            <!-- App: Bóveda Eats -->
+            <button data-url="/admin/eats" class="os-nav-link group flex items-center p-3 md:p-4 rounded-xl transition-all duration-300 border border-transparent hover:bg-white/5 relative overflow-hidden">
+                <svg class="w-6 h-6 text-gray-500 group-hover:text-emerald-400 group-hover:scale-110 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                <span class="hidden md:block ml-4 font-semibold text-xs tracking-widest uppercase text-gray-400 group-hover:text-white transition-colors">Bóveda Eats</span>
+            </button>
+
+            <!-- App: Tesorería -->
+            <button data-url="/admin/billing" class="os-nav-link group flex items-center p-3 md:p-4 rounded-xl transition-all duration-300 border border-transparent hover:bg-white/5 relative overflow-hidden">
+                <svg class="w-6 h-6 text-gray-500 group-hover:text-white group-hover:scale-110 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="hidden md:block ml-4 font-semibold text-xs tracking-widest uppercase text-gray-400 group-hover:text-white transition-colors">Tesorería</span>
+            </button>
+        </div>
+
+        <!-- Cierre de Sesión -->
+        <div class="px-3 md:px-4">
+            <button id="btn-logout" class="w-full flex items-center justify-center p-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 hover:border-red-500 transition-all duration-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 🖥️ LIENZO PRINCIPAL (El Área de Trabajo) -->
+    <main class="flex-1 h-full relative bg-[#050505]">
+        
+        <!-- Pantalla de Carga Fluida (Cortina) -->
+        <div id="os-loader" class="absolute inset-0 z-40 bg-[#050505] flex flex-col items-center justify-center transition-opacity duration-500">
+            <div class="w-12 h-12 border-4 border-white/10 border-t-[#FFC300] rounded-full animate-spin shadow-[0_0_15px_rgba(255,195,0,0.5)]"></div>
+            <p class="mt-4 text-[10px] font-black tracking-[0.3em] uppercase text-gray-500 animate-pulse">Sincronizando</p>
+        </div>
+
+        <!-- El Motor: Iframe Dinámico -->
+        <!-- NOTA: Cambia "/admin/users" a la ruta real de tu servidor Flask que renderiza la vista de usuarios -->
+        <iframe id="os-frame" src="/admin/users" class="w-full h-full border-0 opacity-0 transition-opacity duration-700 ease-in-out"></iframe>
+    </main>
+
     <script src="/static/js/admin/dashboard.js"></script>
-    <script type="module" src="/static/js/admin/radar_admin.js"></script>
-
-    <script>
-        // =================================================================
-        // LÓGICA OS MULTITAREA AVANZADA (Persistencia y Garbage Collector)
-        // =================================================================
-        
-        const CACHE_TIME_MS = 12 * 60 * 1000; // 12 minutos de memoria viva
-        const moduleCache = {}; 
-        
-        const viewer = document.getElementById('module-viewer');
-        const iframeContainer = document.getElementById('iframe-container');
-        const titleEl = document.getElementById('module-title');
-        const loader = document.getElementById('module-loader');
-        const dashboard = document.getElementById('home-dashboard');
-
-        window.openModule = function(url, title, navId) {
-            // 1. Preparar Interfaz de Transición
-            titleEl.textContent = title;
-            loader.classList.remove('opacity-0');
-            
-            // 2. Animación de subida "Sheet" (Nivel Cupertino)
-            viewer.classList.remove('viewer-hidden');
-            viewer.classList.add('viewer-visible');
-            
-            // Efecto de profundidad 3D en el dashboard de fondo
-            dashboard.style.transform = "scale(0.95) translateY(-10px) rotateX(2deg)";
-            dashboard.style.opacity = "0.3";
-            dashboard.style.filter = "blur(4px)";
-            dashboard.style.pointerEvents = "none";
-            
-            // 3. Ocultar todos los iframes almacenados actualmente
-            Object.values(moduleCache).forEach(mod => {
-                mod.iframe.style.display = 'none';
-            });
-
-            const now = Date.now();
-
-            // 4. LÓGICA DE CACHÉ: ¿La aplicación ya estaba abierta y es válida?
-            if (moduleCache[navId] && (now - moduleCache[navId].lastAccessed < CACHE_TIME_MS)) {
-                moduleCache[navId].lastAccessed = now; 
-                moduleCache[navId].iframe.style.display = 'block';
-                
-                setTimeout(() => { loader.classList.add('opacity-0'); }, 150);
-            } else {
-                // 5. La app no existe o expiró -> Hay que (re)crearla
-                if (moduleCache[navId]) {
-                    iframeContainer.removeChild(moduleCache[navId].iframe);
-                }
-                
-                const iframe = document.createElement('iframe');
-                iframe.className = "absolute inset-0 w-full h-full border-none bg-transparent";
-                iframe.src = url;
-                
-                iframe.onload = function() {
-                    setTimeout(() => {
-                        loader.classList.add('opacity-0');
-                    }, 300);
-                };
-                
-                iframeContainer.appendChild(iframe);
-                
-                moduleCache[navId] = {
-                    iframe: iframe,
-                    lastAccessed: now
-                };
-            }
-        };
-
-        window.closeModule = function() {
-            // 1. Animación de bajada
-            viewer.classList.remove('viewer-visible');
-            viewer.classList.add('viewer-hidden');
-            
-            // 2. Restaurar dashboard frontal
-            dashboard.style.transform = "scale(1) translateY(0) rotateX(0)";
-            dashboard.style.opacity = "1";
-            dashboard.style.filter = "none";
-            dashboard.style.pointerEvents = "auto";
-        };
-
-        // =================================================================
-        // GARBAGE COLLECTOR (Recolector de Basura Silencioso)
-        // =================================================================
-        setInterval(() => {
-            const now = Date.now();
-            for (const navId in moduleCache) {
-                if (now - moduleCache[navId].lastAccessed >= CACHE_TIME_MS) {
-                    const iframeToDestroy = moduleCache[navId].iframe;
-                    if(iframeToDestroy && iframeToDestroy.parentNode) {
-                        iframeToDestroy.parentNode.removeChild(iframeToDestroy);
-                    }
-                    delete moduleCache[navId];
-                    console.log(`[OS Core] Módulo limpiado por inactividad (>12m): ${navId}`);
-                }
-            }
-        }, 60000); 
-
-    </script>
 </body>
 </html>
