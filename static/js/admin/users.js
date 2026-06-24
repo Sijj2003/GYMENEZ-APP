@@ -8,7 +8,7 @@ let activeUserId = null;
 let targetCertifyUserId = null; 
 
 // ==========================================
-// 🧠 DICCIONARIO ALGORÍTMICO DE MÉTRICAS (Desde Metrics.js)
+// 🧠 DICCIONARIO ALGORÍTMICO DE MÉTRICAS
 // ==========================================
 const MEASURABLE_METRICS = [
     { id: "weight", label: "Peso Corporal Base", unit: "kg" },
@@ -49,14 +49,12 @@ function getDefaultExpirationDate() {
     return d.toISOString().split('T')[0];
 }
 
-// 🎛️ Control de Pestañas del Dossier 360
 function switchDossierTab(tabName) {
     const btnId = document.getElementById('d-tab-identity');
     const btnBio = document.getElementById('d-tab-biolab');
     const contentId = document.getElementById('d-content-identity');
     const contentBio = document.getElementById('d-content-biolab');
 
-    // Reset styles
     btnId.className = "py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors";
     btnBio.className = "py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors";
     contentId.classList.add('hidden'); contentId.classList.remove('block');
@@ -133,17 +131,67 @@ document.getElementById('search-input').addEventListener('input', (e) => {
 });
 
 // ==========================================
+// 🧮 MOTOR DE BIOMETRÍA AUTOMATIZADA
+// ==========================================
+function autoCalculateBiometrics() {
+    const weight = parseFloat(document.getElementById('m-weight').value);
+    const heightCm = parseFloat(document.getElementById('m-height').value);
+    let age = parseInt(document.getElementById('m-age').value);
+    const sex = document.getElementById('f-sex').value;
+
+    const fatInput = document.getElementById('m-fat');
+    const muscleInput = document.getElementById('m-muscle');
+
+    // Si la edad está vacía, intentamos calcularla dinámicamente desde la fecha de nacimiento
+    if (isNaN(age) || age <= 0) {
+        const dobVal = document.getElementById('f-dob').value;
+        if (dobVal) {
+            const dob = new Date(dobVal);
+            const diff = Date.now() - dob.getTime();
+            age = Math.abs(new Date(diff).getUTCFullYear() - 1970);
+            document.getElementById('m-age').value = age;
+        }
+    }
+
+    // Condición: Si tenemos los 3 pilares, calculamos. Si falta alguno, dejamos en blanco.
+    if (weight > 0 && heightCm > 0 && age > 0) {
+        const heightM = heightCm / 100; // Convertir a metros
+        const bmi = weight / (heightM * heightM); // Índice de Masa Corporal
+        
+        // Factor de sexo para la fórmula
+        const sexFactor = sex === 'Hombre' ? 1 : (sex === 'Mujer' ? 0 : 0.5);
+
+        // 1. Cálculo de % Grasa (Fórmula de Deurenberg et al.)
+        let fatPercent = (1.20 * bmi) + (0.23 * age) - (10.8 * sexFactor) - 5.4;
+        
+        // Ajuste de límites biológicos
+        if (fatPercent < 3) fatPercent = 3;
+        if (fatPercent > 65) fatPercent = 65;
+
+        // 2. Estimación de % Músculo (Masa Muscular Esquelética aprox.)
+        const muscleFactor = sex === 'Hombre' ? 0.52 : (sex === 'Mujer' ? 0.47 : 0.495);
+        let musclePercent = (100 - fatPercent) * muscleFactor;
+
+        // Imprimir resultados en el frontend redondeados a 1 decimal
+        fatInput.value = fatPercent.toFixed(1);
+        muscleInput.value = musclePercent.toFixed(1);
+    } else {
+        // Limpiar si faltan datos
+        fatInput.value = '';
+        muscleInput.value = '';
+    }
+}
+
+// ==========================================
 // 🗂️ DOSSIER 360 (IDENTIDAD + BIOLAB)
 // ==========================================
 async function loadUserDossier(userId) {
     activeUserId = userId;
-    // Refrescar estilo activo
     renderUsersList(document.getElementById('search-input').value ? allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(document.getElementById('search-input').value.toLowerCase().trim())) : allUsersData);
 
     const user = allUsersData.find(u => u.id === userId);
     if (!user) return;
 
-    // Mostrar panel
     document.getElementById('empty-state').classList.add('hidden');
     const dossier = document.getElementById('active-dossier');
     dossier.classList.remove('hidden'); dossier.classList.add('flex');
@@ -196,7 +244,7 @@ async function loadUserDossier(userId) {
     const btnCertify = document.getElementById('btn-certify');
     btnCertify.onclick = () => requestUserCertification(user.id, user.email);
 
-    // 2. LLENAR BIOLAB (Petición Silenciosa al Backend)
+    // 2. LLENAR BIOLAB
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/fitness-profile/${userId}`, { headers: getSecureHeaders() });
         const data = await res.json();
@@ -206,8 +254,6 @@ async function loadUserDossier(userId) {
             document.getElementById('m-weight').value = m.weight || '';
             document.getElementById('m-height').value = m.height || '';
             document.getElementById('m-age').value = m.age || '--';
-            document.getElementById('m-fat').value = m.fat_percent || '';
-            document.getElementById('m-muscle').value = m.muscle_percent || '';
             
             document.getElementById('m-neck').value = m.neck || '';
             document.getElementById('m-back').value = m.back || '';
@@ -231,6 +277,9 @@ async function loadUserDossier(userId) {
             document.getElementById('m-allergies').value = m.allergies || '';
             document.getElementById('m-diseases').value = m.chronic_diseases || '';
             document.getElementById('m-medical-notes').value = m.medical_notes || '';
+
+            // 🚀 Calculamos grasa y músculo automáticamente tras cargar los datos base
+            autoCalculateBiometrics();
 
             // Objetivos
             const g = data.goals || {};
@@ -275,8 +324,6 @@ function openCreateMode() {
     passEl.disabled = false; passEl.required = true; passEl.placeholder = "Mínimo 6 caracteres"; passEl.classList.replace('text-gray-500', 'text-white');
 
     document.getElementById('f-expires').value = getDefaultExpirationDate();
-    
-    // Forzamos a la pestaña de identidad, porque no tiene biometría aún
     switchDossierTab('identity');
 }
 
@@ -368,8 +415,6 @@ function extractGoalsArray(containerId) {
 // ==========================================
 // 💾 GESTIÓN DE GUARDADO (IDENTIDAD, MÉTRICAS, METAS)
 // ==========================================
-
-// Guardar Identidad
 document.getElementById('user-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('f-submit-btn');
@@ -411,7 +456,6 @@ document.getElementById('user-form').addEventListener('submit', async (e) => {
     btn.disabled = false; btn.textContent = "Guardar Cambios";
 });
 
-// Guardar Biometría
 document.getElementById('metrics-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     if(!activeUserId) return;
@@ -441,7 +485,6 @@ document.getElementById('metrics-form').addEventListener('submit', async (e) => 
     btn.disabled = false; btn.textContent = 'Guardar Biometría';
 });
 
-// Guardar Metas SMART
 document.getElementById('goals-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     if(!activeUserId) return;
@@ -524,69 +567,18 @@ function closeCertifyModal() {
 }
 
 // ==========================================
-// 🧮 MOTOR DE BIOMETRÍA AUTOMATIZADA
-// ==========================================
-function autoCalculateBiometrics() {
-    const weight = parseFloat(document.getElementById('m-weight').value);
-    const heightCm = parseFloat(document.getElementById('m-height').value);
-    let age = parseInt(document.getElementById('m-age').value);
-    const sex = document.getElementById('f-sex').value;
-
-    const fatInput = document.getElementById('m-fat');
-    const muscleInput = document.getElementById('m-muscle');
-
-    // Si la edad está vacía, intentamos calcularla dinámicamente desde la fecha de nacimiento
-    if (isNaN(age) || age <= 0) {
-        const dobVal = document.getElementById('f-dob').value;
-        if (dobVal) {
-            const dob = new Date(dobVal);
-            const diff = Date.now() - dob.getTime();
-            age = Math.abs(new Date(diff).getUTCFullYear() - 1970);
-            document.getElementById('m-age').value = age;
-        }
-    }
-
-    // 🌟 Condición: Si tenemos los 3 pilares, calculamos. Si falta alguno, dejamos en blanco.
-    if (weight > 0 && heightCm > 0 && age > 0) {
-        const heightM = heightCm / 100; // Convertir a metros
-        const bmi = weight / (heightM * heightM); // Índice de Masa Corporal
-        
-        // Factor de sexo para la fórmula
-        const sexFactor = sex === 'Hombre' ? 1 : (sex === 'Mujer' ? 0 : 0.5);
-
-        // 1. Cálculo de % Grasa (Fórmula de Deurenberg et al.)
-        let fatPercent = (1.20 * bmi) + (0.23 * age) - (10.8 * sexFactor) - 5.4;
-        
-        // Ajuste de límites biológicos
-        if (fatPercent < 3) fatPercent = 3;
-        if (fatPercent > 65) fatPercent = 65;
-
-        // 2. Estimación de % Músculo (Masa Muscular Esquelética aprox.)
-        const muscleFactor = sex === 'Hombre' ? 0.52 : (sex === 'Mujer' ? 0.47 : 0.495);
-        let musclePercent = (100 - fatPercent) * muscleFactor;
-
-        // Imprimir resultados en el frontend redondeados a 1 decimal
-        fatInput.value = fatPercent.toFixed(1);
-        muscleInput.value = musclePercent.toFixed(1);
-    } else {
-        // Limpiar si faltan datos
-        fatInput.value = '';
-        muscleInput.value = '';
-    }
-}
-
-// ==========================================
 // 🚀 INICIALIZACIÓN BLINDADA
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
+    // 1. Asignar el filtro numérico OTP
     const otpInput = document.getElementById('otp-input');
-    if (otpInput) { otpInput.addEventListener('input', function() { this.value = this.value.replace(/\D/g, ''); }); }
-    fetchAllUsers();
-});
+    if (otpInput) {
+        otpInput.addEventListener('input', function() { 
+            this.value = this.value.replace(/\D/g, ''); 
+        });
+    }
 
-}
-
-    // 2. Escuchadores de Biometría Automatizada (NUEVO)
+    // 2. Escuchadores de Biometría Automatizada
     document.getElementById('m-weight').addEventListener('input', autoCalculateBiometrics);
     document.getElementById('m-height').addEventListener('input', autoCalculateBiometrics);
     document.getElementById('f-sex').addEventListener('change', autoCalculateBiometrics);
