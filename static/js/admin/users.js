@@ -356,8 +356,18 @@ function closeCertifyModal() {
     targetCertifyUserId = null; 
 }
 
-// Filtro numérico para OTP
-document.getElementById('otp-input').addEventListener('input', function() { this.value = this.value.replace(/\D/g, ''); });
+// ==========================================
+// 🚀 INICIALIZACIÓN BLINDADA
+// ==========================================
+window.addEventListener('DOMContentLoaded', () => {
+    // 1. Asignar el filtro numérico solo si el elemento existe en el HTML
+    const otpInput = document.getElementById('otp-input');
+    if (otpInput) {
+        otpInput.addEventListener('input', function() { 
+            this.value = this.value.replace(/\D/g, ''); 
+        });
+    }
 
-// Inicializar
-window.addEventListener('DOMContentLoaded', fetchAllUsers);
+    // 2. Arrancar la extracción de datos desde el backend
+    fetchAllUsers();
+});
