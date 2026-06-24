@@ -1,218 +1,294 @@
+// Configuración de API
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
+// Estado en RAM (Acelera la búsqueda)
 let allUsersData = [];
-let targetCertifyUserId = null; // Memoria temporal para el protocolo OTP
+let activeUserId = null; 
+let targetCertifyUserId = null; 
 
 // ==========================================
-// UTILIDADES Y FORMATOS
+// 📢 UTILIDADES UI
 // ==========================================
+function showUIFeedback(message, type = 'success') {
+    const box = document.getElementById('message-box');
+    if(!box) return;
+    box.textContent = message;
+    box.className = `fixed top-4 left-1/2 transform -translate-x-1/2 px-5 py-2 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] transition-all duration-300 text-center border backdrop-blur-md ${type === 'success' ? 'bg-emerald-950/90 text-emerald-400 border-emerald-500/30' : 'bg-red-950/90 text-red-400 border-red-500/30'}`;
+    box.style.opacity = '1'; box.style.transform = 'translate(-50%, 0)';
+    setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 3000);
+}
+
 function formatToUpperCase(inputString) { return inputString ? inputString.toUpperCase().trim() : ''; }
-
 function formatDateForBackend(dateValue) {
     if (!dateValue) return '';
     const parts = dateValue.split('-'); 
     return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateValue;
 }
-
-// Calcula fecha actual + 30 días en formato YYYY-MM-DD
 function getDefaultExpirationDate() {
-    const d = new Date();
-    d.setDate(d.getDate() + 30);
+    const d = new Date(); d.setDate(d.getDate() + 30);
     return d.toISOString().split('T')[0];
 }
 
-// Manejo de UI
-function showUIFeedback(message, type = 'success') {
-    const box = document.getElementById('message-box');
-    if(!box) return alert(message);
-    box.textContent = message;
-    box.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] transition-all duration-400 text-center border backdrop-blur-md w-11/12 max-w-[360px] ${type === 'success' ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/30' : 'bg-red-950/80 text-red-400 border-red-500/30'}`;
-    box.style.opacity = '1'; box.style.transform = 'translate(-50%, 0)';
-    setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 4000);
-}
-
-function toggleModal(show, modalId = 'user-modal') {
-    const modal = document.getElementById(modalId);
-    const content = modal.querySelector('.modal-content');
-    if (show) {
-        modal.classList.remove('hidden');
-        setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
-    } else {
-        modal.classList.add('opacity-0'); content.classList.add('scale-95');
-        setTimeout(() => modal.classList.add('hidden'), 300);
-    }
-}
-
 // ==========================================
-// RENDERIZADO DE TABLA
+// 📡 CARGA Y RENDERIZADO DE LA LISTA (RAM)
 // ==========================================
 async function fetchAllUsers() {
-    const tableBody = document.getElementById('users-table-body');
-    tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-[#FFC300] font-black uppercase tracking-widest text-[10px]">Descifrando base de datos...</td></tr>';
-    
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/users`);
         const data = await response.json();
         
         if (response.ok && data.success) {
             allUsersData = data.users; 
-            filterUsersTable(document.getElementById('user-search-input').value);
+            renderUsersList(allUsersData);
         } else throw new Error(data.error);
     } catch (error) {
-        tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-500 font-bold text-xs uppercase tracking-widest">Falla de Conexión Core</td></tr>`;
+        document.getElementById('users-list').innerHTML = `<div class="p-4 text-center text-red-500 font-bold text-[10px] uppercase tracking-widest">Error conectando al Core</div>`;
     }
 }
 
-function renderUsersTable(users) {
-    const tableBody = document.getElementById('users-table-body');
-    tableBody.innerHTML = ''; 
+function renderUsersList(users) {
+    const container = document.getElementById('users-list');
+    container.innerHTML = ''; 
 
     if (users.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500 font-bold uppercase tracking-widest text-[10px]">No se detectaron expedientes.</td></tr>`;
+        container.innerHTML = `<div class="p-4 text-center text-gray-500 font-bold uppercase tracking-widest text-[10px]">No hay coincidencias.</div>`;
         return;
     }
 
     users.forEach(user => {
-        const row = tableBody.insertRow();
+        const item = document.createElement('div');
+        const isActive = activeUserId === user.id;
+        const isBlocked = user.is_blocked;
+        const tier = user.subscription_level || 'BASICO';
         
-        row.insertCell().textContent = user.full_name || 'N/A';
-        row.insertCell().textContent = user.email || 'N/A';
-        row.insertCell().textContent = user.phone_number || 'N/A';
-        
-        const subCell = row.insertCell();
-        const subLvl = user.subscription_level || 'BASICO';
-        subCell.innerHTML = `<span class="px-2 py-1 rounded bg-white/5 border border-white/10 text-[9px] font-black tracking-widest ${subLvl === 'ULTRA' || subLvl === 'PLUS' ? 'text-[#FFC300]' : 'text-gray-400'}">${subLvl}</span>`;
+        // Estilos dinámicos para la lista lateral
+        let tierColor = 'text-gray-500 border-gray-500/30';
+        if(tier === 'PLUS') tierColor = 'text-sky-400 border-sky-500/30';
+        if(tier === 'ULTRA') tierColor = 'text-[#FFC300] border-[#FFC300]/30';
 
-        // Columna Vencimiento
-        const expDate = user.subscription_expires_at ? String(user.subscription_expires_at).split('T')[0] : 'Indefinido';
-        row.insertCell().innerHTML = `<span class="text-[10px] font-mono font-bold ${expDate === 'Indefinido' ? 'text-gray-600' : 'text-red-400'}">${expDate}</span>`;
+        item.className = `p-3 rounded-xl border cursor-pointer transition-all duration-200 flex flex-col gap-1 ${isActive ? 'bg-white/10 border-white/20' : 'bg-transparent border-transparent hover:bg-white/5'}`;
+        item.onclick = () => loadUserDossier(user.id);
 
-        // Acciones
-        const actionsCell = row.insertCell();
-        actionsCell.className = "text-right space-x-2";
-        const isBlocked = user.is_blocked === true;
-        
-        actionsCell.innerHTML = `
-            <button onclick="requestUserCertification('${user.id}', '${user.email}')" class="px-3 py-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 text-sky-400 text-[8px] font-black uppercase tracking-widest hover:bg-sky-500 hover:text-white transition">Certificar</button>
-            <button onclick="handleBlockUser('${user.id}', ${isBlocked})" class="px-3 py-1.5 rounded-lg border text-[8px] font-black uppercase tracking-widest transition ${isBlocked ? 'bg-emerald-600/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-600 hover:text-white' : 'bg-red-600/10 border-red-500/30 text-red-500 hover:bg-red-600 hover:text-white'}">
-                ${isBlocked ? 'Desbloquear' : 'Bloquear'}
-            </button>
-            <button onclick='openModalForEdit(${JSON.stringify(user)})' class="px-3 py-1.5 rounded-lg border border-[#FFC300]/30 bg-[#FFC300]/10 text-[#FFC300] text-[8px] font-black uppercase tracking-widest hover:bg-[#FFC300] hover:text-black transition">Editar</button>
+        item.innerHTML = `
+            <div class="flex justify-between items-start">
+                <span class="font-black text-[11px] uppercase tracking-tight truncate ${isBlocked ? 'text-red-400 line-through' : 'text-white'}">${user.full_name || 'N/A'}</span>
+                <span class="px-1.5 py-0.5 rounded border text-[7px] font-black uppercase tracking-widest ${tierColor}">${tier}</span>
+            </div>
+            <span class="text-[9px] font-mono text-gray-500 truncate">${user.email}</span>
         `;
+        container.appendChild(item);
     });
 }
 
-function filterUsersTable(searchTerm) {
-    const normalized = searchTerm.toLowerCase().trim();
-    if (!normalized) return renderUsersTable(allUsersData);
-    const filtered = allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(normalized) || (u.email || '').toLowerCase().includes(normalized));
-    renderUsersTable(filtered);
-}
+// Búsqueda en tiempo real con DEBOUNCE (Previene lag)
+let searchTimeout;
+document.getElementById('search-input').addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        const term = e.target.value.toLowerCase().trim();
+        if (!term) return renderUsersList(allUsersData);
+        const filtered = allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term));
+        renderUsersList(filtered);
+    }, 200); // 200ms de retraso
+});
 
 // ==========================================
-// MODAL (CREATE / UPDATE)
+// 🗂️ DOSSIER 360 (SPLIT VIEW LOGIC)
 // ==========================================
-function openModalForCreate() {
-    const form = document.getElementById('user-form');
-    form.reset(); 
-    document.getElementById('modal-title').textContent = 'Inyectar Nuevo Usuario';
-    document.getElementById('user-id-field').value = '';
-    document.getElementById('is-edit-mode').value = 'false';
-    
-    document.getElementById('email').removeAttribute('disabled');
-    document.getElementById('password').required = true;
-    document.getElementById('password-req').classList.remove('hidden');
-    document.getElementById('password').placeholder = 'Mínimo 6 caracteres';
-    
-    // Lógica +30 días por defecto
-    document.getElementById('subscription_expires_at').value = getDefaultExpirationDate();
-    
-    toggleModal(true);
-}
+function loadUserDossier(userId) {
+    activeUserId = userId;
+    // Refrescar estilos visuales de la lista izquierda
+    renderUsersList(document.getElementById('search-input').value ? allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(document.getElementById('search-input').value.toLowerCase().trim())) : allUsersData);
 
-function openModalForEdit(user) {
-    const form = document.getElementById('user-form');
-    form.reset(); 
-    
-    document.getElementById('modal-title').textContent = `Editar Expediente`;
-    document.getElementById('user-id-field').value = user.id;
-    document.getElementById('is-edit-mode').value = 'true';
+    const user = allUsersData.find(u => u.id === userId);
+    if (!user) return;
 
-    document.getElementById('email').value = user.email || '';
-    document.getElementById('email').setAttribute('disabled', 'true');
-    document.getElementById('password').required = false;
-    document.getElementById('password-req').classList.add('hidden');
-    document.getElementById('password').placeholder = 'Bloqueado. Use Certificación para cambiar.';
-    document.getElementById('password').setAttribute('disabled', 'true'); // Solo se cambia vía OTP ahora
+    // Cambiar vistas
+    document.getElementById('empty-state').classList.add('hidden');
+    const dossier = document.getElementById('active-dossier');
+    dossier.classList.remove('hidden');
+    dossier.classList.add('flex');
 
-    document.getElementById('name').value = user.name || '';
-    document.getElementById('last_name').value = user.last_name || '';
-    document.getElementById('sex').value = user.sex || 'Otro';
-    document.getElementById('subscription_level').value = user.subscription_level || 'BASICO';
+    // Llenar Cabecera 360
+    document.getElementById('d-name').textContent = user.full_name || 'N/A';
+    document.getElementById('d-name').className = `text-3xl font-black uppercase tracking-tighter ${user.is_blocked ? 'text-red-500 line-through' : 'text-white'}`;
+    document.getElementById('d-email').textContent = user.email || 'N/A';
     
-    // Cargar fecha de expiración o calcularla si no tiene
-    if(user.subscription_expires_at) {
-        document.getElementById('subscription_expires_at').value = user.subscription_expires_at.split('T')[0];
-    } else {
-        document.getElementById('subscription_expires_at').value = getDefaultExpirationDate();
-    }
+    const statusEl = document.getElementById('d-status');
+    statusEl.textContent = user.is_blocked ? 'BLOQUEADO' : 'ACTIVO';
+    statusEl.className = `px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${user.is_blocked ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`;
+    
+    const tierEl = document.getElementById('d-tier');
+    tierEl.textContent = user.subscription_level || 'BASICO';
+    let tierColorClass = 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+    if(user.subscription_level === 'PLUS') tierColorClass = 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+    if(user.subscription_level === 'ULTRA') tierColorClass = 'bg-[#FFC300]/10 text-[#FFC300] border-[#FFC300]/20';
+    tierEl.className = `px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${tierColorClass}`;
+
+    // Llenar Formulario de Identidad (Edit Mode)
+    document.getElementById('f-id').value = user.id;
+    document.getElementById('f-is-edit').value = 'true';
+    document.getElementById('f-name').value = user.name || '';
+    document.getElementById('f-lastname').value = user.last_name || '';
+    
+    const emailEl = document.getElementById('f-email');
+    emailEl.value = user.email || '';
+    emailEl.disabled = true; // No se puede cambiar email
+    
+    const passEl = document.getElementById('f-password');
+    passEl.disabled = true;
+    passEl.required = false;
+    passEl.placeholder = "Cambio exclusivo vía OTP Clave";
+    
+    document.getElementById('f-tier').value = user.subscription_level || 'BASICO';
+    document.getElementById('f-expires').value = user.subscription_expires_at ? String(user.subscription_expires_at).split('T')[0] : getDefaultExpirationDate();
+    document.getElementById('f-sex').value = user.sex || 'Otro';
+    if(user.dob) document.getElementById('f-dob').value = user.dob.split('/').reverse().join('-');
 
     if (user.phone_number && user.phone_number.includes('-')) {
         const [prefix, number] = user.phone_number.split('-');
-        document.getElementById('phone_prefix').value = prefix || '0414';
-        document.getElementById('phone_number_body').value = number || '';
+        document.getElementById('f-phone-pre').value = prefix || '0414';
+        document.getElementById('f-phone-num').value = number || '';
+    } else {
+        document.getElementById('f-phone-num').value = user.phone_number || '';
     }
 
-    if(user.dob) document.getElementById('dob').value = user.dob.split('/').reverse().join('-');
-    toggleModal(true);
+    // Configurar Botones Superiores Dinámicos
+    const btnBlock = document.getElementById('btn-block');
+    btnBlock.textContent = user.is_blocked ? 'Desbloquear' : 'Bloquear';
+    btnBlock.className = `px-4 py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-colors ${user.is_blocked ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500 hover:text-black' : 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white'}`;
+    btnBlock.onclick = () => handleBlockUser(user.id, user.is_blocked);
+
+    const btnCertify = document.getElementById('btn-certify');
+    btnCertify.onclick = () => requestUserCertification(user.id, user.email);
 }
 
+function openCreateMode() {
+    activeUserId = null;
+    renderUsersList(document.getElementById('search-input').value ? allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(document.getElementById('search-input').value.toLowerCase().trim())) : allUsersData);
+
+    document.getElementById('empty-state').classList.add('hidden');
+    const dossier = document.getElementById('active-dossier');
+    dossier.classList.remove('hidden');
+    dossier.classList.add('flex');
+
+    // Cabecera Modo Creación
+    document.getElementById('d-name').textContent = "Nuevo Atleta";
+    document.getElementById('d-name').className = "text-3xl font-black uppercase tracking-tighter text-[#FFC300]";
+    document.getElementById('d-email').textContent = "Llenar formulario inferior";
+    document.getElementById('d-status').className = "hidden";
+    document.getElementById('d-tier').className = "hidden";
+    document.getElementById('btn-block').className = "hidden";
+    document.getElementById('btn-certify').className = "hidden";
+
+    // Limpiar Formulario
+    const form = document.getElementById('user-form');
+    form.reset();
+    document.getElementById('f-id').value = '';
+    document.getElementById('f-is-edit').value = 'false';
+
+    const emailEl = document.getElementById('f-email');
+    emailEl.disabled = false;
+    emailEl.classList.replace('text-gray-400', 'text-white');
+
+    const passEl = document.getElementById('f-password');
+    passEl.disabled = false;
+    passEl.required = true;
+    passEl.placeholder = "Mínimo 6 caracteres";
+    passEl.classList.replace('text-gray-500', 'text-white');
+
+    document.getElementById('f-expires').value = getDefaultExpirationDate();
+}
+
+// ==========================================
+// 💾 GESTIÓN DEL FORMULARIO PRINCIPAL
+// ==========================================
 document.getElementById('user-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
-    const isEdit = document.getElementById('is-edit-mode').value === 'true';
-    const userId = document.getElementById('user-id-field').value;
+    const btn = document.getElementById('f-submit-btn');
+    const isEdit = document.getElementById('f-is-edit').value === 'true';
+    const userId = document.getElementById('f-id').value;
 
-    const name = formatToUpperCase(form.name.value);
-    const lastName = formatToUpperCase(form.last_name.value);
-    const fullPhoneNumber = form.phone_prefix.value + '-' + form.phone_number_body.value.replace(/\D/g, '');
+    const name = formatToUpperCase(document.getElementById('f-name').value);
+    const lastName = formatToUpperCase(document.getElementById('f-lastname').value);
+    const fullPhoneNumber = document.getElementById('f-phone-pre').value + '-' + document.getElementById('f-phone-num').value.replace(/\D/g, '');
 
     const payload = {
         name: name, last_name: lastName, full_name: `${name} ${lastName}`,
-        email: form.email.value, password: form.password.value,
-        phone_number: fullPhoneNumber, sex: form.sex.value, 
-        subscription_level: form.subscription_level.value,
-        subscription_expires_at: form.subscription_expires_at.value,
-        dob: formatDateForBackend(form.dob.value)
+        email: document.getElementById('f-email').value, 
+        password: document.getElementById('f-password').value,
+        phone_number: fullPhoneNumber, 
+        sex: document.getElementById('f-sex').value, 
+        subscription_level: document.getElementById('f-tier').value,
+        subscription_expires_at: document.getElementById('f-expires').value,
+        dob: formatDateForBackend(document.getElementById('f-dob').value)
     };
     
     if (isEdit) { delete payload.email; delete payload.password; }
+
+    btn.disabled = true; btn.textContent = "Guardando...";
 
     const url = isEdit ? `${API_BASE_URL}/api/admin/user/${userId}` : `${API_BASE_URL}/api/admin/user`;
     
     try {
         const response = await fetch(url, {
             method: isEdit ? 'PUT' : 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' }, // Usa el admin_middleware para el Token
             body: JSON.stringify(payload)
         });
         const data = await response.json();
+        
         if (response.ok && data.success) {
-            toggleModal(false);
-            showUIFeedback(`Operación exitosa en ${name}.`);
-            fetchAllUsers();
-        } else alert(`Error: ${data.error}`);
-    } catch (err) { alert(`Falla de conexión.`); }
+            showUIFeedback(`Expediente actualizado exitosamente.`, 'success');
+            await fetchAllUsers(); // Refrescar RAM
+            
+            // Si creamos uno nuevo, seleccionarlo
+            if (!isEdit) {
+                // Pequeño truco: Buscar el último usuario creado por el email (que acabamos de poner)
+                const newU = allUsersData.find(u => u.email === payload.email);
+                if (newU) loadUserDossier(newU.id);
+            } else {
+                loadUserDossier(userId);
+            }
+        } else {
+            showUIFeedback(data.error || "Fallo en la base de datos.", "error");
+        }
+    } catch (err) { 
+        showUIFeedback("Falla de conexión de red.", "error"); 
+    }
+    btn.disabled = false; btn.textContent = "Guardar Cambios";
 });
 
 // ==========================================
-// PROTOCOLO DE CERTIFICACIÓN OTP (Alta Seguridad)
+// 🛡️ BLOQUEO DE ACCESOS
+// ==========================================
+async function handleBlockUser(userId, isBlocked) {
+    const newState = !isBlocked;
+    if (!confirm(`¿Ejecutar orden de ${newState ? 'BLOQUEAR' : 'DESBLOQUEAR'} para este expediente?`)) return;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/user/block/${userId}`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_blocked: newState })
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            showUIFeedback(`Permisos actualizados.`, 'success');
+            await fetchAllUsers();
+            loadUserDossier(userId); // Refrescar vista
+        }
+    } catch (err) { showUIFeedback(`Error al procesar el bloqueo.`, 'error'); }
+}
+
+// ==========================================
+// 🔐 PROTOCOLO DE CERTIFICACIÓN OTP
 // ==========================================
 async function requestUserCertification(userId, email) {
-    if(!confirm(`Se enviará un código OTP de seguridad al correo: ${email}. ¿Desea proceder?`)) return;
+    if(!confirm(`Se despachará un código OTP de seguridad al correo: ${email}. ¿Desea proceder?`)) return;
     
-    showUIFeedback("Despachando código al atleta...", "success");
+    showUIFeedback("Enviando PIN al atleta...", "success");
     
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/user/${userId}/request-cert`, { method: 'POST' });
@@ -221,16 +297,23 @@ async function requestUserCertification(userId, email) {
             targetCertifyUserId = userId;
             document.getElementById('otp-input').value = '';
             document.getElementById('new-password-input').value = '';
-            document.getElementById('certify-step-1').classList.remove('hidden');
-            document.getElementById('certify-step-2').classList.add('hidden');
-            toggleModal(true, 'certify-modal');
+            document.getElementById('otp-step-1').classList.remove('hidden');
+            document.getElementById('otp-step-2').classList.add('hidden');
+            
+            // Mostrar Modal
+            const modal = document.getElementById('otp-modal');
+            const content = document.getElementById('otp-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
+            
         } else { showUIFeedback(data.error, 'error'); }
-    } catch (e) { showUIFeedback("Error de red conectando al servidor", 'error'); }
+    } catch (e) { showUIFeedback("Falla de red.", 'error'); }
 }
 
 async function verifyUserCode() {
     const code = document.getElementById('otp-input').value.trim();
-    if(code.length !== 6) return alert("El código debe tener 6 dígitos.");
+    if(code.length !== 6) { showUIFeedback("El código debe tener 6 dígitos.", "error"); return; }
     
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/user/${targetCertifyUserId}/verify-cert`, {
@@ -240,15 +323,15 @@ async function verifyUserCode() {
         });
         const data = await response.json();
         if(data.success) {
-            document.getElementById('certify-step-1').classList.add('hidden');
-            document.getElementById('certify-step-2').classList.remove('hidden');
+            document.getElementById('otp-step-1').classList.add('hidden');
+            document.getElementById('otp-step-2').classList.remove('hidden');
         } else { showUIFeedback("Código inválido o expirado.", 'error'); }
-    } catch (e) { showUIFeedback("Error verificando código.", 'error'); }
+    } catch (e) { showUIFeedback("Error verificando.", 'error'); }
 }
 
 async function forcePasswordReset() {
     const newPass = document.getElementById('new-password-input').value;
-    if(newPass.length < 6) return alert("La contraseña debe ser de al menos 6 caracteres.");
+    if(newPass.length < 6) { showUIFeedback("La contraseña debe tener mínimo 6 caracteres.", "error"); return; }
     
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/user/${targetCertifyUserId}/force-password`, {
@@ -258,34 +341,23 @@ async function forcePasswordReset() {
         });
         const data = await response.json();
         if(data.success) {
-            showUIFeedback("Identidad Verificada y Contraseña actualizada.");
+            showUIFeedback("Identidad Verificada y Contraseña forzada con éxito.");
             closeCertifyModal();
         } else { showUIFeedback(data.error, 'error'); }
-    } catch (e) { showUIFeedback("Error al forzar actualización.", 'error'); }
+    } catch (e) { showUIFeedback("Error de red.", 'error'); }
 }
 
-function closeCertifyModal() { toggleModal(false, 'certify-modal'); targetCertifyUserId = null; }
-
-// ==========================================
-// BLOQUEO DE ACCESOS
-// ==========================================
-async function handleBlockUser(userId, isBlocked) {
-    const newState = !isBlocked;
-    if (!confirm(`¿Ejecutar orden de ${newState ? 'BLOQUEAR' : 'DESBLOQUEAR'} para este expediente?`)) return;
-    try {
-        await fetch(`${API_BASE_URL}/api/admin/user/block/${userId}`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ is_blocked: newState })
-        });
-        fetchAllUsers(); 
-    } catch (err) { alert(`Error al procesar el bloqueo.`); }
+function closeCertifyModal() { 
+    const modal = document.getElementById('otp-modal');
+    const content = document.getElementById('otp-content');
+    modal.classList.add('opacity-0');
+    content.classList.add('scale-95');
+    setTimeout(() => { modal.classList.remove('flex'); modal.classList.add('hidden'); }, 300);
+    targetCertifyUserId = null; 
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    document.body.classList.add('loaded');
-    document.getElementById('user-search-input').addEventListener('input', (e) => filterUsersTable(e.target.value));
-    document.getElementById('add-user-btn').addEventListener('click', openModalForCreate);
-    document.getElementById('close-modal-btn').addEventListener('click', () => toggleModal(false));
-    document.getElementById('cancel-modal-btn').addEventListener('click', () => toggleModal(false));
-    fetchAllUsers();
-});
+// Filtro numérico para OTP
+document.getElementById('otp-input').addEventListener('input', function() { this.value = this.value.replace(/\D/g, ''); });
+
+// Inicializar
+window.addEventListener('DOMContentLoaded', fetchAllUsers);
