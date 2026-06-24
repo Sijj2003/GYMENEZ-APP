@@ -2,14 +2,33 @@
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
-// Estado en RAM (Acelera la búsqueda)
+// Estado en RAM
 let allUsersData = [];
 let activeUserId = null; 
 let targetCertifyUserId = null; 
 
 // ==========================================
+// 🧠 DICCIONARIO ALGORÍTMICO DE MÉTRICAS (Desde Metrics.js)
+// ==========================================
+const MEASURABLE_METRICS = [
+    { id: "weight", label: "Peso Corporal Base", unit: "kg" },
+    { id: "fat_percent", label: "% Grasa Estimada", unit: "%" },
+    { id: "muscle_percent", label: "% Masa Muscular", unit: "%" },
+    { id: "waist", label: "Perímetro Cintura", unit: "cm" },
+    { id: "rm_push", label: "Potencia: 1RM Empuje", unit: "kg" },
+    { id: "rm_pull", label: "Potencia: 1RM Tracción", unit: "kg" },
+    { id: "rm_legs", label: "Potencia: 1RM Pierna", unit: "kg" },
+    { id: "custom", label: "Hábito Cualitativo / Otro", unit: "" }
+];
+
+// ==========================================
 // 📢 UTILIDADES UI
 // ==========================================
+function getSecureHeaders() {
+    const token = localStorage.getItem('gymen_admin_token'); 
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+}
+
 function showUIFeedback(message, type = 'success') {
     const box = document.getElementById('message-box');
     if(!box) return;
@@ -19,15 +38,37 @@ function showUIFeedback(message, type = 'success') {
     setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 3000);
 }
 
-function formatToUpperCase(inputString) { return inputString ? inputString.toUpperCase().trim() : ''; }
-function formatDateForBackend(dateValue) {
-    if (!dateValue) return '';
-    const parts = dateValue.split('-'); 
-    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateValue;
+function formatToUpperCase(str) { return str ? str.toUpperCase().trim() : ''; }
+function formatDateForBackend(dVal) {
+    if (!dVal) return '';
+    const parts = dVal.split('-'); 
+    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dVal;
 }
 function getDefaultExpirationDate() {
     const d = new Date(); d.setDate(d.getDate() + 30);
     return d.toISOString().split('T')[0];
+}
+
+// 🎛️ Control de Pestañas del Dossier 360
+function switchDossierTab(tabName) {
+    const btnId = document.getElementById('d-tab-identity');
+    const btnBio = document.getElementById('d-tab-biolab');
+    const contentId = document.getElementById('d-content-identity');
+    const contentBio = document.getElementById('d-content-biolab');
+
+    // Reset styles
+    btnId.className = "py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors";
+    btnBio.className = "py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors";
+    contentId.classList.add('hidden'); contentId.classList.remove('block');
+    contentBio.classList.add('hidden'); contentBio.classList.remove('block');
+
+    if (tabName === 'identity') {
+        btnId.className = "py-3 border-b-2 border-[#FFC300] text-[#FFC300] font-black text-[10px] uppercase tracking-widest transition-colors";
+        contentId.classList.remove('hidden'); contentId.classList.add('block');
+    } else if (tabName === 'biolab') {
+        btnBio.className = "py-3 border-b-2 border-sky-400 text-sky-400 font-black text-[10px] uppercase tracking-widest transition-colors";
+        contentBio.classList.remove('hidden'); contentBio.classList.add('block');
+    }
 }
 
 // ==========================================
@@ -35,7 +76,7 @@ function getDefaultExpirationDate() {
 // ==========================================
 async function fetchAllUsers() {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/users`);
+        const response = await fetch(`${API_BASE_URL}/api/admin/users`, { headers: getSecureHeaders() });
         const data = await response.json();
         
         if (response.ok && data.success) {
@@ -80,7 +121,6 @@ function renderUsersList(users) {
     });
 }
 
-// Búsqueda en tiempo real con DEBOUNCE
 let searchTimeout;
 document.getElementById('search-input').addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
@@ -93,20 +133,22 @@ document.getElementById('search-input').addEventListener('input', (e) => {
 });
 
 // ==========================================
-// 🗂️ DOSSIER 360 (SPLIT VIEW LOGIC)
+// 🗂️ DOSSIER 360 (IDENTIDAD + BIOLAB)
 // ==========================================
-function loadUserDossier(userId) {
+async function loadUserDossier(userId) {
     activeUserId = userId;
+    // Refrescar estilo activo
     renderUsersList(document.getElementById('search-input').value ? allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(document.getElementById('search-input').value.toLowerCase().trim())) : allUsersData);
 
     const user = allUsersData.find(u => u.id === userId);
     if (!user) return;
 
+    // Mostrar panel
     document.getElementById('empty-state').classList.add('hidden');
     const dossier = document.getElementById('active-dossier');
-    dossier.classList.remove('hidden');
-    dossier.classList.add('flex');
+    dossier.classList.remove('hidden'); dossier.classList.add('flex');
 
+    // 1. LLENAR IDENTIDAD
     document.getElementById('d-name').textContent = user.full_name || 'N/A';
     document.getElementById('d-name').className = `text-3xl font-black uppercase tracking-tighter ${user.is_blocked ? 'text-red-500 line-through' : 'text-white'}`;
     document.getElementById('d-email').textContent = user.email || 'N/A';
@@ -128,13 +170,10 @@ function loadUserDossier(userId) {
     document.getElementById('f-lastname').value = user.last_name || '';
     
     const emailEl = document.getElementById('f-email');
-    emailEl.value = user.email || '';
-    emailEl.disabled = true; 
+    emailEl.value = user.email || ''; emailEl.disabled = true; 
     
     const passEl = document.getElementById('f-password');
-    passEl.disabled = true;
-    passEl.required = false;
-    passEl.placeholder = "Cambio exclusivo vía OTP Clave";
+    passEl.disabled = true; passEl.required = false; passEl.placeholder = "Cambio exclusivo vía OTP Clave";
     
     document.getElementById('f-tier').value = user.subscription_level || 'BASICO';
     document.getElementById('f-expires').value = user.subscription_expires_at ? String(user.subscription_expires_at).split('T')[0] : getDefaultExpirationDate();
@@ -156,6 +195,57 @@ function loadUserDossier(userId) {
 
     const btnCertify = document.getElementById('btn-certify');
     btnCertify.onclick = () => requestUserCertification(user.id, user.email);
+
+    // 2. LLENAR BIOLAB (Petición Silenciosa al Backend)
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/fitness-profile/${userId}`, { headers: getSecureHeaders() });
+        const data = await res.json();
+        
+        if (data.success) {
+            const m = data.metrics || {};
+            document.getElementById('m-weight').value = m.weight || '';
+            document.getElementById('m-height').value = m.height || '';
+            document.getElementById('m-age').value = m.age || '--';
+            document.getElementById('m-fat').value = m.fat_percent || '';
+            document.getElementById('m-muscle').value = m.muscle_percent || '';
+            
+            document.getElementById('m-neck').value = m.neck || '';
+            document.getElementById('m-back').value = m.back || '';
+            document.getElementById('m-thorax').value = m.thorax || '';
+            document.getElementById('m-abdomen').value = m.abdomen || '';
+            document.getElementById('m-bicep-l').value = m.bicep_left || '';
+            document.getElementById('m-bicep-r').value = m.bicep_right || '';
+            document.getElementById('m-forearm-l').value = m.forearm_left || '';
+            document.getElementById('m-forearm-r').value = m.forearm_right || '';
+            
+            document.getElementById('m-waist').value = m.waist || '';
+            document.getElementById('m-femur-l').value = m.femur_left || '';
+            document.getElementById('m-femur-r').value = m.femur_right || '';
+            document.getElementById('m-tibia-l').value = m.tibia_left || '';
+            document.getElementById('m-tibia-r').value = m.tibia_right || '';
+            
+            document.getElementById('m-push').value = m.rm_push || '';
+            document.getElementById('m-pull').value = m.rm_pull || '';
+            document.getElementById('m-legs').value = m.rm_legs || '';
+
+            document.getElementById('m-allergies').value = m.allergies || '';
+            document.getElementById('m-diseases').value = m.chronic_diseases || '';
+            document.getElementById('m-medical-notes').value = m.medical_notes || '';
+
+            // Objetivos
+            const g = data.goals || {};
+            document.getElementById('g-focus').value = g.focus || 'Masa Muscular';
+            
+            document.getElementById('st-goals-container').innerHTML = '';
+            document.getElementById('mt-goals-container').innerHTML = '';
+            document.getElementById('lt-goals-container').innerHTML = '';
+
+            const normalize = (val) => Array.isArray(val) ? val : (val && val.description ? [val] : []);
+            normalize(g.short_term).forEach(goal => addGoalRow('st-goals-container', goal));
+            normalize(g.medium_term).forEach(goal => addGoalRow('mt-goals-container', goal));
+            normalize(g.long_term).forEach(goal => addGoalRow('lt-goals-container', goal));
+        }
+    } catch (e) { console.warn("Error leyendo biometría: ", e); }
 }
 
 function openCreateMode() {
@@ -164,8 +254,7 @@ function openCreateMode() {
 
     document.getElementById('empty-state').classList.add('hidden');
     const dossier = document.getElementById('active-dossier');
-    dossier.classList.remove('hidden');
-    dossier.classList.add('flex');
+    dossier.classList.remove('hidden'); dossier.classList.add('flex');
 
     document.getElementById('d-name').textContent = "Nuevo Atleta";
     document.getElementById('d-name').className = "text-3xl font-black uppercase tracking-tighter text-[#FFC300]";
@@ -175,27 +264,112 @@ function openCreateMode() {
     document.getElementById('btn-block').className = "hidden";
     document.getElementById('btn-certify').className = "hidden";
 
-    const form = document.getElementById('user-form');
-    form.reset();
+    document.getElementById('user-form').reset();
     document.getElementById('f-id').value = '';
     document.getElementById('f-is-edit').value = 'false';
 
     const emailEl = document.getElementById('f-email');
-    emailEl.disabled = false;
-    emailEl.classList.replace('text-gray-400', 'text-white');
+    emailEl.disabled = false; emailEl.classList.replace('text-gray-400', 'text-white');
 
     const passEl = document.getElementById('f-password');
-    passEl.disabled = false;
-    passEl.required = true;
-    passEl.placeholder = "Mínimo 6 caracteres";
-    passEl.classList.replace('text-gray-500', 'text-white');
+    passEl.disabled = false; passEl.required = true; passEl.placeholder = "Mínimo 6 caracteres"; passEl.classList.replace('text-gray-500', 'text-white');
 
     document.getElementById('f-expires').value = getDefaultExpirationDate();
+    
+    // Forzamos a la pestaña de identidad, porque no tiene biometría aún
+    switchDossierTab('identity');
 }
 
 // ==========================================
-// 💾 GESTIÓN DEL FORMULARIO PRINCIPAL
+// 🏗️ CREADOR DE FILAS DE OBJETIVOS
 // ==========================================
+function addGoalRow(containerId, data = null) {
+    const container = document.getElementById(containerId);
+    const rowId = `goal-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    const metricOptions = MEASURABLE_METRICS.map(m => 
+        `<option value="${m.id}" ${data && data.metric_key === m.id ? 'selected' : ''}>${m.label}</option>`
+    ).join('');
+
+    const isDone = data && data.status === 'Cumplido';
+    const row = document.createElement('div');
+    row.className = 'goal-row flex flex-col md:flex-row gap-3 p-4 bg-black/40 border border-white/5 rounded-2xl items-end relative transition-all hover:border-white/10';
+    row.id = rowId;
+
+    row.innerHTML = `
+        <div class="w-full md:w-1/5">
+            <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Variable Base</label>
+            <select class="goal-metric-key glass-input rounded-lg p-2 text-[10px] font-bold text-white w-full">
+                ${metricOptions}
+            </select>
+        </div>
+        <div class="w-full md:w-[12%]">
+            <label class="block text-[8px] text-gray-400 uppercase font-black mb-1">V. Inicial</label>
+            <input type="text" class="goal-start glass-input p-2 text-xs font-mono w-full" placeholder="Base" value="${data ? (data.start_value || '') : ''}">
+        </div>
+        <div class="w-full md:w-[12%]">
+            <label class="block text-[8px] text-[#FFC300] uppercase font-black mb-1">Target</label>
+            <input type="text" class="goal-target glass-input p-2 text-xs font-mono w-full !text-[#FFC300]" placeholder="Meta" value="${data ? (data.target_value || '') : ''}">
+        </div>
+        <div class="w-full md:flex-grow">
+            <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción SMART</label>
+            <input type="text" class="goal-desc glass-input p-2 text-xs w-full" placeholder="Describe la meta..." value="${data ? (data.description || '') : ''}">
+        </div>
+        <div class="w-full md:w-[15%]">
+            <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Estatus</label>
+            <select class="goal-status glass-input rounded-lg p-2 text-[9px] font-black uppercase ${isDone ? 'text-emerald-400' : 'text-gray-300'} w-full">
+                <option value="En progreso" ${!isDone ? 'selected' : ''}>En progreso</option>
+                <option value="Cumplido" ${isDone ? 'selected' : ''}>Cumplido</option>
+            </select>
+        </div>
+        <button type="button" onclick="document.getElementById('${rowId}').remove()" class="w-full md:w-auto px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-[10px] font-black uppercase transition shrink-0">
+            X
+        </button>
+    `;
+
+    container.appendChild(row);
+
+    const selectEl = row.querySelector('.goal-metric-key');
+    const startEl = row.querySelector('.goal-start');
+    const targetEl = row.querySelector('.goal-target');
+    const descEl = row.querySelector('.goal-desc');
+    const statusEl = row.querySelector('.goal-status');
+
+    const updateDescription = () => {
+        const metricKey = selectEl.value;
+        const metricObj = MEASURABLE_METRICS.find(m => m.id === metricKey);
+        if (metricKey !== 'custom' && targetEl.value.trim() !== '') {
+            let startText = startEl.value.trim() !== '' ? ` (desde ${startEl.value})` : '';
+            descEl.value = `Establecer ${metricObj.label.toLowerCase()} en ${targetEl.value} ${metricObj.unit}${startText}`.trim();
+        }
+    };
+
+    statusEl.addEventListener('change', (e) => {
+        e.target.classList.remove('text-emerald-400', 'text-gray-300');
+        e.target.classList.add(e.target.value === 'Cumplido' ? 'text-emerald-400' : 'text-gray-300');
+    });
+
+    selectEl.addEventListener('change', updateDescription);
+    startEl.addEventListener('input', updateDescription);
+    targetEl.addEventListener('input', updateDescription);
+}
+
+function extractGoalsArray(containerId) {
+    const rows = document.querySelectorAll(`#${containerId} .goal-row`);
+    return Array.from(rows).map(row => ({
+        metric_key: row.querySelector('.goal-metric-key').value,
+        start_value: row.querySelector('.goal-start').value,
+        target_value: row.querySelector('.goal-target').value,
+        description: row.querySelector('.goal-desc').value,
+        status: row.querySelector('.goal-status').value
+    }));
+}
+
+// ==========================================
+// 💾 GESTIÓN DE GUARDADO (IDENTIDAD, MÉTRICAS, METAS)
+// ==========================================
+
+// Guardar Identidad
 document.getElementById('user-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('f-submit-btn');
@@ -210,8 +384,7 @@ document.getElementById('user-form').addEventListener('submit', async (e) => {
         name: name, last_name: lastName, full_name: `${name} ${lastName}`,
         email: document.getElementById('f-email').value, 
         password: document.getElementById('f-password').value,
-        phone_number: fullPhoneNumber, 
-        sex: document.getElementById('f-sex').value, 
+        phone_number: fullPhoneNumber, sex: document.getElementById('f-sex').value, 
         subscription_level: document.getElementById('f-tier').value,
         subscription_expires_at: document.getElementById('f-expires').value,
         dob: formatDateForBackend(document.getElementById('f-dob').value)
@@ -220,75 +393,101 @@ document.getElementById('user-form').addEventListener('submit', async (e) => {
     if (isEdit) { delete payload.email; delete payload.password; }
 
     btn.disabled = true; btn.textContent = "Guardando...";
-
     const url = isEdit ? `${API_BASE_URL}/api/admin/user/${userId}` : `${API_BASE_URL}/api/admin/user`;
     
     try {
-        const response = await fetch(url, {
-            method: isEdit ? 'PUT' : 'POST',
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify(payload)
-        });
-        const data = await response.json();
+        const res = await fetch(url, { method: isEdit ? 'PUT' : 'POST', headers: getSecureHeaders(), body: JSON.stringify(payload) });
+        const data = await res.json();
         
-        if (response.ok && data.success) {
+        if (res.ok && data.success) {
             showUIFeedback(`Expediente actualizado exitosamente.`, 'success');
             await fetchAllUsers();
             if (!isEdit) {
                 const newU = allUsersData.find(u => u.email === payload.email);
                 if (newU) loadUserDossier(newU.id);
-            } else {
-                loadUserDossier(userId);
-            }
-        } else {
-            showUIFeedback(data.error || "Fallo en la base de datos.", "error");
-        }
-    } catch (err) { 
-        showUIFeedback("Falla de conexión de red.", "error"); 
-    }
+            } else { loadUserDossier(userId); }
+        } else { showUIFeedback(data.error || "Fallo en la base de datos.", "error"); }
+    } catch (err) { showUIFeedback("Falla de conexión de red.", "error"); }
     btn.disabled = false; btn.textContent = "Guardar Cambios";
 });
 
+// Guardar Biometría
+document.getElementById('metrics-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if(!activeUserId) return;
+    const btn = document.getElementById('btn-submit-metrics');
+    
+    const payload = {
+        weight: document.getElementById('m-weight').value, height: document.getElementById('m-height').value,
+        fat_percent: document.getElementById('m-fat').value, muscle_percent: document.getElementById('m-muscle').value,
+        neck: document.getElementById('m-neck').value, back: document.getElementById('m-back').value,
+        thorax: document.getElementById('m-thorax').value, abdomen: document.getElementById('m-abdomen').value,
+        bicep_left: document.getElementById('m-bicep-l').value, bicep_right: document.getElementById('m-bicep-r').value,
+        forearm_left: document.getElementById('m-forearm-l').value, forearm_right: document.getElementById('m-forearm-r').value,
+        waist: document.getElementById('m-waist').value, femur_left: document.getElementById('m-femur-l').value,
+        femur_right: document.getElementById('m-femur-r').value, tibia_left: document.getElementById('m-tibia-l').value,
+        tibia_right: document.getElementById('m-tibia-r').value, rm_push: document.getElementById('m-push').value,
+        rm_pull: document.getElementById('m-pull').value, rm_legs: document.getElementById('m-legs').value,
+        allergies: document.getElementById('m-allergies').value, chronic_diseases: document.getElementById('m-diseases').value,
+        medical_notes: document.getElementById('m-medical-notes').value
+    };
+
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/metrics/${activeUserId}`, { method: 'POST', headers: getSecureHeaders(), body: JSON.stringify(payload) });
+        const data = await res.json();
+        if(data.success) showUIFeedback("Telemetría corporal actualizada.");
+    } catch (e) { showUIFeedback("Error de red.", "error"); }
+    btn.disabled = false; btn.textContent = 'Guardar Biometría';
+});
+
+// Guardar Metas SMART
+document.getElementById('goals-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if(!activeUserId) return;
+    const btn = document.getElementById('btn-submit-goals');
+
+    const payload = {
+        focus: document.getElementById('g-focus').value,
+        short_term: extractGoalsArray('st-goals-container'),
+        medium_term: extractGoalsArray('mt-goals-container'),
+        long_term: extractGoalsArray('lt-goals-container')
+    };
+
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/goals/${activeUserId}`, { method: 'POST', headers: getSecureHeaders(), body: JSON.stringify(payload) });
+        const data = await res.json();
+        if(data.success) showUIFeedback("Matriz de objetivos guardada.");
+    } catch (e) { showUIFeedback("Error de red.", "error"); }
+    btn.disabled = false; btn.textContent = 'Fijar Matriz Estratégica';
+});
+
 // ==========================================
-// 🛡️ BLOQUEO DE ACCESOS
+// 🛡️ BLOQUEO DE ACCESOS Y OTP
 // ==========================================
 async function handleBlockUser(userId, isBlocked) {
     const newState = !isBlocked;
     if (!confirm(`¿Ejecutar orden de ${newState ? 'BLOQUEAR' : 'DESBLOQUEAR'} para este expediente?`)) return;
-    
     try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/user/block/${userId}`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ is_blocked: newState })
-        });
+        const response = await fetch(`${API_BASE_URL}/api/admin/user/block/${userId}`, { method: 'PUT', headers: getSecureHeaders(), body: JSON.stringify({ is_blocked: newState }) });
         const data = await response.json();
-        if (response.ok && data.success) {
-            showUIFeedback(`Permisos actualizados.`, 'success');
-            await fetchAllUsers();
-            loadUserDossier(userId); 
-        }
+        if (response.ok && data.success) { showUIFeedback(`Permisos actualizados.`, 'success'); await fetchAllUsers(); loadUserDossier(userId); }
     } catch (err) { showUIFeedback(`Error al procesar el bloqueo.`, 'error'); }
 }
 
-// ==========================================
-// 🔐 PROTOCOLO DE CERTIFICACIÓN OTP
-// ==========================================
 async function requestUserCertification(userId, email) {
     if(!confirm(`Se despachará un código OTP de seguridad al correo: ${email}. ¿Desea proceder?`)) return;
     showUIFeedback("Enviando PIN al atleta...", "success");
     try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/user/${userId}/request-cert`, { method: 'POST' });
+        const response = await fetch(`${API_BASE_URL}/api/admin/user/${userId}/request-cert`, { method: 'POST', headers: getSecureHeaders() });
         const data = await response.json();
         if(data.success) {
             targetCertifyUserId = userId;
-            document.getElementById('otp-input').value = '';
-            document.getElementById('new-password-input').value = '';
-            document.getElementById('otp-step-1').classList.remove('hidden');
-            document.getElementById('otp-step-2').classList.add('hidden');
-            const modal = document.getElementById('otp-modal');
-            const content = document.getElementById('otp-content');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            document.getElementById('otp-input').value = ''; document.getElementById('new-password-input').value = '';
+            document.getElementById('otp-step-1').classList.remove('hidden'); document.getElementById('otp-step-2').classList.add('hidden');
+            const modal = document.getElementById('otp-modal'); const content = document.getElementById('otp-content');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
         } else { showUIFeedback(data.error, 'error'); }
     } catch (e) { showUIFeedback("Falla de red.", 'error'); }
@@ -298,13 +497,10 @@ async function verifyUserCode() {
     const code = document.getElementById('otp-input').value.trim();
     if(code.length !== 6) { showUIFeedback("El código debe tener 6 dígitos.", "error"); return; }
     try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/user/${targetCertifyUserId}/verify-cert`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: code })
-        });
+        const response = await fetch(`${API_BASE_URL}/api/admin/user/${targetCertifyUserId}/verify-cert`, { method: 'POST', headers: getSecureHeaders(), body: JSON.stringify({ code: code }) });
         const data = await response.json();
         if(data.success) {
-            document.getElementById('otp-step-1').classList.add('hidden');
-            document.getElementById('otp-step-2').classList.remove('hidden');
+            document.getElementById('otp-step-1').classList.add('hidden'); document.getElementById('otp-step-2').classList.remove('hidden');
         } else { showUIFeedback("Código inválido o expirado.", 'error'); }
     } catch (e) { showUIFeedback("Error verificando.", 'error'); }
 }
@@ -313,22 +509,16 @@ async function forcePasswordReset() {
     const newPass = document.getElementById('new-password-input').value;
     if(newPass.length < 6) { showUIFeedback("La contraseña debe tener mínimo 6 caracteres.", "error"); return; }
     try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/user/${targetCertifyUserId}/force-password`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_password: newPass })
-        });
+        const response = await fetch(`${API_BASE_URL}/api/admin/user/${targetCertifyUserId}/force-password`, { method: 'PUT', headers: getSecureHeaders(), body: JSON.stringify({ new_password: newPass }) });
         const data = await response.json();
-        if(data.success) {
-            showUIFeedback("Identidad Verificada y Contraseña forzada con éxito.");
-            closeCertifyModal();
-        } else { showUIFeedback(data.error, 'error'); }
+        if(data.success) { showUIFeedback("Contraseña forzada con éxito."); closeCertifyModal(); } 
+        else { showUIFeedback(data.error, 'error'); }
     } catch (e) { showUIFeedback("Error de red.", 'error'); }
 }
 
 function closeCertifyModal() { 
-    const modal = document.getElementById('otp-modal');
-    const content = document.getElementById('otp-content');
-    modal.classList.add('opacity-0');
-    content.classList.add('scale-95');
+    const modal = document.getElementById('otp-modal'); const content = document.getElementById('otp-content');
+    modal.classList.add('opacity-0'); content.classList.add('scale-95');
     setTimeout(() => { modal.classList.remove('flex'); modal.classList.add('hidden'); }, 300);
     targetCertifyUserId = null; 
 }
@@ -337,14 +527,7 @@ function closeCertifyModal() {
 // 🚀 INICIALIZACIÓN BLINDADA
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
-    // 1. Asignar el filtro numérico solo si el elemento existe en el HTML
     const otpInput = document.getElementById('otp-input');
-    if (otpInput) {
-        otpInput.addEventListener('input', function() { 
-            this.value = this.value.replace(/\D/g, ''); 
-        });
-    }
-
-    // 2. Arrancar la extracción de datos desde el backend
+    if (otpInput) { otpInput.addEventListener('input', function() { this.value = this.value.replace(/\D/g, ''); }); }
     fetchAllUsers();
 });
