@@ -524,10 +524,79 @@ function closeCertifyModal() {
 }
 
 // ==========================================
+// 🧮 MOTOR DE BIOMETRÍA AUTOMATIZADA
+// ==========================================
+function autoCalculateBiometrics() {
+    const weight = parseFloat(document.getElementById('m-weight').value);
+    const heightCm = parseFloat(document.getElementById('m-height').value);
+    let age = parseInt(document.getElementById('m-age').value);
+    const sex = document.getElementById('f-sex').value;
+
+    const fatInput = document.getElementById('m-fat');
+    const muscleInput = document.getElementById('m-muscle');
+
+    // Si la edad está vacía, intentamos calcularla dinámicamente desde la fecha de nacimiento
+    if (isNaN(age) || age <= 0) {
+        const dobVal = document.getElementById('f-dob').value;
+        if (dobVal) {
+            const dob = new Date(dobVal);
+            const diff = Date.now() - dob.getTime();
+            age = Math.abs(new Date(diff).getUTCFullYear() - 1970);
+            document.getElementById('m-age').value = age;
+        }
+    }
+
+    // 🌟 Condición: Si tenemos los 3 pilares, calculamos. Si falta alguno, dejamos en blanco.
+    if (weight > 0 && heightCm > 0 && age > 0) {
+        const heightM = heightCm / 100; // Convertir a metros
+        const bmi = weight / (heightM * heightM); // Índice de Masa Corporal
+        
+        // Factor de sexo para la fórmula
+        const sexFactor = sex === 'Hombre' ? 1 : (sex === 'Mujer' ? 0 : 0.5);
+
+        // 1. Cálculo de % Grasa (Fórmula de Deurenberg et al.)
+        let fatPercent = (1.20 * bmi) + (0.23 * age) - (10.8 * sexFactor) - 5.4;
+        
+        // Ajuste de límites biológicos
+        if (fatPercent < 3) fatPercent = 3;
+        if (fatPercent > 65) fatPercent = 65;
+
+        // 2. Estimación de % Músculo (Masa Muscular Esquelética aprox.)
+        const muscleFactor = sex === 'Hombre' ? 0.52 : (sex === 'Mujer' ? 0.47 : 0.495);
+        let musclePercent = (100 - fatPercent) * muscleFactor;
+
+        // Imprimir resultados en el frontend redondeados a 1 decimal
+        fatInput.value = fatPercent.toFixed(1);
+        muscleInput.value = musclePercent.toFixed(1);
+    } else {
+        // Limpiar si faltan datos
+        fatInput.value = '';
+        muscleInput.value = '';
+    }
+}
+
+// ==========================================
 // 🚀 INICIALIZACIÓN BLINDADA
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
     const otpInput = document.getElementById('otp-input');
     if (otpInput) { otpInput.addEventListener('input', function() { this.value = this.value.replace(/\D/g, ''); }); }
+    fetchAllUsers();
+});
+
+}
+
+    // 2. Escuchadores de Biometría Automatizada (NUEVO)
+    document.getElementById('m-weight').addEventListener('input', autoCalculateBiometrics);
+    document.getElementById('m-height').addEventListener('input', autoCalculateBiometrics);
+    document.getElementById('f-sex').addEventListener('change', autoCalculateBiometrics);
+    
+    // Si cambias el nacimiento, actualiza la edad y recalcula todo
+    document.getElementById('f-dob').addEventListener('input', () => {
+        document.getElementById('m-age').value = ''; // Forzamos recálculo
+        autoCalculateBiometrics();
+    });
+
+    // 3. Arrancar la extracción de datos
     fetchAllUsers();
 });
