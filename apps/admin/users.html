@@ -168,12 +168,36 @@
                     </div>
 
                     <div class="bg-white/[0.02] border border-white/5 rounded-2xl p-6 grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div><label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Peso (KG)</label><input type="number" step="0.1" id="m-weight" class="w-full glass-input p-2 rounded-lg text-xs"></div>
-                        <div><label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Altura (CM)</label><input type="number" step="0.1" id="m-height" class="w-full glass-input p-2 rounded-lg text-xs"></div>
-                        <div><label class="block text-[8px] font-black text-cyan-400 uppercase mb-1">Edad</label><input type="text" id="m-age" readonly class="w-full glass-input p-2 rounded-lg text-xs !bg-cyan-950/20 !border-cyan-500/20 !text-cyan-400 cursor-not-allowed"></div>
-                        <div><label class="block text-[8px] font-black text-amber-500 uppercase mb-1">% Grasa</label><input type="number" step="0.1" id="m-fat" class="w-full glass-input p-2 rounded-lg text-xs !text-amber-400"></div>
-                        <div><label class="block text-[8px] font-black text-emerald-500 uppercase mb-1">% Músculo</label><input type="number" step="0.1" id="m-muscle" class="w-full glass-input p-2 rounded-lg text-xs !text-emerald-400"></div>
-                    </div>
+    <!-- 1. Peso -->
+    <div>
+        <label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Peso (KG)</label>
+        <input type="number" step="0.1" id="m-weight" class="w-full glass-input p-2 rounded-lg text-xs">
+    </div>
+    
+    <!-- 2. Altura -->
+    <div>
+        <label class="block text-[8px] font-black text-gray-500 uppercase mb-1">Altura (CM)</label>
+        <input type="number" step="0.1" id="m-height" class="w-full glass-input p-2 rounded-lg text-xs">
+    </div>
+    
+    <!-- 3. Edad -->
+    <div>
+        <label class="block text-[8px] font-black text-cyan-400 uppercase mb-1">Edad</label>
+        <input type="text" id="m-age" readonly class="w-full glass-input p-2 rounded-lg text-xs !bg-cyan-950/20 !border-cyan-500/20 !text-cyan-400 cursor-not-allowed">
+    </div>
+    
+    <!-- 4. Grasa (Automática) -->
+    <div>
+        <label class="block text-[8px] font-black text-amber-500 uppercase mb-1">% Grasa (Auto)</label>
+        <input type="text" id="m-fat" readonly class="w-full glass-input p-2 rounded-lg text-xs !bg-amber-950/20 !border-amber-500/20 !text-amber-400 cursor-not-allowed placeholder-amber-500/30" placeholder="Automático">
+    </div>
+    
+    <!-- 5. Músculo (Automático) -->
+    <div>
+        <label class="block text-[8px] font-black text-emerald-500 uppercase mb-1">% Músculo (Auto)</label>
+        <input type="text" id="m-muscle" readonly class="w-full glass-input p-2 rounded-lg text-xs !bg-emerald-950/20 !border-emerald-500/20 !text-emerald-400 cursor-not-allowed placeholder-emerald-500/30" placeholder="Automático">
+    </div>
+</div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="bg-white/[0.02] border border-white/5 rounded-2xl p-6">
