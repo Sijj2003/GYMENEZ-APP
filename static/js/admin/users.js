@@ -62,7 +62,6 @@ function renderUsersList(users) {
         const isBlocked = user.is_blocked;
         const tier = user.subscription_level || 'BASICO';
         
-        // Estilos dinámicos para la lista lateral
         let tierColor = 'text-gray-500 border-gray-500/30';
         if(tier === 'PLUS') tierColor = 'text-sky-400 border-sky-500/30';
         if(tier === 'ULTRA') tierColor = 'text-[#FFC300] border-[#FFC300]/30';
@@ -81,7 +80,7 @@ function renderUsersList(users) {
     });
 }
 
-// Búsqueda en tiempo real con DEBOUNCE (Previene lag)
+// Búsqueda en tiempo real con DEBOUNCE
 let searchTimeout;
 document.getElementById('search-input').addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
@@ -90,7 +89,7 @@ document.getElementById('search-input').addEventListener('input', (e) => {
         if (!term) return renderUsersList(allUsersData);
         const filtered = allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term));
         renderUsersList(filtered);
-    }, 200); // 200ms de retraso
+    }, 200); 
 });
 
 // ==========================================
@@ -98,19 +97,16 @@ document.getElementById('search-input').addEventListener('input', (e) => {
 // ==========================================
 function loadUserDossier(userId) {
     activeUserId = userId;
-    // Refrescar estilos visuales de la lista izquierda
     renderUsersList(document.getElementById('search-input').value ? allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(document.getElementById('search-input').value.toLowerCase().trim())) : allUsersData);
 
     const user = allUsersData.find(u => u.id === userId);
     if (!user) return;
 
-    // Cambiar vistas
     document.getElementById('empty-state').classList.add('hidden');
     const dossier = document.getElementById('active-dossier');
     dossier.classList.remove('hidden');
     dossier.classList.add('flex');
 
-    // Llenar Cabecera 360
     document.getElementById('d-name').textContent = user.full_name || 'N/A';
     document.getElementById('d-name').className = `text-3xl font-black uppercase tracking-tighter ${user.is_blocked ? 'text-red-500 line-through' : 'text-white'}`;
     document.getElementById('d-email').textContent = user.email || 'N/A';
@@ -126,7 +122,6 @@ function loadUserDossier(userId) {
     if(user.subscription_level === 'ULTRA') tierColorClass = 'bg-[#FFC300]/10 text-[#FFC300] border-[#FFC300]/20';
     tierEl.className = `px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${tierColorClass}`;
 
-    // Llenar Formulario de Identidad (Edit Mode)
     document.getElementById('f-id').value = user.id;
     document.getElementById('f-is-edit').value = 'true';
     document.getElementById('f-name').value = user.name || '';
@@ -134,7 +129,7 @@ function loadUserDossier(userId) {
     
     const emailEl = document.getElementById('f-email');
     emailEl.value = user.email || '';
-    emailEl.disabled = true; // No se puede cambiar email
+    emailEl.disabled = true; 
     
     const passEl = document.getElementById('f-password');
     passEl.disabled = true;
@@ -154,7 +149,6 @@ function loadUserDossier(userId) {
         document.getElementById('f-phone-num').value = user.phone_number || '';
     }
 
-    // Configurar Botones Superiores Dinámicos
     const btnBlock = document.getElementById('btn-block');
     btnBlock.textContent = user.is_blocked ? 'Desbloquear' : 'Bloquear';
     btnBlock.className = `px-4 py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-colors ${user.is_blocked ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500 hover:text-black' : 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white'}`;
@@ -173,7 +167,6 @@ function openCreateMode() {
     dossier.classList.remove('hidden');
     dossier.classList.add('flex');
 
-    // Cabecera Modo Creación
     document.getElementById('d-name').textContent = "Nuevo Atleta";
     document.getElementById('d-name').className = "text-3xl font-black uppercase tracking-tighter text-[#FFC300]";
     document.getElementById('d-email').textContent = "Llenar formulario inferior";
@@ -182,7 +175,6 @@ function openCreateMode() {
     document.getElementById('btn-block').className = "hidden";
     document.getElementById('btn-certify').className = "hidden";
 
-    // Limpiar Formulario
     const form = document.getElementById('user-form');
     form.reset();
     document.getElementById('f-id').value = '';
@@ -206,7 +198,6 @@ function openCreateMode() {
 // ==========================================
 document.getElementById('user-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const form = e.target;
     const btn = document.getElementById('f-submit-btn');
     const isEdit = document.getElementById('f-is-edit').value === 'true';
     const userId = document.getElementById('f-id').value;
@@ -235,18 +226,15 @@ document.getElementById('user-form').addEventListener('submit', async (e) => {
     try {
         const response = await fetch(url, {
             method: isEdit ? 'PUT' : 'POST',
-            headers: { 'Content-Type': 'application/json' }, // Usa el admin_middleware para el Token
+            headers: { 'Content-Type': 'application/json' }, 
             body: JSON.stringify(payload)
         });
         const data = await response.json();
         
         if (response.ok && data.success) {
             showUIFeedback(`Expediente actualizado exitosamente.`, 'success');
-            await fetchAllUsers(); // Refrescar RAM
-            
-            // Si creamos uno nuevo, seleccionarlo
+            await fetchAllUsers();
             if (!isEdit) {
-                // Pequeño truco: Buscar el último usuario creado por el email (que acabamos de poner)
                 const newU = allUsersData.find(u => u.email === payload.email);
                 if (newU) loadUserDossier(newU.id);
             } else {
@@ -277,7 +265,7 @@ async function handleBlockUser(userId, isBlocked) {
         if (response.ok && data.success) {
             showUIFeedback(`Permisos actualizados.`, 'success');
             await fetchAllUsers();
-            loadUserDossier(userId); // Refrescar vista
+            loadUserDossier(userId); 
         }
     } catch (err) { showUIFeedback(`Error al procesar el bloqueo.`, 'error'); }
 }
@@ -287,9 +275,7 @@ async function handleBlockUser(userId, isBlocked) {
 // ==========================================
 async function requestUserCertification(userId, email) {
     if(!confirm(`Se despachará un código OTP de seguridad al correo: ${email}. ¿Desea proceder?`)) return;
-    
     showUIFeedback("Enviando PIN al atleta...", "success");
-    
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/user/${userId}/request-cert`, { method: 'POST' });
         const data = await response.json();
@@ -299,14 +285,11 @@ async function requestUserCertification(userId, email) {
             document.getElementById('new-password-input').value = '';
             document.getElementById('otp-step-1').classList.remove('hidden');
             document.getElementById('otp-step-2').classList.add('hidden');
-            
-            // Mostrar Modal
             const modal = document.getElementById('otp-modal');
             const content = document.getElementById('otp-content');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
-            
         } else { showUIFeedback(data.error, 'error'); }
     } catch (e) { showUIFeedback("Falla de red.", 'error'); }
 }
@@ -314,12 +297,9 @@ async function requestUserCertification(userId, email) {
 async function verifyUserCode() {
     const code = document.getElementById('otp-input').value.trim();
     if(code.length !== 6) { showUIFeedback("El código debe tener 6 dígitos.", "error"); return; }
-    
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/user/${targetCertifyUserId}/verify-cert`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: code })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: code })
         });
         const data = await response.json();
         if(data.success) {
@@ -332,12 +312,9 @@ async function verifyUserCode() {
 async function forcePasswordReset() {
     const newPass = document.getElementById('new-password-input').value;
     if(newPass.length < 6) { showUIFeedback("La contraseña debe tener mínimo 6 caracteres.", "error"); return; }
-    
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/user/${targetCertifyUserId}/force-password`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ new_password: newPass })
+            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_password: newPass })
         });
         const data = await response.json();
         if(data.success) {
