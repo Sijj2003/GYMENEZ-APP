@@ -42,7 +42,8 @@ function ejecutarPurgaAdmin(mensaje) {
     localStorage.removeItem('adminSession');
     localStorage.removeItem(ADMIN_TOKEN_KEY);
     alert(`🔴 ALERTA DE SEGURIDAD: ${mensaje}`);
-    window.location.href = '/apps/admin/login.html';
+    // Usamos window.top para sacar toda la página al login, rompiendo el iframe
+    window.top.location.href = '/apps/admin/login.html';
 }
 
 // 4. Verificación de Perímetro al cargar cualquier pantalla protegida
@@ -53,7 +54,8 @@ window.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem(ADMIN_TOKEN_KEY);
         
         if (!storedSession || !token) {
-            window.location.href = '/apps/admin/login.html';
+            // Usamos window.top aquí también
+            window.top.location.href = '/apps/admin/login.html';
         }
     }
 });
