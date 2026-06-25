@@ -1,378 +1,248 @@
 <!DOCTYPE html>
-<html lang="es" class="scroll-smooth">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GYMENEZ CORE | Gestión Física</title>
-    <link rel="icon" type="image/png" href="/static/img/logos/mini_logo.png">
+    <title>Gymenez OS | Laboratorio Físico</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/static/css/auth.css">
-    <link rel="stylesheet" href="/static/css/dashboard.css">
-    <link rel="stylesheet" href="/static/css/admin.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: transparent; color: white; margin: 0; overflow: hidden; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        
+        .glass-input { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s ease; }
+        .glass-input:focus { border-color: #FFC300; box-shadow: 0 0 15px rgba(255, 195, 0, 0.1); outline: none; }
+        
+        /* Checkboxes estilo Chip para los días */
+        .day-chip input:checked + div { background-color: #FFC300; color: black; border-color: #FFC300; font-weight: 900; }
+        
+        .fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
-<body class="selection:bg-[#FFC300] selection:text-black overflow-x-hidden min-h-screen flex flex-col bg-[#030305]">
+<body class="h-screen w-full flex selection:bg-[#FFC300] selection:text-black">
 
-    <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-4 md:px-6 py-2 md:py-3 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none text-center w-11/12 max-w-[350px] border border-white/10"></div>
+    <div id="message-box" class="fixed top-4 left-1/2 transform -translate-x-1/2 px-5 py-2 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-300 pointer-events-none text-center border backdrop-blur-md"></div>
 
-    <div class="fixed inset-0 bg-[url('/static/img/backgrounds/FONDO.png')] bg-cover bg-center opacity-5 -z-10 mix-blend-screen grayscale"></div>
-    <div class="fixed inset-0 bg-gradient-to-b from-[#030305]/50 via-[#030305]/95 to-[#030305] -z-10"></div>
-
-    <header class="w-full border-b border-white/5 bg-black/30 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
-            <h1 class="text-xl font-black uppercase tracking-tighter text-white">
-                <span class="text-[#FFC300]">GYM</span>ENEZ CORE
-            </h1>
-            <a href="/apps/admin/dashboard.html" class="px-5 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition">
-                ← Volver al Panel
-            </a>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto w-full px-4 md:px-6 py-8 flex-grow fade-in-up">
-        <div class="glass-panel p-6 md:p-8 rounded-[24px] min-h-[70vh]">
+    <!-- COLUMNA IZQUIERDA: INVENTARIO -->
+    <div class="w-full md:w-[35%] lg:w-[30%] h-full border-r border-white/10 bg-[#0a0a0f]/80 backdrop-blur-xl flex flex-col shrink-0">
+        <div class="p-4 md:p-6 border-b border-white/5 shrink-0">
+            <h2 class="text-lg font-black uppercase tracking-tighter text-white mb-4">Laboratorio</h2>
             
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <!-- Segmented Control (Pestañas) -->
+            <div class="flex p-1 bg-black/50 rounded-xl mb-4">
+                <button onclick="switchInventoryTab('routines')" id="tab-routines" class="flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg bg-white/10 text-white shadow transition-all">Programas</button>
+                <button onclick="switchInventoryTab('exercises')" id="tab-exercises" class="flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg text-gray-500 hover:text-white transition-all">Ciencia</button>
+                <button onclick="switchInventoryTab('recovery')" id="tab-recovery" class="flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg text-gray-500 hover:text-white transition-all">Recovery</button>
+            </div>
+
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <svg class="w-4 h-4 text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" id="search-inventory" placeholder="Buscar en inventario..." class="w-full glass-input pl-9 pr-4 py-2.5 rounded-xl text-xs">
+                </div>
+                <button onclick="openCreateWorkspace()" class="w-10 h-10 rounded-xl bg-[#FFC300] text-black flex items-center justify-center hover:scale-105 transition-transform shadow-[0_0_15px_rgba(255,195,0,0.3)] shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="inventory-list" class="flex-1 overflow-y-auto p-3 space-y-1">
+            <div class="flex justify-center py-10"><div class="w-6 h-6 border-2 border-[#FFC300] border-t-transparent rounded-full animate-spin"></div></div>
+        </div>
+    </div>
+
+    <!-- COLUMNA DERECHA: LIENZO DE TRABAJO -->
+    <div class="hidden md:flex flex-1 h-full bg-[#050505] flex-col relative" id="workspace-panel">
+        
+        <!-- Estado Vacío -->
+        <div id="ws-empty" class="absolute inset-0 flex flex-col items-center justify-center text-center p-6 z-10 fade-in">
+            <div class="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4 text-gray-500">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+            </div>
+            <h3 class="text-xl font-black uppercase tracking-tighter text-white">Mesa de Ensamblaje</h3>
+            <p class="text-xs text-gray-500 font-medium mt-2 max-w-sm">Selecciona una rutina, ejercicio o protocolo para comenzar la configuración.</p>
+        </div>
+
+        <!-- 🏋️‍♂️ LIENZO 1: ENSAMBLADOR DE RUTINAS -->
+        <div id="ws-routine" class="hidden flex-col h-full z-20 fade-in w-full">
+            <div class="px-8 py-6 border-b border-white/5 bg-gradient-to-r from-white/[0.02] to-transparent shrink-0 flex justify-between items-start">
                 <div>
-                    <h2 class="text-2xl font-black text-white uppercase tracking-tighter">Comando de Entrenamiento</h2>
-                    <p class="text-xs text-gray-500 font-bold tracking-widest uppercase mt-1">Biblioteca física y táctica</p>
+                    <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-[#FFC300]/10 text-[#FFC300] border border-[#FFC300]/20 mb-2 inline-block">Programa Físico</span>
+                    <h2 id="rt-header-title" class="text-2xl font-black uppercase tracking-tighter text-white">Nueva Rutina</h2>
+                </div>
+                <div class="flex gap-2">
+                    <button id="rt-btn-delete" onclick="deleteCurrentRoutine()" class="hidden px-4 py-2 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white text-[9px] font-black uppercase tracking-widest transition-colors">Purgar</button>
+                    <button onclick="saveRoutine()" id="rt-btn-save" class="px-6 py-2 rounded-xl bg-[#FFC300] text-black hover:scale-105 text-[9px] font-black uppercase tracking-widest transition-transform shadow-[0_0_15px_rgba(255,195,0,0.2)]">Ensamblar</button>
                 </div>
             </div>
 
-            <div class="flex gap-4 border-b border-white/10 mb-8 overflow-x-auto no-scrollbar">
-                <button id="tab-btn-routines" class="px-6 py-3 border-b-2 border-[#FFC300] text-[#FFC300] font-black uppercase tracking-widest text-[10px] transition-colors whitespace-nowrap">Programas (Rutinas)</button>
-                <button id="tab-btn-exercises" class="px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-colors whitespace-nowrap">Base de Ejercicios</button>
-                <button id="tab-btn-recovery" class="px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black uppercase tracking-widest text-[10px] transition-colors whitespace-nowrap text-sky-400">🧘 Recovery Room</button>
-            </div>
-            
-            <div id="panel-routines" class="block">
-                <div class="flex justify-between items-center mb-6">
-                    <input type="text" id="routine-search" placeholder="Buscar rutina por nombre..." class="w-2/3 md:w-1/2 glass-input p-3.5 rounded-xl text-sm font-medium">
-                    <button id="add-routine-btn" class="btn-gold px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(255,195,0,0.2)]">
-                        + Nueva Rutina
-                    </button>
-                </div>
-                <div class="overflow-x-auto rounded-xl border border-white/5 bg-black/20">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th class="rounded-tl-xl">Nombre de la Rutina</th>
-                                <th>Días Operativos</th>
-                                <th>Volumen (Ejercicios)</th>
-                                <th>Atletas Activos</th>
-                                <th class="rounded-tr-xl text-right">Controles</th>
-                            </tr>
-                        </thead>
-                        <tbody id="routines-tbody" class="text-xs text-gray-300 font-medium"></tbody>
-                    </table>
-                </div>
-            </div>
+            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar grid grid-cols-1 xl:grid-cols-2 gap-8">
+                <!-- Columna 1: Info Base y Atletas -->
+                <div class="space-y-6">
+                    <input type="hidden" id="rt-id">
+                    <input type="hidden" id="rt-is-edit" value="false">
+                    
+                    <div class="bg-white/[0.02] border border-white/5 p-5 rounded-2xl">
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Nombre del Bloque</label>
+                        <input type="text" id="rt-name" class="w-full glass-input p-3 rounded-xl text-sm font-black uppercase mb-4" placeholder="Ej: Hipertrofia Pecho">
+                        
+                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Enfoque / Notas</label>
+                        <textarea id="rt-desc" rows="2" class="w-full glass-input p-3 rounded-xl text-xs resize-none" placeholder="Instrucciones tácticas..."></textarea>
+                    </div>
 
-            <div id="panel-exercises" class="hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <input type="text" id="exercise-search" placeholder="Buscar ejercicio por nombre..." class="w-2/3 md:w-1/2 glass-input p-3.5 rounded-xl text-sm font-medium">
-                    <button id="add-exercise-btn" class="bg-white text-black hover:bg-gray-200 px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(255,255,255,0.2)] transition">
-                        + Crear Ejercicio
-                    </button>
-                </div>
-                <div class="overflow-x-auto rounded-xl border border-white/5 bg-black/20">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th class="rounded-tl-xl">Nombre Técnico</th>
-                                <th>Descripción</th>
-                                <th>Cinemática (Video)</th>
-                                <th class="rounded-tr-xl text-right">Controles</th>
-                            </tr>
-                        </thead>
-                        <tbody id="exercises-tbody" class="text-xs text-gray-300 font-medium"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="panel-recovery" class="hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <input type="text" id="recovery-search" placeholder="Buscar protocolo de recuperación..." class="w-2/3 md:w-1/2 glass-input p-3.5 rounded-xl text-sm font-medium">
-                    <button id="add-recovery-btn" class="bg-sky-600 hover:bg-sky-500 text-white px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(14,165,233,0.2)] transition duration-200">
-                        + Crear Protocolo
-                    </button>
-                </div>
-                <div class="overflow-x-auto rounded-xl border border-white/5 bg-black/20">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th class="rounded-tl-xl">Nombre del Protocolo</th>
-                                <th>Instrucciones / Foco</th>
-                                <th>Video Guía</th>
-                                <th class="rounded-tr-xl text-right">Controles</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recovery-tbody" class="text-xs text-gray-300 font-medium"></tbody>
-                    </table>
-                </div>
-            </div>
-
-        </div>
-    </main>
-
-    <div id="exercise-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-[1010] flex justify-center items-center p-4 opacity-0 transition-opacity duration-300 overflow-y-auto">
-        <div class="modal-content w-full max-w-4xl p-6 md:p-8 rounded-[24px] transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar my-8">
-            <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
-                <h3 id="ex-modal-title" class="text-xl font-black text-white uppercase tracking-tighter">Inyectar Ejercicio Científico</h3>
-                <button type="button" onclick="toggleModal('exercise-modal', false)" class="text-gray-500 hover:text-white text-3xl leading-none">&times;</button>
-            </div>
-            
-            <form id="exercise-form" class="space-y-5">
-                <input type="hidden" id="ex-id" name="id">
-                <input type="hidden" id="ex-is-edit" value="false">
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Nombre Técnico <span class="text-red-500">*</span></label>
-                        <input type="text" id="ex-name" required class="w-full glass-input p-3 rounded-xl text-xs font-bold uppercase">
-                    </div>
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Enlace a Cinemática (YouTube/Drive)</label>
-                        <input type="url" id="ex-link" class="w-full glass-input p-3 rounded-xl text-xs font-medium text-sky-400" placeholder="https://...">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/5 pt-4">
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Patrón de Movimiento</label>
-                        <select id="ex-pattern" class="w-full glass-input p-3 rounded-xl text-xs font-bold text-[#FFC300]">
-                            <option value="Empuje horizontal">Empuje horizontal</option>
-                            <option value="Empuje vertical">Empuje vertical</option>
-                            <option value="Tracción horizontal">Tracción horizontal</option>
-                            <option value="Tracción vertical">Tracción vertical</option>
-                            <option value="Dominante de rodilla">Dominante de rodilla</option>
-                            <option value="Dominante de cadera">Dominante de cadera</option>
-                            <option value="Core">Core</option>
-                            <option value="Aislamiento">Aislamiento</option>
-                            <option value="Cardio/Metabólico">Cardio/Metabólico</option>
-                            <option value="Movilidad/Calentamiento">Movilidad/Calentamiento</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Músculo Primario</label>
-                        <select id="ex-main-muscle" class="w-full glass-input p-3 rounded-xl text-xs font-bold">
-                            <option value="Pectoral">Pectoral</option>
-                            <option value="Dorsal">Dorsal</option>
-                            <option value="Cuádriceps">Cuádriceps</option>
-                            <option value="Isquiotibiales">Isquiotibiales</option>
-                            <option value="Glúteos">Glúteos</option>
-                            <option value="Deltoides">Deltoides</option>
-                            <option value="Bíceps">Bíceps</option>
-                            <option value="Tríceps">Tríceps</option>
-                            <option value="Core">Core</option>
-                            <option value="Pantorrillas">Pantorrillas</option>
-                            <option value="Fullbody">Fullbody</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Cinemática</label>
-                        <select id="ex-type" class="w-full glass-input p-3 rounded-xl text-xs font-bold">
-                            <option value="Compuesto">Compuesto</option>
-                            <option value="Aislamiento">Aislamiento</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Equipamiento</label>
-                        <select id="ex-equipment" class="w-full glass-input p-3 rounded-xl text-xs font-bold">
-                            <option value="Peso corporal">Peso corporal</option>
-                            <option value="Mancuernas">Mancuernas</option>
-                            <option value="Barra">Barra</option>
-                            <option value="Poleas">Poleas</option>
-                            <option value="Máquina">Máquina</option>
-                            <option value="Bandas de resistencia">Bandas de resistencia</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Dificultad</label>
-                        <select id="ex-difficulty" class="w-full glass-input p-3 rounded-xl text-xs font-bold">
-                            <option value="Principiante">Principiante</option>
-                            <option value="Intermedio">Intermedio</option>
-                            <option value="Avanzado">Avanzado</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Paywall (Acceso Atleta)</label>
-                        <select id="ex-tier" class="w-full glass-input p-3 rounded-xl text-xs font-bold text-emerald-400">
-                            <option value="Básico">Básico</option>
-                            <option value="Plus">Plus</option>
-                            <option value="Ultra">Ultra</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Fatiga del SNC</label>
-                        <select id="ex-fatigue" class="w-full glass-input p-3 rounded-xl text-xs font-bold text-red-400">
-                            <option value="Baja">Baja</option>
-                            <option value="Media">Media</option>
-                            <option value="Alta">Alta</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Intensidad Energética</label>
-                        <select id="ex-metabolic" class="w-full glass-input p-3 rounded-xl text-xs font-bold">
-                            <option value="Baja">Baja</option>
-                            <option value="Media">Media</option>
-                            <option value="Alta">Alta</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/5 pt-4">
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Alternativa de Regresión (Más Fácil)</label>
-                        <input type="text" id="ex-regression" class="w-full glass-input p-3 rounded-xl text-xs font-medium" placeholder="Nombre exacto del ejercicio alternativo">
-                    </div>
-                    <div>
-                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Alternativa de Progresión (Más Difícil)</label>
-                        <input type="text" id="ex-progression" class="w-full glass-input p-3 rounded-xl text-xs font-medium" placeholder="Nombre exacto del ejercicio avanzado">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-black/40 p-4 rounded-2xl border border-white/5">
-                    <div class="space-y-3">
-                        <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest">Estrés Articular Relacionado (Escudo Lesiones)</label>
-                        <div class="grid grid-cols-3 gap-2">
-                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="ex_joint" value="Hombro" class="accent-sky-500"> Hombro</label>
-                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="ex_joint" value="Codo" class="accent-sky-500"> Codo</label>
-                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="ex_joint" value="Muñeca" class="accent-sky-500"> Muñeca</label>
-                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="ex_joint" value="Columna" class="accent-sky-500"> Columna</label>
-                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="ex_joint" value="Cadera" class="accent-sky-500"> Cadera</label>
-                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="ex_joint" value="Rodilla" class="accent-sky-500"> Rodilla</label>
+                    <div class="bg-white/[0.02] border border-white/5 p-5 rounded-2xl">
+                        <label class="block text-[9px] font-bold text-[#FFC300] uppercase tracking-widest mb-3">Días Asignados</label>
+                        <div class="flex flex-wrap gap-2" id="rt-days-container">
+                            <!-- Los días se generan via JS -->
                         </div>
+                    </div>
+
+                    <div class="bg-white/[0.02] border border-white/5 p-5 rounded-2xl flex flex-col" style="max-height: 250px;">
+                        <label class="block text-[9px] font-bold text-sky-400 uppercase tracking-widest mb-2">Atletas Asignados (<span id="rt-users-count">0</span>)</label>
+                        <input type="text" id="rt-user-search" placeholder="Filtrar atletas..." class="w-full glass-input p-2 rounded-lg text-[10px] mb-3">
+                        <div id="rt-users-list" class="overflow-y-auto custom-scrollbar flex-1 space-y-1">
+                            <!-- Lista de usuarios via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna 2: Inyección de Ejercicios -->
+                <div class="flex flex-col h-full bg-black/40 border border-white/5 rounded-2xl overflow-hidden">
+                    <div class="p-4 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                        <h3 class="text-[10px] font-black uppercase tracking-widest text-emerald-400">Ejercicios Integrados (<span id="rt-ex-count">0</span>)</h3>
+                        <input type="text" id="rt-ex-search" placeholder="Buscar ciencia disponible..." class="glass-input p-2 rounded-lg text-[9px] w-1/2">
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-4 flex-row items-center pt-2">
-                        <label class="flex flex-col gap-1 cursor-pointer bg-white/5 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
-                            <span class="text-[9px] font-black uppercase text-gray-400 tracking-wider">¿Carga Axial?</span>
-                            <div class="flex items-center gap-2 mt-1">
-                                <input type="checkbox" id="ex-axial" class="w-4 h-4 accent-[#FFC300]">
-                                <span class="text-[9px] text-gray-500 font-bold uppercase">Compresión</span>
-                            </div>
-                        </label>
-                        <label class="flex flex-col gap-1 cursor-pointer bg-white/5 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
-                            <span class="text-[9px] font-black uppercase text-gray-400 tracking-wider">¿Es Unilateral?</span>
-                            <div class="flex items-center gap-2 mt-1">
-                                <input type="checkbox" id="ex-unilateral" class="w-4 h-4 accent-[#FFC300]">
-                                <span class="text-[9px] text-gray-500 font-bold uppercase">Por Lados</span>
-                            </div>
-                        </label>
+                    <div class="flex-1 flex overflow-hidden">
+                        <!-- Ejercicios Seleccionados -->
+                        <div id="rt-selected-ex" class="w-1/2 border-r border-white/5 p-3 overflow-y-auto custom-scrollbar space-y-2">
+                            <!-- JS inyecta seleccionados -->
+                        </div>
+                        <!-- Ejercicios Disponibles -->
+                        <div id="rt-available-ex" class="w-1/2 p-3 overflow-y-auto custom-scrollbar space-y-1">
+                            <!-- JS inyecta disponibles -->
+                        </div>
                     </div>
                 </div>
-
-                <div>
-                    <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Instrucciones / Foco de Estímulo <span class="text-red-500">*</span></label>
-                    <textarea id="ex-desc" rows="3" required class="w-full glass-input p-3 rounded-xl text-xs font-medium leading-relaxed" placeholder="Instrucciones biomecánicas estrictas para el atleta..."></textarea>
-                </div>
-                
-                <div class="pt-6 flex justify-end gap-3 border-t border-white/10">
-                    <button type="button" onclick="toggleModal('exercise-modal', false)" class="px-6 py-3 rounded-xl bg-white/5 text-gray-400 font-bold text-[10px] uppercase tracking-widest hover:text-white transition">Cancelar</button>
-                    <button type="submit" id="ex-submit-btn" class="bg-white text-black px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-gray-200">Guardar Ficha Ejercicio</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="routine-modal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-md z-[1000] flex justify-center items-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="modal-content w-full max-w-5xl p-6 md:p-8 rounded-[24px] transform scale-95 transition-transform duration-300">
-            <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
-                <h3 id="rt-modal-title" class="text-xl font-black text-[#FFC300] uppercase tracking-tighter">Ensamblar Rutina Base</h3>
-                <button type="button" onclick="toggleModal('routine-modal', false)" class="text-gray-500 hover:text-white text-3xl leading-none">&times;</button>
             </div>
-            <form id="routine-form" class="space-y-6">
-                <input type="hidden" id="rt-id">
-                <input type="hidden" id="rt-is-edit" value="false">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-1 space-y-4">
-                        <div>
-                            <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Nombre del Bloque <span class="text-red-500">*</span></label>
-                            <input type="text" id="rt-name" required class="w-full glass-input p-3 rounded-xl text-xs font-bold uppercase">
-                        </div>
-                        <div>
-                            <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Descripción / Notas <span class="text-red-500">*</span></label>
-                            <textarea id="rt-desc" rows="3" required class="w-full glass-input p-3 rounded-xl text-xs font-medium"></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Días Operativos</label>
-                            <div class="grid grid-cols-2 gap-2 bg-black/30 p-4 rounded-xl border border-white/5">
-                                <label class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="rt_days" value="Lunes" class="accent-[#FFC300] w-3 h-3"> Lunes</label>
-                                <label class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="rt_days" value="Martes" class="accent-[#FFC300] w-3 h-3"> Martes</label>
-                                <label class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="rt_days" value="Miércoles" class="accent-[#FFC300] w-3 h-3"> Miércoles</label>
-                                <label class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="rt_days" value="Jueves" class="accent-[#FFC300] w-3 h-3"> Jueves</label>
-                                <label class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="rt_days" value="Viernes" class="accent-[#FFC300] w-3 h-3"> Viernes</label>
-                                <label class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase"><input type="checkbox" name="rt_days" value="Sábado" class="accent-[#FFC300] w-3 h-3"> Sábado</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-black/30 border border-white/5 rounded-xl p-4 flex flex-col h-[350px]">
-                            <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2">Catálogo Disponible</label>
-                            <input type="text" id="rt-search-ex" placeholder="Buscar ejercicio..." class="w-full glass-input p-2 rounded-lg text-[10px] mb-3">
-                            <div id="rt-available-ex" class="flex-grow overflow-y-auto space-y-1 pr-1 custom-scrollbar"></div>
-                        </div>
-                        <div class="bg-black/30 border border-white/5 rounded-xl p-4 flex flex-col h-[350px]">
-                            <div class="flex justify-between items-center mb-2">
-                                <label class="block text-[9px] font-bold text-[#FFC300] uppercase tracking-widest">Ejercicios Asignados</label>
-                                <span id="rt-count-ex" class="text-[9px] font-black text-white bg-white/10 px-2 py-0.5 rounded">0</span>
-                            </div>
-                            <div id="rt-selected-ex" class="flex-grow overflow-y-auto space-y-2 pr-1 custom-scrollbar"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="border-t border-white/5 pt-5 mt-4">
-                    <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2">Atletas Asignados (Auto-Desasignación Preventiva Activa)</label>
-                    <div class="bg-black/30 border border-white/5 rounded-xl p-4 max-h-[150px] overflow-y-auto">
-                        <div id="rt-users-list" class="grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
-                    </div>
-                </div>
-                <div class="pt-6 flex justify-end gap-3 border-t border-white/10">
-                    <button type="button" onclick="toggleModal('routine-modal', false)" class="px-6 py-3 rounded-xl bg-white/5 text-gray-400 font-bold text-[10px] uppercase tracking-widest hover:text-white transition">Cancelar</button>
-                    <button type="submit" id="rt-submit-btn" class="btn-gold px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em]">Ensamblar Rutina</button>
-                </div>
-            </form>
         </div>
-    </div>
 
-    <div id="recovery-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-[1010] flex justify-center items-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="modal-content w-full max-w-lg p-6 md:p-8 rounded-[24px] transform scale-95 transition-transform duration-300">
-            <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
-                <h3 id="rec-modal-title" class="text-xl font-black text-white uppercase tracking-tighter">Inyectar Protocolo Recovery</h3>
-                <button type="button" onclick="toggleModal('recovery-modal', false)" class="text-gray-500 hover:text-white text-3xl leading-none">&times;</button>
+        <!-- 🧬 LIENZO 2: FICHA CIENTÍFICA (EJERCICIOS) -->
+        <div id="ws-exercise" class="hidden flex-col h-full z-20 fade-in w-full">
+            <div class="px-8 py-6 border-b border-white/5 bg-gradient-to-r from-white/[0.02] to-transparent shrink-0 flex justify-between items-start">
+                <div>
+                    <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-2 inline-block">Ciencia Biomecánica</span>
+                    <h2 id="ex-header-title" class="text-2xl font-black uppercase tracking-tighter text-white">Nuevo Ejercicio</h2>
+                </div>
+                <div class="flex gap-2">
+                    <button id="ex-btn-delete" onclick="deleteCurrentExercise()" class="hidden px-4 py-2 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white text-[9px] font-black uppercase tracking-widest transition-colors">Purgar</button>
+                    <button onclick="saveExercise()" id="ex-btn-save" class="px-6 py-2 rounded-xl bg-emerald-500 text-black hover:scale-105 text-[9px] font-black uppercase tracking-widest transition-transform shadow-[0_0_15px_rgba(16,185,129,0.2)]">Registrar Ficha</button>
+                </div>
             </div>
-            <form id="recovery-form" class="space-y-5">
-                <input type="hidden" id="rec-id" name="id">
-                <input type="hidden" id="rec-is-edit" value="false">
-                <div>
-                    <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Nombre del Protocolo <span class="text-red-500">*</span></label>
-                    <input type="text" id="rec-name" required class="w-full glass-input p-3 rounded-xl text-xs font-bold uppercase" placeholder="Ej: FOCALIZADO CADENA POSTERIOR">
-                </div>
-                <div>
-                    <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Enlace a Video Guía (YouTube/Drive)</label>
-                    <input type="url" id="rec-link" class="w-full glass-input p-3 rounded-xl text-xs font-medium text-sky-400" placeholder="https://...">
-                </div>
-                <div>
-                    <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Fondo de Tarjeta Atleta (Link Unsplash Opcional)</label>
-                    <input type="url" id="rec-image" class="w-full glass-input p-3 rounded-xl text-xs font-medium text-emerald-400" placeholder="https://images.unsplash.com/...">
-                </div>
-                <div>
-                    <label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Instrucciones / Dosificación Muscular <span class="text-red-500">*</span></label>
-                    <textarea id="rec-desc" rows="3" required class="w-full glass-input p-3 rounded-xl text-xs font-medium leading-relaxed" placeholder="Ej: Realizar 4 rondas de 90 segundos controlando la respiración circadiana..."></textarea>
-                </div>
-                <div class="pt-6 flex justify-end gap-3 border-t border-white/10">
-                    <button type="button" onclick="toggleModal('recovery-modal', false)" class="px-6 py-3 rounded-xl bg-white/5 text-gray-400 font-bold text-[10px] uppercase tracking-widest hover:text-white transition">Cancelar</button>
-                    <button type="submit" id="rec-submit-btn" class="bg-white text-black px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-gray-200">Guardar Protocolo</button>
-                </div>
-            </form>
+
+            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                <form id="ex-form" class="max-w-3xl space-y-6">
+                    <input type="hidden" id="ex-id">
+                    <input type="hidden" id="ex-is-edit" value="false">
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="col-span-2 md:col-span-1"><label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Nombre Técnico</label><input type="text" id="ex-name" required class="w-full glass-input p-3 rounded-xl text-xs font-black uppercase"></div>
+                        <div class="col-span-2 md:col-span-1"><label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">URL Tutorial (ON)</label><input type="url" id="ex-link" class="w-full glass-input p-3 rounded-xl text-xs text-sky-400 font-mono"></div>
+                        <div class="col-span-2"><label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Ejecución Perfecta</label><textarea id="ex-desc" rows="2" class="w-full glass-input p-3 rounded-xl text-xs resize-none"></textarea></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white/[0.02] p-5 rounded-2xl border border-white/5">
+                        <div>
+                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Músculo Principal</label>
+                            <input type="text" id="ex-main-muscle" class="w-full glass-input p-2 rounded-lg text-xs uppercase" placeholder="Ej: Pectoral">
+                        </div>
+                        <div>
+                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Patrón Motor</label>
+                            <select id="ex-pattern" class="w-full glass-input p-2 rounded-lg text-[10px] uppercase font-bold bg-[#0a0a0f]">
+                                <option value="Empuje horizontal">Empuje H</option><option value="Empuje vertical">Empuje V</option>
+                                <option value="Tracción horizontal">Tracción H</option><option value="Tracción vertical">Tracción V</option>
+                                <option value="Dominante rodilla">Rodilla</option><option value="Dominante cadera">Cadera</option>
+                                <option value="Aislamiento">Aislamiento</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Mecánica</label>
+                            <select id="ex-type" class="w-full glass-input p-2 rounded-lg text-[10px] uppercase font-bold bg-[#0a0a0f]">
+                                <option value="Compuesto">Compuesto</option><option value="Aislamiento">Aislamiento</option><option value="Isométrico">Isométrico</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Equipamiento</label>
+                            <input type="text" id="ex-equipment" class="w-full glass-input p-2 rounded-lg text-xs" placeholder="Ej: Mancuernas">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Dificultad SNC</label>
+                            <select id="ex-difficulty" class="w-full glass-input p-2 rounded-lg text-[10px] uppercase font-bold bg-[#0a0a0f]">
+                                <option value="Principiante">Principiante</option><option value="Intermedio">Intermedio</option><option value="Avanzado">Avanzado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Fatiga Sistémica</label>
+                            <select id="ex-fatigue" class="w-full glass-input p-2 rounded-lg text-[10px] uppercase font-bold bg-[#0a0a0f]">
+                                <option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta</option><option value="Extrema">Extrema</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[8px] font-bold text-[#FFC300] uppercase mb-1">Tier de Pago</label>
+                            <select id="ex-tier" class="w-full glass-input p-2 rounded-lg text-[10px] uppercase font-bold bg-[#0a0a0f] text-[#FFC300]">
+                                <option value="Básico">Básico</option><option value="Plus">Plus</option><option value="Ultra">Ultra</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/[0.02] p-5 rounded-2xl border border-white/5">
+                        <label class="block text-[9px] font-bold text-cyan-400 uppercase tracking-widest mb-3">Tensión Articular Primaria</label>
+                        <div class="flex flex-wrap gap-3" id="ex-joints-container">
+                            <!-- Checkboxes Articulares via JS -->
+                        </div>
+                        <div class="mt-4 flex gap-6">
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="ex-axial" class="accent-cyan-500"><span class="text-[10px] font-bold text-gray-400 uppercase">Carga Axial (Columna)</span></label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="ex-unilateral" class="accent-cyan-500"><span class="text-[10px] font-bold text-gray-400 uppercase">Trabajo Unilateral</span></label>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
+
+        <!-- 🧘 LIENZO 3: RECOVERY -->
+        <div id="ws-recovery" class="hidden flex-col h-full z-20 fade-in w-full flex items-center justify-center">
+            <div class="w-full max-w-lg bg-white/[0.02] border border-white/5 rounded-3xl p-8 shadow-2xl">
+                <div class="text-center mb-8">
+                    <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-sky-500/10 text-sky-400 border border-sky-500/20 mb-2 inline-block">Recovery Room</span>
+                    <h2 id="rec-header-title" class="text-2xl font-black uppercase tracking-tighter text-white">Nuevo Protocolo</h2>
+                </div>
+
+                <form id="rec-form" class="space-y-4">
+                    <input type="hidden" id="rec-id">
+                    <input type="hidden" id="rec-is-edit" value="false">
+                    
+                    <div><label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Nombre Protocolo</label><input type="text" id="rec-name" required class="w-full glass-input p-3 rounded-xl text-xs uppercase font-black"></div>
+                    <div><label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">URL Video Guía</label><input type="url" id="rec-link" class="w-full glass-input p-3 rounded-xl text-xs text-sky-400 font-mono"></div>
+                    <div><label class="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Metodología</label><textarea id="rec-desc" rows="3" class="w-full glass-input p-3 rounded-xl text-xs resize-none"></textarea></div>
+
+                    <div class="pt-4 flex gap-2">
+                        <button type="button" id="rec-btn-delete" onclick="deleteCurrentRecovery()" class="hidden w-1/3 py-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors">Purgar</button>
+                        <button type="button" onclick="saveRecovery()" id="rec-btn-save" class="flex-1 py-3 rounded-xl bg-sky-500 text-black hover:bg-sky-400 text-[10px] font-black uppercase tracking-widest transition shadow-[0_0_15px_rgba(14,165,233,0.2)]">Habilitar Protocolo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
 
-    <script src="/static/js/admin/admin_middleware.js"></script>
-    <script src="/static/js/admin/routines.js"></script>
-    <script type="module" src="/static/js/admin/radar_admin.js"></script>
+    <!-- Scripts con Cache Busting -->
+    <script src="/static/js/admin/admin_middleware.js?v=1.0"></script>
+    <script src="/static/js/admin/routines.js?v=5.0"></script>
 </body>
 </html>
