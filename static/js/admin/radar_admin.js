@@ -11,170 +11,118 @@ const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https:/
 const firebaseConfig = {
     apiKey: "AIzaSyC7ESvLhYTydAn_ZjHVSkebTC-BhvnbzIw",
     authDomain: "gymenezapp.firebaseapp.com",
-    projectId: "gymenezapp",
-    storageBucket: "gymenezapp.firebasestorage.app",
-    messagingSenderId: "257686887231",
-    appId: "1:257686887231:web:ca6c5ccabe33a1625b918a"
+    projectId: "gymenezapp"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const activeToasts = {}; 
-const toastTimers = {};  
-let isInitialLoad = true; 
+// Memoria RAM para evitar duplicados en la sesión de admin
+let lastNotifiedTimestamps = {}; 
+let isInitialLoad = true;
 
 // ==========================================
-// 🎵 SINTETIZADOR DE AUDIO INTELIGENTE
+// 🎵 AUDIO PROFESIONAL
 // ==========================================
-const AudioContext = window.AudioContext || window.webkitAudioContext;
-let audioCtx = null;
-
-function playRadarSound(isUpdate = false) {
+function playAdminNotification(isTicket) {
     try {
-        if (!audioCtx) audioCtx = new AudioContext();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
         const osc = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
-        osc.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
         
-        if (isUpdate) {
+        if (isTicket) {
+            // Sonido de alerta (doble tono rápido)
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.05);
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.01);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-            osc.start(audioCtx.currentTime); 
-            osc.stop(audioCtx.currentTime + 0.05);
-        } else {
-            osc.type = 'sine';
             osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.02);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-            osc.start(audioCtx.currentTime); 
-            osc.stop(audioCtx.currentTime + 0.3);
+            osc.frequency.setValueAtTime(900, audioCtx.currentTime + 0.1);
+        } else {
+            // Sonido iMessage suave
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1108, audioCtx.currentTime + 0.1);
         }
+
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.3);
     } catch(e) {}
 }
 
 // ==========================================
-// 🔔 INYECCIÓN Y AGRUPACIÓN DE NOTIFICACIONES
+// 📱 INYECCIÓN ESTILO iOS PARA EL DASHBOARD
 // ==========================================
-function injectRadarContainer() {
-    if (!document.getElementById('radar-notifications-container')) {
+function injectAdminIOSContainer() {
+    if (!document.getElementById('ios-admin-notifications')) {
         const container = document.createElement('div');
-        container.id = 'radar-notifications-container';
-        container.className = 'fixed top-6 right-6 z-[99999] flex flex-col gap-3 w-80 pointer-events-none';
+        container.id = 'ios-admin-notifications';
+        // Arriba a la derecha (estilo macOS/iOS iPad)
+        container.className = 'fixed top-6 right-6 z-[99999] flex flex-col gap-3 pointer-events-none w-[320px]';
         document.body.appendChild(container);
     }
 }
 
-function updateSidebarBadge(count) {
-    const pulseBtn = document.querySelector('button[data-url*="pulse.html"]');
-    if (!pulseBtn) return;
+function showAdminIOSNotification(userId, userName, text, isTicket = false) {
+    injectAdminIOSContainer();
+    const container = document.getElementById('ios-admin-notifications');
+
+    const toast = document.createElement('div');
+    const accentColor = isTicket ? 'text-amber-400' : 'text-sky-400';
+    const bgAccent = isTicket ? 'bg-amber-500' : 'bg-sky-500';
+    const titleText = isTicket ? 'Solicitud de Soporte' : 'Nuevo Mensaje';
+
+    toast.className = `pointer-events-auto bg-[#1c1c1e]/90 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-2xl flex items-start gap-3 transform translate-x-10 opacity-0 transition-all duration-400 ease-out cursor-pointer hover:bg-[#2c2c2e]/90`;
     
-    let badge = pulseBtn.querySelector('.pulse-badge');
-    if (count > 0) {
-        if (!badge) {
-            badge = document.createElement('span');
-            badge.className = 'pulse-badge absolute top-3 right-3 flex h-3 w-3';
-            badge.innerHTML = `<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>`;
-            pulseBtn.appendChild(badge);
-        }
-    } else {
-        if (badge) badge.remove();
-    }
-}
-
-function removeToast(userId) {
-    const toast = activeToasts[userId];
-    if (toast) {
-        toast.style.transform = 'translateX(120%)';
-        setTimeout(() => {
-            if(toast.parentNode) toast.remove();
-            delete activeToasts[userId];
-        }, 500);
-    }
-}
-
-function showSmartRadarToast(userId, userName, text, isTicket = false) {
-    injectRadarContainer();
-    const container = document.getElementById('radar-notifications-container');
-
-    const badgeColor = isTicket ? 'bg-amber-500' : 'bg-sky-400';
-    const textColor = isTicket ? 'text-amber-500' : 'text-sky-400';
-    const titleText = isTicket ? 'Ticket en Espera' : 'Requiere Asistencia';
-    const borderGlow = isTicket ? 'shadow-[0_10px_30px_rgba(245,158,11,0.2)] border-amber-500/30' : 'shadow-[0_10px_30px_rgba(0,0,0,0.8)] border-white/10';
-
-    if (activeToasts[userId]) {
-        const toast = activeToasts[userId];
-        const textElement = toast.querySelector('.msg-text');
-        const badgeElement = toast.querySelector('.msg-counter');
+    // Al hacer clic, redirigir el iframe y guardar el ID para que Pulse lo abra
+    toast.onclick = () => {
+        localStorage.setItem('gymen_pending_open_id', userId);
+        localStorage.setItem('gymen_pending_open_name', userName);
         
-        textElement.textContent = text;
+        // Simular click en el menú lateral de Pulse
+        const pulseNavBtn = document.querySelector('button[data-url*="pulse.html"]');
+        if(pulseNavBtn) pulseNavBtn.click();
         
-        let count = parseInt(badgeElement.dataset.count || 1) + 1;
-        badgeElement.dataset.count = count;
-        badgeElement.textContent = `${count} Msgs`;
-        badgeElement.classList.remove('hidden');
+        toast.remove(); // Desaparecer al instante al hacer clic
+    };
 
-        toast.classList.add('bg-white/10');
-        setTimeout(() => toast.classList.remove('bg-white/10'), 200);
-
-        clearTimeout(toastTimers[userId]);
-        toastTimers[userId] = setTimeout(() => removeToast(userId), 6000);
-        
-        playRadarSound(true); 
-    } 
-    else {
-        const toast = document.createElement('div');
-        toast.className = `bg-[#111111]/95 backdrop-blur-xl border p-4 rounded-2xl flex items-start gap-3 pointer-events-auto transform translate-x-[120%] transition-all duration-500 ease-out cursor-pointer hover:bg-white/5 ${borderGlow}`;
-        
-        toast.onclick = () => {
-            localStorage.setItem('gymen_pending_open_id', userId);
-            localStorage.setItem('gymen_pending_open_name', userName);
-            
-            const pulseNavBtn = document.querySelector('button[data-url*="pulse.html"]');
-            if(pulseNavBtn) pulseNavBtn.click();
-            
-            removeToast(userId);
-        };
-
-        toast.innerHTML = `
-            <div class="w-10 h-10 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/30">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z"></path></svg>
+    toast.innerHTML = `
+        <div class="w-10 h-10 rounded-full ${bgAccent}/20 flex items-center justify-center shrink-0 border border-${bgAccent}/30">
+            <svg class="w-5 h-5 ${accentColor}" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 5.92 2 10.75c0 2.5 1.35 4.74 3.5 6.27V22l3.85-2.02c.85.22 1.74.33 2.65.33 5.52 0 10-3.92 10-8.75S17.52 2 12 2z"/></svg>
+        </div>
+        <div class="flex-1 overflow-hidden pt-0.5">
+            <div class="flex justify-between items-center mb-0.5">
+                <span class="font-bold text-white text-[13px] tracking-tight truncate">${userName}</span>
+                <span class="text-[9px] font-bold ${accentColor} uppercase tracking-widest">${titleText}</span>
             </div>
-            <div class="flex-1 min-w-0">
-                <div class="flex justify-between items-start">
-                    <h4 class="text-xs font-black text-white uppercase tracking-tight truncate pr-2">${userName}</h4>
-                    <span class="msg-counter hidden px-1.5 py-0.5 rounded bg-sky-500 text-black text-[7px] font-black uppercase tracking-widest shrink-0" data-count="1">1 Msg</span>
-                </div>
-                <p class="text-[9px] ${textColor} font-bold uppercase tracking-widest mb-1 flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full ${badgeColor} animate-pulse"></span> ${titleText}
-                </p>
-                <p class="msg-text text-[11px] text-gray-400 font-medium truncate">${text}</p>
-            </div>
-        `;
+            <p class="text-[11px] text-gray-300 truncate font-medium">${text}</p>
+        </div>
+    `;
 
-        container.appendChild(toast);
-        activeToasts[userId] = toast;
-        
-        requestAnimationFrame(() => toast.style.transform = 'translateX(0)');
-        toastTimers[userId] = setTimeout(() => removeToast(userId), 6000);
-        
-        playRadarSound(false); 
-    }
+    container.appendChild(toast); // Agregar al final de la pila
+
+    // Animación de entrada
+    requestAnimationFrame(() => {
+        toast.style.transform = 'translateX(0)';
+        toast.style.opacity = '1';
+    });
+
+    playAdminNotification(isTicket);
+
+    // Auto-cierre
+    setTimeout(() => {
+        toast.style.transform = 'translate-x-10';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 400);
+    }, 6000);
 }
 
 // ==========================================
-// 📡 EL MOTOR DEL RADAR
+// 📡 LÓGICA DEL RADAR ADMIN (MULTITAREA)
 // ==========================================
-async function activateRadar() {
+async function activateAdminRadar() {
     const token = localStorage.getItem('gymen_admin_token');
     if (!token) return;
 
@@ -186,17 +134,14 @@ async function activateRadar() {
             await signInWithCustomToken(auth, data.firebase_token);
             
             onSnapshot(collection(db, "chats"), (snapshot) => {
-                let unreadCount = 0;
                 
-                snapshot.forEach(docSnap => {
-                    const chat = docSnap.data();
-                    if(chat.unread_admin || chat.estado === 'espera') unreadCount++;
-                });
-                
-                updateSidebarBadge(unreadCount);
-                
-                if (isInitialLoad) {
-                    isInitialLoad = false;
+                if (isInitialLoad) { 
+                    isInitialLoad = false; 
+                    // Llenar el diccionario de memorias inicial sin sonar
+                    snapshot.forEach(doc => {
+                        const chat = doc.data();
+                        lastNotifiedTimestamps[doc.id] = chat.actualizado ? chat.actualizado.toMillis() : 0;
+                    });
                     return; 
                 }
 
@@ -205,23 +150,31 @@ async function activateRadar() {
                         const chat = change.doc.data();
                         const userId = change.doc.id;
 
+                        // Si es para el admin o es un ticket nuevo
                         const isTicketWaiting = chat.estado === 'espera';
                         const isNewMessage = chat.unread_admin === true;
 
                         if (isNewMessage || isTicketWaiting) {
-                            
-                            // 🧠 INTELIGENCIA DE CONTEXTO PRECISA
-                            // Verifica si el administrador ya está hablando CON ESTE USUARIO EXACTO
+                            const currentMsgTime = chat.actualizado ? chat.actualizado.toMillis() : 0;
+                            const savedTime = lastNotifiedTimestamps[userId] || 0;
+
+                            // Prevención matemática de duplicados
+                            if (currentMsgTime <= savedTime) return; 
+                            lastNotifiedTimestamps[userId] = currentMsgTime;
+
+                            // 🧠 CONTEXT AWARENESS INTELIGENTE (Iframe Support)
                             const iframe = document.getElementById('os-frame');
-                            if (iframe && iframe.contentWindow.location.href.includes('pulse.html')) {
-                                // Leemos la variable global "activeChatUserId" directamente del Iframe de Pulse
-                                const pulseActiveUser = iframe.contentWindow.activeChatUserId;
+                            if (iframe && iframe.contentWindow && iframe.contentWindow.location.href.includes('pulse.html')) {
+                                const pulseActiveUser = iframe.contentWindow.activeChatUserId; // Variable expuesta en pulse.js
+                                
+                                // Si el admin ya tiene a ESE atleta abierto en pantalla, no notificar visualmente
                                 if (pulseActiveUser === userId && !isTicketWaiting) {
-                                    return; // El administrador ya lo está leyendo. No notificar.
+                                    return; 
                                 }
                             }
                             
-                            showSmartRadarToast(userId, chat.atleta_nombre || 'Atleta', chat.ultimo_mensaje || "Solicitando asistencia.", isTicketWaiting);
+                            const text = (chat.ultimo_mensaje || "").replace("Tú: ", "").trim();
+                            showAdminIOSNotification(userId, chat.atleta_nombre || 'Atleta', text, isTicketWaiting);
                         }
                     }
                 });
@@ -232,4 +185,4 @@ async function activateRadar() {
     }
 }
 
-window.addEventListener('DOMContentLoaded', activateRadar);
+window.addEventListener('DOMContentLoaded', activateAdminRadar);
