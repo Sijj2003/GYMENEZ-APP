@@ -18,12 +18,11 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Memoria RAM para evitar duplicados en la sesión de admin
 let lastNotifiedTimestamps = {}; 
 let isInitialLoad = true;
 
 // ==========================================
-// 🎵 AUDIO PROFESIONAL
+// 🎵 AUDIO PROFESIONAL (Web Audio API)
 // ==========================================
 function playAdminNotification(isTicket) {
     try {
@@ -34,32 +33,29 @@ function playAdminNotification(isTicket) {
         osc.connect(gainNode); gainNode.connect(audioCtx.destination);
         
         if (isTicket) {
-            // Sonido de alerta (doble tono rápido)
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(600, audioCtx.currentTime);
             osc.frequency.setValueAtTime(900, audioCtx.currentTime + 0.1);
         } else {
-            // Sonido iMessage suave
             osc.type = 'sine';
             osc.frequency.setValueAtTime(880, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(1108, audioCtx.currentTime + 0.1);
         }
 
         gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
+        gainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.02);
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
         osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.3);
     } catch(e) {}
 }
 
 // ==========================================
-// 📱 INYECCIÓN ESTILO iOS PARA EL DASHBOARD
+// 📱 CONTENEDOR UI ESTILO iOS
 // ==========================================
 function injectAdminIOSContainer() {
     if (!document.getElementById('ios-admin-notifications')) {
         const container = document.createElement('div');
         container.id = 'ios-admin-notifications';
-        // Arriba a la derecha (estilo macOS/iOS iPad)
         container.className = 'fixed top-6 right-6 z-[99999] flex flex-col gap-3 pointer-events-none w-[320px]';
         document.body.appendChild(container);
     }
@@ -76,16 +72,14 @@ function showAdminIOSNotification(userId, userName, text, isTicket = false) {
 
     toast.className = `pointer-events-auto bg-[#1c1c1e]/90 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-2xl flex items-start gap-3 transform translate-x-10 opacity-0 transition-all duration-400 ease-out cursor-pointer hover:bg-[#2c2c2e]/90`;
     
-    // Al hacer clic, redirigir el iframe y guardar el ID para que Pulse lo abra
     toast.onclick = () => {
         localStorage.setItem('gymen_pending_open_id', userId);
         localStorage.setItem('gymen_pending_open_name', userName);
         
-        // Simular click en el menú lateral de Pulse
         const pulseNavBtn = document.querySelector('button[data-url*="pulse.html"]');
         if(pulseNavBtn) pulseNavBtn.click();
         
-        toast.remove(); // Desaparecer al instante al hacer clic
+        toast.remove();
     };
 
     toast.innerHTML = `
@@ -101,9 +95,8 @@ function showAdminIOSNotification(userId, userName, text, isTicket = false) {
         </div>
     `;
 
-    container.appendChild(toast); // Agregar al final de la pila
+    container.appendChild(toast);
 
-    // Animación de entrada
     requestAnimationFrame(() => {
         toast.style.transform = 'translateX(0)';
         toast.style.opacity = '1';
@@ -111,16 +104,15 @@ function showAdminIOSNotification(userId, userName, text, isTicket = false) {
 
     playAdminNotification(isTicket);
 
-    // Auto-cierre
     setTimeout(() => {
-        toast.style.transform = 'translate-x-10';
+        toast.style.transform = 'translateX(10px)';
         toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 400);
     }, 6000);
 }
 
 // ==========================================
-// 📡 LÓGICA DEL RADAR ADMIN (MULTITAREA)
+// 📡 LÓGICA DEL RADAR ADMIN (CORREGIDA)
 // ==========================================
 async function activateAdminRadar() {
     const token = localStorage.getItem('gymen_admin_token');
@@ -137,7 +129,6 @@ async function activateAdminRadar() {
                 
                 if (isInitialLoad) { 
                     isInitialLoad = false; 
-                    // Llenar el diccionario de memorias inicial sin sonar
                     snapshot.forEach(doc => {
                         const chat = doc.data();
                         lastNotifiedTimestamps[doc.id] = chat.actualizado ? chat.actualizado.toMillis() : 0;
@@ -150,29 +141,32 @@ async function activateAdminRadar() {
                         const chat = change.doc.data();
                         const userId = change.doc.id;
 
-                        // Si es para el admin o es un ticket nuevo
+                        const currentMsgTime = chat.actualizado ? chat.actualizado.toMillis() : 0;
+                        const savedTime = lastNotifiedTimestamps[userId] || 0;
+
+                        // 1️⃣ FILTRO DE CONTROL DE DUPLICADOS MATEMÁTICO
+                        if (currentMsgTime <= savedTime) return; 
+                        lastNotifiedTimestamps[userId] = currentMsgTime;
+
+                        // 2️⃣ FILTRO DE REMITENTE (Anti Auto-Notificación)
+                        // Valida tanto el campo 'remitente' de la estructura del mensaje como un posible 'ultimo_remitente'
+                        const remitenteActivo = chat.ultimo_remitente || chat.remitente || "";
+                        if (remitenteActivo === "admin") {
+                            return; // El administrador envió el mensaje; ignorar por completo.
+                        }
+
+                        // 3️⃣ FILTRO DE CONTEXTO ACTIVO (Búnker de Silencio Inteligente)
+                        // Verifica qué chat tiene abierto el administrador en su pantalla principal
+                        const chatAbiertoEnPantalla = localStorage.getItem('gymen_admin_active_chat_id');
+                        if (chatAbiertoEnPantalla === userId) {
+                            return; // El administrador ya está leyendo al atleta; no interrumpir.
+                        }
+
+                        // Si supera todos los filtros de seguridad, se evalúa el estado
                         const isTicketWaiting = chat.estado === 'espera';
                         const isNewMessage = chat.unread_admin === true;
 
                         if (isNewMessage || isTicketWaiting) {
-                            const currentMsgTime = chat.actualizado ? chat.actualizado.toMillis() : 0;
-                            const savedTime = lastNotifiedTimestamps[userId] || 0;
-
-                            // Prevención matemática de duplicados
-                            if (currentMsgTime <= savedTime) return; 
-                            lastNotifiedTimestamps[userId] = currentMsgTime;
-
-                            // 🧠 CONTEXT AWARENESS INTELIGENTE (Iframe Support)
-                            const iframe = document.getElementById('os-frame');
-                            if (iframe && iframe.contentWindow && iframe.contentWindow.location.href.includes('pulse.html')) {
-                                const pulseActiveUser = iframe.contentWindow.activeChatUserId; // Variable expuesta en pulse.js
-                                
-                                // Si el admin ya tiene a ESE atleta abierto en pantalla, no notificar visualmente
-                                if (pulseActiveUser === userId && !isTicketWaiting) {
-                                    return; 
-                                }
-                            }
-                            
                             const text = (chat.ultimo_mensaje || "").replace("Tú: ", "").trim();
                             showAdminIOSNotification(userId, chat.atleta_nombre || 'Atleta', text, isTicketWaiting);
                         }
@@ -181,7 +175,7 @@ async function activateAdminRadar() {
             });
         }
     } catch (e) {
-        console.warn("Radar Global inactivo. Falla de conexión.");
+        console.warn("Radar Global inactivo.");
     }
 }
 
