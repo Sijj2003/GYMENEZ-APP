@@ -1,7 +1,10 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+// ==========================================
+// CONFIGURACIÓN GLOBAL
+// ==========================================
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
@@ -9,111 +12,106 @@ const firebaseConfig = {
   apiKey: "AIzaSyC7ESvLhYTydAn_ZjHVSkebTC-BhvnbzIw",
   authDomain: "gymenezapp.firebaseapp.com",
   projectId: "gymenezapp",
-  storageBucket: "gymenezapp.firebasestorage.app"
+  storageBucket: "gymenezapp.firebasestorage.app",
+  messagingSenderId: "257686887231",
+  appId: "1:257686887231:web:ca6c5ccabe33a1625b918a"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let audioCtx = null;
-let lastNotificationState = ""; 
-let targetUserId = null;   // 🔥 Memoria para saber a quién redirigir
-let targetUserName = null; // 🔥 Memoria para el nombre
+// Memoria Anti-Spam (Evita notificar repetidas veces en un lapso corto)
+const cooldownMemory = new Set();
+const COOLDOWN_TIME_MS = 60000; // 1 minuto de silencio por usuario tras la primera alerta
 
-function playDing() {
+// ==========================================
+// 🎵 SINTETIZADOR DE AUDIO GLOBAL
+// ==========================================
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function playRadarSound() {
     try {
-        if (!audioCtx) {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AudioContext();
-        }
+        if (!audioCtx) audioCtx = new AudioContext();
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
-        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        // Sonido estilo "Pop/Burbuja" elegante
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(500, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
         gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-        osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.2);
+        gainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        
+        osc.start(audioCtx.currentTime); 
+        osc.stop(audioCtx.currentTime + 0.3);
     } catch(e) {}
 }
 
-// Inyección de la UI Flotante optimizada con redirección inteligente al hacer click
-const toastHTML = `
-<div id="radar-toast-admin" class="fixed top-6 right-6 z-[9999] flex items-center gap-3 bg-[#060608]/90 backdrop-blur-2xl border border-sky-500/20 p-3.5 pr-12 rounded-[24px] shadow-[0_20px_50px_rgba(14,165,233,0.15)] transition-all duration-500 select-none touch-none animate-fade-in" style="transform: translateX(160vw); max-width: 340px; width: calc(100vw - 48px);">
-    <div id="radar-action-trigger" class="flex items-center gap-3 flex-grow cursor-pointer overflow-hidden">
-        <div class="w-10 h-10 bg-gradient-to-tr from-sky-500 to-sky-400 rounded-[16px] flex items-center justify-center text-white shadow-[0_0_20px_rgba(14,165,233,0.3)] shrink-0 animate-pulse">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-        </div>
-        <div class="overflow-hidden">
-            <h4 class="text-white text-[11px] font-black uppercase tracking-widest truncate">Radar Pulse</h4>
-            <p class="text-sky-400 text-[10px] font-bold uppercase tracking-widest mt-0.5 truncate" id="radar-admin-text">Alerta de tráfico</p>
-        </div>
-    </div>
-    <button id="radar-admin-close-btn" class="absolute right-3.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 text-xs transition-all font-sans">✕</button>
-</div>`;
-document.body.insertAdjacentHTML('beforeend', toastHTML);
-
-let startX = 0, startY = 0, currentX = 0, currentY = 0;
-const toastEl = document.getElementById('radar-toast-admin');
-
-// AGREGAR EVENTO DE CLICK REDIRECCIONADOR AL CUERPO DE LA NOTIFICACIÓN
-document.getElementById('radar-action-trigger').addEventListener('click', () => {
-    // Si ya estamos en la pantalla de pulse, abrimos el chat inmediatamente
-    if (window.location.pathname.includes('pulse.html')) {
-        if (typeof window.openChatWindow === 'function' && targetUserId) {
-            window.openChatWindow(targetUserId, targetUserName);
-            toastEl.style.transform = 'translateX(160vw)';
-        }
-    } else {
-        // Si estamos en otra pantalla, redirigimos guardando variables temporales para que pulse.js las abra al cargar
-        localStorage.setItem('gymen_pending_open_id', targetUserId);
-        localStorage.setItem('gymen_pending_open_name', targetUserName);
-        window.location.href = '/apps/admin/pulse.html';
+// ==========================================
+// 🔔 INYECCIÓN DE LA INTERFAZ DE NOTIFICACIÓN
+// ==========================================
+function injectRadarContainer() {
+    if (!document.getElementById('radar-notifications-container')) {
+        const container = document.createElement('div');
+        container.id = 'radar-notifications-container';
+        container.className = 'fixed top-6 right-6 z-[99999] flex flex-col gap-3 w-80 pointer-events-none';
+        document.body.appendChild(container);
     }
-});
-
-toastEl.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    toastEl.style.transition = 'none';
-});
-
-toastEl.addEventListener('touchmove', (e) => {
-    currentX = e.touches[0].clientX - startX;
-    currentY = e.touches[0].clientY - startY;
-    let moveX = currentX > 0 ? currentX : 0;
-    let moveY = currentY < 0 ? currentY : 0;
-    
-    if (Math.abs(currentX) > Math.abs(currentY)) {
-        toastEl.style.transform = `translateX(${moveX}px)`;
-    } else {
-        toastEl.style.transform = `translateY(${moveY}px)`;
-    }
-});
-
-toastEl.addEventListener('touchend', () => {
-    toastEl.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
-    if (currentX > 100 || currentY < -60) {
-        dismissToastManual();
-    } else {
-        toastEl.style.transform = 'translateX(0)';
-    }
-    startX = startY = currentX = currentY = 0;
-});
-
-document.getElementById('radar-admin-close-btn').addEventListener('click', dismissToastManual);
-
-function dismissToastManual() {
-    toastEl.style.transform = 'translateX(160vw)';
-    const currentText = document.getElementById('radar-admin-text').textContent;
-    if (currentText) lastNotificationState = currentText; 
 }
 
-window.addEventListener('DOMContentLoaded', async () => {
+function showRadarToast(userId, userName, text) {
+    injectRadarContainer();
+    const container = document.getElementById('radar-notifications-container');
+
+    const toast = document.createElement('div');
+    toast.className = 'bg-[#111111]/90 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl flex items-start gap-3 pointer-events-auto transform translate-x-[120%] transition-transform duration-500 ease-out cursor-pointer hover:bg-white/5';
+    
+    // Al hacer clic, navega a Pulse
+    toast.onclick = () => {
+        localStorage.setItem('gymen_pending_open_id', userId);
+        localStorage.setItem('gymen_pending_open_name', userName);
+        
+        // Disparar click en el botón de la barra lateral del Dashboard
+        const pulseNavBtn = document.querySelector('button[data-url*="pulse.html"]');
+        if(pulseNavBtn) pulseNavBtn.click();
+        
+        toast.style.transform = 'translateX(120%)';
+        setTimeout(() => toast.remove(), 500);
+    };
+
+    toast.innerHTML = `
+        <div class="w-10 h-10 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/30">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z"></path></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+            <h4 class="text-xs font-black text-white uppercase tracking-tight truncate">${userName}</h4>
+            <p class="text-[10px] text-sky-400 font-bold uppercase tracking-widest mb-1">Nuevo Mensaje</p>
+            <p class="text-[11px] text-gray-400 font-medium truncate">${text}</p>
+        </div>
+    `;
+
+    container.appendChild(toast);
+    
+    // Animar entrada
+    requestAnimationFrame(() => toast.style.transform = 'translateX(0)');
+
+    // Remover a los 5 segundos
+    setTimeout(() => {
+        toast.style.transform = 'translateX(120%)';
+        setTimeout(() => toast.remove(), 500);
+    }, 5000);
+}
+
+// ==========================================
+// 📡 EL MOTOR DEL RADAR
+// ==========================================
+async function activateRadar() {
     const token = localStorage.getItem('gymen_admin_token');
     if (!token) return;
 
@@ -124,44 +122,38 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (res.ok && data.success) {
             await signInWithCustomToken(auth, data.firebase_token);
             
-            let unreadCount = 0;
+            // Escuchar SOLO los chats donde unread_admin es TRUE
             const q = query(collection(db, "chats"), where("unread_admin", "==", true));
             
             onSnapshot(q, (snapshot) => {
-                const toast = document.getElementById('radar-toast-admin');
-                if (!toast) return;
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added" || change.type === "modified") {
+                        const chat = change.doc.data();
+                        const userId = change.doc.id;
 
-                if (!snapshot.empty) {
-                    const count = snapshot.size;
-                    let stateText = "";
-                    
-                    // 🌟 EXTRACCIÓN DINÁMICA DE IDENTIDADES EN EL RADAR
-                    if (count === 1) {
-                        // Si hay un solo chat sin leer, extraemos los datos específicos de ese atleta
-                        const recentDoc = snapshot.docs[0];
-                        targetUserId = recentDoc.id;
-                        targetUserName = recentDoc.data().atleta_nombre || "Atleta";
-                        stateText = `${targetUserName} escribió...`;
-                    } else {
-                        // Si hay varios atletas simultáneos, mostramos un resumen global del tráfico
-                        const firstDoc = snapshot.docs[0];
-                        targetUserId = firstDoc.id;
-                        targetUserName = firstDoc.data().atleta_nombre || "Atleta";
-                        stateText = `${count} atletas en espera`;
+                        // 1. Context-Aware: Verificar si la app Pulse ya está abierta en el Dashboard
+                        const iframe = document.getElementById('os-frame');
+                        if (iframe && iframe.contentWindow.location.href.includes('pulse.html')) {
+                            return; // Se aborta. Pulse.js manejará su propio sonido.
+                        }
+
+                        // 2. Anti-Spam: Verificar si está en Cooldown
+                        if (cooldownMemory.has(userId)) return;
+
+                        // 3. Activar Alerta
+                        cooldownMemory.add(userId);
+                        playRadarSound();
+                        showRadarToast(userId, chat.atleta_nombre || 'Atleta', chat.ultimo_mensaje);
+
+                        // Limpiar memoria tras 1 minuto
+                        setTimeout(() => cooldownMemory.delete(userId), COOLDOWN_TIME_MS);
                     }
-
-                    if (stateText === lastNotificationState) return;
-
-                    if (count > unreadCount) playDing();
-                    unreadCount = count;
-                    
-                    document.getElementById('radar-admin-text').textContent = stateText;
-                    toastEl.style.transform = 'translateX(0)';
-                } else {
-                    unreadCount = 0;
-                    toastEl.style.transform = 'translateX(160vw)';
-                }
+                });
             });
         }
-    } catch(e) {}
-});
+    } catch (e) {
+        console.warn("Radar Global inactivo. Falla de conexión.");
+    }
+}
+
+window.addEventListener('DOMContentLoaded', activateRadar);
