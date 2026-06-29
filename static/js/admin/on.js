@@ -8,7 +8,7 @@ const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https:/
 let allVideosData = [];
 let activeVideoId = null;
 let currentCategoryFilter = '';
-let chapterCount = 0; // Para llevar la cuenta de episodios al añadir
+let chapterCount = 0; 
 
 function getSecureHeaders() {
     return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('gymen_admin_token')}` };
@@ -145,7 +145,14 @@ function addChapterRow(data = null) {
             </div>
             <div class="md:col-span-12">
                 <label class="block text-[8px] text-gray-500 font-bold uppercase tracking-widest mb-1">URL (YouTube / Vimeo)</label>
-                <input type="url" class="chap-url w-full glass-input p-2.5 rounded-lg text-xs font-mono text-sky-400" value="${data ? data.video_url : ''}" oninput="updateVideoPreview(this.value)" placeholder="https://youtube.com/..." required>
+                <div class="flex gap-2">
+                    <input type="url" id="url-${rowId}" class="chap-url flex-1 glass-input p-2.5 rounded-lg text-xs font-mono text-sky-400" value="${data ? data.video_url : ''}" placeholder="https://youtube.com/..." required>
+                    
+                    <!-- 🎬 Botón de Play Cinematográfico -->
+                    <button type="button" onclick="openVideoPreview(document.getElementById('url-${rowId}').value)" class="px-4 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors flex items-center justify-center" title="Previsualizar">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                </div>
             </div>
             <div class="md:col-span-12">
                 <label class="block text-[8px] text-gray-500 font-bold uppercase tracking-widest mb-1">Descripción Breve</label>
@@ -172,7 +179,7 @@ function extractChapters() {
 }
 
 // ==========================================
-// 🖥️ CONTROL DEL LIENZO Y PREVISUALIZADOR
+// 🖥️ CONTROL DEL LIENZO DE TRABAJO
 // ==========================================
 function hideWorkspace() {
     document.getElementById('ws-empty').classList.add('hidden');
@@ -201,8 +208,6 @@ function openCreateWorkspace() {
     document.getElementById('chapters-container').innerHTML = '';
     chapterCount = 0;
     addChapterRow();
-
-    updateVideoPreview('');
 }
 
 function loadVideoWorkspace(id) {
@@ -242,41 +247,56 @@ function loadVideoWorkspace(id) {
     document.getElementById('chapters-container').innerHTML = '';
     chapterCount = 0;
     
-    let firstVideoUrl = '';
     if (video.chapters && video.chapters.length > 0) {
-        video.chapters.forEach(chap => {
-            addChapterRow(chap);
-            if (!firstVideoUrl) firstVideoUrl = chap.video_url; // Guardamos el del primer cap para el preview
-        });
+        video.chapters.forEach(chap => addChapterRow(chap));
     } else {
         addChapterRow(); 
     }
-
-    updateVideoPreview(firstVideoUrl);
 }
 
-// 🎬 Monitor de Previsualización Inteligente
-function updateVideoPreview(url) {
-    const emptyDiv = document.getElementById('v-preview-empty');
-    const iframe = document.getElementById('v-preview-iframe');
-
+// ==========================================
+// 🎬 REPRODUCTOR MODAL CINEMATOGRÁFICO
+// ==========================================
+function openVideoPreview(url) {
     if (!url) {
-        emptyDiv.classList.remove('hidden'); iframe.classList.add('hidden'); iframe.src = ''; return;
+        showUIFeedback("Por favor, ingresa una URL antes de previsualizar.", "error");
+        return;
     }
 
-    // Extraer ID de YouTube
     let videoId = null;
     const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
     const match = url.match(ytRegex);
     if (match && match[1]) { videoId = match[1]; }
 
     if (videoId) {
-        emptyDiv.classList.add('hidden');
-        iframe.classList.remove('hidden');
-        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=0&showinfo=0&controls=1`;
+        const modal = document.getElementById('video-preview-modal');
+        const box = document.getElementById('video-preview-box');
+        const iframe = document.getElementById('modal-iframe');
+        
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&showinfo=0&controls=1`;
+        
+        modal.classList.remove('hidden', 'pointer-events-none');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            box.classList.remove('scale-95');
+        }, 10);
     } else {
-        emptyDiv.classList.remove('hidden'); iframe.classList.add('hidden'); iframe.src = '';
+        showUIFeedback("La URL no es de YouTube o es inválida.", "error");
     }
+}
+
+function closeVideoPreview() {
+    const modal = document.getElementById('video-preview-modal');
+    const box = document.getElementById('video-preview-box');
+    const iframe = document.getElementById('modal-iframe');
+
+    modal.classList.add('opacity-0');
+    box.classList.add('scale-95');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden', 'pointer-events-none');
+        iframe.src = ''; // Detiene el video
+    }, 300);
 }
 
 // ==========================================
@@ -307,7 +327,6 @@ async function saveVideo() {
     };
 
     btn.disabled = true; btn.textContent = '...';
-    // Mantiene la ruta perimetral original que dictaste en tus reglas previas
     const urlEndpoint = isEdit ? `${API_BASE_URL}/api/admin/on/film/${vId}` : `${API_BASE_URL}/api/admin/on/film`;
 
     try {
