@@ -75,6 +75,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('gymen_admin_token');
     if (!token) return; // Middleware lo echará
     
+    // Auto-limpieza estricta de variables residuales por si se recarga la página
+    localStorage.removeItem('gymen_admin_active_chat_id');
+
     // Autoresize del input text
     const chatInput = document.getElementById('admin-chat-input');
     if(chatInput) {
@@ -134,7 +137,15 @@ function listenToAllChats() {
         snapshot.forEach((docSnap) => {
             const data = docSnap.data();
             globalChatsMemory.push({ id: docSnap.id, ...data });
-            if (data.unread_admin) hasNewUnread = true;
+            
+            // Evaluar sonido solo si NO somos nosotros mismos (anti-rebote lateral)
+            const isFromAdmin = (data.ultimo_mensaje || "").startsWith("Tú: ");
+            if (data.unread_admin && !isFromAdmin) {
+                // Verificar que no sea el chat activo
+                if(docSnap.id !== activeChatUserId) {
+                    hasNewUnread = true;
+                }
+            }
         });
 
         if (hasNewUnread) playUISound('receive'); 
@@ -253,13 +264,18 @@ function closeMobileWorkspace() {
     wsPanel.classList.remove('flex');
     wsPanel.classList.add('hidden', 'md:flex');
     
+    // 🛡️ LIBERAR CANDADO DE BÚNKER
     activeChatUserId = null;
+    localStorage.removeItem('gymen_admin_active_chat_id');
     renderSidebar(); // Quita el highlight
 }
 
 function openChatWindow(userId, userName) {
     activeChatUserId = userId;
     activeChatUserName = userName || 'Atleta';
+    
+    // 🛡️ ACTIVAR CANDADO DE BÚNKER (Avisa al Radar que estamos hablando con él)
+    localStorage.setItem('gymen_admin_active_chat_id', userId);
     
     // UI Móvil Responsive Split-View
     const invPanel = document.getElementById('inventory-panel');
@@ -297,6 +313,11 @@ function openChatWindow(userId, userName) {
 
         const liveChatData = docSnap.data();
 
+        // 🛡️ LIMPIEZA ACTIVA: Si el usuario escribe y tenemos el chat abierto, lo marcamos como leído automáticamente
+        if (liveChatData.unread_admin === true) {
+            setDoc(doc(db, "chats", userId), { unread_admin: false }, { merge: true }).catch(e=>{});
+        }
+
         if (liveChatData.estado === 'espera') {
             statusText.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> En Cola de Espera`;
             statusText.className = "text-amber-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
@@ -318,6 +339,7 @@ function openChatWindow(userId, userName) {
         }
     }, (error) => console.warn("Escuchador de sala silenciado."));
 
+    // Marcamos como leído al instante de entrar
     setDoc(doc(db, "chats", userId), { unread_admin: false }, { merge: true }).catch(e=>{});
 
     if (messagesUnsubscribe) messagesUnsubscribe();
@@ -373,7 +395,7 @@ async function markAsActive() {
         await setDoc(doc(db, "chats", activeChatUserId), {
             estado: "activo", 
             actualizado: serverTimestamp(), 
-            ultimo_mensaje: "🟢 Operador en sala.",
+            ultimo_mensaje: "Tú: 🟢 Operador en sala.", // Firmado como "Tú" para el radar
             atleta_nombre: activeChatUserName,
             unread_user: true
         }, { merge: true });
@@ -393,14 +415,16 @@ async function closeCurrentSession() {
     document.getElementById('ws-chat').classList.add('hidden');
     document.getElementById('ws-chat').classList.remove('flex');
     
+    // 🛡️ LIBERAR CANDADO DE BÚNKER
     activeChatUserId = null;
+    localStorage.removeItem('gymen_admin_active_chat_id');
     renderSidebar();
 
     try {
         await setDoc(doc(db, "chats", targetId), {
             estado: "cerrado", 
             actualizado: serverTimestamp(), 
-            ultimo_mensaje: "🔴 Canal cerrado."
+            ultimo_mensaje: "Tú: 🔴 Canal cerrado." // Firmado como "Tú" para el radar
         }, { merge: true });
     } catch(e) {}
 }
@@ -414,10 +438,13 @@ document.getElementById('admin-chat-form').addEventListener('submit', async (e) 
     input.value = ''; input.style.height = 'auto';
 
     try {
+        // Guarda en subcoleccion (NO gatilla el Radar Principal)
         await addDoc(collection(db, "chats", activeChatUserId, "mensajes"), {
             texto: texto, remitente: "admin", fecha: serverTimestamp()
         });
         
+        // Guarda en raíz (Gatilla el radar). 
+        // 🔒 COMO LE PUSIMOS "Tú: ", EL RADAR LO VA A DESCARTAR AL INSTANTE.
         await setDoc(doc(db, "chats", activeChatUserId), {
             estado: "activo",
             ultimo_mensaje: "Tú: " + texto, 
