@@ -60,7 +60,7 @@ function filterCategory(cat) {
 }
 
 function refreshActiveList(searchTerm = '') {
-    // Normalizamos el texto (quitamos tildes) para que la búsqueda sea perfecta
+    // Normalizamos el texto (quitamos tildes)
     const normalizeText = (str) => (str || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     
     const term = normalizeText(searchTerm);
@@ -68,7 +68,6 @@ function refreshActiveList(searchTerm = '') {
     const container = document.getElementById('inventory-list');
     container.innerHTML = '';
 
-    // Filtrar por RAM (Búsqueda + Categoría flexible)
     let list = allFoodsData.filter(f => {
         const fName = normalizeText(f.name);
         const fCat = normalizeText(f.category);
@@ -88,7 +87,6 @@ function refreshActiveList(searchTerm = '') {
         const isActive = activeFoodId === food.id;
         const catNorm = normalizeText(food.category);
         
-        // Colores según macro principal
         let catColor = 'text-gray-400 border-gray-500/30';
         if(catNorm.includes('proteina')) catColor = 'text-rose-400 border-rose-500/30';
         else if(catNorm.includes('carbohidrato')) catColor = 'text-[#FFC300] border-[#FFC300]/30';
@@ -115,7 +113,6 @@ function refreshActiveList(searchTerm = '') {
     });
 }
 
-// Búsqueda instantánea con Debounce
 let searchTimeout;
 document.getElementById('search-inventory').addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
@@ -156,7 +153,7 @@ function loadFoodWorkspace(id) {
     if (!food) return;
 
     activeFoodId = id;
-    refreshActiveList(document.getElementById('search-inventory').value); // Refresca color activo
+    refreshActiveList(document.getElementById('search-inventory').value); 
     hideWorkspace();
     
     document.getElementById('ws-food').classList.remove('hidden');
@@ -168,11 +165,37 @@ function loadFoodWorkspace(id) {
     
     document.getElementById('e-btn-delete').classList.remove('hidden');
     
-    // Llenar formulario
     document.getElementById('e-id').value = food.id;
     document.getElementById('e-is-edit').value = 'true';
     document.getElementById('e-name').value = food.name || '';
-    document.getElementById('e-category').value = food.category || 'Otro';
+
+    // ========================================================
+    // 🧠 TRADUCTOR INTELIGENTE DE CATEGORÍAS (EL FIX)
+    // ========================================================
+    const selectCat = document.getElementById('e-category');
+    const dbCat = food.category || 'Otro';
+    
+    // 1. Revisa si la categoría existe exactamente igual en las opciones del HTML
+    let exactMatch = Array.from(selectCat.options).some(opt => opt.value === dbCat);
+    
+    if (exactMatch) {
+        selectCat.value = dbCat;
+    } else {
+        // 2. Si no coincide, normaliza y busca a qué nueva categoría pertenece
+        const catLower = dbCat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        
+        if (catLower.includes('proteina')) selectCat.value = 'Proteínas Magras AVB';
+        else if (catLower.includes('carbohidrato') && catLower.includes('rapido')) selectCat.value = 'Carbohidratos Rápidos y Frutas';
+        else if (catLower.includes('carbohidrato')) selectCat.value = 'Carbohidratos Almidonados';
+        else if (catLower.includes('grasa') || catLower.includes('lipido')) selectCat.value = 'Lípidos y Grasas Esenciales';
+        else if (catLower.includes('vegetal')) selectCat.value = 'Vegetales Fibrosos';
+        else if (catLower.includes('fruta')) selectCat.value = 'Carbohidratos Rápidos y Frutas';
+        else if (catLower.includes('lacteo')) selectCat.value = 'Lácteos y Derivados Proteicos';
+        else if (catLower.includes('suplemento')) selectCat.value = 'Suplementación y Ergogénicos';
+        else selectCat.value = 'Otro';
+    }
+    // ========================================================
+
     document.getElementById('e-portion').value = food.portion || '100g';
     document.getElementById('e-calories').value = food.calories || 0;
     document.getElementById('e-protein').value = food.proteins || 0; 
