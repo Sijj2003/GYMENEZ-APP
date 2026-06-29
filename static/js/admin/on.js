@@ -8,6 +8,7 @@ const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https:/
 let allVideosData = [];
 let activeVideoId = null;
 let currentCategoryFilter = '';
+let chapterCount = 0; // Para llevar la cuenta de episodios al añadir
 
 function getSecureHeaders() {
     return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('gymen_admin_token')}` };
@@ -75,7 +76,7 @@ function refreshActiveList(searchTerm = '') {
     });
 
     if (list.length === 0) {
-        container.innerHTML = `<div class="p-4 text-center text-gray-500 font-bold uppercase tracking-widest text-[9px]">Sin episodios registrados.</div>`;
+        container.innerHTML = `<div class="p-4 text-center text-gray-500 font-bold uppercase tracking-widest text-[9px]">Sin producciones registradas.</div>`;
         return;
     }
 
@@ -90,9 +91,7 @@ function refreshActiveList(searchTerm = '') {
         div.className = `p-3 rounded-xl border cursor-pointer transition-all duration-200 flex flex-col gap-1 ${isActive ? 'bg-white/10 border-red-500/50' : 'bg-transparent border-transparent hover:bg-white/5'}`;
         div.onclick = () => loadVideoWorkspace(video.id);
 
-        // Se usa video.chapters[0]?.video_url solo para mostrar si tiene enlace
-        const firstUrl = video.chapters && video.chapters.length > 0 ? video.chapters[0].video_url : null;
-        const icon = firstUrl ? '▶' : '⏸';
+        const chapCount = video.chapters ? video.chapters.length : 0;
 
         div.innerHTML = `
             <div class="flex justify-between items-start">
@@ -100,8 +99,8 @@ function refreshActiveList(searchTerm = '') {
                 <span class="px-1.5 py-0.5 rounded border text-[7px] font-black uppercase tracking-widest shrink-0 ${tierColor}">${video.subscription_tier || 'Básico'}</span>
             </div>
             <div class="flex justify-between items-center mt-1">
-                <span class="text-[8px] font-mono text-red-400 uppercase tracking-wider truncate">${video.category || 'Streaming'}</span>
-                <span class="text-[8px] text-gray-500">${icon}</span>
+                <span class="text-[8px] font-mono text-red-400 uppercase tracking-wider truncate">${video.category || 'Serie'}</span>
+                <span class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">${chapCount} Cap.</span>
             </div>
         `;
         container.appendChild(div);
@@ -113,6 +112,64 @@ document.getElementById('search-inventory').addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => refreshActiveList(e.target.value), 200);
 });
+
+// ==========================================
+// 🖥️ CREADOR DINÁMICO DE CAPÍTULOS
+// ==========================================
+function addChapterRow(data = null) {
+    chapterCount++;
+    const container = document.getElementById('chapters-container');
+    const rowId = `chapter-${Date.now()}-${Math.floor(Math.random()*1000)}`;
+    const div = document.createElement('div');
+    div.id = rowId;
+    
+    div.className = "chapter-card bg-black/40 border border-white/10 p-4 rounded-xl relative group transition-all hover:border-red-500/40 hover:bg-white/[0.05]";
+    
+    div.innerHTML = `
+        <button type="button" onclick="document.getElementById('${rowId}').remove()" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors opacity-50 hover:opacity-100">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+        
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 pr-6">
+            <div class="md:col-span-2">
+                <label class="block text-[8px] text-gray-500 font-bold uppercase tracking-widest mb-1">Cap. Nº</label>
+                <input type="number" class="chap-num w-full glass-input p-2.5 rounded-lg text-center font-mono text-xs" value="${data ? data.chapter_number : chapterCount}" required min="1">
+            </div>
+            <div class="md:col-span-7">
+                <label class="block text-[8px] text-gray-500 font-bold uppercase tracking-widest mb-1">Título del Episodio</label>
+                <input type="text" class="chap-title w-full glass-input p-2.5 rounded-lg text-xs" value="${data ? data.title : ''}" placeholder="El Despertar" required>
+            </div>
+            <div class="md:col-span-3">
+                <label class="block text-[8px] text-gray-500 font-bold uppercase tracking-widest mb-1">Duración</label>
+                <input type="text" class="chap-duration w-full glass-input p-2.5 rounded-lg text-center text-xs" value="${data ? data.duration : ''}" placeholder="45:00" required>
+            </div>
+            <div class="md:col-span-12">
+                <label class="block text-[8px] text-gray-500 font-bold uppercase tracking-widest mb-1">URL (YouTube / Vimeo)</label>
+                <input type="url" class="chap-url w-full glass-input p-2.5 rounded-lg text-xs font-mono text-sky-400" value="${data ? data.video_url : ''}" oninput="updateVideoPreview(this.value)" placeholder="https://youtube.com/..." required>
+            </div>
+            <div class="md:col-span-12">
+                <label class="block text-[8px] text-gray-500 font-bold uppercase tracking-widest mb-1">Descripción Breve</label>
+                <textarea class="chap-desc w-full glass-input p-2.5 rounded-lg text-xs resize-none" rows="2" placeholder="Resumen del capítulo...">${data ? (data.description || '') : ''}</textarea>
+            </div>
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+function extractChapters() {
+    const rows = document.querySelectorAll('#chapters-container .chapter-card');
+    const chapters = [];
+    rows.forEach(row => {
+        chapters.push({
+            chapter_number: parseInt(row.querySelector('.chap-num').value),
+            title: row.querySelector('.chap-title').value.trim(),
+            duration: row.querySelector('.chap-duration').value.trim(),
+            video_url: row.querySelector('.chap-url').value.trim(),
+            description: row.querySelector('.chap-desc').value.trim()
+        });
+    });
+    return chapters.sort((a, b) => a.chapter_number - b.chapter_number);
+}
 
 // ==========================================
 // 🖥️ CONTROL DEL LIENZO Y PREVISUALIZADOR
@@ -131,7 +188,7 @@ function openCreateWorkspace() {
     document.getElementById('ws-video').classList.remove('hidden');
     document.getElementById('ws-video').classList.add('flex');
     
-    document.getElementById('v-header-title').textContent = "Nuevo Episodio";
+    document.getElementById('v-header-title').textContent = "Nueva Producción";
     document.getElementById('v-header-title').className = "text-2xl font-black uppercase tracking-tighter text-red-500";
     document.getElementById('v-cat-badge').textContent = "Edición Activa";
     document.getElementById('v-btn-delete').classList.add('hidden');
@@ -139,6 +196,12 @@ function openCreateWorkspace() {
     document.getElementById('video-form').reset();
     document.getElementById('v-id').value = '';
     document.getElementById('v-is-edit').value = 'false';
+    
+    // Limpiamos los capítulos y agregamos uno vacío
+    document.getElementById('chapters-container').innerHTML = '';
+    chapterCount = 0;
+    addChapterRow();
+
     updateVideoPreview('');
 }
 
@@ -158,6 +221,7 @@ function loadVideoWorkspace(id) {
     document.getElementById('v-cat-badge').textContent = video.category || 'N/A';
     document.getElementById('v-btn-delete').classList.remove('hidden');
     
+    // Rellenamos el formulario general
     document.getElementById('v-id').value = video.id;
     document.getElementById('v-is-edit').value = 'true';
     document.getElementById('v-title').value = video.title || '';
@@ -168,18 +232,30 @@ function loadVideoWorkspace(id) {
     if(exactMatch) selectCat.value = dbCat; else selectCat.value = 'Otro';
 
     document.getElementById('v-tier').value = video.subscription_tier || 'BASICO';
+    document.getElementById('v-year').value = video.year || 2026;
+    document.getElementById('v-age').value = video.age_rating || 'TP';
+    document.getElementById('v-cover').value = video.cover_url || '';
+    document.getElementById('v-trailer').value = video.trailer_url || '';
     document.getElementById('v-desc').value = video.synopsis || '';
 
-    // En tu backend, los videos se guardan dentro de un array "chapters".
-    // En el diseño Split-View agarramos el primer capítulo por simplicidad.
-    let url = '';
+    // Reconstruimos los Capítulos Dinámicos
+    document.getElementById('chapters-container').innerHTML = '';
+    chapterCount = 0;
+    
+    let firstVideoUrl = '';
     if (video.chapters && video.chapters.length > 0) {
-        url = video.chapters[0].video_url || '';
+        video.chapters.forEach(chap => {
+            addChapterRow(chap);
+            if (!firstVideoUrl) firstVideoUrl = chap.video_url; // Guardamos el del primer cap para el preview
+        });
+    } else {
+        addChapterRow(); 
     }
-    document.getElementById('v-url').value = url;
-    updateVideoPreview(url);
+
+    updateVideoPreview(firstVideoUrl);
 }
 
+// 🎬 Monitor de Previsualización Inteligente
 function updateVideoPreview(url) {
     const emptyDiv = document.getElementById('v-preview-empty');
     const iframe = document.getElementById('v-preview-iframe');
@@ -188,6 +264,7 @@ function updateVideoPreview(url) {
         emptyDiv.classList.remove('hidden'); iframe.classList.add('hidden'); iframe.src = ''; return;
     }
 
+    // Extraer ID de YouTube
     let videoId = null;
     const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
     const match = url.match(ytRegex);
@@ -202,8 +279,6 @@ function updateVideoPreview(url) {
     }
 }
 
-document.getElementById('v-url').addEventListener('input', (e) => updateVideoPreview(e.target.value));
-
 // ==========================================
 // 💾 GESTIÓN DE GUARDADO Y ELIMINADO
 // ==========================================
@@ -211,50 +286,51 @@ async function saveVideo() {
     const form = document.getElementById('video-form');
     if(!form.checkValidity()) { form.reportValidity(); return; }
 
+    const chapters = extractChapters();
+    if (chapters.length === 0) { showUIFeedback("Debes añadir al menos 1 capítulo.", "error"); return; }
+
     const isEdit = document.getElementById('v-is-edit').value === 'true';
     const vId = document.getElementById('v-id').value;
     const btn = document.getElementById('v-btn-save');
 
-    // Mantenemos la estructura requerida por tu backend (enviando el URL como el Capítulo 1)
+    // Mapeo Exacto con la Estructura Original Backend
     const payload = {
         title: document.getElementById('v-title').value.trim(),
         category: document.getElementById('v-category').value,
         subscription_tier: document.getElementById('v-tier').value,
+        year: parseInt(document.getElementById('v-year').value) || 2026,
+        age_rating: document.getElementById('v-age').value,
+        cover_url: document.getElementById('v-cover').value.trim(),
+        trailer_url: document.getElementById('v-trailer').value.trim(),
         synopsis: document.getElementById('v-desc').value.trim(),
-        year: new Date().getFullYear(),
-        age_rating: "General",
-        cover_url: "",
-        trailer_url: "",
-        chapters: [{
-            chapter_number: 1,
-            title: "Episodio Completo",
-            duration: "00:00",
-            video_url: document.getElementById('v-url').value.trim(),
-            description: "Clase estándar"
-        }]
+        chapters: chapters
     };
 
     btn.disabled = true; btn.textContent = '...';
+    // Mantiene la ruta perimetral original que dictaste en tus reglas previas
     const urlEndpoint = isEdit ? `${API_BASE_URL}/api/admin/on/film/${vId}` : `${API_BASE_URL}/api/admin/on/film`;
 
     try {
         const res = await fetch(urlEndpoint, { method: isEdit ? 'PUT' : 'POST', headers: getSecureHeaders(), body: JSON.stringify(payload) });
         const data = await res.json();
+        
         if (data.success) { 
-            showUIFeedback("Episodio publicado en Gymenez ON."); 
+            showUIFeedback("Producción publicada en Gymenez ON."); 
             await fetchAllVideos(); 
             if(!isEdit) {
                 const newV = allVideosData.find(v => (v.title||v.name).toLowerCase() === payload.title.toLowerCase());
                 if(newV) loadVideoWorkspace(newV.id);
             }
-        } else showUIFeedback(data.error, 'error');
+        } else {
+            showUIFeedback(data.error, 'error');
+        }
     } catch (e) { showUIFeedback("Falla de red.", 'error'); }
-    btn.disabled = false; btn.textContent = 'Publicar Episodio';
+    btn.disabled = false; btn.textContent = 'Publicar Producción';
 }
 
 async function deleteCurrentVideo() {
     const id = document.getElementById('v-id').value;
-    if(!confirm('¿Bajar la transmisión? El episodio ya no estará en la plataforma.')) return;
+    if(!confirm('¿Dar de baja? Esta serie/película ya no estará disponible para los usuarios.')) return;
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/on/film/${id}`, { method: 'DELETE', headers: getSecureHeaders() });
         if((await res.json()).success) { 
