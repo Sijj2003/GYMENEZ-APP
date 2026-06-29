@@ -18,11 +18,12 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Memoria RAM estricta para matar duplicados
 let lastNotifiedTimestamps = {}; 
 let isInitialLoad = true;
 
 // ==========================================
-// 🎵 AUDIO PROFESIONAL (Web Audio API)
+// 🎵 SINTETIZADOR DE AUDIO TIPO iOS
 // ==========================================
 function playAdminNotification(isTicket) {
     try {
@@ -33,24 +34,26 @@ function playAdminNotification(isTicket) {
         osc.connect(gainNode); gainNode.connect(audioCtx.destination);
         
         if (isTicket) {
+            // Tono de Alerta de Soporte (Doble tono rápido)
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(600, audioCtx.currentTime);
             osc.frequency.setValueAtTime(900, audioCtx.currentTime + 0.1);
         } else {
+            // Tono "Note" suave estilo iMessage
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(1108, audioCtx.currentTime + 0.1);
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+            osc.frequency.exponentialRampToValueAtTime(1108, audioCtx.currentTime + 0.1); // C#6
         }
 
         gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.02);
+        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
         osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.3);
     } catch(e) {}
 }
 
 // ==========================================
-// 📱 CONTENEDOR UI ESTILO iOS
+// 📱 MOTOR GRÁFICO DE NOTIFICACIONES (DYNAMIC BANNER)
 // ==========================================
 function injectAdminIOSContainer() {
     if (!document.getElementById('ios-admin-notifications')) {
@@ -70,15 +73,14 @@ function showAdminIOSNotification(userId, userName, text, isTicket = false) {
     const bgAccent = isTicket ? 'bg-amber-500' : 'bg-sky-500';
     const titleText = isTicket ? 'Solicitud de Soporte' : 'Nuevo Mensaje';
 
-    toast.className = `pointer-events-auto bg-[#1c1c1e]/90 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-2xl flex items-start gap-3 transform translate-x-10 opacity-0 transition-all duration-400 ease-out cursor-pointer hover:bg-[#2c2c2e]/90`;
+    toast.className = `pointer-events-auto bg-[#1c1c1e]/90 backdrop-blur-2xl border border-white/10 rounded-[20px] p-4 shadow-2xl flex items-start gap-3 transform translate-x-12 opacity-0 transition-all duration-400 ease-out cursor-pointer hover:bg-[#2c2c2e]/90`;
     
+    // Al hacer clic, redirigimos el foco y eliminamos la notificación
     toast.onclick = () => {
         localStorage.setItem('gymen_pending_open_id', userId);
         localStorage.setItem('gymen_pending_open_name', userName);
-        
         const pulseNavBtn = document.querySelector('button[data-url*="pulse.html"]');
         if(pulseNavBtn) pulseNavBtn.click();
-        
         toast.remove();
     };
 
@@ -97,6 +99,7 @@ function showAdminIOSNotification(userId, userName, text, isTicket = false) {
 
     container.appendChild(toast);
 
+    // Animar entrada fluidamente
     requestAnimationFrame(() => {
         toast.style.transform = 'translateX(0)';
         toast.style.opacity = '1';
@@ -104,15 +107,16 @@ function showAdminIOSNotification(userId, userName, text, isTicket = false) {
 
     playAdminNotification(isTicket);
 
+    // Auto-cierre con animación de salida
     setTimeout(() => {
-        toast.style.transform = 'translateX(10px)';
+        toast.style.transform = 'translateX(12px)';
         toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 400);
     }, 6000);
 }
 
 // ==========================================
-// 📡 LÓGICA DEL RADAR ADMIN (CORREGIDA)
+// 📡 CEREBRO LÓGICO DEL RADAR (FILTROS DE GRADO MILITAR)
 // ==========================================
 async function activateAdminRadar() {
     const token = localStorage.getItem('gymen_admin_token');
@@ -140,34 +144,35 @@ async function activateAdminRadar() {
                     if (change.type === "modified" || change.type === "added") {
                         const chat = change.doc.data();
                         const userId = change.doc.id;
-
+                        
                         const currentMsgTime = chat.actualizado ? chat.actualizado.toMillis() : 0;
                         const savedTime = lastNotifiedTimestamps[userId] || 0;
 
-                        // 1️⃣ FILTRO DE CONTROL DE DUPLICADOS MATEMÁTICO
+                        // 🔒 CANDADO 1: Freno de Duplicados
                         if (currentMsgTime <= savedTime) return; 
-                        lastNotifiedTimestamps[userId] = currentMsgTime;
 
-                        // 2️⃣ FILTRO DE REMITENTE (Anti Auto-Notificación)
-                        // Valida tanto el campo 'remitente' de la estructura del mensaje como un posible 'ultimo_remitente'
-                        const remitenteActivo = chat.ultimo_remitente || chat.remitente || "";
-                        if (remitenteActivo === "admin") {
-                            return; // El administrador envió el mensaje; ignorar por completo.
+                        // 🔒 CANDADO 2: Freno de Auto-Notificación (Ignorar los mensajes enviados por ti)
+                        const ultimoMsj = chat.ultimo_mensaje || "";
+                        if (ultimoMsj.startsWith("Tú: ")) {
+                            lastNotifiedTimestamps[userId] = currentMsgTime; // Lo marcamos como leído en RAM
+                            return; // Destruimos el proceso aquí, NO SUENA.
                         }
 
-                        // 3️⃣ FILTRO DE CONTEXTO ACTIVO (Búnker de Silencio Inteligente)
-                        // Verifica qué chat tiene abierto el administrador en su pantalla principal
+                        // 🔒 CANDADO 3: Freno de Contexto (Búnker)
+                        // Preguntamos al disco duro del navegador si estás actualmente con ESTE atleta.
                         const chatAbiertoEnPantalla = localStorage.getItem('gymen_admin_active_chat_id');
                         if (chatAbiertoEnPantalla === userId) {
-                            return; // El administrador ya está leyendo al atleta; no interrumpir.
+                            lastNotifiedTimestamps[userId] = currentMsgTime; // Lo marcamos como leído en RAM
+                            return; // Destruimos el proceso aquí, NO SUENA.
                         }
 
-                        // Si supera todos los filtros de seguridad, se evalúa el estado
+                        // Si pasó los 3 candados, es un mensaje de un cliente que NO estás viendo. ¡Notificar!
                         const isTicketWaiting = chat.estado === 'espera';
                         const isNewMessage = chat.unread_admin === true;
 
                         if (isNewMessage || isTicketWaiting) {
-                            const text = (chat.ultimo_mensaje || "").replace("Tú: ", "").trim();
+                            lastNotifiedTimestamps[userId] = currentMsgTime; // Sellar para no repetir
+                            const text = ultimoMsj.replace("Tú: ", "").trim();
                             showAdminIOSNotification(userId, chat.atleta_nombre || 'Atleta', text, isTicketWaiting);
                         }
                     }
