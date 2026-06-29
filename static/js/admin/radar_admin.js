@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // ==========================================
 // CONFIGURACIÓN GLOBAL
@@ -9,22 +9,21 @@ const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || windo
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC7ESvLhYTydAn_ZjHVSkebTC-BhvnbzIw",
-  authDomain: "gymenezapp.firebaseapp.com",
-  projectId: "gymenezapp",
-  storageBucket: "gymenezapp.firebasestorage.app",
-  messagingSenderId: "257686887231",
-  appId: "1:257686887231:web:ca6c5ccabe33a1625b918a"
+    apiKey: "AIzaSyC7ESvLhYTydAn_ZjHVSkebTC-BhvnbzIw",
+    authDomain: "gymenezapp.firebaseapp.com",
+    projectId: "gymenezapp",
+    storageBucket: "gymenezapp.firebasestorage.app",
+    messagingSenderId: "257686887231",
+    appId: "1:257686887231:web:ca6c5ccabe33a1625b918a"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Memoria de Interfaz Inteligente
-const activeToasts = {}; // Guarda las tarjetas en pantalla por usuario
-const toastTimers = {};  // Guarda los cronómetros de autodestrucción
-let isInitialLoad = true; // Para no lanzar sonidos al refrescar la página
+const activeToasts = {}; 
+const toastTimers = {};  
+let isInitialLoad = true; 
 
 // ==========================================
 // 🎵 SINTETIZADOR DE AUDIO INTELIGENTE
@@ -42,7 +41,6 @@ function playRadarSound(isUpdate = false) {
         gainNode.connect(audioCtx.destination);
         
         if (isUpdate) {
-            // Tic sutil (Para mensajes agrupados)
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(800, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.05);
@@ -52,7 +50,6 @@ function playRadarSound(isUpdate = false) {
             osc.start(audioCtx.currentTime); 
             osc.stop(audioCtx.currentTime + 0.05);
         } else {
-            // Burbuja Principal (Para primer mensaje)
             osc.type = 'sine';
             osc.frequency.setValueAtTime(600, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
@@ -105,11 +102,15 @@ function removeToast(userId) {
     }
 }
 
-function showSmartRadarToast(userId, userName, text) {
+function showSmartRadarToast(userId, userName, text, isTicket = false) {
     injectRadarContainer();
     const container = document.getElementById('radar-notifications-container');
 
-    // SI EL USUARIO YA TIENE UNA TARJETA EN PANTALLA (AGRUPACIÓN)
+    const badgeColor = isTicket ? 'bg-amber-500' : 'bg-sky-400';
+    const textColor = isTicket ? 'text-amber-500' : 'text-sky-400';
+    const titleText = isTicket ? 'Ticket en Espera' : 'Requiere Asistencia';
+    const borderGlow = isTicket ? 'shadow-[0_10px_30px_rgba(245,158,11,0.2)] border-amber-500/30' : 'shadow-[0_10px_30px_rgba(0,0,0,0.8)] border-white/10';
+
     if (activeToasts[userId]) {
         const toast = activeToasts[userId];
         const textElement = toast.querySelector('.msg-text');
@@ -117,28 +118,23 @@ function showSmartRadarToast(userId, userName, text) {
         
         textElement.textContent = text;
         
-        // Incrementar el contador visual
         let count = parseInt(badgeElement.dataset.count || 1) + 1;
         badgeElement.dataset.count = count;
         badgeElement.textContent = `${count} Msgs`;
         badgeElement.classList.remove('hidden');
 
-        // Efecto visual sutil de actualización
         toast.classList.add('bg-white/10');
         setTimeout(() => toast.classList.remove('bg-white/10'), 200);
 
-        // Reiniciar el cronómetro de autodestrucción a 6 segundos
         clearTimeout(toastTimers[userId]);
         toastTimers[userId] = setTimeout(() => removeToast(userId), 6000);
         
-        playRadarSound(true); // Sonido sutil (Tic)
+        playRadarSound(true); 
     } 
-    // SI ES UNA TARJETA NUEVA
     else {
         const toast = document.createElement('div');
-        toast.className = 'bg-[#111111]/95 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] flex items-start gap-3 pointer-events-auto transform translate-x-[120%] transition-all duration-500 ease-out cursor-pointer hover:bg-white/5';
+        toast.className = `bg-[#111111]/95 backdrop-blur-xl border p-4 rounded-2xl flex items-start gap-3 pointer-events-auto transform translate-x-[120%] transition-all duration-500 ease-out cursor-pointer hover:bg-white/5 ${borderGlow}`;
         
-        // Click para Enrutar a Pulse
         toast.onclick = () => {
             localStorage.setItem('gymen_pending_open_id', userId);
             localStorage.setItem('gymen_pending_open_name', userName);
@@ -158,8 +154,8 @@ function showSmartRadarToast(userId, userName, text) {
                     <h4 class="text-xs font-black text-white uppercase tracking-tight truncate pr-2">${userName}</h4>
                     <span class="msg-counter hidden px-1.5 py-0.5 rounded bg-sky-500 text-black text-[7px] font-black uppercase tracking-widest shrink-0" data-count="1">1 Msg</span>
                 </div>
-                <p class="text-[9px] text-sky-400 font-bold uppercase tracking-widest mb-1 flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span> Requiere Asistencia
+                <p class="text-[9px] ${textColor} font-bold uppercase tracking-widest mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full ${badgeColor} animate-pulse"></span> ${titleText}
                 </p>
                 <p class="msg-text text-[11px] text-gray-400 font-medium truncate">${text}</p>
             </div>
@@ -168,13 +164,10 @@ function showSmartRadarToast(userId, userName, text) {
         container.appendChild(toast);
         activeToasts[userId] = toast;
         
-        // Animar entrada
         requestAnimationFrame(() => toast.style.transform = 'translateX(0)');
-
-        // Iniciar cronómetro de 6 segundos
         toastTimers[userId] = setTimeout(() => removeToast(userId), 6000);
         
-        playRadarSound(false); // Sonido Principal (Burbuja)
+        playRadarSound(false); 
     }
 }
 
@@ -192,38 +185,43 @@ async function activateRadar() {
         if (res.ok && data.success) {
             await signInWithCustomToken(auth, data.firebase_token);
             
-            // Escuchar todos los chats para conteo global de no leídos
             onSnapshot(collection(db, "chats"), (snapshot) => {
                 let unreadCount = 0;
                 
                 snapshot.forEach(docSnap => {
                     const chat = docSnap.data();
-                    if(chat.unread_admin) unreadCount++;
+                    if(chat.unread_admin || chat.estado === 'espera') unreadCount++;
                 });
                 
                 updateSidebarBadge(unreadCount);
                 
-                // Si es la carga inicial, detenemos aquí para no sacar 20 toasts de chats viejos
                 if (isInitialLoad) {
                     isInitialLoad = false;
                     return; 
                 }
 
-                // Detectar los cambios en vivo para mostrar los Toasts
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "modified" || change.type === "added") {
                         const chat = change.doc.data();
                         const userId = change.doc.id;
 
-                        // Si el chat requiere atención (fue modificado por el usuario)
-                        if (chat.unread_admin) {
-                            // Si el admin ya está dentro de Pulse.js, el radar se hace a un lado
+                        const isTicketWaiting = chat.estado === 'espera';
+                        const isNewMessage = chat.unread_admin === true;
+
+                        if (isNewMessage || isTicketWaiting) {
+                            
+                            // 🧠 INTELIGENCIA DE CONTEXTO PRECISA
+                            // Verifica si el administrador ya está hablando CON ESTE USUARIO EXACTO
                             const iframe = document.getElementById('os-frame');
                             if (iframe && iframe.contentWindow.location.href.includes('pulse.html')) {
-                                return; 
+                                // Leemos la variable global "activeChatUserId" directamente del Iframe de Pulse
+                                const pulseActiveUser = iframe.contentWindow.activeChatUserId;
+                                if (pulseActiveUser === userId && !isTicketWaiting) {
+                                    return; // El administrador ya lo está leyendo. No notificar.
+                                }
                             }
-                            // Mostrar o actualizar tarjeta
-                            showSmartRadarToast(userId, chat.atleta_nombre || 'Atleta', chat.ultimo_mensaje);
+                            
+                            showSmartRadarToast(userId, chat.atleta_nombre || 'Atleta', chat.ultimo_mensaje || "Solicitando asistencia.", isTicketWaiting);
                         }
                     }
                 });
