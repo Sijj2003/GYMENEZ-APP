@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-import { getFirestore, collection, query, orderBy, onSnapshot, doc, setDoc, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { getFirestore, collection, query, orderBy, onSnapshot, doc, setDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
@@ -25,10 +25,10 @@ let messagesUnsubscribe = null;
 let chatDocUnsubscribe = null; 
 let searchTerm = ''; 
 let lastMessageCount = 0; 
-
 let globalChatsMemory = [];
 let allSystemUsers = [];
 
+// 🎵 SINTETIZADOR DE AUDIO UI (Bloop/Ding)
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 
@@ -40,7 +40,6 @@ function playUISound(type) {
         const gainNode = audioCtx.createGain();
         osc.connect(gainNode);
         gainNode.connect(audioCtx.destination);
-        
         if (type === 'receive') { 
             osc.type = 'sine';
             osc.frequency.setValueAtTime(500, audioCtx.currentTime);
@@ -53,19 +52,50 @@ function playUISound(type) {
     } catch(e) {}
 }
 
+function showUIFeedback(message, type = 'success') {
+    const box = document.getElementById('message-box');
+    if(!box) return;
+    box.textContent = message;
+    box.className = `fixed top-4 left-1/2 transform -translate-x-1/2 px-5 py-2 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] transition-all duration-300 text-center border backdrop-blur-md ${type === 'success' ? 'bg-emerald-950/90 text-emerald-400 border-emerald-500/30' : 'bg-red-950/90 text-red-400 border-red-500/30'}`;
+    box.style.opacity = '1'; box.style.transform = 'translate(-50%, 0)';
+    setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 3000);
+}
+
+// Permitir funciones en el scope global (porque type="module" encapsula todo)
+window.filterChats = filterChats;
+window.openChatWindow = openChatWindow;
+window.closeMobileWorkspace = closeMobileWorkspace;
+window.markAsActive = markAsActive;
+window.closeCurrentSession = closeCurrentSession;
+
+// ==========================================
+// 🚀 INICIO Y AUTENTICACIÓN
+// ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('gymen_admin_token');
-    if (!token) { window.location.href = '/apps/admin/login.html'; return; }
+    if (!token) return; // Middleware lo echará
     
+    // Autoresize del input text
+    const chatInput = document.getElementById('admin-chat-input');
+    if(chatInput) {
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            if(this.scrollHeight > 120) { this.style.overflowY = 'auto'; this.style.height = '120px'; } 
+            else { this.style.overflowY = 'hidden'; }
+        });
+    }
+
     document.getElementById('admin-chat-search').addEventListener('input', (e) => {
         searchTerm = e.target.value.toLowerCase().trim();
         renderSidebar(); 
     });
 
+    // Carga de directorio de atletas para pestañas
     fetch(`${API_BASE_URL}/api/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } })
         .then(res => res.json())
         .then(data => { if(data.success) allSystemUsers = data.users; })
-        .catch(e => console.error("Error obteniendo usuarios", e));
+        .catch(e => console.error("Error directorio", e));
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/pulse/token`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -73,37 +103,30 @@ window.addEventListener('DOMContentLoaded', async () => {
         
         if (res.ok && data.success) {
             await signInWithCustomToken(auth, data.firebase_token);
-            document.getElementById('pulse-loader').style.opacity = '0';
-            setTimeout(() => document.getElementById('pulse-loader').classList.add('hidden'), 500);
+            document.getElementById('chats-list-container').innerHTML = ''; // Quitar loader local
             
-            // 1. Encendemos los radares normales de monitorización de salas
+            // Encender Radares
             listenToAllChats();
 
-            // ====================================================================
-            // 🔥 REDIRECCIÓN PREMIUM DESDE EL RADAR (PEGADO AQUÍ)
-            // ====================================================================
+            // 🔥 REDIRECCIÓN PREMIUM DESDE EL RADAR FLOTANTE
             const pendingOpenId = localStorage.getItem('gymen_pending_open_id');
             const pendingOpenName = localStorage.getItem('gymen_pending_open_name');
             if (pendingOpenId) {
-                // Borramos la memoria temporal inmediatamente
                 localStorage.removeItem('gymen_pending_open_id');
                 localStorage.removeItem('gymen_pending_open_name');
-                // Forzamos la apertura automática de la ventana de chat
-                setTimeout(() => {
-                    openChatWindow(pendingOpenId, pendingOpenName);
-                }, 600); // 600ms de retraso para esperar que Firebase inicialice la bandeja operativa
+                setTimeout(() => openChatWindow(pendingOpenId, pendingOpenName), 600); 
             }
-            // ====================================================================
-
         }
-    } catch (e) { alert("Falla de red."); }
+    } catch (e) { showUIFeedback("Falla de red.", "error"); }
 });
 
+// ==========================================
+// 📡 RADARES Y LISTAS
+// ==========================================
 function listenToAllChats() {
     const chatsRef = collection(db, "chats");
     const q = query(chatsRef, orderBy("actualizado", "desc")); 
 
-    // Agregamos el manejador de errores silencioso
     onSnapshot(q, (snapshot) => {
         globalChatsMemory = [];
         let hasNewUnread = false;
@@ -116,14 +139,13 @@ function listenToAllChats() {
 
         if (hasNewUnread) playUISound('receive'); 
         renderSidebar();
-    }, (error) => console.warn("Escuchador principal silencioso."));
+    }, (error) => console.warn("Escuchador silenciado."));
 }
 
 function renderSidebar() {
     const container = document.getElementById('chats-list-container');
     container.innerHTML = '';
     let found = false;
-    let displayedIds = new Set();
 
     if (currentFilter === 'directorio' || searchTerm !== '') {
         allSystemUsers.forEach(u => {
@@ -133,10 +155,10 @@ function renderSidebar() {
             found = true;
             const existingChat = globalChatsMemory.find(c => c.id === u.id);
             const isUnread = (existingChat && existingChat.unread_admin) ? `<div class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></div>` : ``;
-            const isActive = activeChatUserId === u.id ? 'active' : '';
+            const isActive = activeChatUserId === u.id;
             
             let timeString = '';
-            let lastMsg = 'Toca para iniciar conversación';
+            let lastMsg = 'Abrir canal de comunicación';
 
             if (existingChat) {
                 timeString = existingChat.actualizado ? existingChat.actualizado.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
@@ -144,7 +166,7 @@ function renderSidebar() {
             }
 
             const item = document.createElement('div');
-            item.className = `chat-list-item p-3 rounded-xl cursor-pointer hover:bg-white/5 flex justify-between items-center ${isActive}`;
+            item.className = `p-3 rounded-xl cursor-pointer transition-all duration-200 flex justify-between items-center ${isActive ? 'bg-white/10 border border-sky-500/50' : 'bg-transparent border border-transparent hover:bg-white/5'}`;
             item.onclick = () => openChatWindow(u.id, fullName);
 
             item.innerHTML = `
@@ -165,11 +187,11 @@ function renderSidebar() {
 
             found = true;
             const isUnread = chatData.unread_admin ? `<div class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></div>` : ``;
-            const isActive = activeChatUserId === chatData.id ? 'active' : '';
+            const isActive = activeChatUserId === chatData.id;
             const timeString = chatData.actualizado ? chatData.actualizado.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
 
             const item = document.createElement('div');
-            item.className = `chat-list-item p-3 rounded-xl cursor-pointer hover:bg-white/5 flex justify-between items-center ${isActive}`;
+            item.className = `p-3 rounded-xl cursor-pointer transition-all duration-200 flex justify-between items-center ${isActive ? 'bg-white/10 border border-sky-500/50' : 'bg-transparent border border-transparent hover:bg-white/5'}`;
             item.onclick = () => openChatWindow(chatData.id, chatData.atleta_nombre);
 
             item.innerHTML = `
@@ -191,7 +213,7 @@ function renderSidebar() {
     }
 }
 
-window.filterChats = function(status) {
+function filterChats(status) {
     currentFilter = status;
     searchTerm = '';
     document.getElementById('admin-chat-search').value = '';
@@ -203,26 +225,56 @@ window.filterChats = function(status) {
     };
 
     Object.values(tabs).forEach(t => {
-        if(t) t.className = "flex-1 py-1.5 text-gray-500 hover:text-white rounded text-[9px] font-bold uppercase transition-all";
+        if(t) t.className = "cat-filter flex-1 py-1.5 rounded-lg border border-white/10 text-gray-400 hover:text-white text-[8px] font-black uppercase tracking-widest transition-all text-center shrink-0";
     });
 
     if(status === 'espera' && tabs['espera']) {
-        tabs['espera'].className = "flex-1 py-1.5 bg-amber-500/10 text-amber-500 rounded text-[9px] font-bold uppercase transition-all";
+        tabs['espera'].className = "cat-filter flex-1 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-500 text-[8px] font-black uppercase tracking-widest transition-all text-center shrink-0";
     } else if(status === 'activo' && tabs['activo']) {
-        tabs['activo'].className = "flex-1 py-1.5 bg-sky-500/10 text-sky-400 rounded text-[9px] font-bold uppercase transition-all";
+        tabs['activo'].className = "cat-filter flex-1 py-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 text-sky-400 text-[8px] font-black uppercase tracking-widest transition-all text-center shrink-0";
     } else if(status === 'directorio' && tabs['directorio']) {
-        tabs['directorio'].className = "flex-1 py-1.5 bg-purple-500/10 text-purple-400 rounded text-[9px] font-bold uppercase transition-all";
+        tabs['directorio'].className = "cat-filter flex-1 py-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-400 text-[8px] font-black uppercase tracking-widest transition-all text-center shrink-0";
     }
     renderSidebar();
+}
+
+// ==========================================
+// 🖥️ WORKSPACE (DERECHA Y MÓVIL)
+// ==========================================
+function closeMobileWorkspace() {
+    const invPanel = document.getElementById('inventory-panel');
+    const wsPanel = document.getElementById('workspace-panel');
+    
+    // Reactivar Sidebar en Móvil
+    invPanel.classList.remove('hidden');
+    invPanel.classList.add('flex');
+    
+    // Esconder Chat en Móvil
+    wsPanel.classList.remove('flex');
+    wsPanel.classList.add('hidden', 'md:flex');
+    
+    activeChatUserId = null;
+    renderSidebar(); // Quita el highlight
 }
 
 function openChatWindow(userId, userName) {
     activeChatUserId = userId;
     activeChatUserName = userName || 'Atleta';
     
-    document.getElementById('empty-chat-state').classList.add('hidden');
-    document.getElementById('active-chat-container').classList.remove('hidden');
-    document.getElementById('active-chat-container').classList.add('flex');
+    // UI Móvil Responsive Split-View
+    const invPanel = document.getElementById('inventory-panel');
+    const wsPanel = document.getElementById('workspace-panel');
+    
+    if (window.innerWidth < 768) {
+        invPanel.classList.remove('flex');
+        invPanel.classList.add('hidden');
+        wsPanel.classList.remove('hidden');
+        wsPanel.classList.add('flex');
+    }
+
+    document.getElementById('ws-empty').classList.add('hidden');
+    document.getElementById('ws-chat').classList.remove('hidden');
+    document.getElementById('ws-chat').classList.add('flex');
     
     if (chatDocUnsubscribe) chatDocUnsubscribe();
 
@@ -239,7 +291,7 @@ function openChatWindow(userId, userName) {
             statusText.className = "text-gray-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
             acceptBtn.classList.add('hidden');
             chatInput.disabled = false; sendBtn.disabled = false;
-            chatInput.placeholder = "Escribe para abrir un nuevo canal con este atleta...";
+            chatInput.placeholder = "Escribe para abrir un nuevo canal...";
             return;
         }
 
@@ -262,7 +314,7 @@ function openChatWindow(userId, userName) {
             statusText.className = "text-gray-500 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5";
             acceptBtn.classList.add('hidden');
             chatInput.disabled = false; sendBtn.disabled = false;
-            chatInput.placeholder = "Escribe un mensaje para reabrir el canal...";
+            chatInput.placeholder = "Escribe para reabrir el canal...";
         }
     }, (error) => console.warn("Escuchador de sala silenciado."));
 
@@ -275,7 +327,10 @@ function openChatWindow(userId, userName) {
 
     messagesUnsubscribe = onSnapshot(q, (snapshot) => {
         const area = document.getElementById('messages-area');
-        area.innerHTML = ''; 
+        // Mantener la retícula de fondo en el HTML
+        const bgGrid = `<div class="absolute inset-0 opacity-[0.02] pointer-events-none" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 20px 20px;"></div>`;
+        area.innerHTML = bgGrid; 
+        
         let currentCount = 0;
 
         snapshot.forEach((msgDoc) => {
@@ -286,15 +341,15 @@ function openChatWindow(userId, userName) {
             if (msg.fecha) timeString = msg.fecha.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             const msgHTML = isMe ? `
-                <div class="flex justify-end message-bubble">
-                    <div class="max-w-[70%] bg-sky-600 text-white px-4 py-2.5 rounded-[20px] rounded-br-[4px] shadow-sm">
+                <div class="flex justify-end message-bubble relative z-10">
+                    <div class="max-w-[85%] md:max-w-[70%] bg-sky-600 text-white px-4 py-2.5 rounded-[20px] rounded-br-[4px] shadow-md border border-sky-500/50">
                         <p class="text-[13px] font-medium whitespace-pre-wrap leading-snug">${escapeHTML(msg.texto)}</p>
                         <span class="text-[8px] text-sky-200 block text-right mt-1 font-bold">${timeString}</span>
                     </div>
                 </div>
             ` : `
-                <div class="flex justify-start message-bubble">
-                    <div class="max-w-[70%] bg-[#1c1c1e] border border-white/5 text-gray-100 px-4 py-2.5 rounded-[20px] rounded-bl-[4px] shadow-sm">
+                <div class="flex justify-start message-bubble relative z-10">
+                    <div class="max-w-[85%] md:max-w-[70%] bg-[#1c1c1e]/90 backdrop-blur-md border border-white/10 text-gray-100 px-4 py-2.5 rounded-[20px] rounded-bl-[4px] shadow-sm">
                         <p class="text-[13px] font-medium whitespace-pre-wrap leading-snug">${escapeHTML(msg.texto)}</p>
                         <span class="text-[8px] text-gray-500 block text-left mt-1 font-bold">${timeString}</span>
                     </div>
@@ -307,12 +362,12 @@ function openChatWindow(userId, userName) {
         lastMessageCount = currentCount;
 
         setTimeout(() => area.scrollTop = area.scrollHeight, 50);
-    }, (error) => console.warn("Escuchador de mensajes silenciado."));
+    });
     
     renderSidebar();
 }
 
-window.markAsActive = async function() {
+async function markAsActive() {
     if (!activeChatUserId) return;
     try {
         await setDoc(doc(db, "chats", activeChatUserId), {
@@ -320,25 +375,25 @@ window.markAsActive = async function() {
             actualizado: serverTimestamp(), 
             ultimo_mensaje: "🟢 Operador en sala.",
             atleta_nombre: activeChatUserName,
-            unread_user: true // 🔥 Radar encendido para el atleta
+            unread_user: true
         }, { merge: true });
     } catch(e) {}
 }
 
-window.closeCurrentSession = async function() {
+async function closeCurrentSession() {
     if (!activeChatUserId) return;
     if (!confirm("¿Cerrar el canal? El historial de mensajes se mantendrá guardado.")) return;
     
     const targetId = activeChatUserId;
-    activeChatUserId = null; // Bloquea la UI para evitar cruces
     
-    // 🔥 APAGAMOS los escuchadores ANTES de cambiar el estado (Elimina el Permission-Denied)
     if(messagesUnsubscribe) messagesUnsubscribe();
     if(chatDocUnsubscribe) chatDocUnsubscribe(); 
     
-    document.getElementById('empty-chat-state').classList.remove('hidden');
-    document.getElementById('active-chat-container').classList.add('hidden');
-    document.getElementById('active-chat-container').classList.remove('flex');
+    document.getElementById('ws-empty').classList.remove('hidden');
+    document.getElementById('ws-chat').classList.add('hidden');
+    document.getElementById('ws-chat').classList.remove('flex');
+    
+    activeChatUserId = null;
     renderSidebar();
 
     try {
@@ -347,9 +402,7 @@ window.closeCurrentSession = async function() {
             actualizado: serverTimestamp(), 
             ultimo_mensaje: "🔴 Canal cerrado."
         }, { merge: true });
-    } catch(e) {
-        console.warn("Cierre de sesión asíncrono realizado.");
-    }
+    } catch(e) {}
 }
 
 document.getElementById('admin-chat-form').addEventListener('submit', async (e) => {
@@ -370,9 +423,9 @@ document.getElementById('admin-chat-form').addEventListener('submit', async (e) 
             ultimo_mensaje: "Tú: " + texto, 
             actualizado: serverTimestamp(),
             atleta_nombre: activeChatUserName,
-            unread_user: true // 🔥 Radar encendido para el atleta
+            unread_user: true
         }, { merge: true });
-    } catch (e) { console.error("Error inyectando mensaje:", e); }
+    } catch (e) { console.error(e); }
 });
 
 document.getElementById('admin-chat-input').addEventListener('keydown', function(e) {
