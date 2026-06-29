@@ -1,7 +1,10 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+// ==========================================
+// CONFIGURACIÓN GLOBAL
+// ==========================================
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
@@ -19,13 +22,15 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let audioCtx = null;
-let lastNotifiedMsg = localStorage.getItem('gymen_last_radar_msg') || ""; 
+// 🔥 El radar ahora recuerda la hora exacta de la última notificación para no repetirla
+let lastNotifiedTime = localStorage.getItem('gymen_last_radar_time') || "0"; 
 let autoDismissTimer = null;
+let isInitialLoad = true;
 
 // ==========================================
-// 🎵 SINTETIZADOR DE AUDIO MODERNO
+// 🎵 SINTETIZADOR DE AUDIO
 // ==========================================
-function playDing() {
+function playDing(isUpdate = false) {
     try {
         if (!audioCtx) {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -36,19 +41,28 @@ function playDing() {
         const gainNode = audioCtx.createGain();
         osc.connect(gainNode); gainNode.connect(audioCtx.destination);
         
-        // Sonido de burbuja premium
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-        osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.3);
+        if (isUpdate) {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.05);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.05);
+        } else {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.3);
+        }
     } catch(e) {}
 }
 
 // ==========================================
-// 🔔 INYECCIÓN DE INTERFAZ Y ESTILOS
+// 🔔 INYECCIÓN DE INTERFAZ
 // ==========================================
 const toastHTML = `
 <div id="radar-toast" class="fixed top-6 right-6 z-[9999] flex items-start gap-3 bg-[#111111]/95 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] transition-transform duration-500 ease-out select-none touch-none cursor-pointer hover:bg-white/5" style="transform: translateX(160vw); width: 320px; max-width: calc(100vw - 48px);">
@@ -58,6 +72,7 @@ const toastHTML = `
     <div class="flex-1 min-w-0 pt-0.5" onclick="window.location.href='/apps/user/pulse.html'">
         <div class="flex justify-between items-start">
             <h4 class="text-xs font-black text-white uppercase tracking-tight truncate pr-2">Soporte Gymenez</h4>
+            <span id="radar-counter" class="hidden px-1.5 py-0.5 rounded bg-sky-500 text-black text-[7px] font-black uppercase tracking-widest shrink-0" data-count="1">1 Msg</span>
         </div>
         <p class="text-[9px] text-sky-400 font-bold uppercase tracking-widest mb-1 flex items-center gap-1">
             <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span> Nuevo Mensaje
@@ -67,82 +82,73 @@ const toastHTML = `
     <button id="radar-close-btn" class="absolute right-3.5 top-4 w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 text-xs transition-all font-sans z-10">✕</button>
 </div>`;
 
-// Evitar duplicados si el script se carga dos veces
-if (!document.getElementById('radar-toast')) {
-    document.body.insertAdjacentHTML('beforeend', toastHTML);
-}
+if (!document.getElementById('radar-toast')) { document.body.insertAdjacentHTML('beforeend', toastHTML); }
 
 const toastEl = document.getElementById('radar-toast');
+const previewEl = document.getElementById('radar-user-preview');
+const counterEl = document.getElementById('radar-counter');
+
+function updateSidebarBadge(isActive) {
+    const pulseBtn = document.querySelector('a[href*="pulse.html"]'); // Adaptado al enlace del Atleta
+    if (!pulseBtn) return;
+    
+    let badge = pulseBtn.querySelector('.pulse-badge');
+    if (isActive) {
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'pulse-badge absolute top-3 right-3 flex h-3 w-3';
+            badge.innerHTML = `<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>`;
+            pulseBtn.appendChild(badge);
+        }
+    } else {
+        if (badge) badge.remove();
+    }
+}
 
 // ==========================================
-// 🖐️ LÓGICA DE GESTOS TÁCTILES (SWIPE TO DISMISS)
+// 🖐️ GESTOS Y CERRADO MANUAL
 // ==========================================
 let startX = 0, startY = 0, currentX = 0, currentY = 0;
 
 toastEl.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
     toastEl.style.transition = 'none';
-    clearTimeout(autoDismissTimer); // Pausar autodestrucción si el usuario lo está tocando
+    clearTimeout(autoDismissTimer); 
 });
 
 toastEl.addEventListener('touchmove', (e) => {
-    currentX = e.touches[0].clientX - startX;
-    currentY = e.touches[0].clientY - startY;
+    currentX = e.touches[0].clientX - startX; currentY = e.touches[0].clientY - startY;
+    let moveX = currentX > 0 ? currentX : 0; let moveY = currentY < 0 ? currentY : 0;
     
-    let moveX = currentX > 0 ? currentX : 0;
-    let moveY = currentY < 0 ? currentY : 0;
-    
-    if (Math.abs(currentX) > Math.abs(currentY)) {
-        toastEl.style.transform = `translateX(${moveX}px)`;
-    } else {
-        toastEl.style.transform = `translateY(${moveY}px)`;
-    }
+    if (Math.abs(currentX) > Math.abs(currentY)) toastEl.style.transform = `translateX(${moveX}px)`;
+    else toastEl.style.transform = `translateY(${moveY}px)`;
 });
 
 toastEl.addEventListener('touchend', () => {
     toastEl.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
-    if (currentX > 100 || currentY < -60) {
-        window.dismissToastManual();
-    } else {
+    if (currentX > 100 || currentY < -60) window.dismissToastManual();
+    else {
         toastEl.style.transform = 'translateX(0)';
-        // Reactivar autodestrucción si lo soltó y no se cerró
-        autoDismissTimer = setTimeout(() => { window.dismissToastManual(false); }, 6000);
+        autoDismissTimer = setTimeout(() => { window.dismissToastManual(); }, 6000);
     }
     startX = startY = currentX = currentY = 0;
 });
 
-// ==========================================
-// ❌ CERRADO MANUAL E INTELIGENCIA DE MEMORIA
-// ==========================================
 document.getElementById('radar-close-btn').addEventListener('click', (e) => {
     e.stopPropagation();
-    window.dismissToastManual(true);
+    window.dismissToastManual();
 });
 
-// Función global para cerrar el toast. 
-// "isManualDismiss" determina si debemos silenciar el mensaje permanentemente
-window.dismissToastManual = function(isManualDismiss = true) {
+window.dismissToastManual = function() {
     toastEl.style.transform = 'translateX(160vw)';
-    
-    // Si el usuario lo cerró a propósito (con X o Swipe), lo guardamos para que no vuelva a sonar en otras páginas
-    if (isManualDismiss) {
-        const currentPreview = document.getElementById('radar-user-preview').textContent;
-        if (currentPreview) {
-            lastNotifiedMsg = currentPreview;
-            localStorage.setItem('gymen_last_radar_msg', lastNotifiedMsg);
-        }
-    }
 }
 
 // ==========================================
-// 📡 CONEXIÓN Y ESCUCHA DE FIRESTORE
+// 📡 EL MOTOR DEL RADAR DEL ATLETA
 // ==========================================
-window.addEventListener('DOMContentLoaded', async () => {
-    // 1. INTELIGENCIA DE CONTEXTO: Si el atleta ya está en la app Pulse, apagamos el radar
-    if (window.location.href.includes('pulse.html')) {
-        return; 
-    }
+async function activateRadar() {
+    // 🧠 INTELIGENCIA DE CONTEXTO: Si el atleta ya está en la app Pulse, apagamos el radar visual.
+    if (window.location.href.includes('pulse.html')) return; 
 
     const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token');
     const sessionStr = localStorage.getItem('userSession');
@@ -156,36 +162,56 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (res.ok && data.success) {
             await signInWithCustomToken(auth, data.firebase_token);
             
+            // El atleta SOLO escucha su propio documento
             onSnapshot(doc(db, "chats", userId), (docSnap) => {
-                if (docSnap.exists() && docSnap.data().unread_user) {
-                    const rawMsg = docSnap.data().ultimo_mensaje || "";
-                    const sanitizedMsg = rawMsg.replace("Tú: ", "").trim();
+                if (!docSnap.exists()) return;
+                
+                const chat = docSnap.data();
+                updateSidebarBadge(chat.unread_user === true);
+                
+                if (isInitialLoad) { isInitialLoad = false; return; }
 
-                    // 🛡️ REGLA CONTROLADORA ANTI-DUPLICADOS (El mensaje ya fue silenciado por el usuario)
-                    if (sanitizedMsg === lastNotifiedMsg) {
-                        return; 
+                if (chat.unread_user === true) {
+                    
+                    // 🛡️ REGLA DE TIEMPO EXACTO: Comparamos el timestamp, no el texto.
+                    const msgTime = chat.actualizado ? chat.actualizado.toMillis().toString() : "0";
+                    if (msgTime === lastNotifiedTime) return; 
+
+                    lastNotifiedTime = msgTime;
+                    localStorage.setItem('gymen_last_radar_time', msgTime); // Recordamos en localStorage que este timestamp ya sonó
+
+                    // Preparar Mensaje
+                    const rawMsg = chat.ultimo_mensaje || "Nuevo mensaje recibido";
+                    const sanitizedMsg = rawMsg.replace("Tú: ", "").trim();
+                    previewEl.textContent = sanitizedMsg;
+
+                    // Si ya estaba en pantalla
+                    if (toastEl.style.transform === 'translateX(0px)' || toastEl.style.transform === 'translateX(0)') {
+                        let count = parseInt(counterEl.dataset.count || 1) + 1;
+                        counterEl.dataset.count = count;
+                        counterEl.textContent = `${count} Msgs`;
+                        counterEl.classList.remove('hidden');
+
+                        toastEl.classList.add('bg-white/10');
+                        setTimeout(() => toastEl.classList.remove('bg-white/10'), 200);
+                        playDing(true); // Sonido TIC
+                    } else {
+                        // Si es nuevo
+                        counterEl.dataset.count = 1;
+                        counterEl.classList.add('hidden');
+                        toastEl.style.transform = 'translateX(0)';
+                        playDing(false); // Sonido BURBUJA
                     }
 
-                    // Actualizar UI
-                    document.getElementById('radar-user-preview').textContent = sanitizedMsg;
-                    toastEl.style.transform = 'translateX(0)';
-                    
-                    // Efecto visual de actualización si el toast ya estaba en pantalla
-                    toastEl.classList.add('bg-white/10');
-                    setTimeout(() => toastEl.classList.remove('bg-white/10'), 200);
-
-                    playDing();
-
-                    // Autodestrucción visual en 8 segundos (pero no silencia el mensaje permanentemente)
+                    // Autodesaparición Visual
                     clearTimeout(autoDismissTimer);
-                    autoDismissTimer = setTimeout(() => {
-                        toastEl.style.transform = 'translateX(160vw)';
-                    }, 8000);
-
-                } else {
-                    toastEl.style.transform = 'translateX(160vw)';
+                    autoDismissTimer = setTimeout(() => { toastEl.style.transform = 'translateX(160vw)'; }, 8000);
                 }
             });
         }
-    } catch(e) {}
-});
+    } catch (e) {
+        console.warn("Radar del Atleta inactivo.");
+    }
+}
+
+window.addEventListener('DOMContentLoaded', activateRadar);
