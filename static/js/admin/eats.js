@@ -60,14 +60,21 @@ function filterCategory(cat) {
 }
 
 function refreshActiveList(searchTerm = '') {
-    const term = searchTerm.toLowerCase().trim();
+    // Normalizamos el texto (quitamos tildes) para que la búsqueda sea perfecta
+    const normalizeText = (str) => (str || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    const term = normalizeText(searchTerm);
+    const filterCat = normalizeText(currentCategoryFilter);
     const container = document.getElementById('inventory-list');
     container.innerHTML = '';
 
-    // Filtrar por RAM (Búsqueda + Categoría)
+    // Filtrar por RAM (Búsqueda + Categoría flexible)
     let list = allFoodsData.filter(f => {
-        const matchesTerm = (f.name||'').toLowerCase().includes(term) || (f.category||'').toLowerCase().includes(term);
-        const matchesCat = currentCategoryFilter === '' || f.category === currentCategoryFilter;
+        const fName = normalizeText(f.name);
+        const fCat = normalizeText(f.category);
+        
+        const matchesTerm = fName.includes(term) || fCat.includes(term);
+        const matchesCat = currentCategoryFilter === '' || fCat.includes(filterCat);
         return matchesTerm && matchesCat;
     });
 
@@ -79,13 +86,14 @@ function refreshActiveList(searchTerm = '') {
     list.forEach(food => {
         const div = document.createElement('div');
         const isActive = activeFoodId === food.id;
+        const catNorm = normalizeText(food.category);
         
         // Colores según macro principal
         let catColor = 'text-gray-400 border-gray-500/30';
-        if(food.category === 'Proteína') catColor = 'text-rose-400 border-rose-500/30';
-        if(food.category === 'Carbohidrato') catColor = 'text-[#FFC300] border-[#FFC300]/30';
-        if(food.category === 'Grasa') catColor = 'text-sky-400 border-sky-500/30';
-        if(food.category === 'Vegetal' || food.category === 'Fruta') catColor = 'text-emerald-400 border-emerald-500/30';
+        if(catNorm.includes('proteina')) catColor = 'text-rose-400 border-rose-500/30';
+        else if(catNorm.includes('carbohidrato')) catColor = 'text-[#FFC300] border-[#FFC300]/30';
+        else if(catNorm.includes('grasa') || catNorm.includes('lipido')) catColor = 'text-sky-400 border-sky-500/30';
+        else if(catNorm.includes('vegetal') || catNorm.includes('fruta')) catColor = 'text-emerald-400 border-emerald-500/30';
 
         div.className = `p-3 rounded-xl border cursor-pointer transition-all duration-200 flex justify-between items-center ${isActive ? 'bg-white/10 border-white/20' : 'bg-transparent border-transparent hover:bg-white/5'}`;
         div.onclick = () => loadFoodWorkspace(food.id);
@@ -160,15 +168,15 @@ function loadFoodWorkspace(id) {
     
     document.getElementById('e-btn-delete').classList.remove('hidden');
     
-    // Llenar formulario (notar el mapeo exacto con los id del HTML y las llaves de Firebase)
+    // Llenar formulario
     document.getElementById('e-id').value = food.id;
     document.getElementById('e-is-edit').value = 'true';
     document.getElementById('e-name').value = food.name || '';
     document.getElementById('e-category').value = food.category || 'Otro';
     document.getElementById('e-portion').value = food.portion || '100g';
     document.getElementById('e-calories').value = food.calories || 0;
-    document.getElementById('e-protein').value = food.proteins || 0; // Backend usa 'proteins'
-    document.getElementById('e-carbs').value = food.carbs_net || 0;  // Backend usa 'carbs_net'
+    document.getElementById('e-protein').value = food.proteins || 0; 
+    document.getElementById('e-carbs').value = food.carbs_net || 0;  
     document.getElementById('e-fats').value = (Number(food.fats_saturated || 0) + Number(food.fats_unsaturated || 0)).toFixed(2);
     document.getElementById('e-notes').value = food.notes || '';
 }
@@ -177,7 +185,6 @@ function loadFoodWorkspace(id) {
 // 💾 GESTIÓN DE GUARDADO Y ELIMINADO
 // ==========================================
 async function saveFood() {
-    // Validar requeridos del HTML 5 manualmente
     const form = document.getElementById('food-form');
     if(!form.checkValidity()) {
         form.reportValidity();
@@ -188,7 +195,6 @@ async function saveFood() {
     const fId = document.getElementById('e-id').value;
     const btn = document.getElementById('e-btn-save');
 
-    // Mapeo perfecto con el endpoint de python 'create_admin_food' / 'modify_admin_food'
     const payload = {
         name: document.getElementById('e-name').value.trim(),
         category: document.getElementById('e-category').value,
@@ -196,9 +202,9 @@ async function saveFood() {
         calories: parseFloat(document.getElementById('e-calories').value) || 0,
         proteins: parseFloat(document.getElementById('e-protein').value) || 0,
         carbs_net: parseFloat(document.getElementById('e-carbs').value) || 0,
-        fats_saturated: parseFloat(document.getElementById('e-fats').value) || 0, // Unificamos grasa en saturada por simplicidad en backend
+        fats_saturated: parseFloat(document.getElementById('e-fats').value) || 0, 
         fats_unsaturated: 0, 
-        has_gluten: false, // Puedes añadir checkboxes en el HTML luego si los requieres
+        has_gluten: false, 
         has_lactose: false,
         has_nuts: false,
         high_sodium: false,
@@ -219,7 +225,6 @@ async function saveFood() {
         if (data.success) { 
             showUIFeedback("Biometría nutricional asentada."); 
             await fetchAllFoods(); 
-            // Si creamos, seleccionamos el nuevo
             if(!isEdit) {
                 const newF = allFoodsData.find(f => f.name.toLowerCase() === payload.name.toLowerCase());
                 if(newF) loadFoodWorkspace(newF.id);
