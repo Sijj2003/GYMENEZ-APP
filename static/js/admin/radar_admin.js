@@ -21,17 +21,18 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Memoria Anti-Spam (Evita notificar repetidas veces en un lapso corto)
-const cooldownMemory = new Set();
-const COOLDOWN_TIME_MS = 60000; // 1 minuto de silencio por usuario tras la primera alerta
+// Memoria de Interfaz Inteligente
+const activeToasts = {}; // Guarda las tarjetas en pantalla por usuario
+const toastTimers = {};  // Guarda los cronómetros de autodestrucción
+let isInitialLoad = true; // Para no lanzar sonidos al refrescar la página
 
 // ==========================================
-// 🎵 SINTETIZADOR DE AUDIO GLOBAL
+// 🎵 SINTETIZADOR DE AUDIO INTELIGENTE
 // ==========================================
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 
-function playRadarSound() {
+function playRadarSound(isUpdate = false) {
     try {
         if (!audioCtx) audioCtx = new AudioContext();
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -40,21 +41,32 @@ function playRadarSound() {
         osc.connect(gainNode);
         gainNode.connect(audioCtx.destination);
         
-        // Sonido estilo "Pop/Burbuja" elegante
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-        
-        osc.start(audioCtx.currentTime); 
-        osc.stop(audioCtx.currentTime + 0.3);
+        if (isUpdate) {
+            // Tic sutil (Para mensajes agrupados)
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.05);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            osc.start(audioCtx.currentTime); 
+            osc.stop(audioCtx.currentTime + 0.05);
+        } else {
+            // Burbuja Principal (Para primer mensaje)
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            osc.start(audioCtx.currentTime); 
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
     } catch(e) {}
 }
 
 // ==========================================
-// 🔔 INYECCIÓN DE LA INTERFAZ DE NOTIFICACIÓN
+// 🔔 INYECCIÓN Y AGRUPACIÓN DE NOTIFICACIONES
 // ==========================================
 function injectRadarContainer() {
     if (!document.getElementById('radar-notifications-container')) {
@@ -65,47 +77,105 @@ function injectRadarContainer() {
     }
 }
 
-function showRadarToast(userId, userName, text) {
+function updateSidebarBadge(count) {
+    const pulseBtn = document.querySelector('button[data-url*="pulse.html"]');
+    if (!pulseBtn) return;
+    
+    let badge = pulseBtn.querySelector('.pulse-badge');
+    if (count > 0) {
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'pulse-badge absolute top-3 right-3 flex h-3 w-3';
+            badge.innerHTML = `<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>`;
+            pulseBtn.appendChild(badge);
+        }
+    } else {
+        if (badge) badge.remove();
+    }
+}
+
+function removeToast(userId) {
+    const toast = activeToasts[userId];
+    if (toast) {
+        toast.style.transform = 'translateX(120%)';
+        setTimeout(() => {
+            if(toast.parentNode) toast.remove();
+            delete activeToasts[userId];
+        }, 500);
+    }
+}
+
+function showSmartRadarToast(userId, userName, text) {
     injectRadarContainer();
     const container = document.getElementById('radar-notifications-container');
 
-    const toast = document.createElement('div');
-    toast.className = 'bg-[#111111]/90 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl flex items-start gap-3 pointer-events-auto transform translate-x-[120%] transition-transform duration-500 ease-out cursor-pointer hover:bg-white/5';
-    
-    // Al hacer clic, navega a Pulse
-    toast.onclick = () => {
-        localStorage.setItem('gymen_pending_open_id', userId);
-        localStorage.setItem('gymen_pending_open_name', userName);
+    // SI EL USUARIO YA TIENE UNA TARJETA EN PANTALLA (AGRUPACIÓN)
+    if (activeToasts[userId]) {
+        const toast = activeToasts[userId];
+        const textElement = toast.querySelector('.msg-text');
+        const badgeElement = toast.querySelector('.msg-counter');
         
-        // Disparar click en el botón de la barra lateral del Dashboard
-        const pulseNavBtn = document.querySelector('button[data-url*="pulse.html"]');
-        if(pulseNavBtn) pulseNavBtn.click();
+        textElement.textContent = text;
         
-        toast.style.transform = 'translateX(120%)';
-        setTimeout(() => toast.remove(), 500);
-    };
+        // Incrementar el contador visual
+        let count = parseInt(badgeElement.dataset.count || 1) + 1;
+        badgeElement.dataset.count = count;
+        badgeElement.textContent = `${count} Msgs`;
+        badgeElement.classList.remove('hidden');
 
-    toast.innerHTML = `
-        <div class="w-10 h-10 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/30">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z"></path></svg>
-        </div>
-        <div class="flex-1 min-w-0">
-            <h4 class="text-xs font-black text-white uppercase tracking-tight truncate">${userName}</h4>
-            <p class="text-[10px] text-sky-400 font-bold uppercase tracking-widest mb-1">Nuevo Mensaje</p>
-            <p class="text-[11px] text-gray-400 font-medium truncate">${text}</p>
-        </div>
-    `;
+        // Efecto visual sutil de actualización
+        toast.classList.add('bg-white/10');
+        setTimeout(() => toast.classList.remove('bg-white/10'), 200);
 
-    container.appendChild(toast);
-    
-    // Animar entrada
-    requestAnimationFrame(() => toast.style.transform = 'translateX(0)');
+        // Reiniciar el cronómetro de autodestrucción a 6 segundos
+        clearTimeout(toastTimers[userId]);
+        toastTimers[userId] = setTimeout(() => removeToast(userId), 6000);
+        
+        playRadarSound(true); // Sonido sutil (Tic)
+    } 
+    // SI ES UNA TARJETA NUEVA
+    else {
+        const toast = document.createElement('div');
+        toast.className = 'bg-[#111111]/95 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] flex items-start gap-3 pointer-events-auto transform translate-x-[120%] transition-all duration-500 ease-out cursor-pointer hover:bg-white/5';
+        
+        // Click para Enrutar a Pulse
+        toast.onclick = () => {
+            localStorage.setItem('gymen_pending_open_id', userId);
+            localStorage.setItem('gymen_pending_open_name', userName);
+            
+            const pulseNavBtn = document.querySelector('button[data-url*="pulse.html"]');
+            if(pulseNavBtn) pulseNavBtn.click();
+            
+            removeToast(userId);
+        };
 
-    // Remover a los 5 segundos
-    setTimeout(() => {
-        toast.style.transform = 'translateX(120%)';
-        setTimeout(() => toast.remove(), 500);
-    }, 5000);
+        toast.innerHTML = `
+            <div class="w-10 h-10 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/30">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z"></path></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-start">
+                    <h4 class="text-xs font-black text-white uppercase tracking-tight truncate pr-2">${userName}</h4>
+                    <span class="msg-counter hidden px-1.5 py-0.5 rounded bg-sky-500 text-black text-[7px] font-black uppercase tracking-widest shrink-0" data-count="1">1 Msg</span>
+                </div>
+                <p class="text-[9px] text-sky-400 font-bold uppercase tracking-widest mb-1 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span> Requiere Asistencia
+                </p>
+                <p class="msg-text text-[11px] text-gray-400 font-medium truncate">${text}</p>
+            </div>
+        `;
+
+        container.appendChild(toast);
+        activeToasts[userId] = toast;
+        
+        // Animar entrada
+        requestAnimationFrame(() => toast.style.transform = 'translateX(0)');
+
+        // Iniciar cronómetro de 6 segundos
+        toastTimers[userId] = setTimeout(() => removeToast(userId), 6000);
+        
+        playRadarSound(false); // Sonido Principal (Burbuja)
+    }
 }
 
 // ==========================================
@@ -122,31 +192,39 @@ async function activateRadar() {
         if (res.ok && data.success) {
             await signInWithCustomToken(auth, data.firebase_token);
             
-            // Escuchar SOLO los chats donde unread_admin es TRUE
-            const q = query(collection(db, "chats"), where("unread_admin", "==", true));
-            
-            onSnapshot(q, (snapshot) => {
+            // Escuchar todos los chats para conteo global de no leídos
+            onSnapshot(collection(db, "chats"), (snapshot) => {
+                let unreadCount = 0;
+                
+                snapshot.forEach(docSnap => {
+                    const chat = docSnap.data();
+                    if(chat.unread_admin) unreadCount++;
+                });
+                
+                updateSidebarBadge(unreadCount);
+                
+                // Si es la carga inicial, detenemos aquí para no sacar 20 toasts de chats viejos
+                if (isInitialLoad) {
+                    isInitialLoad = false;
+                    return; 
+                }
+
+                // Detectar los cambios en vivo para mostrar los Toasts
                 snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added" || change.type === "modified") {
+                    if (change.type === "modified" || change.type === "added") {
                         const chat = change.doc.data();
                         const userId = change.doc.id;
 
-                        // 1. Context-Aware: Verificar si la app Pulse ya está abierta en el Dashboard
-                        const iframe = document.getElementById('os-frame');
-                        if (iframe && iframe.contentWindow.location.href.includes('pulse.html')) {
-                            return; // Se aborta. Pulse.js manejará su propio sonido.
+                        // Si el chat requiere atención (fue modificado por el usuario)
+                        if (chat.unread_admin) {
+                            // Si el admin ya está dentro de Pulse.js, el radar se hace a un lado
+                            const iframe = document.getElementById('os-frame');
+                            if (iframe && iframe.contentWindow.location.href.includes('pulse.html')) {
+                                return; 
+                            }
+                            // Mostrar o actualizar tarjeta
+                            showSmartRadarToast(userId, chat.atleta_nombre || 'Atleta', chat.ultimo_mensaje);
                         }
-
-                        // 2. Anti-Spam: Verificar si está en Cooldown
-                        if (cooldownMemory.has(userId)) return;
-
-                        // 3. Activar Alerta
-                        cooldownMemory.add(userId);
-                        playRadarSound();
-                        showRadarToast(userId, chat.atleta_nombre || 'Atleta', chat.ultimo_mensaje);
-
-                        // Limpiar memoria tras 1 minuto
-                        setTimeout(() => cooldownMemory.delete(userId), COOLDOWN_TIME_MS);
                     }
                 });
             });
