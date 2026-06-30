@@ -8,8 +8,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/static/css/admin.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
+    <style>
+        /* Estilos Apple-like para scrollbars y modales */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
+        .glass-input:focus { border-color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.15); }
+    </style>
 </head>
-<body class="bg-[#030305] text-white selection:bg-emerald-500 selection:text-black min-h-screen flex flex-col font-sans">
+<body class="bg-[#030305] text-white selection:bg-sky-500 selection:text-black min-h-screen flex flex-col font-sans">
 
     <div id="admin-toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] opacity-0 transition-all duration-500 pointer-events-none border border-white/10"></div>
 
@@ -27,37 +34,91 @@
 
     <main class="max-w-7xl mx-auto w-full px-6 py-10 flex-grow flex flex-col">
         
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 border-b border-white/5 pb-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div>
                 <p class="text-gray-500 text-[9px] font-black uppercase tracking-[0.4em] mb-1">Tesorería Central</p>
-                <h2 class="text-3xl font-black text-white uppercase tracking-tighter">Auditoría Fiscal</h2>
+                <h2 class="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">Auditoría Fiscal</h2>
             </div>
-            <button onclick="fetchPendingPayments()" class="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest transition flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                Refrescar Bandeja
-            </button>
+            <div class="flex p-1 bg-white/5 rounded-xl border border-white/10">
+                <button onclick="switchTab('pending')" id="tab-pending" class="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg bg-sky-500 text-black shadow transition-all">Pendientes</button>
+                <button onclick="switchTab('history')" id="tab-history" class="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg text-gray-500 hover:text-white transition-all">Histórico</button>
+            </div>
+        </div>
+
+        <div id="filter-panel" class="hidden mb-6 bg-white/[0.02] border border-white/5 p-5 rounded-2xl flex-col gap-4 transition-all">
+            <div class="flex items-center justify-between border-b border-white/5 pb-3">
+                <h3 class="text-[10px] font-black uppercase tracking-widest text-sky-400">Motor de Búsqueda de Expedientes</h3>
+                <button onclick="clearFilters()" class="text-[9px] text-gray-500 hover:text-white uppercase font-bold tracking-widest transition-colors">Limpiar Filtros</button>
+            </div>
+            <form id="filter-form" class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                <div>
+                    <label class="block text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-1">Atleta (Nombre/Apellido)</label>
+                    <input type="text" id="f-name" class="w-full bg-black/40 border border-white/10 text-white p-2.5 rounded-lg text-xs outline-none focus:border-sky-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-1">Correo Electrónico</label>
+                    <input type="email" id="f-email" class="w-full bg-black/40 border border-white/10 text-white p-2.5 rounded-lg text-xs outline-none focus:border-sky-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-1">Referencia</label>
+                    <input type="text" id="f-ref" class="w-full bg-black/40 border border-white/10 text-white p-2.5 rounded-lg text-xs outline-none focus:border-sky-500 transition-colors font-mono">
+                </div>
+                <div>
+                    <label class="block text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-1">Fecha</label>
+                    <input type="date" id="f-date" class="w-full bg-black/40 border border-white/10 text-white p-2.5 rounded-lg text-xs outline-none focus:border-sky-500 transition-colors font-mono" style="color-scheme: dark;">
+                </div>
+                <div>
+                    <label class="block text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-1">Monto Exacto</label>
+                    <div class="flex gap-2">
+                        <input type="number" step="0.01" id="f-amount" class="w-full bg-black/40 border border-white/10 text-white p-2.5 rounded-lg text-xs outline-none focus:border-sky-500 transition-colors font-mono">
+                        <button type="submit" class="bg-sky-500 text-black px-4 rounded-lg hover:bg-sky-400 transition-colors flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
 
         <div id="admin-spinner" class="flex flex-col items-center justify-center py-20">
-            <div class="w-8 h-8 border-2 border-white/10 border-t-emerald-500 rounded-full animate-spin mb-3"></div>
-            <p class="text-gray-600 text-[9px] font-black uppercase tracking-widest">Buscando pagos pendientes...</p>
+            <div class="w-8 h-8 border-2 border-white/10 border-t-sky-500 rounded-full animate-spin mb-3"></div>
+            <p class="text-gray-600 text-[9px] font-black uppercase tracking-widest">Sincronizando bóveda...</p>
         </div>
 
-        <div id="billing-workspace" class="hidden flex-col w-full gap-6">
-            <div class="glass-panel rounded-[24px] border border-white/5 bg-black/20 overflow-hidden">
+        <div id="pending-workspace" class="hidden flex-col w-full gap-6">
+            <div class="glass-panel rounded-3xl border border-white/5 bg-white/[0.02] overflow-hidden shadow-2xl">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
-                            <tr class="border-b border-white/5 bg-white/[0.02] text-gray-400 font-black uppercase tracking-widest text-[9px]">
-                                <th class="p-5">Fecha / Hora</th>
-                                <th class="p-5">Plan Solicitado</th>
+                            <tr class="border-b border-white/5 bg-black/40 text-gray-400 font-black uppercase tracking-widest text-[9px]">
+                                <th class="p-5">Recepción</th>
+                                <th class="p-5">Atleta</th>
+                                <th class="p-5">Plan</th>
                                 <th class="p-5">Referencia</th>
-                                <th class="p-5 text-right">Monto Reportado</th>
-                                <th class="p-5 text-right">Aprobar / Rechazar</th>
+                                <th class="p-5 text-right">Monto</th>
+                                <th class="p-5 text-right">Dictamen</th>
                             </tr>
                         </thead>
-                        <tbody id="pending-payments-tbody" class="divide-y divide-white/[0.03] font-medium text-gray-300">
-                        </tbody>
+                        <tbody id="pending-payments-tbody" class="divide-y divide-white/[0.02] font-medium text-gray-300"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="history-workspace" class="hidden flex-col w-full gap-6">
+            <div class="glass-panel rounded-3xl border border-white/5 bg-white/[0.02] overflow-hidden shadow-2xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="border-b border-white/5 bg-black/40 text-gray-400 font-black uppercase tracking-widest text-[9px]">
+                                <th class="p-5">Estado</th>
+                                <th class="p-5">Atleta / Email</th>
+                                <th class="p-5">Referencia</th>
+                                <th class="p-5">Resolución</th>
+                                <th class="p-5 text-right">Monto</th>
+                                <th class="p-5 text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-payments-tbody" class="divide-y divide-white/[0.02] font-medium text-gray-300"></tbody>
                     </table>
                 </div>
             </div>
@@ -66,23 +127,84 @@
     </main>
 
     <div id="totp-modal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[10000] hidden flex-col justify-center items-center opacity-0 transition-opacity duration-300 p-4">
-        <div class="glass-panel w-full max-w-sm rounded-[32px] border-t border-sky-500/30 p-8 transform scale-95 transition-transform duration-300 text-center shadow-[0_0_50px_rgba(14,165,233,0.15)] relative" id="totp-content">
-            
-            <button id="btn-close-totp" class="absolute top-5 right-6 text-gray-500 hover:text-white text-2xl font-black transition-colors">&times;</button>
+        <div class="bg-[#050505] w-full max-w-md rounded-[32px] border border-sky-500/30 p-8 transform scale-95 transition-transform duration-300 shadow-[0_0_50px_rgba(14,165,233,0.15)] relative" id="totp-content">
+            <button id="btn-close-totp" class="absolute top-6 right-6 w-8 h-8 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-colors">&times;</button>
 
-            <div class="w-16 h-16 mx-auto bg-sky-500/10 rounded-full flex items-center justify-center border border-sky-500/30 mb-6 shadow-[0_0_20px_rgba(14,165,233,0.2)]">
-                <svg class="w-8 h-8 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            <div class="text-center mb-6">
+                <h3 id="totp-title" class="text-2xl font-black uppercase tracking-tighter text-white">Firma de Dictamen</h3>
+                <p id="totp-subtitle" class="text-sky-400 text-[10px] font-black tracking-widest uppercase mt-1">Autorizando Transacción</p>
             </div>
-            <h3 class="text-2xl font-black uppercase tracking-tighter text-white mb-2">Seguridad 2FA</h3>
-            <p class="text-gray-400 text-[10px] font-medium leading-relaxed mb-6 uppercase tracking-widest">
-                Abre tu Google Authenticator e ingresa el token de seguridad temporal para autorizar esta transacción.
-            </p>
             
-            <input type="text" id="totp-input" maxlength="6" inputmode="numeric" placeholder="------" class="w-full bg-black/60 border border-sky-500/30 p-4 rounded-xl text-center text-3xl font-mono text-white tracking-[0.5em] focus:border-sky-400 outline-none mb-6">
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-2">Motivo de Resolución (Obligatorio para Auditoría)</label>
+                    <textarea id="totp-reason" rows="2" class="w-full bg-black border border-white/10 p-3 rounded-xl text-xs text-white outline-none focus:border-sky-500 resize-none" placeholder="Ej: Transferencia verificada en estado de cuenta Bancamiga..."></textarea>
+                </div>
+                <div>
+                    <label class="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-2 text-center">Firma TOTP (Google Authenticator)</label>
+                    <input type="text" id="totp-input" maxlength="6" inputmode="numeric" placeholder="------" class="w-full bg-black/60 border border-sky-500/30 p-4 rounded-xl text-center text-3xl font-mono text-sky-400 tracking-[0.5em] focus:border-sky-400 outline-none">
+                </div>
+            </div>
             
-            <div class="flex flex-col gap-3">
-                <button onclick="executePaymentVerification()" id="btn-totp-verify" class="w-full py-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-lg">Confirmar Operación</button>
-                <button onclick="closeTOTPModal()" class="w-full py-3 rounded-xl bg-transparent text-gray-500 hover:text-white text-[9px] font-bold uppercase tracking-widest transition-all">Cancelar</button>
+            <div class="mt-8 flex gap-3">
+                <button onclick="closeTOTPModal()" class="flex-1 py-3.5 rounded-xl bg-white/5 text-gray-400 hover:text-white text-[9px] font-bold uppercase tracking-widest transition-all">Cancelar</button>
+                <button onclick="executePaymentVerification()" id="btn-totp-verify" class="flex-1 py-3.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg">Firmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="detail-modal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[10000] hidden flex-col justify-center items-center opacity-0 transition-opacity duration-300 p-4">
+        <div class="bg-[#050505] w-full max-w-2xl rounded-[32px] border border-white/10 p-8 transform scale-95 transition-transform duration-300 shadow-2xl relative flex flex-col max-h-[90vh]" id="detail-content">
+            <div class="flex justify-between items-center border-b border-white/5 pb-4 mb-6">
+                <div>
+                    <h3 class="text-xl font-black uppercase tracking-tighter text-white">Expediente de Pago</h3>
+                    <p id="det-ref" class="text-gray-500 text-[10px] font-mono tracking-widest uppercase mt-1">Ref: 000000</p>
+                </div>
+                <button onclick="closeDetailModal()" class="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="overflow-y-auto custom-scrollbar flex-1 pr-2 space-y-6">
+                
+                <div class="flex justify-between items-center p-4 bg-white/[0.02] rounded-xl border border-white/5">
+                    <div>
+                        <p class="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Monto Reportado</p>
+                        <p id="det-amount" class="text-3xl font-black font-mono text-[#FFC300]">0.00 Bs</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Estado Final</p>
+                        <span id="det-status" class="px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest">APROBADO</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Atleta Emisor</p>
+                        <p id="det-user" class="text-sm font-bold text-white uppercase">Cargando...</p>
+                        <p id="det-email" class="text-[10px] font-mono text-gray-400 mt-0.5">--</p>
+                    </div>
+                    <div>
+                        <p class="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Plan Solicitado</p>
+                        <p id="det-plan" class="text-sm font-bold text-white uppercase">--</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/5 pt-4">
+                    <div>
+                        <p class="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Cronología: Notificación</p>
+                        <p id="det-date-rep" class="text-xs font-mono text-white">--</p>
+                    </div>
+                    <div>
+                        <p class="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">Cronología: Dictamen Admin</p>
+                        <p id="det-date-res" class="text-xs font-mono text-white">--</p>
+                    </div>
+                </div>
+
+                <div class="bg-black/40 border border-white/5 p-4 rounded-xl">
+                    <p class="text-[8px] font-black text-sky-400 uppercase tracking-widest mb-2">Motivo de Resolución Oficial</p>
+                    <p id="det-reason" class="text-xs text-gray-300 italic font-medium leading-relaxed">Sin observaciones del administrador.</p>
+                </div>
             </div>
         </div>
     </div>
