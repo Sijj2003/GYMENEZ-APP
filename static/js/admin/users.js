@@ -49,24 +49,31 @@ function getDefaultExpirationDate() {
     return d.toISOString().split('T')[0];
 }
 
-function switchDossierTab(tabName) {
-    const btnId = document.getElementById('d-tab-identity');
-    const btnBio = document.getElementById('d-tab-biolab');
-    const contentId = document.getElementById('d-content-identity');
-    const contentBio = document.getElementById('d-content-biolab');
-
-    btnId.className = "py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors";
-    btnBio.className = "py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors";
-    contentId.classList.add('hidden'); contentId.classList.remove('block');
-    contentBio.classList.add('hidden'); contentBio.classList.remove('block');
-
-    if (tabName === 'identity') {
-        btnId.className = "py-3 border-b-2 border-[#FFC300] text-[#FFC300] font-black text-[10px] uppercase tracking-widest transition-colors";
-        contentId.classList.remove('hidden'); contentId.classList.add('block');
-    } else if (tabName === 'biolab') {
-        btnBio.className = "py-3 border-b-2 border-sky-400 text-sky-400 font-black text-[10px] uppercase tracking-widest transition-colors";
-        contentBio.classList.remove('hidden'); contentBio.classList.add('block');
-    }
+window.switchDossierTab = function(tabName) {
+    const tabs = ['identity', 'biolab', 'diet'];
+    
+    tabs.forEach(t => {
+        const btn = document.getElementById(`d-tab-${t}`);
+        const content = document.getElementById(`d-content-${t}`);
+        
+        if (t === tabName) {
+            // Colores dinámicos por pestaña
+            if(t === 'identity') btn.className = "py-3 border-b-2 border-[#FFC300] text-[#FFC300] font-black text-[10px] uppercase tracking-widest transition-colors";
+            if(t === 'biolab') btn.className = "py-3 border-b-2 border-sky-400 text-sky-400 font-black text-[10px] uppercase tracking-widest transition-colors";
+            if(t === 'diet') btn.className = "py-3 border-b-2 border-emerald-500 text-emerald-500 font-black text-[10px] uppercase tracking-widest transition-colors flex items-center gap-1.5";
+            
+            content.classList.remove('hidden'); 
+            content.classList.add('block');
+        } else {
+            if(t === 'diet') {
+                btn.className = "py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors flex items-center gap-1.5";
+            } else {
+                btn.className = "py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors";
+            }
+            content.classList.add('hidden'); 
+            content.classList.remove('block');
+        }
+    });
 }
 
 // ==========================================
@@ -142,7 +149,6 @@ function autoCalculateBiometrics() {
     const fatInput = document.getElementById('m-fat');
     const muscleInput = document.getElementById('m-muscle');
 
-    // Si la edad está vacía, intentamos calcularla dinámicamente desde la fecha de nacimiento
     if (isNaN(age) || age <= 0) {
         const dobVal = document.getElementById('f-dob').value;
         if (dobVal) {
@@ -153,37 +159,29 @@ function autoCalculateBiometrics() {
         }
     }
 
-    // Condición: Si tenemos los 3 pilares, calculamos. Si falta alguno, dejamos en blanco.
     if (weight > 0 && heightCm > 0 && age > 0) {
-        const heightM = heightCm / 100; // Convertir a metros
-        const bmi = weight / (heightM * heightM); // Índice de Masa Corporal
+        const heightM = heightCm / 100; 
+        const bmi = weight / (heightM * heightM); 
         
-        // Factor de sexo para la fórmula
         const sexFactor = sex === 'Hombre' ? 1 : (sex === 'Mujer' ? 0 : 0.5);
-
-        // 1. Cálculo de % Grasa (Fórmula de Deurenberg et al.)
         let fatPercent = (1.20 * bmi) + (0.23 * age) - (10.8 * sexFactor) - 5.4;
         
-        // Ajuste de límites biológicos
         if (fatPercent < 3) fatPercent = 3;
         if (fatPercent > 65) fatPercent = 65;
 
-        // 2. Estimación de % Músculo (Masa Muscular Esquelética aprox.)
         const muscleFactor = sex === 'Hombre' ? 0.52 : (sex === 'Mujer' ? 0.47 : 0.495);
         let musclePercent = (100 - fatPercent) * muscleFactor;
 
-        // Imprimir resultados en el frontend redondeados a 1 decimal
         fatInput.value = fatPercent.toFixed(1);
         muscleInput.value = musclePercent.toFixed(1);
     } else {
-        // Limpiar si faltan datos
         fatInput.value = '';
         muscleInput.value = '';
     }
 }
 
 // ==========================================
-// 🗂️ DOSSIER 360 (IDENTIDAD + BIOLAB)
+// 🗂️ DOSSIER 360 (IDENTIDAD + BIOLAB + NUTRICIÓN)
 // ==========================================
 async function loadUserDossier(userId) {
     activeUserId = userId;
@@ -196,7 +194,11 @@ async function loadUserDossier(userId) {
     const dossier = document.getElementById('active-dossier');
     dossier.classList.remove('hidden'); dossier.classList.add('flex');
 
-    // 1. LLENAR IDENTIDAD
+    // Desbloquear pestañas de UI
+    document.getElementById('d-tab-biolab').classList.remove('pointer-events-none', 'opacity-50');
+    document.getElementById('d-tab-diet').classList.remove('pointer-events-none', 'opacity-50');
+
+    // 1. LLENAR IDENTIDAD Y HEADERS
     document.getElementById('d-name').textContent = user.full_name || 'N/A';
     document.getElementById('d-name').className = `text-3xl font-black uppercase tracking-tighter ${user.is_blocked ? 'text-red-500 line-through' : 'text-white'}`;
     document.getElementById('d-email').textContent = user.email || 'N/A';
@@ -205,11 +207,12 @@ async function loadUserDossier(userId) {
     statusEl.textContent = user.is_blocked ? 'BLOQUEADO' : 'ACTIVO';
     statusEl.className = `px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${user.is_blocked ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`;
     
+    const tier = String(user.subscription_level || 'BASICO').toUpperCase();
     const tierEl = document.getElementById('d-tier');
-    tierEl.textContent = user.subscription_level || 'BASICO';
+    tierEl.textContent = tier;
     let tierColorClass = 'bg-gray-500/10 text-gray-400 border-gray-500/20';
-    if(user.subscription_level === 'PLUS') tierColorClass = 'bg-sky-500/10 text-sky-400 border-sky-500/20';
-    if(user.subscription_level === 'ULTRA') tierColorClass = 'bg-[#FFC300]/10 text-[#FFC300] border-[#FFC300]/20';
+    if(tier === 'PLUS') tierColorClass = 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+    if(tier === 'ULTRA') tierColorClass = 'bg-[#FFC300]/10 text-[#FFC300] border-[#FFC300]/20';
     tierEl.className = `px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${tierColorClass}`;
 
     document.getElementById('f-id').value = user.id;
@@ -223,7 +226,7 @@ async function loadUserDossier(userId) {
     const passEl = document.getElementById('f-password');
     passEl.disabled = true; passEl.required = false; passEl.placeholder = "Cambio exclusivo vía OTP Clave";
     
-    document.getElementById('f-tier').value = user.subscription_level || 'BASICO';
+    document.getElementById('f-tier').value = tier;
     document.getElementById('f-expires').value = user.subscription_expires_at ? String(user.subscription_expires_at).split('T')[0] : getDefaultExpirationDate();
     document.getElementById('f-sex').value = user.sex || 'Otro';
     if(user.dob) document.getElementById('f-dob').value = user.dob.split('/').reverse().join('-');
@@ -278,7 +281,6 @@ async function loadUserDossier(userId) {
             document.getElementById('m-diseases').value = m.chronic_diseases || '';
             document.getElementById('m-medical-notes').value = m.medical_notes || '';
 
-            // 🚀 Calculamos grasa y músculo automáticamente tras cargar los datos base
             autoCalculateBiometrics();
 
             // Objetivos
@@ -295,9 +297,35 @@ async function loadUserDossier(userId) {
             normalize(g.long_term).forEach(goal => addGoalRow('lt-goals-container', goal));
         }
     } catch (e) { console.warn("Error leyendo biometría: ", e); }
+
+    // 3. LLENAR NUTRICIÓN ULTRA
+    const dietLocked = document.getElementById('diet-locked');
+    const dietEditor = document.getElementById('diet-editor');
+
+    if (tier !== 'ULTRA') {
+        dietLocked.classList.remove('hidden');
+        dietEditor.classList.add('hidden');
+    } else {
+        dietLocked.classList.add('hidden');
+        dietEditor.classList.remove('hidden');
+        
+        document.getElementById('d-title').value = "";
+        document.getElementById('d-text').value = "";
+
+        try {
+            const resDiet = await fetch(`${API_BASE_URL}/api/admin/diet/${userId}`, { headers: getSecureHeaders() });
+            const dataDiet = await resDiet.json();
+            if (dataDiet.success && dataDiet.has_diet) {
+                document.getElementById('d-title').value = dataDiet.diet.title || "";
+                document.getElementById('d-text').value = dataDiet.diet.menu_text || "";
+            }
+        } catch(e) { console.warn("Error leyendo dieta: ", e); }
+    }
+
+    switchDossierTab('identity');
 }
 
-function openCreateMode() {
+window.openCreateMode = function() {
     activeUserId = null;
     renderUsersList(document.getElementById('search-input').value ? allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(document.getElementById('search-input').value.toLowerCase().trim())) : allUsersData);
 
@@ -324,7 +352,50 @@ function openCreateMode() {
     passEl.disabled = false; passEl.required = true; passEl.placeholder = "Mínimo 6 caracteres"; passEl.classList.replace('text-gray-500', 'text-white');
 
     document.getElementById('f-expires').value = getDefaultExpirationDate();
+    
+    // Al ser nuevo, bloqueamos Biolab y Nutrición
+    document.getElementById('d-tab-biolab').classList.add('pointer-events-none', 'opacity-50');
+    document.getElementById('d-tab-diet').classList.add('pointer-events-none', 'opacity-50');
+    
     switchDossierTab('identity');
+}
+
+// ==========================================
+// 🍎 GESTIÓN DE DIETAS
+// ==========================================
+window.saveDiet = async function() {
+    const title = document.getElementById('d-title').value.trim();
+    const text = document.getElementById('d-text').value.trim();
+    const btn = document.getElementById('btn-save-diet');
+
+    if (!title || !text) { showUIFeedback("El título y el menú son obligatorios", "error"); return; }
+
+    btn.disabled = true; btn.textContent = 'Guardando...';
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/diet/${activeUserId}`, {
+            method: 'POST',
+            headers: getSecureHeaders(),
+            body: JSON.stringify({ title: title, menu_text: text })
+        });
+        const data = await res.json();
+        if (data.success) showUIFeedback("Plan nutricional publicado al atleta.");
+        else showUIFeedback("Error al publicar", "error");
+    } catch(e) { showUIFeedback("Falla de red.", "error"); }
+    btn.disabled = false; btn.textContent = 'Publicar Dieta al Atleta';
+}
+
+window.deleteDiet = async function() {
+    if (!confirm("⚠️ ¿Revocar plan nutricional del atleta?")) return;
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/diet/${activeUserId}`, { method: 'DELETE', headers: getSecureHeaders() });
+        const data = await res.json();
+        if (data.success) { 
+            showUIFeedback("Plan nutricional revocado."); 
+            document.getElementById('d-title').value = "";
+            document.getElementById('d-text').value = "";
+        }
+    } catch(e) {}
 }
 
 // ==========================================
@@ -536,7 +607,7 @@ async function requestUserCertification(userId, email) {
     } catch (e) { showUIFeedback("Falla de red.", 'error'); }
 }
 
-async function verifyUserCode() {
+window.verifyUserCode = async function() {
     const code = document.getElementById('otp-input').value.trim();
     if(code.length !== 6) { showUIFeedback("El código debe tener 6 dígitos.", "error"); return; }
     try {
@@ -548,18 +619,18 @@ async function verifyUserCode() {
     } catch (e) { showUIFeedback("Error verificando.", 'error'); }
 }
 
-async function forcePasswordReset() {
+window.forcePasswordReset = async function() {
     const newPass = document.getElementById('new-password-input').value;
     if(newPass.length < 6) { showUIFeedback("La contraseña debe tener mínimo 6 caracteres.", "error"); return; }
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/user/${targetCertifyUserId}/force-password`, { method: 'PUT', headers: getSecureHeaders(), body: JSON.stringify({ new_password: newPass }) });
         const data = await response.json();
-        if(data.success) { showUIFeedback("Contraseña forzada con éxito."); closeCertifyModal(); } 
+        if(data.success) { showUIFeedback("Contraseña forzada con éxito."); window.closeCertifyModal(); } 
         else { showUIFeedback(data.error, 'error'); }
     } catch (e) { showUIFeedback("Error de red.", 'error'); }
 }
 
-function closeCertifyModal() { 
+window.closeCertifyModal = function() { 
     const modal = document.getElementById('otp-modal'); const content = document.getElementById('otp-content');
     modal.classList.add('opacity-0'); content.classList.add('scale-95');
     setTimeout(() => { modal.classList.remove('flex'); modal.classList.add('hidden'); }, 300);
@@ -570,7 +641,6 @@ function closeCertifyModal() {
 // 🚀 INICIALIZACIÓN BLINDADA
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
-    // 1. Asignar el filtro numérico OTP
     const otpInput = document.getElementById('otp-input');
     if (otpInput) {
         otpInput.addEventListener('input', function() { 
@@ -578,17 +648,14 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. Escuchadores de Biometría Automatizada
     document.getElementById('m-weight').addEventListener('input', autoCalculateBiometrics);
     document.getElementById('m-height').addEventListener('input', autoCalculateBiometrics);
     document.getElementById('f-sex').addEventListener('change', autoCalculateBiometrics);
     
-    // Si cambias el nacimiento, actualiza la edad y recalcula todo
     document.getElementById('f-dob').addEventListener('input', () => {
-        document.getElementById('m-age').value = ''; // Forzamos recálculo
+        document.getElementById('m-age').value = ''; 
         autoCalculateBiometrics();
     });
 
-    // 3. Arrancar la extracción de datos
     fetchAllUsers();
 });
