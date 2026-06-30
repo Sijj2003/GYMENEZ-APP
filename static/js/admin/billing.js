@@ -14,8 +14,12 @@ function showAdminToast(message, type = 'success') {
     if(!box) return;
     box.textContent = message;
     box.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] transition-all duration-400 text-center border backdrop-blur-md w-11/12 max-w-[360px] ${type === 'success' ? 'bg-emerald-950/90 text-emerald-400 border-emerald-500/30' : 'bg-red-950/90 text-red-400 border-red-500/30'}`;
-    box.style.opacity = '1'; box.style.transform = 'translate(-50%, 0)';
-    setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 4000);
+    box.style.opacity = '1'; 
+    box.style.transform = 'translate(-50%, 0)';
+    setTimeout(() => { 
+        box.style.opacity = '0'; 
+        box.style.transform = 'translate(-50%, -20px)'; 
+    }, 4000);
 }
 
 // 🛡️ Exponer funciones globalmente para evitar "not defined" en el HTML
@@ -74,13 +78,14 @@ async function fetchPendingPayments() {
                         const tr = document.createElement('tr');
                         let planColor = p.plan === 'ULTRA' ? 'text-[#FFC300]' : 'text-sky-400';
                         const userName = p.atleta_nombre || p.email || 'Atleta';
+                        const montoSafe = p.monto_bs || p.monto || 0;
                         
                         tr.innerHTML = `
                             <td class="p-5 font-mono text-[10px] text-gray-400 whitespace-nowrap">${p.fecha_reporte || 'N/A'}</td>
                             <td class="p-5 text-[11px] font-bold text-white uppercase">${userName}</td>
                             <td class="p-5 font-black uppercase tracking-widest ${planColor} text-[10px]">${p.plan}</td>
                             <td class="p-5 font-mono text-white text-sm tracking-wider font-bold">#${p.referencia}</td>
-                            <td class="p-5 text-right font-mono font-black text-emerald-400 text-sm whitespace-nowrap">${Number(p.monto).toLocaleString("es-VE", { minimumFractionDigits: 2 })} Bs</td>
+                            <td class="p-5 text-right font-mono font-black text-emerald-400 text-sm whitespace-nowrap">${Number(montoSafe).toLocaleString("es-VE", { minimumFractionDigits: 2 })} Bs</td>
                             <td class="p-5 text-right whitespace-nowrap">
                                 <button onclick="processPayment('${p.id}', 'rechazado')" class="px-4 py-2.5 bg-white/5 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition mr-2">Rechazar</button>
                                 <button onclick="processPayment('${p.id}', 'aprobado')" class="px-5 py-2.5 bg-sky-500 hover:bg-sky-400 text-black rounded-lg text-[9px] font-black uppercase tracking-widest transition shadow-[0_0_15px_rgba(14,165,233,0.2)]">Aprobar</button>
@@ -109,16 +114,16 @@ if (filterForm) {
         e.preventDefault();
         fetchHistoryPayments();
     });
-}
 
-document.querySelectorAll('#filter-form input').forEach(input => {
-    input.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter') {
-            e.preventDefault();
-            fetchHistoryPayments();
-        }
+    document.querySelectorAll('#filter-form input').forEach(input => {
+        input.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') {
+                e.preventDefault();
+                fetchHistoryPayments();
+            }
+        });
     });
-});
+}
 
 window.clearFilters = function() {
     if (filterForm) filterForm.reset();
@@ -151,7 +156,8 @@ async function fetchHistoryPayments() {
 
     try {
         const token = localStorage.getItem('gymen_admin_token');
-        const res = await fetch(`${API_BASE_URL}/api/payments/history?${params.toString()}`, {
+        // 🔥 CORRECCIÓN: Apuntando a la ruta del administrador
+        const res = await fetch(`${API_BASE_URL}/api/admin/payments/history?${params.toString()}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -167,12 +173,14 @@ async function fetchHistoryPayments() {
                         const tr = document.createElement('tr');
                         
                         let statusBadge = '';
-                        if (p.status === 'aprobado') statusBadge = `<span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest">Aprobado</span>`;
-                        else if (p.status === 'rechazado') statusBadge = `<span class="px-2 py-1 rounded bg-red-500/10 text-red-500 border border-red-500/20 text-[8px] font-black uppercase tracking-widest">Rechazado</span>`;
-                        else statusBadge = `<span class="px-2 py-1 rounded bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[8px] font-black uppercase tracking-widest">${p.status}</span>`;
+                        const estadoSeguro = (p.status || '').toLowerCase();
+                        if (estadoSeguro === 'aprobado') statusBadge = `<span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest">Aprobado</span>`;
+                        else if (estadoSeguro === 'rechazado') statusBadge = `<span class="px-2 py-1 rounded bg-red-500/10 text-red-500 border border-red-500/20 text-[8px] font-black uppercase tracking-widest">Rechazado</span>`;
+                        else statusBadge = `<span class="px-2 py-1 rounded bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[8px] font-black uppercase tracking-widest">${p.status || 'Pendiente'}</span>`;
 
-                        const userName = p.atleta_nombre || 'Atleta';
+                        const userName = p.atleta_nombre || p.user_id || 'Atleta';
                         const emailTrunc = p.email ? p.email.substring(0, 15) + '...' : '';
+                        const montoSafe = p.monto_bs || p.monto || 0;
 
                         tr.innerHTML = `
                             <td class="p-5">${statusBadge}</td>
@@ -181,8 +189,8 @@ async function fetchHistoryPayments() {
                                 <span class="font-mono text-gray-500">${emailTrunc}</span>
                             </td>
                             <td class="p-5 font-mono text-white text-[11px] tracking-wider font-bold">#${p.referencia}</td>
-                            <td class="p-5 font-mono text-[9px] text-gray-400 whitespace-nowrap">${p.fecha_resolucion || 'N/A'}</td>
-                            <td class="p-5 text-right font-mono font-black text-gray-300 text-[11px] whitespace-nowrap">${Number(p.monto).toLocaleString("es-VE", { minimumFractionDigits: 2 })} Bs</td>
+                            <td class="p-5 font-mono text-[9px] text-gray-400 whitespace-nowrap">${p.fecha_reporte || 'N/A'}</td>
+                            <td class="p-5 text-right font-mono font-black text-gray-300 text-[11px] whitespace-nowrap">${Number(montoSafe).toLocaleString("es-VE", { minimumFractionDigits: 2 })} Bs</td>
                             <td class="p-5 text-right">
                                 <button onclick="showPaymentDetails(${index})" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition border border-white/10">Ver Detalle</button>
                             </td>
@@ -210,19 +218,21 @@ window.showPaymentDetails = function(index) {
     if (!p) return;
 
     const setText = (id, text) => { if(document.getElementById(id)) document.getElementById(id).textContent = text; };
+    const montoSafe = p.monto_bs || p.monto || 0;
 
     setText('det-ref', `Ref: #${p.referencia}`);
-    setText('det-amount', `${Number(p.monto).toLocaleString("es-VE", { minimumFractionDigits: 2 })} Bs`);
+    setText('det-amount', `${Number(montoSafe).toLocaleString("es-VE", { minimumFractionDigits: 2 })} Bs`);
     
     const statusEl = document.getElementById('det-status');
     if (statusEl) {
-        statusEl.textContent = p.status;
-        if (p.status === 'aprobado') statusEl.className = "px-3 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase tracking-widest";
-        else if (p.status === 'rechazado') statusEl.className = "px-3 py-1 rounded bg-red-500/20 text-red-500 border border-red-500/30 text-[10px] font-black uppercase tracking-widest";
+        statusEl.textContent = p.status || 'PENDIENTE';
+        const estadoSeguro = (p.status || '').toLowerCase();
+        if (estadoSeguro === 'aprobado') statusEl.className = "px-3 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase tracking-widest";
+        else if (estadoSeguro === 'rechazado') statusEl.className = "px-3 py-1 rounded bg-red-500/20 text-red-500 border border-red-500/30 text-[10px] font-black uppercase tracking-widest";
         else statusEl.className = "px-3 py-1 rounded bg-gray-500/20 text-gray-400 border border-gray-500/30 text-[10px] font-black uppercase tracking-widest";
     }
 
-    setText('det-user', p.atleta_nombre || 'N/A');
+    setText('det-user', p.atleta_nombre || p.user_id || 'N/A');
     setText('det-email', p.email || '--');
     setText('det-plan', p.plan || '--');
     
@@ -230,8 +240,8 @@ window.showPaymentDetails = function(index) {
     if (planEl) planEl.className = `text-sm font-black uppercase ${p.plan === 'ULTRA' ? 'text-[#FFC300]' : 'text-sky-400'}`;
     
     setText('det-date-rep', p.fecha_reporte || '--');
-    setText('det-date-res', p.fecha_resolucion || '--');
-    setText('det-reason', p.admin_reason || 'Dictamen realizado sin justificación escrita registrada.');
+    setText('det-date-res', p.fecha_verificacion || p.fecha_resolucion || '--');
+    setText('det-reason', p.admin_reason || p.reason || 'Dictamen realizado sin justificación escrita registrada.');
 
     const modal = document.getElementById('detail-modal');
     const content = document.getElementById('detail-content');
