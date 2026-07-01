@@ -7,6 +7,10 @@ const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https:/
 let activeTab = 'pending'; 
 let pendingPaymentId = null;
 let pendingActionStatus = null;
+
+// Cachés en RAM para evitar llamadas innecesarias y traducir IDs
+let usersDirectory = {}; 
+let allHistoryData = []; 
 let historyDataMemory = []; 
 
 function showAdminToast(message, type = 'success') {
@@ -22,7 +26,27 @@ function showAdminToast(message, type = 'success') {
     }, 4000);
 }
 
-// 🛡️ Exponer funciones globalmente para evitar "not defined" en el HTML
+// ====================================================================
+// 👥 DESCARGA DEL DIRECTORIO DE ATLETAS (PARA TRADUCCIÓN DE ID)
+// ====================================================================
+async function fetchUsersDirectory() {
+    try {
+        const token = localStorage.getItem('gymen_admin_token');
+        const res = await fetch(`${API_BASE_URL}/api/admin/users`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            data.users.forEach(u => {
+                usersDirectory[u.id] = u;
+            });
+        }
+    } catch (e) {
+        console.error("Fallo al descargar directorio de atletas:", e);
+    }
+}
+
+// 🛡️ Exponer funciones globalmente
 window.switchTab = function(tab) {
     activeTab = tab;
     const btnPending = document.getElementById('tab-pending');
@@ -77,7 +101,10 @@ async function fetchPendingPayments() {
                     payments.forEach(p => {
                         const tr = document.createElement('tr');
                         let planColor = p.plan === 'ULTRA' ? 'text-[#FFC300]' : 'text-sky-400';
-                        const userName = p.atleta_nombre || p.email || 'Atleta';
+                        
+                        // Traducción si es posible, sino usa el que viene en la petición
+                        const user = usersDirectory[p.user_id] || {};
+                        const userName = user.full_name || p.atleta_nombre || p.email || 'Atleta';
                         const montoSafe = p.monto_bs || p.monto || 0;
                         
                         tr.innerHTML = `
@@ -106,108 +133,140 @@ async function fetchPendingPayments() {
 }
 
 // ====================================================================
-// 🗃️ AUDITORÍA HISTÓRICA Y FILTROS
+// 🗃️ AUDITORÍA HISTÓRICA Y FILTROS EN TIEMPO REAL
 // ====================================================================
 const filterForm = document.getElementById('filter-form');
 if (filterForm) {
     filterForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        fetchHistoryPayments();
+        window.applyHistoryFilters();
     });
 
+    // Escuchador dinámico: filtra con cada tecla que presionas
     document.querySelectorAll('#filter-form input').forEach(input => {
-        input.addEventListener('keydown', (e) => {
-            if(e.key === 'Enter') {
-                e.preventDefault();
-                fetchHistoryPayments();
-            }
+        input.addEventListener('input', () => {
+            window.applyHistoryFilters();
         });
     });
 }
 
 window.clearFilters = function() {
     if (filterForm) filterForm.reset();
-    fetchHistoryPayments();
+    window.applyHistoryFilters();
 };
 
 async function fetchHistoryPayments() {
     const spinner = document.getElementById('admin-spinner');
     const workspace = document.getElementById('history-workspace');
-    const tbody = document.getElementById('history-payments-tbody');
-
+    
     if (spinner) spinner.classList.remove('hidden');
     if (workspace) workspace.classList.add('hidden');
-    if (tbody) tbody.innerHTML = '';
-
-    const params = new URLSearchParams();
-    const getValue = (id) => document.getElementById(id) ? document.getElementById(id).value.trim() : '';
-    
-    const name = getValue('f-name');
-    const email = getValue('f-email');
-    const ref = getValue('f-ref');
-    const date = getValue('f-date');
-    const amount = getValue('f-amount');
-
-    if (name) params.append('name', name);
-    if (email) params.append('email', email);
-    if (ref) params.append('referencia', ref);
-    if (date) params.append('fecha', date);
-    if (amount) params.append('monto', amount);
 
     try {
         const token = localStorage.getItem('gymen_admin_token');
-        // 🔥 CORRECCIÓN: Apuntando a la ruta del administrador
-        const res = await fetch(`${API_BASE_URL}/api/admin/payments/history?${params.toString()}`, {
+        // Traemos TODO el historial una sola vez y filtramos en RAM
+        const res = await fetch(`${API_BASE_URL}/api/admin/payments/history`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
 
         if (res.ok && data.success) {
-            historyDataMemory = data.history || [];
-            
-            if (tbody) {
-                if (historyDataMemory.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-500 uppercase tracking-widest font-black text-[10px]">No se encontraron expedientes.</td></tr>`;
-                } else {
-                    historyDataMemory.forEach((p, index) => {
-                        const tr = document.createElement('tr');
-                        
-                        let statusBadge = '';
-                        const estadoSeguro = (p.status || '').toLowerCase();
-                        if (estadoSeguro === 'aprobado') statusBadge = `<span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest">Aprobado</span>`;
-                        else if (estadoSeguro === 'rechazado') statusBadge = `<span class="px-2 py-1 rounded bg-red-500/10 text-red-500 border border-red-500/20 text-[8px] font-black uppercase tracking-widest">Rechazado</span>`;
-                        else statusBadge = `<span class="px-2 py-1 rounded bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[8px] font-black uppercase tracking-widest">${p.status || 'Pendiente'}</span>`;
-
-                        const userName = p.atleta_nombre || p.user_id || 'Atleta';
-                        const emailTrunc = p.email ? p.email.substring(0, 15) + '...' : '';
-                        const montoSafe = p.monto_bs || p.monto || 0;
-
-                        tr.innerHTML = `
-                            <td class="p-5">${statusBadge}</td>
-                            <td class="p-5 text-[10px]">
-                                <span class="font-bold text-white uppercase block">${userName}</span>
-                                <span class="font-mono text-gray-500">${emailTrunc}</span>
-                            </td>
-                            <td class="p-5 font-mono text-white text-[11px] tracking-wider font-bold">#${p.referencia}</td>
-                            <td class="p-5 font-mono text-[9px] text-gray-400 whitespace-nowrap">${p.fecha_reporte || 'N/A'}</td>
-                            <td class="p-5 text-right font-mono font-black text-gray-300 text-[11px] whitespace-nowrap">${Number(montoSafe).toLocaleString("es-VE", { minimumFractionDigits: 2 })} Bs</td>
-                            <td class="p-5 text-right">
-                                <button onclick="showPaymentDetails(${index})" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition border border-white/10">Ver Detalle</button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                }
-            }
-
-            if (spinner) spinner.classList.add('hidden');
-            if (workspace) { workspace.classList.remove('hidden'); workspace.classList.add('flex'); }
+            allHistoryData = data.history || [];
+            window.applyHistoryFilters(); 
         } else {
             throw new Error(data.error);
         }
     } catch (error) {
         if (spinner) spinner.innerHTML = `<p class="text-red-500 font-bold uppercase tracking-widest text-[10px]">Fallo buscando historial en servidor</p>`;
     }
+}
+
+window.applyHistoryFilters = function() {
+    const spinner = document.getElementById('admin-spinner');
+    const workspace = document.getElementById('history-workspace');
+    
+    const getValue = (id) => document.getElementById(id) ? document.getElementById(id).value.trim().toLowerCase() : '';
+    
+    const fName = getValue('f-name');
+    const fEmail = getValue('f-email');
+    const fRef = getValue('f-ref');
+    const fDate = getValue('f-date'); // YYYY-MM-DD
+    const fAmount = getValue('f-amount');
+
+    // Filtrar todo el historial usando el diccionario para traducir el user_id
+    historyDataMemory = allHistoryData.filter(p => {
+        const user = usersDirectory[p.user_id] || {};
+        const userName = (user.full_name || p.user_id || '').toLowerCase();
+        const userEmail = (user.email || p.email || '').toLowerCase();
+        const pRef = (p.referencia || '').toLowerCase();
+        const pDate = (p.fecha_reporte || '').toLowerCase();
+        const pAmount = String(p.monto_bs || p.monto || '');
+
+        if (fName && !userName.includes(fName)) return false;
+        if (fEmail && !userEmail.includes(fEmail)) return false;
+        if (fRef && !pRef.includes(fRef)) return false;
+        if (fDate) {
+             const [y, m, d] = fDate.split('-');
+             const formattedInputDate = `${d}/${m}/${y}`;
+             if (!pDate.includes(formattedInputDate)) return false;
+        }
+        if (fAmount && pAmount !== fAmount) return false;
+
+        return true;
+    });
+
+    renderHistoryTable();
+
+    if (spinner) spinner.classList.add('hidden');
+    if (workspace) { workspace.classList.remove('hidden'); workspace.classList.add('flex'); }
+};
+
+function renderHistoryTable() {
+    const tbody = document.getElementById('history-payments-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (historyDataMemory.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-500 uppercase tracking-widest font-black text-[10px]">No se encontraron expedientes.</td></tr>`;
+        return;
+    }
+
+    historyDataMemory.forEach((p, index) => {
+        const tr = document.createElement('tr');
+        
+        let statusBadge = '';
+        const estadoSeguro = (p.status || '').toLowerCase();
+        if (estadoSeguro === 'aprobado') statusBadge = `<span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest">Aprobado</span>`;
+        else if (estadoSeguro === 'rechazado') statusBadge = `<span class="px-2 py-1 rounded bg-red-500/10 text-red-500 border border-red-500/20 text-[8px] font-black uppercase tracking-widest">Rechazado</span>`;
+        else statusBadge = `<span class="px-2 py-1 rounded bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[8px] font-black uppercase tracking-widest">${p.status || 'Pendiente'}</span>`;
+
+        // TRADUCTOR DE ID: Asigna Nombre Completo y Correo
+        const user = usersDirectory[p.user_id] || {};
+        const userName = user.full_name || 'Atleta No Registrado';
+        const userEmail = user.email || 'Sin correo vinculado';
+        const montoSafe = p.monto_bs || p.monto || 0;
+
+        const dateRep = p.fecha_reporte && p.fecha_reporte !== 'N/A' ? p.fecha_reporte : '--';
+        const dateVer = p.fecha_verificacion && p.fecha_verificacion !== 'N/A' ? p.fecha_verificacion : '--';
+
+        tr.innerHTML = `
+            <td class="p-5">${statusBadge}</td>
+            <td class="p-5 text-[10px]">
+                <span class="font-bold text-white uppercase block mb-1">${userName}</span>
+                <span class="font-mono text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20">${userEmail}</span>
+            </td>
+            <td class="p-5 font-mono text-white text-[11px] tracking-wider font-bold">#${p.referencia}</td>
+            <td class="p-5 text-[9px] whitespace-nowrap">
+                <span class="block text-gray-400 mb-1"><strong class="text-gray-500">Rep:</strong> ${dateRep}</span>
+                <span class="block text-emerald-500"><strong class="text-emerald-700">Res:</strong> ${dateVer}</span>
+            </td>
+            <td class="p-5 text-right font-mono font-black text-gray-300 text-[11px] whitespace-nowrap">${Number(montoSafe).toLocaleString("es-VE", { minimumFractionDigits: 2 })} Bs</td>
+            <td class="p-5 text-right">
+                <button onclick="showPaymentDetails(${index})" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition border border-white/10">Ver Detalle</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
 }
 
 // ====================================================================
@@ -219,6 +278,10 @@ window.showPaymentDetails = function(index) {
 
     const setText = (id, text) => { if(document.getElementById(id)) document.getElementById(id).textContent = text; };
     const montoSafe = p.monto_bs || p.monto || 0;
+
+    const user = usersDirectory[p.user_id] || {};
+    const userName = user.full_name || 'Atleta No Registrado';
+    const userEmail = user.email || '--';
 
     setText('det-ref', `Ref: #${p.referencia}`);
     setText('det-amount', `${Number(montoSafe).toLocaleString("es-VE", { minimumFractionDigits: 2 })} Bs`);
@@ -232,8 +295,8 @@ window.showPaymentDetails = function(index) {
         else statusEl.className = "px-3 py-1 rounded bg-gray-500/20 text-gray-400 border border-gray-500/30 text-[10px] font-black uppercase tracking-widest";
     }
 
-    setText('det-user', p.atleta_nombre || p.user_id || 'N/A');
-    setText('det-email', p.email || '--');
+    setText('det-user', userName);
+    setText('det-email', userEmail);
     setText('det-plan', p.plan || '--');
     
     const planEl = document.getElementById('det-plan');
@@ -241,7 +304,7 @@ window.showPaymentDetails = function(index) {
     
     setText('det-date-rep', p.fecha_reporte || '--');
     setText('det-date-res', p.fecha_verificacion || p.fecha_resolucion || '--');
-    setText('det-reason', p.admin_reason || p.reason || 'Dictamen realizado sin justificación escrita registrada.');
+    setText('det-reason', p.admin_reason || p.reason || 'Dictamen realizado sin justificación oficial.');
 
     const modal = document.getElementById('detail-modal');
     const content = document.getElementById('detail-content');
@@ -278,7 +341,20 @@ window.processPayment = function(paymentId, actionStatus) {
     pendingActionStatus = actionStatus;
     
     if(document.getElementById('totp-input')) document.getElementById('totp-input').value = '';
-    if(document.getElementById('totp-reason')) document.getElementById('totp-reason').value = '';
+    
+    const reasonSelect = document.getElementById('totp-reason');
+    if (reasonSelect) {
+        reasonSelect.innerHTML = '<option value="" disabled selected>Seleccione un dictamen...</option>';
+        if (actionStatus === 'aprobado') {
+            reasonSelect.innerHTML += `<option value="Pago verificado correctamente">Pago verificado correctamente</option>`;
+            reasonSelect.innerHTML += `<option value="Aprobado por excepción administrativa">Aprobado por excepción administrativa</option>`;
+        } else {
+            reasonSelect.innerHTML += `<option value="Pago no encontrado en banco">Pago no encontrado en banco</option>`;
+            reasonSelect.innerHTML += `<option value="Irregularidades en la transferencia">Irregularidades en la transferencia</option>`;
+            reasonSelect.innerHTML += `<option value="Monto diferente al establecido en el plan">Monto diferente al establecido en el plan</option>`;
+            reasonSelect.innerHTML += `<option value="Tiempo de respuesta caducado">Tiempo de respuesta caducado</option>`;
+        }
+    }
     
     const modal = document.getElementById('totp-modal');
     const content = document.getElementById('totp-content');
@@ -308,7 +384,6 @@ window.processPayment = function(paymentId, actionStatus) {
         setTimeout(() => {
             modal.classList.remove('opacity-0');
             content.classList.remove('scale-95');
-            if(document.getElementById('totp-reason')) document.getElementById('totp-reason').focus();
         }, 50);
     }
 };
@@ -337,10 +412,10 @@ window.executePaymentVerification = async function() {
     const btn = document.getElementById('btn-totp-verify');
     
     const otpCode = otpInput ? otpInput.value : '';
-    const reasonText = reasonInput ? reasonInput.value.trim() : '';
+    const reasonText = reasonInput ? reasonInput.value : '';
     
     if (!reasonText) {
-        showAdminToast("El motivo de resolución es obligatorio para la auditoría.", "error");
+        showAdminToast("El motivo de resolución es obligatorio.", "error");
         return;
     }
 
@@ -394,8 +469,11 @@ window.executePaymentVerification = async function() {
 // ====================================================================
 // 🚀 INICIALIZACIÓN DE ENTORNO
 // ====================================================================
-window.addEventListener('DOMContentLoaded', () => {
-    // Verificamos que el DOM esté listo antes de llamar a switchTab
+window.addEventListener('DOMContentLoaded', async () => {
+    // 1. Cargamos el diccionario de atletas en segundo plano
+    await fetchUsersDirectory();
+    
+    // 2. Activamos la primera pestaña
     setTimeout(() => { window.switchTab('pending'); }, 50);
     
     const totpInput = document.getElementById('totp-input');
