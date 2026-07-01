@@ -424,7 +424,7 @@ window.executePaymentVerification = async function() {
     const reasonInput = document.getElementById('totp-reason');
     const btn = document.getElementById('btn-totp-verify');
     
-    const otpCode = otpInput ? otpInput.value : '';
+    const otpCode = otpInput ? otpInput.value.trim() : '';
     const reasonText = reasonInput ? reasonInput.value : '';
     
     if (!reasonText) {
@@ -451,6 +451,9 @@ window.executePaymentVerification = async function() {
             reason: reasonText 
         };
 
+        // 👀 Auditoría en tiempo real: Abre tu consola (F12) para ver exactamente qué se está enviando
+        console.log("🚀 Enviando a la Bóveda:", payload);
+
         const res = await fetch(`${API_BASE_URL}/api/payments/verify`, {
             method: 'PUT',
             headers: { 
@@ -468,7 +471,10 @@ window.executePaymentVerification = async function() {
             // Refrescamos toda la tabla para que el pago salte de Pendientes a Histórico inmediatamente
             fetchAllData(); 
         } else {
+            // Muestra el mensaje exacto por el cual el servidor rechazó el pago
             showAdminToast(data.error || "Firma TOTP rechazada.", "error");
+            console.warn("🛑 Dictamen del Servidor:", data.error);
+            
             if (btn) {
                 btn.disabled = false;
                 btn.textContent = pendingActionStatus === 'aprobado' ? "Firmar Aprobación" : "Firmar Rechazo";
