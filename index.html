@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gymenez | Tu plataforma de entrenamiento</title>
+    <title>Gymenez Performance | Fitness plattaform </title>
     
     <link rel="icon" type="image/svg+xml" href="static/img/logos/mini_logo.svg">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -64,9 +64,26 @@
 <body class="selection:bg-[#FFC300] selection:text-black">
 
     <nav class="fixed w-full z-[100] glass-nav py-4 md:py-5 px-4 md:px-12 flex justify-between items-center transition-all duration-300">
-        <div class="flex items-center cursor-pointer group" onclick="window.location.href='index.html'">
-            <span class="text-[#FFC300] font-[900] text-2xl md:text-3xl italic tracking-tighter transition-transform group-hover:scale-105">GYM</span>
-            <span class="text-white font-[900] text-2xl md:text-3xl italic tracking-tighter">ENEZ</span>
+        /* Animación de entrada al hacer scroll */
+        .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body class="selection:bg-[#FFC300] selection:text-black">
+
+    <nav class="fixed w-full z-[100] glass-nav py-4 md:py-5 px-4 md:px-12 flex justify-between items-center transition-all duration-300">
+        
+        <!-- LOGO GYMENEZ PERFORMANCE -->
+        <div class="flex flex-col cursor-pointer group" onclick="window.location.href='index.html'">
+            <!-- GYMENEZ -->
+            <div class="flex items-center leading-none">
+                <span class="text-[#FFC300] font-[900] text-2xl md:text-3xl italic tracking-tighter transition-transform group-hover:scale-105">GYM</span>
+                <span class="text-white font-[900] text-2xl md:text-3xl italic tracking-tighter">ENEZ</span>
+            </div>
+            <!-- PERFORMANCE (Subrayado) -->
+            <span class="text-white text-[8px] md:text-[9px] font-black uppercase tracking-[0.4em] underline decoration-1 underline-offset-4 decoration-white/50 mt-1.5 ml-1 transition-all duration-300 group-hover:decoration-[#FFC300]">
+                PERFORMANCE
+            </span>
         </div>
 
         <div class="hidden md:flex gap-10 items-center">
