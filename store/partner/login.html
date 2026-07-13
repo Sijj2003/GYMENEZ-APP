@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gymenez Partner Console | Acceso Comercial</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { gymenez: { dark: '#030305', accent: '#FFC300' } }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #030305; color: white; -webkit-font-smoothing: antialiased; }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .input-premium {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .input-premium:focus {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #FFC300;
+            outline: none;
+            box-shadow: 0 0 0 1px rgba(255, 195, 0, 0.3);
+        }
+
+        /* Transiciones SPA (Single Page Application) */
+        .form-section { transition: opacity 0.4s ease, transform 0.4s ease; }
+        .hidden-form { opacity: 0; transform: translateY(10px); pointer-events: none; position: absolute; visibility: hidden; }
+        .active-form { opacity: 1; transform: translateY(0); position: relative; visibility: visible; }
+
+        /* Estilos de Notificación (Toast) */
+        #toast { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(-20px) scale(0.95); opacity: 0; pointer-events: none; }
+        #toast.show { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
+    </style>
+</head>
+<body class="selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col relative overflow-hidden">
+
+    <div class="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-[#FFC300]/5 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-white/5 rounded-full blur-[150px] pointer-events-none"></div>
+
+    <nav class="w-full z-50 p-6 flex justify-between items-center max-w-7xl mx-auto">
+        <a href="/store" class="flex items-center leading-none group">
+            <span class="text-xl font-[900] tracking-tighter uppercase italic text-white group-hover:text-[#FFC300] transition-colors">Gymenez</span>
+            <div class="h-4 w-px bg-white/20 mx-3"></div>
+            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mt-1">Partner Console</span>
+        </a>
+        <a href="/store" class="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Volver a la tienda
+        </a>
+    </nav>
+
+    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-[100] glass-panel px-6 py-3 rounded-full border flex items-center gap-3">
+        <span id="toast-icon" class="text-lg"></span>
+        <span id="toast-msg" class="text-xs font-bold tracking-wide"></span>
+    </div>
+
+    <main class="flex-1 flex items-center justify-center p-4 relative z-10">
+        <div class="w-full max-w-[900px] grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+            
+            <div class="hidden md:flex flex-col pr-8">
+                <span class="text-[#FFC300] text-[9px] font-black uppercase tracking-widest border border-[#FFC300]/30 bg-[#FFC300]/10 px-3 py-1 rounded-full w-max mb-6">Plataforma B2B</span>
+                <h1 class="text-4xl lg:text-5xl font-[900] tracking-tighter italic uppercase mb-6 leading-tight">
+                    Expande tu <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">imperio fitness.</span>
+                </h1>
+                <p class="text-gray-400 text-sm font-medium leading-relaxed mb-8">
+                    Únete a la red de distribución más exclusiva de Venezuela. Llega a miles de atletas activos, procesa pagos seguros y liquida tus ventas automáticamente.
+                </p>
+                <ul class="space-y-4">
+                    <li class="flex items-center gap-3 text-xs font-bold text-gray-300">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Liquidación automatizada (Escrow)
+                    </li>
+                    <li class="flex items-center gap-3 text-xs font-bold text-gray-300">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Auditoría financiera y reportes en PDF
+                    </li>
+                    <li class="flex items-center gap-3 text-xs font-bold text-gray-300">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Alojamiento de catálogo en Firebase
+                    </li>
+                </ul>
+            </div>
+
+            <div class="glass-panel p-8 md:p-10 rounded-[2rem] w-full max-w-md mx-auto relative overflow-hidden">
+                
+                <div id="login-form" class="form-section active-form">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-[900] tracking-tighter uppercase italic mb-2">Acceder al Portal</h2>
+                        <p class="text-xs text-gray-400 font-medium">Gestiona tu tienda, inventario y métricas.</p>
+                    </div>
+
+                    <form onsubmit="handleLogin(event)" class="space-y-5">
+                        <div>
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Correo Corporativo</label>
+                            <input type="email" id="login-email" required class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold" placeholder="empresa@correo.com">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500">Contraseña</label>
+                                <a href="#" class="text-[9px] font-black uppercase tracking-widest text-[#FFC300] hover:text-white transition">¿Recuperar?</a>
+                            </div>
+                            <input type="password" id="login-password" required class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold" placeholder="••••••••">
+                        </div>
+                        
+                        <button type="submit" id="btn-login" class="w-full bg-white text-black font-[900] text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-gray-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] flex justify-center items-center gap-2 mt-6">
+                            <span>Ingresar al Workspace</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </button>
+                    </form>
+
+                    <div class="mt-8 pt-6 border-t border-white/10 text-center">
+                        <p class="text-xs text-gray-500 font-medium">¿Quieres ser un aliado comercial?</p>
+                        <button onclick="toggleForms('register')" class="text-xs font-black uppercase tracking-widest text-white hover:text-[#FFC300] mt-2 transition">Solicitar Apertura &rarr;</button>
+                    </div>
+                </div>
+
+                <div id="register-form" class="form-section hidden-form">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-[900] tracking-tighter uppercase italic mb-2">Apertura de Tienda</h2>
+                        <p class="text-xs text-gray-400 font-medium">Sujeto a auditoría y aprobación de Gymenez.</p>
+                    </div>
+
+                    <form onsubmit="handleRegister(event)" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="col-span-2">
+                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5">Nombre de la Tienda / Marca</label>
+                                <input type="text" id="reg-name" required class="input-premium w-full px-4 py-2.5 rounded-xl text-sm font-semibold">
+                            </div>
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5">RIF Comercial</label>
+                                <input type="text" id="reg-rif" required class="input-premium w-full px-4 py-2.5 rounded-xl text-sm font-semibold uppercase" placeholder="J-12345678-9">
+                            </div>
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5">Teléfono Base</label>
+                                <input type="tel" id="reg-phone" required class="input-premium w-full px-4 py-2.5 rounded-xl text-sm font-semibold" placeholder="+58...">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5">Correo Electrónico Oficial</label>
+                                <input type="email" id="reg-email" required class="input-premium w-full px-4 py-2.5 rounded-xl text-sm font-semibold">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5">Contraseña de Acceso</label>
+                                <input type="password" id="reg-password" required class="input-premium w-full px-4 py-2.5 rounded-xl text-sm font-semibold">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" id="btn-register" class="w-full bg-[#FFC300] text-black font-[900] text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-yellow-400 transition-all shadow-[0_0_20px_rgba(255,195,0,0.2)] mt-6">
+                            Enviar Solicitud
+                        </button>
+                    </form>
+
+                    <div class="mt-6 pt-4 border-t border-white/10 text-center">
+                        <button onclick="toggleForms('login')" class="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">&larr; Ya tengo una cuenta</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // CONFIGURACIÓN DE ENTORNO (Cambiar en Producción)
+        const API_URL = 'http://127.0.0.1:5000/api/partner';
+
+        // 1. LÓGICA DE INTERFAZ: Cambiar entre Login y Registro
+        function toggleForms(target) {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+
+            if (target === 'register') {
+                loginForm.classList.remove('active-form');
+                loginForm.classList.add('hidden-form');
+                registerForm.classList.remove('hidden-form');
+                registerForm.classList.add('active-form');
+            } else {
+                registerForm.classList.remove('active-form');
+                registerForm.classList.add('hidden-form');
+                loginForm.classList.remove('hidden-form');
+                loginForm.classList.add('active-form');
+            }
+        }
+
+        // 2. LÓGICA DE NOTIFICACIONES (Toast)
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msgObj = document.getElementById('toast-msg');
+            const iconObj = document.getElementById('toast-icon');
+
+            toast.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-[100] glass-panel px-6 py-3 rounded-full border flex items-center gap-3 show';
+            
+            if (type === 'success') {
+                toast.classList.add('border-green-500/30', 'bg-green-500/10', 'text-green-400');
+                iconObj.innerHTML = '✓';
+            } else {
+                toast.classList.add('border-red-500/30', 'bg-red-500/10', 'text-red-400');
+                iconObj.innerHTML = '⚠';
+            }
+
+            msgObj.innerText = message;
+
+            setTimeout(() => {
+                toast.classList.remove('show', 'border-green-500/30', 'bg-green-500/10', 'text-green-400', 'border-red-500/30', 'bg-red-500/10', 'text-red-400');
+            }, 5000);
+        }
+
+        // 3. COMUNICACIÓN CON EL BACKEND (LOGIN)
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-login');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="animate-pulse">Verificando...</span>';
+            btn.disabled = true;
+
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showToast(`Bienvenido de vuelta, ${data.store_name}`, 'success');
+                    // Guardamos el token exclusivo de tienda (Aislado del token de atleta)
+                    localStorage.setItem('gymenez_partner_token', data.token);
+                    
+                    // Redirección al Dashboard del Vendedor (Siguiente paso)
+                    setTimeout(() => { window.location.href = '/store/partner/dashboard.html'; }, 1500);
+                } else {
+                    showToast(data.error || 'Credenciales inválidas', 'error');
+                }
+            } catch (error) {
+                showToast('Error de conexión con el servidor.', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // 4. COMUNICACIÓN CON EL BACKEND (REGISTRO)
+        async function handleRegister(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-register');
+            const originalText = btn.innerText;
+            btn.innerText = 'Procesando...';
+            btn.disabled = true;
+
+            const payload = {
+                store_name: document.getElementById('reg-name').value,
+                rif: document.getElementById('reg-rif').value,
+                phone: document.getElementById('reg-phone').value,
+                email: document.getElementById('reg-email').value,
+                password: document.getElementById('reg-password').value,
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showToast(data.message, 'success');
+                    // Limpiar formulario y volver al login
+                    e.target.reset();
+                    setTimeout(() => { toggleForms('login'); }, 3000);
+                } else {
+                    showToast(data.error || 'Fallo en el registro', 'error');
+                }
+            } catch (error) {
+                showToast('Error de conexión con el servidor.', 'error');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
