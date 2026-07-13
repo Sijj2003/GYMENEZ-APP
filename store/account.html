@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gymenez Ecosistema | Mi Cuenta</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { gymenez: { dark: '#030305', accent: '#FFC300' } }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #030305; color: white; -webkit-font-smoothing: antialiased; }
+        
+        .glass-nav {
+            background: rgba(3, 3, 5, 0.85);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        /* Estilo para los inputs modo Apple */
+        .input-premium {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.2s;
+        }
+        .input-premium:focus {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #FFC300;
+            outline: none;
+            box-shadow: 0 0 0 1px rgba(255, 195, 0, 0.5);
+        }
+
+        /* Paneles dinámicos */
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .hide-scroll::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="selection:bg-[#FFC300] selection:text-black">
+
+    <!-- NAVBAR ECOSISTEMA (Mantiene la coherencia de la tienda) -->
+    <nav class="fixed w-full z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <div class="flex items-center gap-4">
+                    <a href="/store/home.html" class="p-2 -ml-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </a>
+                    <div class="h-5 w-px bg-white/10 hidden md:block"></div>
+                    <a href="/store" class="flex items-center leading-none group">
+                        <span class="text-xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
+                        <span class="text-xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+                        <span class="text-[9px] font-black uppercase tracking-[0.3em] text-white/70 ml-2 mt-1">Cuenta</span>
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-4 md:gap-6">
+                    <a href="/dashboard" class="flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest text-gray-300 hover:border-[#FFC300] hover:text-[#FFC300] transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <span class="hidden md:inline">Fitness App</span>
+                    </a>
+                    <a href="/store/checkout.html" class="flex items-center gap-2 bg-[#FFC300] text-black px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-yellow-400 transition-all shadow-[0_0_15px_rgba(255,195,0,0.3)]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        Ir al Carrito
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HUB DE CUENTA PRINCIPAL -->
+    <main class="pt-28 pb-20 px-4 max-w-7xl mx-auto">
+        
+        <!-- Cabecera de Identidad -->
+        <div class="mb-10 flex flex-col md:flex-row items-center md:items-end gap-6 pb-8 border-b border-white/10">
+            <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-[#FFC300] to-orange-500 p-1">
+                <img src="https://ui-avatars.com/api/?name=Carlos+M&background=000&color=fff&size=128" class="rounded-full w-full h-full object-cover border-4 border-[#030305]">
+            </div>
+            <div class="text-center md:text-left flex-1">
+                <h1 class="text-3xl font-[900] tracking-tighter italic">Carlos Martínez</h1>
+                <p class="text-gray-400 text-sm font-medium">carlos.m@example.com • Miembro desde 2024</p>
+            </div>
+            <div class="flex gap-3">
+                <span class="bg-white/5 border border-white/10 text-[9px] uppercase tracking-widest font-black px-3 py-1.5 rounded-md text-[#FFC300]">Atleta Ultra</span>
+            </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-10">
+            
+            <!-- MENÚ LATERAL (Estilo Configuración de macOS) -->
+            <aside class="w-full md:w-64 shrink-0">
+                <nav class="flex flex-row md:flex-col gap-2 overflow-x-auto hide-scroll pb-2 md:pb-0">
+                    <button onclick="switchTab('perfil', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-bold bg-white/10 text-white transition-all whitespace-nowrap">
+                        <svg class="w-5 h-5 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        Información Personal
+                    </button>
+                    <button onclick="switchTab('compras', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-bold text-gray-400 hover:bg-white/5 hover:text-white transition-all whitespace-nowrap">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        Historial de Compras
+                    </button>
+                    <button onclick="switchTab('direcciones', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-bold text-gray-400 hover:bg-white/5 hover:text-white transition-all whitespace-nowrap">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Direcciones de Entrega
+                    </button>
+                    <button onclick="switchTab('pagos', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-bold text-gray-400 hover:bg-white/5 hover:text-white transition-all whitespace-nowrap">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                        Métodos de Pago
+                    </button>
+                    <button onclick="switchTab('soporte', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-bold text-gray-400 hover:bg-white/5 hover:text-white transition-all whitespace-nowrap mt-4">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        Centro de Soporte
+                    </button>
+                </nav>
+            </aside>
+
+            <!-- ÁREA DE CONTENIDO DINÁMICO -->
+            <div class="flex-1 max-w-3xl">
+                
+                <!-- PESTAÑA: PERFIL -->
+                <div id="perfil" class="tab-content active">
+                    <h2 class="text-xl font-[900] tracking-tighter uppercase italic mb-6">Información Personal</h2>
+                    <div class="glass-panel p-6 rounded-2xl space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-[10px] uppercase tracking-widest font-black text-gray-500 mb-2">Nombre</label>
+                                <input type="text" value="Carlos" class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase tracking-widest font-black text-gray-500 mb-2">Apellido</label>
+                                <input type="text" value="Martínez" class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[10px] uppercase tracking-widest font-black text-gray-500 mb-2">Correo Electrónico (Gymenez ID)</label>
+                                <input type="email" value="carlos.m@example.com" disabled class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold opacity-50 cursor-not-allowed">
+                                <p class="text-xs text-gray-500 mt-2">Tu correo es tu identificador único en el ecosistema. Para cambiarlo, contacta a soporte.</p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[10px] uppercase tracking-widest font-black text-gray-500 mb-2">Teléfono Móvil</label>
+                                <input type="tel" value="+58 414 123 4567" class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold">
+                            </div>
+                        </div>
+                        <div class="pt-4 border-t border-white/10 flex justify-end">
+                            <button class="bg-white text-black px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition">
+                                Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA: COMPRAS -->
+                <div id="compras" class="tab-content">
+                    <h2 class="text-xl font-[900] tracking-tighter uppercase italic mb-6">Historial de Compras</h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Orden 1 -->
+                        <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row gap-4 items-start md:items-center justify-between border-l-4 border-l-[#FFC300]">
+                            <div>
+                                <div class="flex items-center gap-3 mb-1">
+                                    <span class="text-sm font-black text-white">Orden #ORD-0892A</span>
+                                    <span class="bg-[#FFC300]/10 text-[#FFC300] border border-[#FFC300]/20 text-[9px] uppercase tracking-widest px-2 py-0.5 rounded font-bold">En Tránsito</span>
+                                </div>
+                                <p class="text-xs text-gray-400 font-medium">Realizada el 12 Julio, 2026 • 2 Productos</p>
+                            </div>
+                            <div class="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
+                                <span class="text-lg font-black">$63.25</span>
+                                <button class="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition border border-white/10 px-3 py-1.5 rounded-lg">Ver Detalles</button>
+                            </div>
+                        </div>
+
+                        <!-- Orden 2 -->
+                        <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                            <div>
+                                <div class="flex items-center gap-3 mb-1">
+                                    <span class="text-sm font-black text-gray-300">Orden #ORD-0741B</span>
+                                    <span class="bg-green-500/10 text-green-400 border border-green-500/20 text-[9px] uppercase tracking-widest px-2 py-0.5 rounded font-bold">Entregado</span>
+                                </div>
+                                <p class="text-xs text-gray-500 font-medium">Realizada el 25 Junio, 2026 • 1 Producto</p>
+                            </div>
+                            <div class="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
+                                <span class="text-lg font-black text-gray-400">$25.00</span>
+                                <button class="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition border border-white/5 px-3 py-1.5 rounded-lg">Ver Detalles</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA: DIRECCIONES -->
+                <div id="direcciones" class="tab-content">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-[900] tracking-tighter uppercase italic">Direcciones de Entrega</h2>
+                        <button class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] hover:text-white transition flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Agregar Nueva
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Dirección Principal -->
+                        <div class="glass-panel p-5 rounded-2xl border border-[#FFC300]/30 relative">
+                            <span class="absolute top-4 right-4 bg-[#FFC300] text-black text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded">Predeterminada</span>
+                            <div class="flex items-center gap-2 mb-3 text-white">
+                                <svg class="w-5 h-5 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                                <h3 class="font-bold text-sm">Mi Casa</h3>
+                            </div>
+                            <p class="text-sm text-gray-400 leading-relaxed mb-4">
+                                Av. Principal de Alta Vista<br>
+                                Res. Los Raudales, Torre B, Apto 42<br>
+                                Puerto Ordaz, Bolívar, Venezuela<br>
+                                CP: 8050
+                            </p>
+                            <div class="flex gap-4 border-t border-white/10 pt-3">
+                                <button class="text-[10px] font-bold text-gray-400 hover:text-white uppercase tracking-widest">Editar</button>
+                                <button class="text-[10px] font-bold text-red-400 hover:text-red-300 uppercase tracking-widest">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA: PAGOS -->
+                <div id="pagos" class="tab-content">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-[900] tracking-tighter uppercase italic">Métodos de Pago</h2>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-2xl mb-6">
+                        <h3 class="text-sm font-bold mb-4">Información de Facturación</h3>
+                        <p class="text-xs text-gray-400 mb-4">La validación de pagos en Bolívar (Bs) se realiza de forma manual mediante comprobantes vinculados al módulo financiero del ecosistema.</p>
+                        
+                        <!-- Tarjeta Simulada -->
+                        <div class="bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 p-5 rounded-xl w-full max-w-sm relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                            <div class="flex justify-between items-start mb-6 relative z-10">
+                                <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">Pago Móvil Validado</span>
+                                <svg class="w-8 h-8 text-white/20" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h16v16H4z" opacity=".2"/><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4V6h16v12z"/></svg>
+                            </div>
+                            <div class="relative z-10">
+                                <p class="text-lg font-mono text-gray-300 tracking-[0.2em] mb-1">**** **** **** 4567</p>
+                                <p class="text-xs font-bold text-gray-500 uppercase">Carlos Martínez</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA: SOPORTE -->
+                <div id="soporte" class="tab-content">
+                    <h2 class="text-xl font-[900] tracking-tighter uppercase italic mb-6">Centro de Soporte</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        <a href="https://wa.me/584148780392" target="_blank" class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center text-center hover:border-green-500/50 group transition">
+                            <div class="w-12 h-12 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.964 9.964 0 001.333 5.01L2 22l5.14-1.347a9.982 9.982 0 004.872 1.266h.004c5.503 0 9.985-4.479 9.985-9.985S17.518 2 12.012 2zm0 16.963c-1.528 0-3.024-.412-4.333-1.189l-.31-.184-3.22.845.858-3.14-.203-.323a8.271 8.271 0 01-1.264-4.437c0-4.57 3.723-8.291 8.295-8.291 2.217 0 4.298.865 5.864 2.433 1.566 1.568 2.43 3.652 2.43 5.869 0 4.571-3.722 8.293-8.295 8.293zm4.557-6.223c-.25-.125-1.479-.73-1.708-.813-.23-.084-.396-.125-.563.125-.167.25-.646.813-.792.98-.146.166-.292.187-.542.062-.25-.125-1.056-.39-2.012-1.246-.744-.666-1.246-1.488-1.392-1.738-.146-.25-.015-.385.11-.51.112-.112.25-.292.375-.438.125-.146.167-.25.25-.417.083-.167.042-.313-.021-.438-.063-.125-.563-1.354-.771-1.854-.203-.487-.41-.421-.563-.429-.146-.007-.313-.007-.479-.007s-.438.063-.667.313c-.229.25-.875.854-.875 2.083s.896 2.417 1.021 2.583c.125.167 1.761 2.688 4.261 3.765 2.093.9 2.5.73 2.938.688.438-.042 1.479-.604 1.688-1.188.208-.583.208-1.083.146-1.188-.063-.104-.23-.167-.479-.292z"/></svg>
+                            </div>
+                            <h3 class="font-bold text-sm mb-1 text-white">Atención Rápida</h3>
+                            <p class="text-xs text-gray-500">Contacto directo con operaciones vía WhatsApp.</p>
+                        </a>
+                        
+                        <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center text-center">
+                            <div class="w-12 h-12 bg-white/5 text-gray-300 rounded-full flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <h3 class="font-bold text-sm mb-1 text-white">Correo Oficial</h3>
+                            <p class="text-xs text-gray-500">soporte@gymenez.com</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-white/5 pt-8 pb-8 px-4 mt-12">
+        <div class="max-w-7xl mx-auto text-center">
+            <span class="text-xl font-[900] tracking-tighter uppercase italic text-gray-800 block mb-2">Gymenez<span class="text-[#FFC300]/20">Store</span></span>
+            <p class="text-[9px] uppercase tracking-widest text-gray-700 font-bold">© 2026 Ecosistema de Rendimiento</p>
+        </div>
+    </footer>
+
+    <!-- SCRIPT PARA CAMBIO DE PESTAÑAS (SPA Logic) -->
+    <script>
+        function switchTab(tabId, element) {
+            // 1. Ocultar todos los paneles
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // 2. Desactivar estilo visual de todos los botones
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-white/10', 'text-white');
+                btn.classList.add('text-gray-400');
+                
+                // Si el botón original no tenía el ícono en amarillo, reseteamos el color SVG
+                const svg = btn.querySelector('svg');
+                if(svg) svg.classList.remove('text-[#FFC300]');
+            });
+
+            // 3. Mostrar el panel seleccionado
+            document.getElementById(tabId).classList.add('active');
+
+            // 4. Activar el botón presionado
+            element.classList.remove('text-gray-400', 'hover:bg-white/5');
+            element.classList.add('bg-white/10', 'text-white');
+            const activeSvg = element.querySelector('svg');
+            if(activeSvg) activeSvg.classList.add('text-[#FFC300]');
+        }
+    </script>
+</body>
+</html>
