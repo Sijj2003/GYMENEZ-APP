@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gymenez Store | Bolsa de Compras</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { gymenez: { dark: '#030305', accent: '#FFC300' } }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #030305; color: white; -webkit-font-smoothing: antialiased; }
+        
+        .glass-nav {
+            background: rgba(3, 3, 5, 0.85);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .input-premium {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.2s;
+        }
+        
+        .input-premium:focus {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #FFC300;
+            outline: none;
+            box-shadow: 0 0 0 1px rgba(255, 195, 0, 0.5);
+        }
+
+        /* Ocultar flechas en inputs numéricos */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        .hide-scroll::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="selection:bg-[#FFC300] selection:text-black pb-24">
+
+    <nav class="fixed w-full z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <div class="flex items-center gap-4">
+                    <a href="javascript:history.back()" class="p-2 -ml-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </a>
+                    <div class="h-5 w-px bg-white/10 hidden md:block"></div>
+                    <a href="/store" class="flex items-center leading-none group">
+                        <span class="text-xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
+                        <span class="text-xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+                        <span class="text-[9px] font-black uppercase tracking-[0.3em] text-white/70 ml-2 mt-1">Bolsa</span>
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-4 md:gap-6">
+                    <a href="/dashboard" class="flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest text-gray-300 hover:border-[#FFC300] hover:text-[#FFC300] transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <span class="hidden md:inline">Fitness App</span>
+                    </a>
+                    <a href="/store/account.html" class="text-[10px] font-bold uppercase tracking-wider text-white hover:text-[#FFC300] transition">
+                        Mi Cuenta
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-28 px-4 max-w-7xl mx-auto">
+        <h1 class="text-3xl md:text-4xl font-[900] tracking-tighter italic uppercase mb-8">Revisión de <span class="text-[#FFC300]">Compra</span></h1>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            
+            <div class="lg:col-span-8 space-y-8">
+                
+                <section class="glass-panel p-6 rounded-3xl">
+                    <h2 class="text-xs font-black uppercase tracking-widest text-gray-400 border-b border-white/10 pb-4 mb-4">Artículos en tu bolsa</h2>
+                    
+                    <div class="space-y-6">
+                        
+                        <div class="flex gap-4 md:gap-6 items-center group">
+                            <div class="w-24 h-24 md:w-32 md:h-32 bg-[#050508] rounded-2xl overflow-hidden border border-white/5 flex-shrink-0 relative">
+                                <img src="https://images.unsplash.com/photo-1579722820308-d74e571900a9?q=80&w=400" alt="Creatina" class="w-full h-full object-cover">
+                            </div>
+                            
+                            <div class="flex-1 flex flex-col justify-between h-full">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h3 class="font-bold text-sm md:text-base leading-tight">Creatina Monohidratada Pura</h3>
+                                        <p class="text-[10px] text-gray-500 uppercase tracking-wider mt-1">Gymenez Nutrition • Sabor Neutro</p>
+                                    </div>
+                                    <button class="text-gray-500 hover:text-red-500 transition p-1">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>
+                                
+                                <div class="flex items-end justify-between mt-auto">
+                                    <div class="flex items-center bg-white/5 border border-white/10 rounded-full p-1">
+                                        <button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10">-</button>
+                                        <span class="w-8 text-center text-sm font-bold">1</span>
+                                        <button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10">+</button>
+                                    </div>
+                                    <span class="text-xl font-black text-white">$25.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4 md:gap-6 items-center group pt-6 border-t border-white/5">
+                            <div class="w-24 h-24 md:w-32 md:h-32 bg-[#050508] rounded-2xl overflow-hidden border border-white/5 flex-shrink-0 relative">
+                                <img src="https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=400" alt="Whey" class="w-full h-full object-cover">
+                            </div>
+                            
+                            <div class="flex-1 flex flex-col justify-between h-full">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h3 class="font-bold text-sm md:text-base leading-tight">Whey Protein Isolate</h3>
+                                        <p class="text-[10px] text-gray-500 uppercase tracking-wider mt-1">Titan Supps • Chocolate • 2 Lbs</p>
+                                    </div>
+                                    <button class="text-gray-500 hover:text-red-500 transition p-1">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>
+                                
+                                <div class="flex items-end justify-between mt-auto">
+                                    <div class="flex items-center bg-white/5 border border-white/10 rounded-full p-1">
+                                        <button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10">-</button>
+                                        <span class="w-8 text-center text-sm font-bold">1</span>
+                                        <button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10">+</button>
+                                    </div>
+                                    <span class="text-xl font-black text-white">$38.25</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <section class="glass-panel p-6 rounded-3xl">
+                    <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
+                        <h2 class="text-xs font-black uppercase tracking-widest text-gray-400">Detalles de Envío</h2>
+                        <span class="text-[9px] uppercase tracking-widest text-[#FFC300] font-bold">Autocompletado de tu cuenta</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] uppercase tracking-widest font-black text-gray-500 mb-2">Nombre de quien recibe</label>
+                            <input type="text" value="Carlos Martínez" class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] uppercase tracking-widest font-black text-gray-500 mb-2">Dirección Completa</label>
+                            <input type="text" value="Av. Principal de Alta Vista, Res. Los Raudales, Apto 42" class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-widest font-black text-gray-500 mb-2">Ciudad</label>
+                            <input type="text" value="Puerto Ordaz" class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-widest font-black text-gray-500 mb-2">Estado / Región</label>
+                            <input type="text" value="Bolívar" class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-widest font-black text-gray-500 mb-2">Teléfono de Contacto</label>
+                            <input type="tel" value="+58 414 123 4567" class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="glass-panel p-6 rounded-3xl">
+                    <h2 class="text-xs font-black uppercase tracking-widest text-gray-400 border-b border-white/10 pb-4 mb-6">Método de Pago</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="relative flex cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-4 focus:outline-none hover:border-[#FFC300] transition">
+                            <input type="radio" name="payment_method" value="card" class="peer sr-only" checked>
+                            <span class="absolute inset-0 rounded-2xl border-2 border-transparent peer-checked:border-[#FFC300] pointer-events-none"></span>
+                            <div class="flex w-full items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <svg class="w-6 h-6 text-gray-400 peer-checked:text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                    <span class="text-sm font-bold">Zelle / Tarjeta</span>
+                                </div>
+                                <div class="h-4 w-4 rounded-full border-2 border-gray-500 peer-checked:border-[#FFC300] peer-checked:bg-[#FFC300] transition"></div>
+                            </div>
+                        </label>
+
+                        <label class="relative flex cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-4 focus:outline-none hover:border-[#FFC300] transition">
+                            <input type="radio" name="payment_method" value="transfer" class="peer sr-only">
+                            <span class="absolute inset-0 rounded-2xl border-2 border-transparent peer-checked:border-[#FFC300] pointer-events-none"></span>
+                            <div class="flex w-full items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <svg class="w-6 h-6 text-gray-400 peer-checked:text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                    <span class="text-sm font-bold">Pago Móvil (Bs)</span>
+                                </div>
+                                <div class="h-4 w-4 rounded-full border-2 border-gray-500 peer-checked:border-[#FFC300] peer-checked:bg-[#FFC300] transition"></div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <p class="text-[10px] text-gray-500 mt-4 leading-relaxed">
+                        Al usar Pago Móvil, deberás subir el número de referencia (comprobante) en el siguiente paso para validación mediante nuestro módulo financiero.
+                    </p>
+                </section>
+            </div>
+
+            <div class="lg:col-span-4">
+                <aside class="glass-panel p-6 rounded-3xl sticky top-24 border border-[#FFC300]/20 shadow-[0_0_40px_rgba(255,195,0,0.05)]">
+                    <h2 class="text-lg font-[900] uppercase italic tracking-tighter mb-6">Resumen del Pedido</h2>
+                    
+                    <div class="space-y-4 mb-6 text-sm">
+                        <div class="flex justify-between text-gray-300 font-medium">
+                            <span>Subtotal (2 artículos)</span>
+                            <span>$63.25</span>
+                        </div>
+                        <div class="flex justify-between text-gray-300 font-medium">
+                            <span>Impuestos estim.</span>
+                            <span>$0.00</span>
+                        </div>
+                        <div class="flex justify-between text-gray-300 font-medium">
+                            <span>Envío</span>
+                            <span class="text-green-400 font-bold">Gratis</span>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-white/10 pt-4 mb-8 flex justify-between items-end">
+                        <span class="text-sm font-black uppercase tracking-widest text-gray-400">Total a pagar</span>
+                        <span class="text-3xl font-[900] text-[#FFC300] leading-none">$63.25</span>
+                    </div>
+                    
+                    <button class="w-full bg-[#FFC300] text-black font-[900] uppercase tracking-wider text-xs py-4 rounded-full hover:bg-yellow-400 transition-all duration-300 shadow-[0_0_20px_rgba(255,195,0,0.3)] hover:scale-[1.02]">
+                        Confirmar y Pagar
+                    </button>
+                    
+                    <div class="mt-6 flex items-center justify-center gap-2 text-gray-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        <span class="text-[9px] uppercase tracking-widest font-bold">Transacción encriptada y segura</span>
+                    </div>
+                </aside>
+            </div>
+            
+        </div>
+    </main>
+
+</body>
+</html>
