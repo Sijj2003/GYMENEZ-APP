@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whey Protein Isolate - Gymenez Store</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { gymenez: { dark: '#030305', accent: '#FFC300' } }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #030305; color: white; -webkit-font-smoothing: antialiased; }
+        
+        .glass-nav {
+            background: rgba(3, 3, 5, 0.85);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Ocultar scrollbars */
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Acordeones limpios estilo iOS */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+    </style>
+</head>
+<body class="selection:bg-[#FFC300] selection:text-black pb-24">
+
+    <!-- NAVBAR ECOSISTEMA -->
+    <nav class="fixed w-full z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <div class="flex items-center gap-4">
+                    <a href="javascript:history.back()" class="p-2 -ml-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </a>
+                    <div class="h-5 w-px bg-white/10 hidden md:block"></div>
+                    <a href="/store" class="flex items-center leading-none group">
+                        <span class="text-xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
+                        <span class="text-xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+                        <span class="text-[9px] font-black uppercase tracking-[0.3em] text-white/70 ml-2 mt-1">Store</span>
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-4 md:gap-6">
+                    <button class="relative p-1.5 text-gray-400 hover:text-white transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        <span class="absolute top-0 right-0 bg-[#FFC300] text-black text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full">2</span>
+                    </button>
+                    <div class="h-4 w-px bg-white/10"></div>
+                    <a href="/store/account.html" class="text-[10px] font-bold uppercase tracking-wider text-white hover:text-[#FFC300] transition">
+                        Mi Cuenta
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENEDOR DE PRODUCTO -->
+    <main class="pt-24 px-4 max-w-7xl mx-auto">
+        
+        <!-- Migas de Pan (Breadcrumbs) -->
+        <nav class="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-8 flex items-center gap-2">
+            <a href="/store" class="hover:text-[#FFC300] transition">Inicio</a>
+            <span>/</span>
+            <a href="#" class="hover:text-[#FFC300] transition">Suplementos</a>
+            <span>/</span>
+            <span class="text-white">Whey Isolate</span>
+        </nav>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+            
+            <!-- COLUMNA IZQUIERDA: Galería de Imágenes -->
+            <div class="lg:col-span-7 flex flex-col gap-4">
+                
+                <!-- Imagen Hero -->
+                <div class="glass-panel rounded-3xl aspect-square md:aspect-[4/3] overflow-hidden relative flex items-center justify-center bg-[#050508] border border-white/5 shadow-2xl">
+                    <span class="absolute top-6 left-6 bg-red-600 text-white text-[10px] font-black uppercase px-3 py-1.5 rounded-md z-10 shadow-lg">-15% DESCUENTO</span>
+                    <img id="main-product-image" src="https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=1000&auto=format&fit=crop" alt="Whey Protein" class="w-full h-full object-cover transition-opacity duration-300">
+                </div>
+                
+                <!-- Miniaturas (Scrollable) -->
+                <div class="flex gap-4 overflow-x-auto hide-scroll py-2 px-1">
+                    <button class="thumbnail-btn active border-2 border-[#FFC300] rounded-2xl overflow-hidden w-20 h-20 md:w-24 md:h-24 flex-shrink-0 opacity-100 transition shadow-[0_0_15px_rgba(255,195,0,0.2)]" onclick="changeImage('https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=1000&auto=format&fit=crop', this)">
+                        <img src="https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=200&auto=format&fit=crop" class="w-full h-full object-cover">
+                    </button>
+                    <button class="thumbnail-btn border-2 border-transparent rounded-2xl overflow-hidden w-20 h-20 md:w-24 md:h-24 flex-shrink-0 opacity-50 hover:opacity-100 transition bg-[#050508]" onclick="changeImage('https://images.unsplash.com/photo-1579722820308-d74e571900a9?q=80&w=1000&auto=format&fit=crop', this)">
+                        <img src="https://images.unsplash.com/photo-1579722820308-d74e571900a9?q=80&w=200&auto=format&fit=crop" class="w-full h-full object-cover">
+                    </button>
+                    <button class="thumbnail-btn border-2 border-transparent rounded-2xl overflow-hidden w-20 h-20 md:w-24 md:h-24 flex-shrink-0 opacity-50 hover:opacity-100 transition bg-[#050508]" onclick="changeImage('https://images.unsplash.com/photo-1581541018879-11ba183be7b0?q=80&w=1000&auto=format&fit=crop', this)">
+                        <div class="w-full h-full flex items-center justify-center bg-white/5 text-xs font-bold text-gray-400">Info</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: Configuración y Compra -->
+            <div class="lg:col-span-5 flex flex-col">
+                
+                <!-- Badge del Vendedor -->
+                <div class="inline-flex items-center gap-3 glass-panel px-4 py-2 rounded-full w-max mb-6 border border-white/10">
+                    <div class="w-6 h-6 rounded-full bg-[#111] overflow-hidden">
+                        <img src="https://ui-avatars.com/api/?name=Titan+Supps&background=FFC300&color=000" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[7px] text-gray-400 uppercase tracking-widest leading-none">Distribuido por</span>
+                        <span class="text-[10px] font-black text-white uppercase tracking-wider flex items-center gap-1">
+                            Titan Supps
+                            <svg class="w-3 h-3 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Título y Descripción Corta -->
+                <h1 class="text-3xl md:text-5xl font-[900] italic uppercase tracking-tighter mb-4">Whey Isolate <br><span class="text-[#FFC300]">100% Pura</span></h1>
+                
+                <div class="flex items-end gap-4 mb-6">
+                    <span class="text-4xl font-black text-white leading-none">$38.25</span>
+                    <span class="text-lg text-gray-500 font-bold line-through mb-1">$45.00</span>
+                </div>
+
+                <p class="text-sm text-gray-400 font-medium leading-relaxed mb-8">
+                    Aislado de proteína de suero microfiltrada en frío. Diseñada para absorción ultra-rápida post-entrenamiento. 25g de proteína, 0 azúcares añadidos.
+                </p>
+
+                <!-- Selector de Variantes (Color/Sabor) -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Sabor</span>
+                        <span class="text-[10px] font-black text-white uppercase tracking-widest" id="flavor-label">Vainilla Francesa</span>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="variant-btn w-12 h-12 rounded-full bg-[#F3E5AB] border-2 border-[#FFC300] shadow-[0_0_15px_rgba(255,195,0,0.3)] transition transform hover:scale-105" onclick="selectVariant(this, 'Vainilla Francesa')"></button>
+                        <button class="variant-btn w-12 h-12 rounded-full bg-[#3C2F2F] border-2 border-transparent hover:border-white/30 transition transform hover:scale-105" onclick="selectVariant(this, 'Doble Chocolate')"></button>
+                        <button class="variant-btn w-12 h-12 rounded-full bg-[#FFC0CB] border-2 border-transparent hover:border-white/30 transition transform hover:scale-105" onclick="selectVariant(this, 'Fresa Silvestre')"></button>
+                    </div>
+                </div>
+
+                <!-- Selector de Tamaño -->
+                <div class="mb-10">
+                    <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-3">Presentación</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button class="size-btn border-2 border-[#FFC300] bg-[#FFC300]/10 text-white rounded-xl py-3 px-4 transition flex justify-between items-center" onclick="selectSize(this)">
+                            <span class="text-xs font-bold uppercase tracking-wider">2 Libras</span>
+                            <span class="text-[#FFC300] font-black text-[10px]">30 Serv</span>
+                        </button>
+                        <button class="size-btn border-2 border-white/10 bg-transparent text-gray-400 hover:border-white/30 rounded-xl py-3 px-4 transition flex justify-between items-center" onclick="selectSize(this)">
+                            <span class="text-xs font-bold uppercase tracking-wider">5 Libras</span>
+                            <span class="text-gray-500 font-bold text-[10px]">75 Serv</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bloque de Compra (Cantidad y Botón) -->
+                <div class="flex gap-4 mb-10">
+                    <div class="glass-panel flex items-center justify-between px-4 py-2 rounded-2xl w-32 shrink-0 border border-white/10">
+                        <button class="text-gray-400 hover:text-white transition text-lg" onclick="updateQty(-1)">-</button>
+                        <span id="qty-value" class="font-bold text-sm">1</span>
+                        <button class="text-gray-400 hover:text-white transition text-lg" onclick="updateQty(1)">+</button>
+                    </div>
+                    
+                    <button class="flex-1 bg-[#FFC300] text-black font-[900] text-[11px] uppercase tracking-[0.2em] rounded-2xl hover:bg-yellow-400 transition-all duration-300 shadow-[0_0_20px_rgba(255,195,0,0.3)] hover:scale-[1.02] flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        Añadir a la bolsa
+                    </button>
+                </div>
+
+                <!-- Detalles Técnicos (Acordeones Estilo iOS) -->
+                <div class="border-t border-white/10 divide-y divide-white/10">
+                    
+                    <details class="group py-5" open>
+                        <summary class="flex justify-between items-center font-bold text-[11px] uppercase tracking-widest cursor-pointer text-gray-300 hover:text-[#FFC300] transition">
+                            Descripción Completa
+                            <span class="transition-transform duration-300 group-open:rotate-180">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </span>
+                        </summary>
+                        <div class="text-gray-400 text-sm mt-4 leading-relaxed font-medium">
+                            Nuestra proteína aislada pasa por un proceso de microfiltración de flujo cruzado en frío, lo que garantiza que las fracciones de proteína se mantengan intactas. Ideal para personas intolerantes a la lactosa y atletas en etapa de definición que necesitan una recuperación muscular limpia y eficiente.
+                        </div>
+                    </details>
+
+                    <details class="group py-5">
+                        <summary class="flex justify-between items-center font-bold text-[11px] uppercase tracking-widest cursor-pointer text-gray-300 hover:text-[#FFC300] transition">
+                            Información Nutricional
+                            <span class="transition-transform duration-300 group-open:rotate-180">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </span>
+                        </summary>
+                        <div class="mt-4">
+                            <table class="w-full text-left text-sm text-gray-400 font-medium">
+                                <tbody>
+                                    <tr class="border-b border-white/5"><td class="py-3">Porción</td><td class="py-3 text-white font-bold text-right">1 Scoop (30g)</td></tr>
+                                    <tr class="border-b border-white/5"><td class="py-3">Calorías</td><td class="py-3 text-white font-bold text-right">110 kcal</td></tr>
+                                    <tr class="border-b border-white/5"><td class="py-3">Proteína</td><td class="py-3 text-white font-bold text-right">25g</td></tr>
+                                    <tr class="border-b border-white/5"><td class="py-3">Carbohidratos Netos</td><td class="py-3 text-white font-bold text-right">1g</td></tr>
+                                    <tr><td class="py-3">Grasas Totales</td><td class="py-3 text-white font-bold text-right">0.5g</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+
+                    <details class="group py-5">
+                        <summary class="flex justify-between items-center font-bold text-[11px] uppercase tracking-widest cursor-pointer text-gray-300 hover:text-[#FFC300] transition">
+                            Garantía y Envíos
+                            <span class="transition-transform duration-300 group-open:rotate-180">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </span>
+                        </summary>
+                        <div class="text-gray-400 text-sm mt-4 leading-relaxed font-medium">
+                            <p class="mb-3">Envío gestionado y garantizado por <strong>Titan Supps</strong>. Despacho nacional en 24-48 horas hábiles.</p>
+                            <div class="flex items-center gap-2 text-green-500 text-[10px] font-black uppercase tracking-widest mt-4 bg-green-500/10 p-3 rounded-lg border border-green-500/20">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Compra Segura Auditada por Gymenez
+                            </div>
+                        </div>
+                    </details>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- JS BÁSICO PARA LA VISTA -->
+    <script>
+        // 1. Cambiar imagen principal
+        function changeImage(src, btn) {
+            const img = document.getElementById('main-product-image');
+            img.style.opacity = '0'; // Fade out rápido
+            
+            setTimeout(() => {
+                img.src = src;
+                img.style.opacity = '1'; // Fade in
+            }, 150);
+            
+            // Actualizar borde de miniaturas
+            document.querySelectorAll('.thumbnail-btn').forEach(b => {
+                b.classList.remove('border-[#FFC300]', 'opacity-100', 'shadow-[0_0_15px_rgba(255,195,0,0.2)]');
+                b.classList.add('border-transparent', 'opacity-50');
+            });
+            btn.classList.remove('border-transparent', 'opacity-50');
+            btn.classList.add('border-[#FFC300]', 'opacity-100', 'shadow-[0_0_15px_rgba(255,195,0,0.2)]');
+        }
+
+        // 2. Seleccionar Sabor
+        function selectVariant(btn, labelText) {
+            document.getElementById('flavor-label').innerText = labelText;
+            
+            document.querySelectorAll('.variant-btn').forEach(b => {
+                b.classList.remove('border-[#FFC300]', 'shadow-[0_0_15px_rgba(255,195,0,0.3)]', 'scale-105');
+                b.classList.add('border-transparent');
+            });
+            btn.classList.remove('border-transparent');
+            btn.classList.add('border-[#FFC300]', 'shadow-[0_0_15px_rgba(255,195,0,0.3)]', 'scale-105');
+        }
+
+        // 3. Seleccionar Presentación (Tamaño)
+        function selectSize(btn) {
+            document.querySelectorAll('.size-btn').forEach(b => {
+                b.classList.remove('border-[#FFC300]', 'bg-[#FFC300]/10', 'text-white');
+                b.classList.add('border-white/10', 'bg-transparent', 'text-gray-400');
+                
+                // Reset color del texto pequeño interno
+                const smallText = b.querySelector('span:last-child');
+                smallText.classList.remove('text-[#FFC300]');
+                smallText.classList.add('text-gray-500');
+            });
+            
+            btn.classList.remove('border-white/10', 'bg-transparent', 'text-gray-400');
+            btn.classList.add('border-[#FFC300]', 'bg-[#FFC300]/10', 'text-white');
+            
+            const activeSmallText = btn.querySelector('span:last-child');
+            activeSmallText.classList.remove('text-gray-500');
+            activeSmallText.classList.add('text-[#FFC300]');
+        }
+
+        // 4. Cantidad
+        function updateQty(change) {
+            let qtySpan = document.getElementById('qty-value');
+            let currentQty = parseInt(qtySpan.innerText);
+            let newQty = currentQty + change;
+            if (newQty >= 1 && newQty <= 10) { 
+                qtySpan.innerText = newQty;
+            }
+        }
+    </script>
+</body>
+</html>
