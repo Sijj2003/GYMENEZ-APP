@@ -448,6 +448,70 @@
                 btn.disabled = false;
             }
         }
+
+        // 7. Cargar el Catálogo de Productos
+        async function loadMyProducts() {
+            const token = localStorage.getItem('gymenez_partner_token');
+            const URL = 'https://sijj2003.pythonanywhere.com/api/store/partner/products';
+            
+            try {
+                const response = await fetch(URL, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    renderProducts(data.products);
+                }
+            } catch (error) {
+                console.error("Error al cargar el catálogo:", error);
+            }
+        }
+
+        // 8. Renderizar la cuadrícula de Productos
+        function renderProducts(products) {
+            const emptyState = document.getElementById('empty-state');
+            const grid = document.getElementById('products-grid');
+
+            if (products.length === 0) {
+                emptyState.classList.remove('hidden');
+                grid.innerHTML = '';
+                return;
+            }
+
+            // Ocultamos el cuadro de vacío y mostramos los productos
+            emptyState.classList.add('hidden');
+            
+            grid.innerHTML = products.map(p => `
+                <div class="glass-panel p-4 rounded-2xl group hover:border-[#FFC300]/50 transition relative flex flex-col">
+                    <div class="aspect-square bg-[#050508] rounded-xl mb-4 overflow-hidden border border-white/5 shrink-0">
+                        <img src="${p.image_url}" alt="${p.name}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
+                    </div>
+                    <div class="flex-1 flex flex-col justify-between">
+                        <div class="flex justify-between items-start mb-2 gap-2">
+                            <div>
+                                <h3 class="font-bold text-sm text-white leading-tight mb-1">${p.name}</h3>
+                                <p class="text-[9px] text-gray-500 uppercase tracking-widest font-black">${p.category}</p>
+                            </div>
+                            <span class="bg-[#FFC300]/10 border border-[#FFC300]/20 text-[#FFC300] font-black text-[9px] uppercase px-2 py-1 rounded shrink-0">Stock: ${p.stock}</span>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+                            <p class="text-white font-black text-xl">$${p.price_usd.toFixed(2)}</p>
+                            <button class="text-[10px] text-gray-400 hover:text-white uppercase tracking-widest font-bold transition flex items-center gap-1 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/30">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                Editar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Ejecutar la carga apenas inicie el dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMyProducts();
+        });
     </script>
 </body>
 </html>
