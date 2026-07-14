@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Búsqueda | Gymenez Store</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/store/search.css?v=1.0">
+    
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { gymenez: { dark: '#030305', accent: '#FFC300' } } } }
+        }
+    </script>
+</head>
+<body class="selection:bg-[#FFC300] selection:text-black">
+
+    <!-- NAVBAR (Simplificado para la página interior) -->
+    <nav class="fixed w-full z-50 glass-nav border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-4">
+                    <a href="/store/home.html" class="p-2 -ml-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </a>
+                    <a href="/store" class="flex items-center leading-none">
+                        <span class="text-xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
+                        <span class="text-xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+                    </a>
+                </div>
+                
+                <!-- Buscador Central para seguir buscando -->
+                <div class="hidden md:block flex-1 max-w-md mx-8 relative"> 
+                    <div class="relative group">
+                        <button id="search-btn-inner" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-500 hover:text-[#FFC300] transition z-10">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </button>
+                        <input type="text" id="search-input-inner" autocomplete="off" class="block w-full pl-10 pr-3 py-2 border border-white/10 rounded-full leading-5 bg-[#0a0a0f] text-gray-300 placeholder-gray-500 focus:outline-none focus:border-[#FFC300]/50 transition-all text-xs" placeholder="Nueva búsqueda...">
+                    </div>
+                </div>
+
+                <div class="flex items-center">
+                    <a href="/store/account" class="text-[10px] font-bold uppercase tracking-wider text-white hover:text-[#FFC300] transition">Mi Cuenta</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ZONA DE RESULTADOS -->
+    <main class="pt-28 pb-24 px-4 max-w-7xl mx-auto min-h-screen">
+        
+        <div class="mb-8">
+            <a href="/store/home.html" class="text-gray-500 hover:text-[#FFC300] text-[10px] uppercase font-bold tracking-widest mb-4 inline-block">&larr; Volver al inicio</a>
+            <h1 class="text-2xl md:text-4xl font-[900] tracking-tighter italic uppercase text-white">
+                Resultados para: <span id="search-query-display" class="text-[#FFC300]">"..."</span>
+            </h1>
+            <p id="search-count" class="text-gray-400 text-xs mt-2 font-medium">Buscando coincidencias...</p>
+        </div>
+
+        <div id="results-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div class="col-span-full py-12 flex items-center justify-center">
+                <span class="text-[#FFC300] text-[10px] uppercase tracking-widest font-black animate-pulse">Analizando catálogo...</span>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="/static/js/store/search.js?v=1.0"></script>
+</body>
+</html>
