@@ -71,35 +71,53 @@ async function loadStoreCatalog() {
 function setupFiltersAndSearch() {
     const searchInput = document.getElementById('search-input');
     const searchDropdown = document.getElementById('search-dropdown');
+    const searchBtn = document.getElementById('search-btn'); // Botón de la lupa
     
-    // --- LÓGICA DEL BUSCADOR FLOTANTE ---
+    // Función central para viajar a la página de búsqueda
+    const executeSearch = () => {
+        if (!searchInput) return;
+        const term = searchInput.value.trim();
+        if (term.length > 0) {
+            window.location.href = `/store/search.html?q=${encodeURIComponent(term)}`;
+        }
+    };
+
     if (searchInput && searchDropdown) {
+        
+        // 1. Disparar búsqueda con la tecla ENTER
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                executeSearch();
+            }
+        });
+
+        // 2. Disparar búsqueda haciendo clic en la lupa
+        if (searchBtn) {
+            searchBtn.addEventListener('click', executeSearch);
+        }
+
+        // 3. El dropdown en vivo (Letra por letra)
         searchInput.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase().trim();
-            
             if (term.length === 0) {
                 searchDropdown.classList.add('hidden');
                 return;
             }
-            
-            // Buscar coincidencias en todo el catálogo
             const filtered = window.allProducts.filter(p => 
                 p.name.toLowerCase().includes(term) || 
                 p.store_name.toLowerCase().includes(term) ||
                 p.category.toLowerCase().includes(term)
             );
-            
             renderSearchDropdown(filtered, searchDropdown);
         });
 
-        // Mostrar lista de nuevo al hacer clic en el buscador (si ya había texto)
+        // Mostrar dropdown al enfocar
         searchInput.addEventListener('focus', (e) => {
-            if (e.target.value.trim().length > 0) {
-                searchDropdown.classList.remove('hidden');
-            }
+            if (e.target.value.trim().length > 0) searchDropdown.classList.remove('hidden');
         });
 
-        // Ocultar la lista flotante al hacer clic en cualquier parte fuera de ella
+        // Ocultar dropdown al hacer clic fuera
         document.addEventListener('click', (e) => {
             if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
                 searchDropdown.classList.add('hidden');
@@ -120,11 +138,9 @@ function setupFiltersAndSearch() {
             clicked.classList.add('bg-white/10', 'text-white', 'border-[#FFC300]');
 
             currentCategory = clicked.getAttribute('data-category');
-            
             const titleSpan = document.querySelector('#catalog-title span');
             if(currentCategory === 'all') titleSpan.innerText = 'Completo';
             else titleSpan.innerText = currentCategory;
-
             applyCategoryFilter();
         });
     });
@@ -135,7 +151,12 @@ function applyCategoryFilter() {
     if (currentCategory !== 'all') {
         filtered = filtered.filter(p => p.category === currentCategory);
     }
-    document.getElementById('results-count').innerText = `${filtered.length} Resultados`;
+    
+    const countDisplay = document.getElementById('results-count');
+    if (countDisplay) {
+        countDisplay.innerText = `${filtered.length} Resultados`;
+    }
+    
     renderProductsGrid(filtered); // Esto solo actualiza las cuadrículas grandes de abajo
 }
 
@@ -150,7 +171,6 @@ function renderSearchDropdown(results, container) {
         return;
     }
 
-    // Mostramos máximo 8 resultados rápidos para no colapsar la pantalla
     container.innerHTML = results.slice(0, 8).map(p => {
         const discount = p.discount_percentage || 0;
         const finalPrice = discount > 0 ? (p.price_usd * (1 - discount/100)).toFixed(2) : p.price_usd.toFixed(2);
@@ -174,7 +194,7 @@ function renderSearchDropdown(results, container) {
 }
 
 // ==========================================
-// 5. RENDERIZAR CUADRÍCULA PRINCIPAL (Para las Categorías)
+// 5. RENDERIZAR CUADRÍCULA PRINCIPAL
 // ==========================================
 function renderProductsGrid(productsToRender) {
     const grid = document.getElementById('catalog-grid');
@@ -201,7 +221,6 @@ function renderProductsGrid(productsToRender) {
         const isOfficial = storeName.toLowerCase().includes('gymenez');
         const badgeColor = isOfficial ? 'text-[#FFC300]' : 'text-white';
 
-        // Al hacer clic en la tarjeta grande, también lleva a la página de producto
         return `
         <a href="/store/product.html?id=${p.id}" class="glass-panel p-4 rounded-2xl group cursor-pointer relative flex flex-col hover:border-[#FFC300]/50 transition-all">
             <div class="absolute top-6 left-6 z-10 bg-black/80 backdrop-blur-md px-2 py-1 rounded border border-white/10 text-[8px] font-black uppercase tracking-widest text-gray-300">
