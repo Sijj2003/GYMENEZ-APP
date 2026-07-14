@@ -1,0 +1,60 @@
+body { 
+    background-color: #030305; 
+    color: white; 
+    -webkit-font-smoothing: antialiased; 
+}
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.input-premium {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.input-premium:focus {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #FFC300;
+    outline: none;
+    box-shadow: 0 0 0 1px rgba(255, 195, 0, 0.3);
+}
+
+/* Transiciones fluidas entre formularios (SPA Mode) */
+.form-section { 
+    transition: opacity 0.4s ease, transform 0.4s ease; 
+}
+
+.hidden-form { 
+    opacity: 0; 
+    transform: translateY(10px); 
+    pointer-events: none; 
+    position: absolute; 
+    visibility: hidden; 
+}
+
+.active-form { 
+    opacity: 1; 
+    transform: translateY(0); 
+    position: relative; 
+    visibility: visible; 
+}
+
+/* Sistema de Notificaciones (Toasts) */
+#toast { 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    transform: translateY(-20px) scale(0.95); 
+    opacity: 0; 
+    pointer-events: none; 
+}
+
+#toast.show { 
+    transform: translateY(0) scale(1); 
+    opacity: 1; 
+    pointer-events: auto; 
+}
