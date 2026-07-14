@@ -8,7 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     
-    <!-- Archivo CSS Externo -->
     <link rel="stylesheet" href="/static/css/store/partner_dashboard.css">
     
     <script>
@@ -24,13 +23,11 @@
 </head>
 <body class="selection:bg-[#FFC300] selection:text-black flex h-screen overflow-hidden">
 
-    <!-- PROTECCIÓN DE RUTA -->
     <script>
         const token = localStorage.getItem('gymenez_partner_token');
         if (!token) window.location.href = '/store/partner/login.html';
     </script>
 
-    <!-- SIDEBAR DE NAVEGACIÓN -->
     <aside class="w-64 border-r border-white/10 bg-[#030305] flex-col hidden md:flex z-20 h-full">
         <div class="p-6 border-b border-white/10">
             <a href="#" class="flex items-center leading-none">
@@ -67,10 +64,8 @@
         </div>
     </aside>
 
-    <!-- ÁREA PRINCIPAL -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gradient-to-br from-[#030305] to-[#0a0a0f]">
         
-        <!-- HEADER -->
         <header class="w-full h-16 border-b border-white/10 glass-panel flex items-center justify-between px-6 z-10 shrink-0">
             <div class="flex items-center gap-4 md:hidden">
                 <span class="text-lg font-[900] tracking-tighter uppercase italic text-white">Gymenez</span>
@@ -87,7 +82,6 @@
                         <p id="store-name-display" class="text-xs font-bold text-white">Cargando...</p>
                         <p class="text-[9px] text-gray-500 uppercase tracking-widest">Partner Verificado</p>
                     </div>
-                    <!-- NUEVO: BOTÓN INTERACTIVO DEL PERFIL -->
                     <button onclick="openProfileModal()" class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FFC300] to-orange-500 p-[2px] hover:scale-110 transition transform shadow-[0_0_15px_rgba(255,195,0,0.3)]">
                         <div id="header-logo" class="w-full h-full bg-black rounded-full flex items-center justify-center text-[#FFC300] font-black text-xs overflow-hidden">
                             P
@@ -97,11 +91,9 @@
             </div>
         </header>
 
-        <!-- CONTENIDO CENTRAL -->
         <div class="flex-1 overflow-y-auto custom-scroll p-4 md:p-8">
             <div class="max-w-6xl mx-auto">
                 
-                <!-- PESTAÑA: OVERVIEW -->
                 <div id="tab-overview" class="tab-content active">
                     <h1 class="text-2xl font-[900] tracking-tighter uppercase italic mb-6">Métricas del <span class="text-[#FFC300]">Mes</span></h1>
                     
@@ -132,7 +124,6 @@
                     </div>
                 </div>
 
-                <!-- PESTAÑA: PRODUCTOS -->
                 <div id="tab-products" class="tab-content">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                         <h1 class="text-2xl font-[900] tracking-tighter uppercase italic">Catálogo de <span class="text-[#FFC300]">Productos</span></h1>
@@ -153,11 +144,9 @@
                         </button>
                     </div>
 
-                    <!-- Cuadrícula de Productos Generada por JS -->
                     <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
                 </div>
 
-                <!-- PESTAÑA: ÓRDENES -->
                 <div id="tab-orders" class="tab-content">
                     <h1 class="text-2xl font-[900] tracking-tighter uppercase italic mb-8">Gestión de <span class="text-[#FFC300]">Órdenes</span></h1>
                     
@@ -184,7 +173,6 @@
                     </div>
                 </div>
 
-                <!-- PESTAÑA: FINANZAS -->
                 <div id="tab-finance" class="tab-content">
                     <h1 class="text-2xl font-[900] tracking-tighter uppercase italic mb-8">Auditoría <span class="text-[#FFC300]">Financiera</span></h1>
                     <div class="glass-panel p-8 rounded-3xl border-l-4 border-l-[#FFC300]">
@@ -202,7 +190,6 @@
         </div>
     </main>
 
-    <!-- MODAL: CREAR / EDITAR PRODUCTO -->
     <div id="product-modal" class="fixed inset-0 z-[100] bg-black/60 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-2xl rounded-[2rem] shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
             
@@ -215,7 +202,6 @@
 
             <div class="p-6 overflow-y-auto custom-scroll">
                 <form id="add-product-form" class="space-y-6">
-                    <!-- ID Oculto para lógica de edición -->
                     <input type="hidden" id="prod-id" value="">
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -261,7 +247,6 @@
                             <div class="relative input-premium w-full px-4 py-2.5 rounded-xl flex items-center justify-between overflow-hidden group cursor-pointer hover:border-[#FFC300] transition">
                                 <span id="file-name-display" class="text-xs text-gray-400 truncate">Seleccionar archivo...</span>
                                 <span class="bg-white/10 text-[9px] font-black uppercase px-2 py-1 rounded text-white group-hover:bg-[#FFC300] group-hover:text-black transition">Subir</span>
-                                <!-- NOTA: required removido para permitir edición sin cambiar la foto -->
                                 <input type="file" id="prod-image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="updateFileName(this)">
                             </div>
                         </div>
@@ -284,9 +269,6 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- MODAL: PERFIL DE LA TIENDA Y SOPORTE -->
-    <!-- ========================================== -->
     <div id="profile-modal" class="fixed inset-0 z-[100] bg-black/60 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-sm rounded-[2rem] shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col">
             
@@ -299,21 +281,17 @@
 
             <div class="p-6 space-y-4">
                 <div class="flex flex-col items-center justify-center mb-6">
-                   <!-- Contenedor interactivo de la foto -->
                    <div class="relative group cursor-pointer w-24 h-24 rounded-full border-2 border-[#FFC300]/50 overflow-hidden bg-[#030305] shadow-[0_0_15px_rgba(255,195,0,0.1)]" onclick="document.getElementById('logo-upload').click()">
                        <div id="modal-profile-logo" class="w-full h-full flex items-center justify-center text-3xl font-black text-[#FFC300] transition duration-300 group-hover:opacity-30 group-hover:scale-110"></div>
                        
-                       <!-- Icono de cámara que aparece al pasar el ratón -->
                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition pointer-events-none">
                            <svg class="w-8 h-8 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                        </div>
                    </div>
-                   <!-- Input oculto -->
                    <input type="file" id="logo-upload" class="hidden" accept="image/*" onchange="uploadNewLogo(this)">
                    <p class="text-[9px] text-gray-500 uppercase tracking-widest mt-3 font-bold">Cambiar Logo (Max 3/mes)</p>
                 </div>
                 
-                <!-- Campos Bloqueados -->
                 <div>
                     <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1">Nombre Comercial</label>
                     <input type="text" id="prof-name" class="w-full bg-[#030305] border border-white/5 rounded-xl px-4 py-2 text-sm font-semibold text-gray-300 cursor-not-allowed" readonly>
@@ -334,7 +312,6 @@
                 </div>
             </div>
 
-            <!-- Botones de Contacto -->
             <div class="p-6 border-t border-white/10 bg-white/5 rounded-b-[2rem]">
                 <p class="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-3 text-center">Modificaciones sujetas a auditoría</p>
                 <div class="flex gap-3 justify-center">
@@ -350,7 +327,6 @@
         </div>
     </div>
 
-    <!-- Script Externo -->
-    <script src="/static/js/store/partner_dashboard.js"></script>
+    <script src="/static/js/store/partner_dashboard.js?v=3.0"></script>
 </body>
 </html>
