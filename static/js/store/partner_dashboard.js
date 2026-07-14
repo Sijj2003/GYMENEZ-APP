@@ -310,6 +310,55 @@ function closeProfileModal() {
     setTimeout(() => { profileModal.classList.add('hidden'); }, 300);
 }
 
+// ==========================================
+// SUBIR NUEVO LOGO CON RESTRICCIONES
+// ==========================================
+async function uploadNewLogo(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) { // Límite 2MB Front-end
+        alert("La imagen es demasiado pesada (Máximo 2MB).");
+        return;
+    }
+
+    const logoEl = document.getElementById('modal-profile-logo');
+    const headerLogoEl = document.getElementById('header-logo');
+    logoEl.innerHTML = `<span class="animate-pulse text-[9px] uppercase tracking-widest text-white">Subiendo...</span>`;
+
+    const token = localStorage.getItem('gymenez_partner_token');
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    try {
+        const response = await fetch('https://sijj2003.pythonanywhere.com/api/partner/profile/logo', {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            // Guardamos el nuevo Token con la foto actualizada para la sesión
+            localStorage.setItem('gymenez_partner_token', data.token);
+            
+            // Reflejamos los cambios instantáneamente en la pantalla
+            logoEl.innerHTML = `<img src="${data.logo_url}" class="w-full h-full object-cover">`;
+            headerLogoEl.innerHTML = `<img src="${data.logo_url}" class="w-full h-full object-cover">`;
+            
+            alert("¡Foto de perfil actualizada exitosamente!");
+        } else {
+            alert(data.error || "Error al actualizar la foto.");
+            openProfileModal(); // Refrescamos el modal para que vuelva a poner la letra/logo anterior
+        }
+    } catch (error) {
+        alert("Error de conexión al subir la imagen.");
+        openProfileModal();
+    } finally {
+        input.value = ''; // Reseteamos el input file
+    }
+}
 // Inicializador modificado para inyectar Logo en el Header y cargar productos
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('gymenez_partner_token');
