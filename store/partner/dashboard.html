@@ -87,9 +87,12 @@
                         <p id="store-name-display" class="text-xs font-bold text-white">Cargando...</p>
                         <p class="text-[9px] text-gray-500 uppercase tracking-widest">Partner Verificado</p>
                     </div>
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FFC300] to-orange-500 p-[2px]">
-                        <div class="w-full h-full bg-black rounded-full flex items-center justify-center text-[#FFC300] font-black text-xs">P</div>
-                    </div>
+                    <!-- NUEVO: BOTÓN INTERACTIVO DEL PERFIL -->
+                    <button onclick="openProfileModal()" class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FFC300] to-orange-500 p-[2px] hover:scale-110 transition transform shadow-[0_0_15px_rgba(255,195,0,0.3)]">
+                        <div id="header-logo" class="w-full h-full bg-black rounded-full flex items-center justify-center text-[#FFC300] font-black text-xs overflow-hidden">
+                            P
+                        </div>
+                    </button>
                 </div>
             </div>
         </header>
@@ -276,6 +279,61 @@
                 <button onclick="submitProduct(event)" id="btn-save-prod" class="bg-[#FFC300] text-black px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-yellow-400 transition shadow-[0_0_15px_rgba(255,195,0,0.2)]">
                     Guardar Producto
                 </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: PERFIL DE LA TIENDA Y SOPORTE -->
+    <!-- ========================================== -->
+    <div id="profile-modal" class="fixed inset-0 z-[100] bg-black/60 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-sm rounded-[2rem] shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col">
+            
+            <div class="flex justify-between items-center p-6 border-b border-white/10 shrink-0">
+                <h3 class="text-lg font-[900] tracking-tighter uppercase italic text-white">Perfil <span class="text-[#FFC300]">Comercial</span></h3>
+                <button onclick="closeProfileModal()" class="text-gray-400 hover:text-white transition p-1 rounded-full hover:bg-white/10">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div class="flex justify-center mb-6">
+                   <div id="modal-profile-logo" class="w-24 h-24 rounded-full border-2 border-[#FFC300]/50 overflow-hidden bg-[#030305] flex items-center justify-center text-3xl font-black text-[#FFC300]"></div>
+                </div>
+                
+                <!-- Campos Bloqueados -->
+                <div>
+                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1">Nombre Comercial</label>
+                    <input type="text" id="prof-name" class="w-full bg-[#030305] border border-white/5 rounded-xl px-4 py-2 text-sm font-semibold text-gray-300 cursor-not-allowed" readonly>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1">Doc / RIF</label>
+                        <input type="text" id="prof-doc" class="w-full bg-[#030305] border border-white/5 rounded-xl px-4 py-2 text-sm font-semibold text-gray-300 cursor-not-allowed" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1">Teléfono</label>
+                        <input type="text" id="prof-phone" class="w-full bg-[#030305] border border-white/5 rounded-xl px-4 py-2 text-sm font-semibold text-gray-300 cursor-not-allowed" readonly>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1">Correo Oficial</label>
+                    <input type="text" id="prof-email" class="w-full bg-[#030305] border border-white/5 rounded-xl px-4 py-2 text-sm font-semibold text-gray-300 cursor-not-allowed" readonly>
+                </div>
+            </div>
+
+            <!-- Botones de Contacto -->
+            <div class="p-6 border-t border-white/10 bg-white/5 rounded-b-[2rem]">
+                <p class="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-3 text-center">Modificaciones sujetas a auditoría</p>
+                <div class="flex gap-3 justify-center">
+                    <a href="https://wa.me/584148780392?text=Hola%20Gymenez,%20necesito%20actualizar%20los%20datos%20legales%20de%20mi%20tienda%20aliada." target="_blank" class="flex-1 bg-green-500/10 text-green-400 border border-green-500/30 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-center hover:bg-green-500/20 transition flex items-center justify-center gap-2">
+                        WhatsApp
+                    </a>
+                    <a href="mailto:performance@gymenez.com?subject=Solicitud de Modificación de Datos - Tienda Aliada" class="flex-1 bg-blue-500/10 text-blue-400 border border-blue-500/30 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-center hover:bg-blue-500/20 transition flex items-center justify-center gap-2">
+                        Soporte
+                    </a>
+                </div>
             </div>
 
         </div>
