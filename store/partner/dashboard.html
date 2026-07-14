@@ -368,18 +368,73 @@
             window.location.href = '/store/partner/login.html';
         }
 
-        // 6. Preparación para el Backend (Subida de producto)
-        function submitProduct(e) {
+        // 6. Conexión real con el Backend (Subida de producto y foto)
+        async function submitProduct(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-save-prod');
+            const originalText = btn.innerText;
             btn.innerText = "Subiendo...";
-            
-            // Aquí enlazaremos esto con Firebase Storage y tu store_service.py en el próximo paso
-            setTimeout(() => {
-                alert("¡Interfaz conectada! En el próximo paso crearemos el Backend para que esta foto y datos lleguen a Firestore.");
-                btn.innerText = "Guardar Producto";
-                closeModal();
-            }, 1000);
+            btn.disabled = true;
+
+            // 1. Recolectar datos y el archivo físico
+            const name = document.getElementById('prod-name').value;
+            const price = document.getElementById('prod-price').value;
+            const category = document.getElementById('prod-category').value;
+            const stock = document.getElementById('prod-stock').value;
+            const desc = document.getElementById('prod-desc').value;
+            const imageFile = document.getElementById('prod-image').files[0];
+
+            if (!imageFile) {
+                alert("Por favor, adjunta una fotografía del producto.");
+                btn.innerText = originalText;
+                btn.disabled = false;
+                return;
+            }
+
+            // 2. Empaquetar todo en FormData (El estándar para enviar archivos)
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('price', price);
+            formData.append('category', category);
+            formData.append('stock', stock);
+            formData.append('description', desc);
+            formData.append('image', imageFile); // ¡Aquí va el archivo físico!
+
+            try {
+                // Recuperar el token del vendedor para autorizar la subida
+                const token = localStorage.getItem('gymenez_partner_token');
+                const STORE_API_URL = 'https://sijj2003.pythonanywhere.com/api/store/product';
+
+                const response = await fetch(STORE_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                        // ⚠️ IMPORTANTE: Cuando usas FormData NO debes poner 'Content-Type'. 
+                        // El navegador lo configura automáticamente.
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Éxito: Limpiar formulario, cerrar modal y avisar
+                    document.getElementById('add-product-form').reset();
+                    document.getElementById('file-name-display').innerText = 'Seleccionar archivo...';
+                    closeModal();
+                    
+                    // Aviso temporal (luego podemos poner el toast elegante)
+                    alert("¡Producto publicado exitosamente en el catálogo!"); 
+                } else {
+                    alert(data.error || "Error al subir producto");
+                }
+            } catch (error) {
+                console.error("Error de red:", error);
+                alert("Error de conexión con el servidor. Revisa tu consola.");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
