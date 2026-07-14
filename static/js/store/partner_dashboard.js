@@ -45,7 +45,6 @@ const modalInner = modal ? modal.querySelector('div') : null;
 
 function openModal() {
     if (!modal) return;
-    // Reseteo limpio para el modo "Crear"
     document.getElementById('add-product-form').reset();
     document.getElementById('prod-id').value = '';
     document.getElementById('file-name-display').innerText = 'Seleccionar archivo...';
@@ -64,7 +63,6 @@ function openEditModal(productId) {
     const product = window.myProducts.find(p => p.id === productId);
     if (!product) return;
 
-    // Llenamos el formulario con los datos en memoria
     document.getElementById('prod-id').value = product.id;
     document.getElementById('prod-name').value = product.name;
     document.getElementById('prod-price').value = product.price_usd;
@@ -268,7 +266,7 @@ const profileModalInner = profileModal ? profileModal.querySelector('div') : nul
 
 async function openProfileModal() {
     if (!profileModal) return;
-    
+
     profileModal.classList.remove('hidden');
     setTimeout(() => {
         profileModal.classList.remove('opacity-0');
@@ -281,7 +279,7 @@ async function openProfileModal() {
         const res = await fetch('https://sijj2003.pythonanywhere.com/api/partner/profile', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         const data = await res.json();
         if (res.ok && data.success) {
             const p = data.profile;
@@ -317,7 +315,7 @@ async function uploadNewLogo(input) {
     const file = input.files[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) { // Límite 2MB Front-end
+    if (file.size > 2 * 1024 * 1024) { 
         alert("La imagen es demasiado pesada (Máximo 2MB).");
         return;
     }
@@ -340,25 +338,24 @@ async function uploadNewLogo(input) {
         const data = await response.json();
 
         if (response.ok && data.success) {
-            // Guardamos el nuevo Token con la foto actualizada para la sesión
             localStorage.setItem('gymenez_partner_token', data.token);
             
-            // Reflejamos los cambios instantáneamente en la pantalla
             logoEl.innerHTML = `<img src="${data.logo_url}" class="w-full h-full object-cover">`;
             headerLogoEl.innerHTML = `<img src="${data.logo_url}" class="w-full h-full object-cover">`;
             
             alert("¡Foto de perfil actualizada exitosamente!");
         } else {
             alert(data.error || "Error al actualizar la foto.");
-            openProfileModal(); // Refrescamos el modal para que vuelva a poner la letra/logo anterior
+            openProfileModal(); 
         }
     } catch (error) {
         alert("Error de conexión al subir la imagen.");
         openProfileModal();
     } finally {
-        input.value = ''; // Reseteamos el input file
+        input.value = ''; 
     }
 }
+
 // Inicializador modificado para inyectar Logo en el Header y cargar productos
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('gymenez_partner_token');
