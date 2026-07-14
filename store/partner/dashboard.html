@@ -1,1 +1,386 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gymenez Partner Console | Dashboard</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { gymenez: { dark: '#030305', accent: '#FFC300' } }
+                }
+            }
+        }
+    </script>
 
+    <style>
+        body { background-color: #030305; color: white; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .input-premium {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .input-premium:focus {
+            border-color: #FFC300;
+            outline: none;
+            box-shadow: 0 0 0 1px rgba(255, 195, 0, 0.3);
+        }
+
+        /* SPA Logic */
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Custom Scrollbar for tables */
+        .custom-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #FFC300; }
+        
+        /* Modal Overlay */
+        #product-modal { backdrop-filter: blur(8px); }
+    </style>
+</head>
+<body class="selection:bg-[#FFC300] selection:text-black flex h-screen overflow-hidden">
+
+    <script>
+        const token = localStorage.getItem('gymenez_partner_token');
+        if (!token) window.location.href = '/store/partner/login.html';
+    </script>
+
+    <aside class="w-64 border-r border-white/10 bg-[#030305] flex-col hidden md:flex z-20 h-full">
+        <div class="p-6 border-b border-white/10">
+            <a href="#" class="flex items-center leading-none">
+                <span class="text-xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
+                <span class="text-xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+            </a>
+            <p class="text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 mt-2">Partner Console</p>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <button onclick="switchTab('tab-overview', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold bg-white/10 text-white transition-all">
+                <svg class="w-5 h-5 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Vista General
+            </button>
+            <button onclick="switchTab('tab-products', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold text-gray-400 hover:bg-white/5 hover:text-white transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                Mis Productos
+            </button>
+            <button onclick="switchTab('tab-orders', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold text-gray-400 hover:bg-white/5 hover:text-white transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                Órdenes
+            </button>
+            <button onclick="switchTab('tab-finance', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold text-gray-400 hover:bg-white/5 hover:text-white transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                Liquidaciones
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-white/10">
+            <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-xs font-bold text-red-400 hover:bg-red-500/10 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Cerrar Sesión
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gradient-to-br from-[#030305] to-[#0a0a0f]">
+        
+        <header class="w-full h-16 border-b border-white/10 glass-panel flex items-center justify-between px-6 z-10 shrink-0">
+            <div class="flex items-center gap-4 md:hidden">
+                <span class="text-lg font-[900] tracking-tighter uppercase italic text-white">Gymenez</span>
+            </div>
+            <div class="hidden md:block">
+                <h2 class="text-sm font-bold text-gray-300">Resumen Operativo</h2>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <span class="bg-green-500/10 text-green-400 border border-green-500/20 text-[9px] uppercase tracking-widest px-2 py-1 rounded font-black">Tienda Activa</span>
+                <div class="h-6 w-px bg-white/10"></div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden sm:block">
+                        <p id="store-name-display" class="text-xs font-bold text-white">Cargando...</p>
+                        <p class="text-[9px] text-gray-500 uppercase tracking-widest">Partner Verificado</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FFC300] to-orange-500 p-[2px]">
+                        <div class="w-full h-full bg-black rounded-full flex items-center justify-center text-[#FFC300] font-black text-xs">P</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto custom-scroll p-4 md:p-8">
+            <div class="max-w-6xl mx-auto">
+                
+                <div id="tab-overview" class="tab-content active">
+                    <h1 class="text-2xl font-[900] tracking-tighter uppercase italic mb-6">Métricas del <span class="text-[#FFC300]">Mes</span></h1>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                        <div class="glass-panel p-6 rounded-2xl relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-[#FFC300]/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Ventas Brutas</h3>
+                            <p class="text-3xl font-black text-white">$0.00</p>
+                            <p class="text-xs text-gray-500 font-medium mt-2">No hay ventas registradas aún</p>
+                        </div>
+                        <div class="glass-panel p-6 rounded-2xl">
+                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Ganancia Neta (Por Liquidar)</h3>
+                            <p class="text-3xl font-black text-[#FFC300]">$0.00</p>
+                            <p class="text-xs text-gray-500 font-medium mt-2">Deducida la comisión de plataforma</p>
+                        </div>
+                        <div class="glass-panel p-6 rounded-2xl">
+                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Órdenes Pendientes</h3>
+                            <p class="text-3xl font-black text-white">0</p>
+                            <p class="text-xs text-gray-500 font-medium mt-2">Listas para ser despachadas</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-2xl h-64 flex flex-col items-center justify-center text-center border-dashed border-2 border-white/5">
+                        <svg class="w-12 h-12 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <h3 class="text-sm font-bold text-gray-300">Sin datos suficientes</h3>
+                        <p class="text-xs text-gray-500 max-w-sm mt-2">Añade productos a tu catálogo para comenzar a generar métricas en tiempo real.</p>
+                        <button onclick="switchTab('tab-products', document.querySelectorAll('.nav-btn')[1])" class="mt-4 text-[#FFC300] text-[10px] font-black uppercase tracking-widest hover:underline">Ir a Mis Productos</button>
+                    </div>
+                </div>
+
+                <div id="tab-products" class="tab-content">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                        <h1 class="text-2xl font-[900] tracking-tighter uppercase italic">Catálogo de <span class="text-[#FFC300]">Productos</span></h1>
+                        <button onclick="openModal()" class="bg-[#FFC300] text-black px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:bg-yellow-400 transition shadow-[0_0_15px_rgba(255,195,0,0.3)] flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Nuevo Producto
+                        </button>
+                    </div>
+
+                    <div class="glass-panel p-12 rounded-3xl flex flex-col items-center justify-center text-center">
+                        <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 text-gray-500">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Tu catálogo está vacío</h3>
+                        <p class="text-sm text-gray-400 max-w-md mb-6">Sube tu primer producto con fotografías de alta calidad. Gymenez almacenará tus imágenes de forma segura en la nube.</p>
+                        <button onclick="openModal()" class="bg-white/10 text-white px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:bg-white/20 transition border border-white/10">
+                            Crear Primer Producto
+                        </button>
+                    </div>
+                </div>
+
+                <div id="tab-orders" class="tab-content">
+                    <h1 class="text-2xl font-[900] tracking-tighter uppercase italic mb-8">Gestión de <span class="text-[#FFC300]">Órdenes</span></h1>
+                    
+                    <div class="glass-panel rounded-2xl overflow-hidden">
+                        <div class="overflow-x-auto custom-scroll">
+                            <table class="w-full text-left border-collapse min-w-[600px]">
+                                <thead class="bg-white/5">
+                                    <tr class="text-gray-500 text-[9px] uppercase font-black tracking-widest">
+                                        <th class="p-4">ID Orden</th>
+                                        <th class="p-4">Atleta</th>
+                                        <th class="p-4">Producto</th>
+                                        <th class="p-4">Monto</th>
+                                        <th class="p-4">Estado</th>
+                                        <th class="p-4 text-right">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="6" class="p-8 text-center text-xs text-gray-500 font-bold uppercase tracking-widest">No hay órdenes pendientes.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-finance" class="tab-content">
+                    <h1 class="text-2xl font-[900] tracking-tighter uppercase italic mb-8">Auditoría <span class="text-[#FFC300]">Financiera</span></h1>
+                    <div class="glass-panel p-8 rounded-3xl border-l-4 border-l-[#FFC300]">
+                        <h3 class="text-lg font-bold mb-2">Liquidaciones en Ciclo Automático</h3>
+                        <p class="text-sm text-gray-400 mb-6 max-w-2xl leading-relaxed">
+                            El dinero de tus ventas se retiene de forma segura (Escrow). Las transferencias a tu cuenta se procesan automáticamente todos los viernes, deduciendo el porcentaje de comisión pactado con Gymenez.
+                        </p>
+                        <button class="bg-white/5 text-gray-400 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest border border-white/10 cursor-not-allowed">
+                            Descargar Reporte PDF (No disponible aún)
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <div id="product-modal" class="fixed inset-0 z-[100] bg-black/60 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-2xl rounded-[2rem] shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
+            
+            <div class="flex justify-between items-center p-6 border-b border-white/10 shrink-0">
+                <h3 class="text-lg font-[900] tracking-tighter uppercase italic text-white">Alta de <span class="text-[#FFC300]">Producto</span></h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white transition p-1 rounded-full hover:bg-white/10">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto custom-scroll">
+                <form id="add-product-form" class="space-y-6">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Nombre del Producto</label>
+                            <input type="text" id="prod-name" class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold" placeholder="Ej: Whey Protein Isolate 2Lbs" required>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Precio de Venta (USD)</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-3 text-gray-400 font-bold">$</span>
+                                <input type="number" id="prod-price" step="0.01" class="input-premium w-full pl-8 pr-4 py-3 rounded-xl text-sm font-semibold" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Categoría</label>
+                            <select id="prod-category" class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold appearance-none">
+                                <option value="suplementos">Suplementación</option>
+                                <option value="ropa">Ropa Deportiva</option>
+                                <option value="accesorios">Equipamiento & Accesorios</option>
+                                <option value="cosmetica">Cosmética Deportiva</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Stock Inicial (Unidades)</label>
+                            <input type="number" id="prod-stock" class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold" placeholder="10" required>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Fotografía (Max 2MB)</label>
+                            <div class="relative input-premium w-full px-4 py-2.5 rounded-xl flex items-center justify-between overflow-hidden group cursor-pointer hover:border-[#FFC300] transition">
+                                <span id="file-name-display" class="text-xs text-gray-400 truncate">Seleccionar archivo...</span>
+                                <span class="bg-white/10 text-[9px] font-black uppercase px-2 py-1 rounded text-white group-hover:bg-[#FFC300] group-hover:text-black transition">Subir</span>
+                                <input type="file" id="prod-image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="updateFileName(this)" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Descripción Corta</label>
+                        <textarea id="prod-desc" rows="3" class="input-premium w-full px-4 py-3 rounded-xl text-sm font-semibold resize-none custom-scroll" placeholder="Describe los beneficios principales del producto..."></textarea>
+                    </div>
+
+                </form>
+            </div>
+
+            <div class="p-6 border-t border-white/10 shrink-0 flex justify-end gap-3">
+                <button onclick="closeModal()" class="px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">Cancelar</button>
+                <button onclick="submitProduct(event)" id="btn-save-prod" class="bg-[#FFC300] text-black px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-yellow-400 transition shadow-[0_0_15px_rgba(255,195,0,0.2)]">
+                    Guardar Producto
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // 1. Extraer nombre de la tienda del Token JWT para saludar
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        const decodedToken = parseJwt(token);
+        if (decodedToken && decodedToken.store_name) {
+            document.getElementById('store-name-display').innerText = decodedToken.store_name;
+        }
+
+        // 2. SPA Tab Switching (Menú Lateral)
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white/10', 'text-white');
+                btn.classList.add('text-gray-400');
+                const svg = btn.querySelector('svg');
+                if(svg) svg.classList.remove('text-[#FFC300]');
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            
+            element.classList.remove('text-gray-400', 'hover:bg-white/5');
+            element.classList.add('bg-white/10', 'text-white');
+            const activeSvg = element.querySelector('svg');
+            if(activeSvg) activeSvg.classList.add('text-[#FFC300]');
+        }
+
+        // 3. Lógica del Modal (Abrir/Cerrar fluido)
+        const modal = document.getElementById('product-modal');
+        const modalInner = modal.querySelector('div');
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            // Timeout pequeño para permitir que el display:block aplique antes de la opacidad
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalInner.classList.remove('scale-95');
+                modalInner.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            modal.classList.add('opacity-0');
+            modalInner.classList.remove('scale-100');
+            modalInner.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300); // Espera la transición
+        }
+
+        // 4. Input de Archivo (Estética)
+        function updateFileName(input) {
+            const display = document.getElementById('file-name-display');
+            if (input.files && input.files[0]) {
+                display.innerText = input.files[0].name;
+                display.classList.remove('text-gray-400');
+                display.classList.add('text-white');
+            } else {
+                display.innerText = 'Seleccionar archivo...';
+                display.classList.remove('text-white');
+                display.classList.add('text-gray-400');
+            }
+        }
+
+        // 5. Cerrar Sesión
+        function logout() {
+            localStorage.removeItem('gymenez_partner_token');
+            window.location.href = '/store/partner/login.html';
+        }
+
+        // 6. Preparación para el Backend (Subida de producto)
+        function submitProduct(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-prod');
+            btn.innerText = "Subiendo...";
+            
+            // Aquí enlazaremos esto con Firebase Storage y tu store_service.py en el próximo paso
+            setTimeout(() => {
+                alert("¡Interfaz conectada! En el próximo paso crearemos el Backend para que esta foto y datos lleguen a Firestore.");
+                btn.innerText = "Guardar Producto";
+                closeModal();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
