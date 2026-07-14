@@ -1,0 +1,34 @@
+/* SPA Logic */
+.tab-content { 
+    display: none; 
+    animation: fadeIn 0.3s ease-in-out; 
+}
+.tab-content.active { 
+    display: block; 
+}
+
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(5px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+/* Custom Scrollbar for tables and content */
+.custom-scroll::-webkit-scrollbar { 
+    height: 6px; 
+    width: 6px; 
+}
+.custom-scroll::-webkit-scrollbar-track { 
+    background: rgba(255,255,255,0.02); 
+}
+.custom-scroll::-webkit-scrollbar-thumb { 
+    background: rgba(255,255,255,0.1); 
+    border-radius: 10px; 
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover { 
+    background: #FFC300; 
+}
+
+/* Modal Overlay */
+#product-modal { 
+    backdrop-filter: blur(8px); 
+}
