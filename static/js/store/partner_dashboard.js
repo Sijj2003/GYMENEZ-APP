@@ -1,4 +1,9 @@
-// 1. Extraer nombre de la tienda del Token JWT para saludar
+// Array global para guardar el catálogo en memoria (facilita la edición)
+window.myProducts = [];
+
+// ==========================================
+// UTILIDADES & AUTENTICACIÓN
+// ==========================================
 function parseJwt(token) {
     try {
         const base64Url = token.split('.')[1];
@@ -7,12 +12,14 @@ function parseJwt(token) {
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
         return JSON.parse(jsonPayload);
-    } catch (e) {
-        return null;
-    }
+    } catch (e) { return null; }
 }
 
-// 2. SPA Tab Switching (Menú Lateral)
+function logout() {
+    localStorage.removeItem('gymenez_partner_token');
+    window.location.href = '/store/partner/login.html';
+}
+
 function switchTab(tabId, element) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -30,12 +37,46 @@ function switchTab(tabId, element) {
     if(activeSvg) activeSvg.classList.add('text-[#FFC300]');
 }
 
-// 3. Lógica del Modal (Abrir/Cerrar fluido)
+// ==========================================
+// CONTROL DEL MODAL (CREAR / EDITAR)
+// ==========================================
 const modal = document.getElementById('product-modal');
 const modalInner = modal ? modal.querySelector('div') : null;
 
 function openModal() {
     if (!modal) return;
+    // Reseteo limpio para el modo "Crear"
+    document.getElementById('add-product-form').reset();
+    document.getElementById('prod-id').value = '';
+    document.getElementById('file-name-display').innerText = 'Seleccionar archivo...';
+    document.getElementById('btn-save-prod').innerText = 'Guardar Producto';
+    document.getElementById('prod-image').required = true; 
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modalInner.classList.remove('scale-95');
+        modalInner.classList.add('scale-100');
+    }, 10);
+}
+
+function openEditModal(productId) {
+    const product = window.myProducts.find(p => p.id === productId);
+    if (!product) return;
+
+    // Llenamos el formulario con los datos en memoria
+    document.getElementById('prod-id').value = product.id;
+    document.getElementById('prod-name').value = product.name;
+    document.getElementById('prod-price').value = product.price_usd;
+    document.getElementById('prod-discount').value = product.discount_percentage || 0;
+    document.getElementById('prod-category').value = product.category;
+    document.getElementById('prod-stock').value = product.stock;
+    document.getElementById('prod-desc').value = product.description;
+    
+    document.getElementById('prod-image').required = false; 
+    document.getElementById('file-name-display').innerText = 'Dejar actual o cambiar...';
+    document.getElementById('btn-save-prod').innerText = 'Actualizar Producto';
+
     modal.classList.remove('hidden');
     setTimeout(() => {
         modal.classList.remove('opacity-0');
@@ -52,7 +93,6 @@ function closeModal() {
     setTimeout(() => { modal.classList.add('hidden'); }, 300);
 }
 
-// 4. Input de Archivo (Estética)
 function updateFileName(input) {
     const display = document.getElementById('file-name-display');
     if (input.files && input.files[0]) {
@@ -66,75 +106,88 @@ function updateFileName(input) {
     }
 }
 
-// 5. Cerrar Sesión
-function logout() {
-    localStorage.removeItem('gymenez_partner_token');
-    window.location.href = '/store/partner/login.html';
-}
-
-// 6. Conexión real con el Backend (Subida de producto y foto)
+// ==========================================
+// CRUD OPERACIONES (API CALLS)
+// ==========================================
 async function submitProduct(e) {
     e.preventDefault();
     const btn = document.getElementById('btn-save-prod');
     const originalText = btn.innerText;
-    btn.innerText = "Subiendo...";
+    btn.innerText = "Procesando...";
     btn.disabled = true;
 
-    const name = document.getElementById('prod-name').value;
-    const price = document.getElementById('prod-price').value;
-    const category = document.getElementById('prod-category').value;
-    const stock = document.getElementById('prod-stock').value;
-    const desc = document.getElementById('prod-desc').value;
+    const prodId = document.getElementById('prod-id').value; 
     const imageFile = document.getElementById('prod-image').files[0];
 
-    if (!imageFile) {
-        alert("Por favor, adjunta una fotografía del producto.");
+    // Validación estricta en Creación
+    if (!prodId && !imageFile) {
+        alert("Para un nuevo producto, adjunta una fotografía obligatoria.");
         btn.innerText = originalText;
         btn.disabled = false;
         return;
     }
 
     const formData = new FormData();
-    formData.append('name', name);
-    formData.append('price', price);
-    formData.append('category', category);
-    formData.append('stock', stock);
-    formData.append('description', desc);
-    formData.append('image', imageFile); 
+    formData.append('name', document.getElementById('prod-name').value);
+    formData.append('price', document.getElementById('prod-price').value);
+    formData.append('discount', document.getElementById('prod-discount').value);
+    formData.append('category', document.getElementById('prod-category').value);
+    formData.append('stock', document.getElementById('prod-stock').value);
+    formData.append('description', document.getElementById('prod-desc').value);
+    if (imageFile) formData.append('image', imageFile); 
 
     try {
         const token = localStorage.getItem('gymenez_partner_token');
-        const STORE_API_URL = 'https://sijj2003.pythonanywhere.com/api/store/product';
+        const method = prodId ? 'PUT' : 'POST';
+        const urlEnd = prodId ? `/${prodId}` : '';
+        const STORE_API_URL = `https://sijj2003.pythonanywhere.com/api/store/product${urlEnd}`;
 
         const response = await fetch(STORE_API_URL, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            },
+            method: method,
+            headers: { 'Authorization': `Bearer ${token}` },
             body: formData
         });
 
         const data = await response.json();
 
         if (response.ok && data.success) {
-            document.getElementById('add-product-form').reset();
-            document.getElementById('file-name-display').innerText = 'Seleccionar archivo...';
             closeModal();
-            alert("¡Producto publicado exitosamente en el catálogo!");
             loadMyProducts(); 
         } else {
-            alert(data.error || "Error al subir producto");
+            alert(data.error || "Error al procesar producto");
         }
     } catch (error) {
-        console.error("Error de red:", error);
-        alert("Error de conexión con el servidor. Revisa tu consola.");
+        alert("Error de conexión con el servidor.");
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
     }
 }
 
-// 7. Cargar el Catálogo de Productos
+async function deleteProduct(productId) {
+    if (!confirm("¿Estás seguro de eliminar este producto? Esta acción es irreversible.")) return;
+
+    try {
+        const token = localStorage.getItem('gymenez_partner_token');
+        const response = await fetch(`https://sijj2003.pythonanywhere.com/api/store/product/${productId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+        if (response.ok && data.success) {
+            loadMyProducts(); 
+        } else {
+            alert(data.error || "Error al eliminar");
+        }
+    } catch (error) {
+        alert("Error de red al intentar eliminar.");
+    }
+}
+
+// ==========================================
+// OBTENER Y RENDERIZAR
+// ==========================================
 async function loadMyProducts() {
     const token = localStorage.getItem('gymenez_partner_token');
     const URL = 'https://sijj2003.pythonanywhere.com/api/store/partner/products';
@@ -147,6 +200,7 @@ async function loadMyProducts() {
         
         const data = await response.json();
         if (response.ok && data.success) {
+            window.myProducts = data.products; 
             renderProducts(data.products);
         }
     } catch (error) {
@@ -154,7 +208,6 @@ async function loadMyProducts() {
     }
 }
 
-// 8. Renderizar la cuadrícula de Productos
 function renderProducts(products) {
     const emptyState = document.getElementById('empty-state');
     const grid = document.getElementById('products-grid');
@@ -167,32 +220,48 @@ function renderProducts(products) {
 
     emptyState.classList.add('hidden');
     
-    grid.innerHTML = products.map(p => `
+    grid.innerHTML = products.map(p => {
+        // Matemática del descuento promocional
+        const discount = p.discount_percentage || 0;
+        const hasDiscount = discount > 0;
+        const finalPrice = hasDiscount ? (p.price_usd * (1 - discount/100)).toFixed(2) : p.price_usd.toFixed(2);
+
+        return `
         <div class="glass-panel p-4 rounded-2xl group hover:border-[#FFC300]/50 transition relative flex flex-col">
-            <div class="aspect-square bg-[#050508] rounded-xl mb-4 overflow-hidden border border-white/5 shrink-0">
+            ${hasDiscount ? `<span class="absolute top-6 left-6 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${discount}% OFF</span>` : ''}
+            
+            <div class="aspect-square bg-[#050508] rounded-xl mb-4 overflow-hidden border border-white/5 shrink-0 relative">
                 <img src="${p.image_url}" alt="${p.name}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
             </div>
             <div class="flex-1 flex flex-col justify-between">
                 <div class="flex justify-between items-start mb-2 gap-2">
                     <div>
-                        <h3 class="font-bold text-sm text-white leading-tight mb-1">${p.name}</h3>
+                        <h3 class="font-bold text-sm text-white leading-tight mb-1 truncate max-w-[150px]">${p.name}</h3>
                         <p class="text-[9px] text-gray-500 uppercase tracking-widest font-black">${p.category}</p>
                     </div>
-                    <span class="bg-[#FFC300]/10 border border-[#FFC300]/20 text-[#FFC300] font-black text-[9px] uppercase px-2 py-1 rounded shrink-0">Stock: ${p.stock}</span>
+                    <span class="${p.stock > 0 ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'} border font-black text-[9px] uppercase px-2 py-1 rounded shrink-0">Stock: ${p.stock}</span>
                 </div>
-                <div class="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
-                    <p class="text-white font-black text-xl">$${p.price_usd.toFixed(2)}</p>
-                    <button class="text-[10px] text-gray-400 hover:text-white uppercase tracking-widest font-bold transition flex items-center gap-1 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/30">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                        Editar
-                    </button>
+                
+                <div class="mt-2 pt-4 border-t border-white/10 flex items-center justify-between">
+                    <div>
+                        <p class="text-white font-black text-xl leading-none">$${finalPrice}</p>
+                        ${hasDiscount ? `<p class="text-[10px] text-gray-500 font-bold line-through mt-1">$${p.price_usd.toFixed(2)}</p>` : ''}
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openEditModal('${p.id}')" class="text-gray-400 hover:text-[#FFC300] transition bg-white/5 p-2 rounded-lg border border-white/10 hover:border-[#FFC300]/50" title="Editar">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
+                        <button onclick="deleteProduct('${p.id}')" class="text-gray-400 hover:text-red-500 transition bg-white/5 p-2 rounded-lg border border-white/10 hover:border-red-500/50" title="Eliminar">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
-// Ejecutar la inicialización apenas inicie el dashboard
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('gymenez_partner_token');
     if (token) {
