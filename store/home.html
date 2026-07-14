@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gymenez Store | Marketplace</title>
     
-    <!-- Tailwind & Google Fonts (Inter) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/static/css/store/home.css?v=1.0">
     
     <script>
         tailwind.config = {
@@ -21,59 +22,20 @@
             }
         }
     </script>
-
-    <style>
-        body { 
-            background-color: #030305; 
-            color: white; 
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* Glassmorphism Ecosistema */
-        .glass-nav {
-            background: rgba(3, 3, 5, 0.85);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .glass-panel:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(255, 195, 0, 0.3);
-            transform: translateY(-4px);
-            box-shadow: 0 10px 40px -10px rgba(255, 195, 0, 0.1);
-        }
-
-        .hide-scroll::-webkit-scrollbar { display: none; }
-        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
 </head>
 <body class="selection:bg-[#FFC300] selection:text-black">
 
-    <!-- NAVBAR ECOSISTEMA (Independiente pero conectada) -->
     <nav class="fixed w-full z-50 glass-nav transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 
-                <!-- IZQUIERDA: Navegación y Branding -->
                 <div class="flex items-center gap-4">
-                    <!-- Botón Flecha Retroceso (Universal) -->
                     <a href="javascript:history.back()" class="p-2 -ml-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-all" title="Volver">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     </a>
                     
-                    <!-- Separador sutil -->
                     <div class="h-5 w-px bg-white/10 hidden md:block"></div>
 
-                    <!-- Logo Store -->
                     <a href="/store" class="flex items-center leading-none group">
                         <span class="text-xl font-[900] tracking-tighter uppercase italic text-[#FFC300] transition-transform group-hover:scale-105">Gym</span>
                         <span class="text-xl font-[900] tracking-tighter uppercase italic text-white transition-transform group-hover:scale-105">enez</span>
@@ -81,7 +43,6 @@
                     </a>
                 </div>
 
-                <!-- CENTRO: Buscador Universal -->
                 <div class="hidden md:block flex-1 max-w-md mx-8">
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -91,25 +52,19 @@
                     </div>
                 </div>
 
-                <!-- DERECHA: Botón Ecosistema, Carrito y Cuenta -->
                 <div class="flex items-center gap-3 md:gap-5">
-                    
-                    <!-- BOTÓN PUENTE: FITNESS -->
                     <a href="/dashboard" class="flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest text-gray-300 hover:border-[#FFC300] hover:text-[#FFC300] transition-all">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                         <span class="hidden md:inline">Fitness</span>
                     </a>
 
-                    <!-- Separador -->
                     <div class="h-4 w-px bg-white/10"></div>
 
-                    <!-- Carrito -->
                     <button class="relative p-1.5 text-gray-400 hover:text-white transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                         <span class="absolute top-0 right-0 bg-[#FFC300] text-black text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full">0</span>
                     </button>
                     
-                    <!-- Cuenta / Ingresar -->
                     <a href="/store/account" class="text-[10px] font-bold uppercase tracking-wider text-white hover:text-[#FFC300] transition whitespace-nowrap ml-2">
                         Mi Cuenta
                     </a>
@@ -118,10 +73,8 @@
         </div>
     </nav>
 
-    <!-- HERO SECTION -->
     <main class="pt-28 pb-12 px-4 max-w-7xl mx-auto">
         <div class="relative rounded-[2rem] overflow-hidden bg-[#0a0a0f] border border-white/5 p-8 md:p-16 flex flex-col md:flex-row items-center justify-between shadow-2xl">
-            <!-- Efecto de luz de fondo -->
             <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FFC300]/5 rounded-full blur-[100px] pointer-events-none"></div>
 
             <div class="z-10 max-w-xl">
@@ -140,13 +93,11 @@
             </div>
             
             <div class="mt-12 md:mt-0 z-10 w-full md:w-1/2 flex justify-center">
-                <!-- Imagen Hero -->
                 <img src="https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=600&auto=format&fit=crop" alt="Hero Product" class="relative z-20 w-64 md:w-80 object-cover rounded-2xl rotate-[-5deg] hover:rotate-0 transition-all duration-700 shadow-2xl border border-white/10">
             </div>
         </div>
     </main>
 
-    <!-- CATEGORÍAS RÁPIDAS -->
     <section class="max-w-7xl mx-auto px-4 mb-16 relative z-20">
         <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Explorar Categorías</h3>
         <div class="flex gap-3 overflow-x-auto hide-scroll pb-4">
@@ -165,67 +116,19 @@
         </div>
     </section>
 
-    <!-- GRID DE PRODUCTOS -->
     <section class="max-w-7xl mx-auto px-4 mb-24">
         <div class="flex justify-between items-end mb-8">
             <h2 class="text-2xl md:text-3xl font-[900] tracking-tighter italic uppercase">Productos <span class="text-[#FFC300]">Destacados</span></h2>
             <a href="#" class="text-[#FFC300] hover:text-white text-[10px] uppercase tracking-widest font-black transition">Ver todo &rarr;</a>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            
-            <!-- PRODUCTO 1 -->
-            <div class="glass-panel p-4 rounded-2xl group cursor-pointer relative flex flex-col">
-                <div class="absolute top-6 left-6 z-10 bg-black/80 backdrop-blur-md px-2 py-1 rounded border border-white/10 text-[8px] font-black uppercase tracking-widest text-gray-300">
-                    Por <span class="text-[#FFC300]">Gymenez</span>
-                </div>
-                
-                <div class="aspect-square bg-[#050508] rounded-xl mb-4 overflow-hidden relative border border-white/5">
-                    <img src="https://images.unsplash.com/photo-1579722820308-d74e571900a9?q=80&w=400" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                    <button class="absolute bottom-3 right-3 bg-white/10 backdrop-blur-md border border-white/20 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:bg-[#FFC300] hover:border-[#FFC300] hover:text-black">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                    </button>
-                </div>
-                <div class="flex-grow">
-                    <h3 class="font-bold text-sm text-gray-100 leading-tight mb-1">Creatina Monohidratada Pura</h3>
-                    <p class="text-gray-500 text-[10px] uppercase tracking-wider mb-3">Gymenez Nutrition • 300g</p>
-                </div>
-                <div class="flex items-center justify-between mt-auto">
-                    <p class="text-white font-black text-lg">$25.00</p>
-                </div>
+        <div id="catalog-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div class="col-span-full py-12 flex items-center justify-center">
+                <span class="text-[#FFC300] text-[10px] uppercase tracking-widest font-black animate-pulse">Cargando catálogo en vivo...</span>
             </div>
-
-            <!-- PRODUCTO 2 (Partner) -->
-            <div class="glass-panel p-4 rounded-2xl group cursor-pointer relative flex flex-col">
-                <div class="absolute top-6 left-6 z-10 bg-black/80 backdrop-blur-md px-2 py-1 rounded border border-white/10 text-[8px] font-black uppercase tracking-widest text-gray-300">
-                    Por <span class="text-white">Titan Supps</span>
-                </div>
-                
-                <div class="aspect-square bg-[#050508] rounded-xl mb-4 overflow-hidden relative border border-white/5">
-                    <img src="https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=400" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                    <span class="absolute top-2 right-2 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-1 rounded">-15%</span>
-                    <button class="absolute bottom-3 right-3 bg-white/10 backdrop-blur-md border border-white/20 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:bg-[#FFC300] hover:border-[#FFC300] hover:text-black">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                    </button>
-                </div>
-                <div class="flex-grow">
-                    <h3 class="font-bold text-sm text-gray-100 leading-tight mb-1">Whey Protein Isolate</h3>
-                    <p class="text-gray-500 text-[10px] uppercase tracking-wider mb-3">Titan Supps • 2 Lbs</p>
-                </div>
-                <div class="flex items-center justify-between mt-auto">
-                    <div class="flex flex-col">
-                        <span class="text-xs text-gray-500 line-through leading-none">$45.00</span>
-                        <span class="text-[#FFC300] font-black text-lg leading-none mt-1">$38.25</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Puedes replicar más productos aquí -->
-
         </div>
     </section>
 
-    <!-- FOOTER -->
     <footer class="border-t border-white/5 pt-12 pb-8 px-4">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
             <div class="text-center md:text-left">
@@ -233,12 +136,13 @@
                 <p class="text-[9px] uppercase tracking-widest text-gray-600 font-bold">© 2026 Ecosistema de Rendimiento</p>
             </div>
             <div class="flex gap-4 md:gap-6 flex-wrap justify-center">
-                <a href="/store/seller" class="text-[9px] font-black text-gray-500 hover:text-[#FFC300] transition uppercase tracking-widest border border-gray-800 hover:border-[#FFC300] px-3 py-1.5 rounded-full">Vender Aquí</a>
+                <a href="/store/partner/login.html" class="text-[9px] font-black text-gray-500 hover:text-[#FFC300] transition uppercase tracking-widest border border-gray-800 hover:border-[#FFC300] px-3 py-1.5 rounded-full">Vender Aquí</a>
                 <a href="#" class="text-[9px] font-bold text-gray-500 hover:text-white transition uppercase tracking-widest py-1.5">Soporte</a>
                 <a href="#" class="text-[9px] font-bold text-gray-500 hover:text-white transition uppercase tracking-widest py-1.5">Envíos</a>
             </div>
         </div>
     </footer>
 
+    <script src="/static/js/store/catalog.js?v=1.0"></script>
 </body>
 </html>
