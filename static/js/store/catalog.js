@@ -1,7 +1,6 @@
-// Memoria Global para filtrado sin recargar (Cero lag)
+// Memoria Global
 window.allProducts = [];
 let currentCategory = 'all';
-let currentSearchTerm = '';
 
 document.addEventListener('DOMContentLoaded', () => {
     loadStoreCatalog();
@@ -22,14 +21,11 @@ async function loadPartners() {
 
         if (data.success && data.partners.length > 0) {
             grid.innerHTML = data.partners.map(p => {
-                
                 const initial = p.store_name.charAt(0).toUpperCase();
-                // Si el logo existe, muestra la imagen. Si no, muestra la letra inicial de su marca.
                 const logoHtml = p.logo_url 
                     ? `<img src="${p.logo_url}" class="w-full h-full object-cover">`
                     : `<span class="text-xl font-black text-[#FFC300]">${initial}</span>`;
 
-                // Aquí creamos el enlace a la tienda (URL que desarrollaremos luego)
                 return `
                 <a href="/store/partner_page.html?id=${p.id}" class="flex flex-col items-center gap-2 group flex-shrink-0 cursor-pointer w-20">
                     <div class="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-[#FFC300] to-orange-600 transition-transform duration-300 group-hover:scale-110 shadow-[0_0_15px_rgba(255,195,0,0.2)]">
@@ -59,8 +55,8 @@ async function loadStoreCatalog() {
         const data = await response.json();
 
         if (response.ok && data.success) {
-            window.allProducts = data.products; // Guardamos en memoria
-            applyFilters(); // Pintamos por primera vez
+            window.allProducts = data.products; 
+            applyCategoryFilter(); 
         } else {
             document.getElementById('catalog-grid').innerHTML = '<p class="col-span-full text-center text-gray-500">Pronto tendremos productos disponibles...</p>';
         }
@@ -70,23 +66,51 @@ async function loadStoreCatalog() {
 }
 
 // ==========================================
-// 3. LÓGICA DE FILTROS Y BÚSQUEDA
+// 3. BUSCADOR INTELIGENTE TIPO AMAZON & CATEGORÍAS
 // ==========================================
 function setupFiltersAndSearch() {
-    // Escuchar la barra de búsqueda en tiempo real
     const searchInput = document.getElementById('search-input');
-    if (searchInput) {
+    const searchDropdown = document.getElementById('search-dropdown');
+    
+    // --- LÓGICA DEL BUSCADOR FLOTANTE ---
+    if (searchInput && searchDropdown) {
         searchInput.addEventListener('input', (e) => {
-            currentSearchTerm = e.target.value.toLowerCase().trim();
-            applyFilters(); // Se filtra letra por letra al instante
+            const term = e.target.value.toLowerCase().trim();
+            
+            if (term.length === 0) {
+                searchDropdown.classList.add('hidden');
+                return;
+            }
+            
+            // Buscar coincidencias en todo el catálogo
+            const filtered = window.allProducts.filter(p => 
+                p.name.toLowerCase().includes(term) || 
+                p.store_name.toLowerCase().includes(term) ||
+                p.category.toLowerCase().includes(term)
+            );
+            
+            renderSearchDropdown(filtered, searchDropdown);
+        });
+
+        // Mostrar lista de nuevo al hacer clic en el buscador (si ya había texto)
+        searchInput.addEventListener('focus', (e) => {
+            if (e.target.value.trim().length > 0) {
+                searchDropdown.classList.remove('hidden');
+            }
+        });
+
+        // Ocultar la lista flotante al hacer clic en cualquier parte fuera de ella
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+                searchDropdown.classList.add('hidden');
+            }
         });
     }
 
-    // Escuchar los botones de categorías
+    // --- LÓGICA DE BOTONES DE CATEGORÍA ---
     const categoryBtns = document.querySelectorAll('.category-btn');
     categoryBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            // Estilos visuales del botón activo
             categoryBtns.forEach(b => {
                 b.classList.remove('bg-white/10', 'text-white', 'border-[#FFC300]');
                 b.classList.add('bg-white/5', 'text-gray-300', 'border-white/10');
@@ -95,47 +119,64 @@ function setupFiltersAndSearch() {
             clicked.classList.remove('bg-white/5', 'text-gray-300', 'border-white/10');
             clicked.classList.add('bg-white/10', 'text-white', 'border-[#FFC300]');
 
-            // Aplicar el filtro
             currentCategory = clicked.getAttribute('data-category');
             
-            // Cambiar el título
             const titleSpan = document.querySelector('#catalog-title span');
             if(currentCategory === 'all') titleSpan.innerText = 'Completo';
             else titleSpan.innerText = currentCategory;
 
-            applyFilters();
+            applyCategoryFilter();
         });
     });
 }
 
-function applyFilters() {
+function applyCategoryFilter() {
     let filtered = window.allProducts;
-
-    // 1. Filtrar por Categoría
     if (currentCategory !== 'all') {
         filtered = filtered.filter(p => p.category === currentCategory);
     }
-
-    // 2. Filtrar por Búsqueda de texto
-    if (currentSearchTerm !== '') {
-        filtered = filtered.filter(p => 
-            p.name.toLowerCase().includes(currentSearchTerm) || 
-            p.store_name.toLowerCase().includes(currentSearchTerm) ||
-            p.description.toLowerCase().includes(currentSearchTerm)
-        );
-    }
-
-    // Actualizar el contador de resultados
     document.getElementById('results-count').innerText = `${filtered.length} Resultados`;
-    
-    // Mandar a pintar
-    renderProducts(filtered);
+    renderProductsGrid(filtered); // Esto solo actualiza las cuadrículas grandes de abajo
 }
 
 // ==========================================
-// 4. MOTOR DE RENDERIZADO
+// 4. RENDERIZAR RESULTADOS (Buscador Flotante)
 // ==========================================
-function renderProducts(productsToRender) {
+function renderSearchDropdown(results, container) {
+    container.classList.remove('hidden');
+    
+    if (results.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-gray-500 text-[10px] uppercase font-bold tracking-widest">No encontramos productos similares.</div>`;
+        return;
+    }
+
+    // Mostramos máximo 8 resultados rápidos para no colapsar la pantalla
+    container.innerHTML = results.slice(0, 8).map(p => {
+        const discount = p.discount_percentage || 0;
+        const finalPrice = discount > 0 ? (p.price_usd * (1 - discount/100)).toFixed(2) : p.price_usd.toFixed(2);
+        
+        return `
+        <a href="/store/product.html?id=${p.id}" class="flex items-center justify-between p-3 hover:bg-white/5 transition border-b border-white/5 last:border-0 cursor-pointer">
+            <div class="flex items-center gap-4">
+                <img src="${p.image_url}" alt="${p.name}" class="w-12 h-12 object-cover rounded-lg bg-[#050508] border border-white/5 shrink-0">
+                <div>
+                    <h4 class="text-xs font-bold text-gray-200 truncate max-w-[200px] md:max-w-xs">${p.name}</h4>
+                    <p class="text-[9px] text-[#FFC300] uppercase tracking-widest font-black mt-1">${p.store_name || 'Gymenez Partner'}</p>
+                </div>
+            </div>
+            <div class="text-right shrink-0">
+                <p class="text-xs font-black text-white">$${finalPrice}</p>
+                ${discount > 0 ? `<p class="text-[8px] text-red-500 font-bold uppercase">-${discount}% OFF</p>` : ''}
+            </div>
+        </a>
+        `;
+    }).join('');
+}
+
+// ==========================================
+// 5. RENDERIZAR CUADRÍCULA PRINCIPAL (Para las Categorías)
+// ==========================================
+function renderProductsGrid(productsToRender) {
     const grid = document.getElementById('catalog-grid');
     
     if (productsToRender.length === 0) {
@@ -145,7 +186,7 @@ function renderProducts(productsToRender) {
                     <span class="text-3xl">🔍</span>
                 </div>
                 <h3 class="text-xl font-[900] tracking-tighter uppercase italic text-white mb-2">Sin Resultados</h3>
-                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Intenta con otra palabra o categoría.</p>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Nuestros partners añadirán productos pronto.</p>
             </div>
         `;
         return;
@@ -160,8 +201,9 @@ function renderProducts(productsToRender) {
         const isOfficial = storeName.toLowerCase().includes('gymenez');
         const badgeColor = isOfficial ? 'text-[#FFC300]' : 'text-white';
 
+        // Al hacer clic en la tarjeta grande, también lleva a la página de producto
         return `
-        <div class="glass-panel p-4 rounded-2xl group cursor-pointer relative flex flex-col">
+        <a href="/store/product.html?id=${p.id}" class="glass-panel p-4 rounded-2xl group cursor-pointer relative flex flex-col hover:border-[#FFC300]/50 transition-all">
             <div class="absolute top-6 left-6 z-10 bg-black/80 backdrop-blur-md px-2 py-1 rounded border border-white/10 text-[8px] font-black uppercase tracking-widest text-gray-300">
                 Por <span class="${badgeColor}">${storeName}</span>
             </div>
@@ -170,9 +212,9 @@ function renderProducts(productsToRender) {
                 <img src="${p.image_url}" alt="${p.name}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
                 ${hasDiscount ? `<span class="absolute top-2 right-2 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-1 rounded shadow-lg">-${discount}%</span>` : ''}
                 
-                <button class="absolute bottom-3 right-3 bg-white/10 backdrop-blur-md border border-white/20 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:bg-[#FFC300] hover:border-[#FFC300] hover:text-black">
+                <div class="absolute bottom-3 right-3 bg-white/10 backdrop-blur-md border border-white/20 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 group-hover:bg-[#FFC300] group-hover:border-[#FFC300] group-hover:text-black">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                </button>
+                </div>
             </div>
             
             <div class="flex-grow">
@@ -186,7 +228,7 @@ function renderProducts(productsToRender) {
                     : `<p class="text-white font-black text-lg">$${finalPrice}</p>`
                 }
             </div>
-        </div>
+        </a>
         `;
     }).join('');
 }
