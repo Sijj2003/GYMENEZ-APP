@@ -38,7 +38,7 @@ function switchTab(tabId, element) {
 }
 
 // ==========================================
-// CONTROL DEL MODAL (CREAR / EDITAR)
+// CONTROL DEL MODAL (CREAR / EDITAR PRODUCTOS)
 // ==========================================
 const modal = document.getElementById('product-modal');
 const modalInner = modal ? modal.querySelector('div') : null;
@@ -107,7 +107,7 @@ function updateFileName(input) {
 }
 
 // ==========================================
-// CRUD OPERACIONES (API CALLS)
+// CRUD OPERACIONES (API CALLS PRODUCTOS)
 // ==========================================
 async function submitProduct(e) {
     e.preventDefault();
@@ -119,7 +119,6 @@ async function submitProduct(e) {
     const prodId = document.getElementById('prod-id').value; 
     const imageFile = document.getElementById('prod-image').files[0];
 
-    // Validación estricta en Creación
     if (!prodId && !imageFile) {
         alert("Para un nuevo producto, adjunta una fotografía obligatoria.");
         btn.innerText = originalText;
@@ -186,7 +185,7 @@ async function deleteProduct(productId) {
 }
 
 // ==========================================
-// OBTENER Y RENDERIZAR
+// OBTENER Y RENDERIZAR PRODUCTOS
 // ==========================================
 async function loadMyProducts() {
     const token = localStorage.getItem('gymenez_partner_token');
@@ -221,7 +220,6 @@ function renderProducts(products) {
     emptyState.classList.add('hidden');
     
     grid.innerHTML = products.map(p => {
-        // Matemática del descuento promocional
         const discount = p.discount_percentage || 0;
         const hasDiscount = discount > 0;
         const finalPrice = hasDiscount ? (p.price_usd * (1 - discount/100)).toFixed(2) : p.price_usd.toFixed(2);
@@ -262,12 +260,69 @@ function renderProducts(products) {
     }).join('');
 }
 
+// ==========================================
+// NUEVA LÓGICA DEL PERFIL DE LA TIENDA
+// ==========================================
+const profileModal = document.getElementById('profile-modal');
+const profileModalInner = profileModal ? profileModal.querySelector('div') : null;
+
+async function openProfileModal() {
+    if (!profileModal) return;
+    
+    profileModal.classList.remove('hidden');
+    setTimeout(() => {
+        profileModal.classList.remove('opacity-0');
+        profileModalInner.classList.remove('scale-95');
+        profileModalInner.classList.add('scale-100');
+    }, 10);
+
+    try {
+        const token = localStorage.getItem('gymenez_partner_token');
+        const res = await fetch('https://sijj2003.pythonanywhere.com/api/partner/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await res.json();
+        if (res.ok && data.success) {
+            const p = data.profile;
+            document.getElementById('prof-name').value = p.store_name || 'No definido';
+            document.getElementById('prof-doc').value = `${p.doc_type || 'V'}-${p.doc_number || ''}`;
+            document.getElementById('prof-phone').value = p.phone || 'No definido';
+            document.getElementById('prof-email').value = p.email || 'No definido';
+
+            const logoEl = document.getElementById('modal-profile-logo');
+            if (p.logo_url) {
+                logoEl.innerHTML = `<img src="${p.logo_url}" class="w-full h-full object-cover">`;
+            } else {
+                logoEl.innerHTML = p.store_name ? p.store_name.charAt(0).toUpperCase() : 'P';
+            }
+        }
+    } catch (error) {
+        console.error('Error cargando perfil:', error);
+    }
+}
+
+function closeProfileModal() {
+    if (!profileModal) return;
+    profileModal.classList.add('opacity-0');
+    profileModalInner.classList.remove('scale-100');
+    profileModalInner.classList.add('scale-95');
+    setTimeout(() => { profileModal.classList.add('hidden'); }, 300);
+}
+
+// Inicializador modificado para inyectar Logo en el Header y cargar productos
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('gymenez_partner_token');
     if (token) {
         const decodedToken = parseJwt(token);
-        if (decodedToken && decodedToken.store_name) {
-            document.getElementById('store-name-display').innerText = decodedToken.store_name;
+        if (decodedToken) {
+            if(decodedToken.store_name) {
+                document.getElementById('store-name-display').innerText = decodedToken.store_name;
+                document.getElementById('header-logo').innerText = decodedToken.store_name.charAt(0).toUpperCase();
+            }
+            if(decodedToken.logo_url) {
+                document.getElementById('header-logo').innerHTML = `<img src="${decodedToken.logo_url}" class="w-full h-full object-cover">`;
+            }
         }
         loadMyProducts();
     }
