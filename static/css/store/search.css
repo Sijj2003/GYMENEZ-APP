@@ -1,0 +1,26 @@
+body { 
+    background-color: #030305; 
+    color: white; 
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+.glass-nav {
+    background: rgba(3, 3, 5, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 195, 0, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 40px -10px rgba(255, 195, 0, 0.1);
+}
