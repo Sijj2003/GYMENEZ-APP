@@ -22,12 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 2. Cargar datos pesados (Logística) en segundo plano
+    // 2. Conectar al backend para la data logística y legal
     loadBuyerProfile();
 });
 
 // ==========================================
-// LÓGICA DE NAVEGACIÓN (PESTAÑAS)
+// LÓGICA DE NAVEGACIÓN (PESTAÑAS SPA)
 // ==========================================
 function switchTab(tabId, btnElement) {
     // Ocultar todos los contenidos
@@ -35,18 +35,18 @@ function switchTab(tabId, btnElement) {
         tab.classList.remove('active');
     });
     
-    // Quitar color a todos los botones
+    // Quitar estado activo a todos los botones
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     
-    // Mostrar el seleccionado
+    // Mostrar el contenido y botón seleccionado
     document.getElementById(`tab-${tabId}`).classList.add('active');
     btnElement.classList.add('active');
 }
 
 // ==========================================
-// CARGA Y CONEXIÓN CON BACKEND
+// CARGA Y VERIFICACIÓN CON BACKEND
 // ==========================================
 async function loadBuyerProfile() {
     const token = localStorage.getItem(TOKEN_KEY);
@@ -66,33 +66,44 @@ async function loadBuyerProfile() {
         if (response.ok && data.success) {
             const p = data.profile;
             
-            // Llenar datos de saludo visual
-            if (p.name) {
-                document.getElementById('user-greeting').innerText = p.name;
-                document.getElementById('avatar-initials').innerText = p.name.charAt(0);
+            // 1. Llenar Identidad Legal (KYC Inteligente)
+            if (p.kyc_cedula_url) {
+                // Ya está verificado: Ocultamos formulario, mostramos la tarjeta
+                document.getElementById('kyc-form-container').classList.add('hidden');
+                document.getElementById('kyc-readonly-container').classList.remove('hidden');
+                
+                // CRÍTICO: Evita que el navegador bloquee el envío por un campo oculto
+                document.getElementById('doc-number').removeAttribute('required');
+
+                // Cambiar etiqueta visual a VERIFICADO
+                const badge = document.getElementById('kyc-status-badge');
+                badge.innerText = "Verificado";
+                badge.className = "text-[9px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full";
+
+                // Extraemos el nombre completo original de la base de datos de fitness
+                const fullName = p.full_name || p.name || 'Atleta Autorizado';
+                document.getElementById('readonly-fullname').innerText = fullName;
+                document.getElementById('readonly-doc').innerText = `${p.doc_type || 'V'}-${p.doc_number || ''}`;
+                document.getElementById('readonly-doc-btn').href = p.kyc_cedula_url;
+            } else {
+                // Es nuevo: Dejamos el formulario visible y pre-llenamos si hay datos básicos
+                if (p.doc_type) document.getElementById('doc-type').value = p.doc_type;
+                if (p.doc_number) document.getElementById('doc-number').value = p.doc_number;
             }
 
-            // Llenar formulario de Logística
-            if (p.doc_type) document.getElementById('doc-type').value = p.doc_type;
-            if (p.doc_number) document.getElementById('doc-number').value = p.doc_number;
+            // 2. Llenar formulario de Logística (Siempre editable)
             if (p.shipping_state) document.getElementById('ship-state').value = p.shipping_state;
             if (p.shipping_municipality) document.getElementById('ship-municipality').value = p.shipping_municipality;
             if (p.shipping_city) document.getElementById('ship-city').value = p.shipping_city;
             if (p.preferred_courier) document.getElementById('ship-courier').value = p.preferred_courier;
-            
-            if (p.kyc_cedula_url) {
-                const display = document.getElementById('file-name-display');
-                display.innerText = "Cédula verificada (Toca para actualizar)";
-                display.classList.add('text-green-400');
-            }
         }
     } catch (error) {
-        console.error("Error cargando el perfil", error);
+        console.error("Error cargando el perfil:", error);
     }
 }
 
 // ==========================================
-// GUARDAR FORMULARIO DE LOGÍSTICA
+// GUARDAR FORMULARIO (ACTUALIZAR PERFIL)
 // ==========================================
 document.getElementById('buyer-profile-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -115,6 +126,7 @@ document.getElementById('buyer-profile-form').addEventListener('submit', async (
     formData.append('city', document.getElementById('ship-city').value);
     formData.append('courier', document.getElementById('ship-courier').value);
 
+    // Solo anexamos archivo si el usuario subió uno (solo visible para nuevos)
     const imageFile = document.getElementById('cedula-upload').files[0];
     if (imageFile) {
         formData.append('cedula_image', imageFile);
