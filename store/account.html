@@ -16,10 +16,10 @@
 <body class="selection:bg-[#FFC300] selection:text-black">
 
     <script>
-        // Buscamos la llave REAL que usa tu ecosistema: 'userSession'
-        const activeSession = localStorage.getItem('userSession'); 
-        if (!activeSession) {
-            // Si no hay sesión, enviamos al login de la app y le decimos que regrese a la tienda
+        // Buscamos la llave EXACTA que usa tu ecosistema
+        const activeToken = localStorage.getItem('gymen_auth_token'); 
+        if (!activeToken) {
+            // Si no hay token, enviamos al login de la app y le decimos que regrese a la tienda
             window.location.href = '/apps/start/login.html?redirect=/store/account.html';
         }
     </script>
