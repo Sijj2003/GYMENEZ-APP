@@ -1,8 +1,17 @@
+// ==========================================
+// CONFIGURACIÓN DE SEGURIDAD (SSO)
+// ==========================================
+// ⚠️ IMPORTANTE: Este valor debe ser el mismo string que usas en tu login.js
+const TOKEN_KEY = 'auth_token'; // <--- Revisa tu login.js y cambia esto si es necesario
+
 document.addEventListener('DOMContentLoaded', loadBuyerProfile);
 
 async function loadBuyerProfile() {
-    const token = localStorage.getItem('gymenez_auth_token');
+    const token = localStorage.getItem(TOKEN_KEY);
     
+    // Si no hay token, el HTML ya se encargará de redirigir, así que abortamos la petición
+    if (!token) return; 
+
     try {
         const response = await fetch('https://sijj2003.pythonanywhere.com/api/store/athlete/profile', {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -19,8 +28,9 @@ async function loadBuyerProfile() {
             if (p.preferred_courier) document.getElementById('ship-courier').value = p.preferred_courier;
             
             if (p.kyc_cedula_url) {
-                document.getElementById('file-name-display').innerText = "Cédula subida previamente (Toca para cambiar)";
-                document.getElementById('file-name-display').classList.add('text-green-400');
+                const display = document.getElementById('file-name-display');
+                display.innerText = "Cédula subida previamente (Toca para cambiar)";
+                display.classList.add('text-green-400');
             }
         }
     } catch (error) {
@@ -38,7 +48,7 @@ document.getElementById('buyer-profile-form').addEventListener('submit', async (
     btn.disabled = true;
     msg.classList.add('hidden');
 
-    const token = localStorage.getItem('gymenez_auth_token');
+    const token = localStorage.getItem(TOKEN_KEY);
     const formData = new FormData();
     
     formData.append('docType', document.getElementById('doc-type').value);
