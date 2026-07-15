@@ -1,15 +1,13 @@
 // ==========================================
 // CONFIGURACIÓN DE SEGURIDAD (SSO)
 // ==========================================
-// ⚠️ IMPORTANTE: Este valor debe ser el mismo string que usas en tu login.js
-const TOKEN_KEY = 'auth_token'; // <--- Revisa tu login.js y cambia esto si es necesario
+const TOKEN_KEY = 'gymen_auth_token';
 
 document.addEventListener('DOMContentLoaded', loadBuyerProfile);
 
 async function loadBuyerProfile() {
     const token = localStorage.getItem(TOKEN_KEY);
     
-    // Si no hay token, el HTML ya se encargará de redirigir, así que abortamos la petición
     if (!token) return; 
 
     try {
