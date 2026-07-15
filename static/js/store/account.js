@@ -1,5 +1,5 @@
 // ==========================================
-// CONFIGURACIÓN DE SEGURIDAD (SSO)
+// CONFIGURACIÓN DE SEGURIDAD (SSO & SHIELD)
 // ==========================================
 const TOKEN_KEY = 'gymen_auth_token';
 
@@ -7,12 +7,17 @@ document.addEventListener('DOMContentLoaded', loadBuyerProfile);
 
 async function loadBuyerProfile() {
     const token = localStorage.getItem(TOKEN_KEY);
+    const deviceId = localStorage.getItem('gymen_device_id') || ''; // Huella del SHIELD
     
     if (!token) return; 
 
     try {
         const response = await fetch('https://sijj2003.pythonanywhere.com/api/store/athlete/profile', {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'X-Device-ID': deviceId,  // Enviamos la huella al shield
+                'Device-ID': deviceId     // (Por si tu backend usa este nombre)
+            }
         });
         const data = await response.json();
 
@@ -47,6 +52,7 @@ document.getElementById('buyer-profile-form').addEventListener('submit', async (
     msg.classList.add('hidden');
 
     const token = localStorage.getItem(TOKEN_KEY);
+    const deviceId = localStorage.getItem('gymen_device_id') || ''; // Huella del SHIELD
     const formData = new FormData();
     
     formData.append('docType', document.getElementById('doc-type').value);
@@ -64,7 +70,11 @@ document.getElementById('buyer-profile-form').addEventListener('submit', async (
     try {
         const response = await fetch('https://sijj2003.pythonanywhere.com/api/store/athlete/profile', {
             method: 'PUT',
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'X-Device-ID': deviceId,
+                'Device-ID': deviceId
+            },
             body: formData
         });
 
