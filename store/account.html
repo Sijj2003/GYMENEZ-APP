@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Cuenta | Gymenez Store</title>
+    <title>Mi Hub | Gymenez Store</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
@@ -12,115 +12,197 @@
     <script>
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { gymenez: { dark: '#030305', accent: '#FFC300' } } } } }
     </script>
+    <style>
+        /* Estilos para ocultar pestañas inactivas suavemente */
+        .tab-content { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .tab-content.active { display: block; opacity: 1; }
+        .tab-btn.active { background: rgba(255,195,0,0.1); border-right: 3px solid #FFC300; color: #FFC300; }
+    </style>
 </head>
-<body class="selection:bg-[#FFC300] selection:text-black">
+<body class="bg-[#030305] selection:bg-[#FFC300] selection:text-black text-white min-h-screen flex flex-col">
 
+    <!-- Script SSO -->
     <script>
-        // Buscamos la llave EXACTA que usa tu ecosistema
         const activeToken = localStorage.getItem('gymen_auth_token'); 
-        if (!activeToken) {
-            // Si no hay token, enviamos al login de la app y le decimos que regrese a la tienda
-            window.location.href = '/apps/start/login.html?redirect=/store/account.html';
-        }
+        if (!activeToken) window.location.href = '/apps/start/login.html?redirect=/store/account.html';
     </script>
 
+    <!-- NAVBAR ECOMMERCE PREMIUM -->
     <nav class="fixed w-full z-50 glass-nav border-b border-white/5">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <a href="/store/home.html" class="flex items-center gap-2 text-gray-400 hover:text-white transition">
+                <a href="/store/home.html" class="flex items-center gap-2 text-[#FFC300] hover:text-white transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    <span class="text-xs font-bold uppercase tracking-widest">Tienda</span>
+                    <span class="text-xs font-bold uppercase tracking-widest">Volver a la Tienda</span>
                 </a>
-                <a href="/apps/start/inicio.html" class="text-[10px] font-bold uppercase tracking-wider text-white hover:text-[#FFC300] transition">Ir a Fitness</a>
+                <div class="flex items-center gap-6">
+                    <!-- Icono Carrito -->
+                    <a href="/store/checkout.html" class="relative text-gray-400 hover:text-[#FFC300] transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <span class="absolute -top-2 -right-2 bg-[#FFC300] text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+                    </a>
+                    <a href="/apps/start/inicio.html" class="text-[10px] font-bold uppercase tracking-wider text-white bg-white/10 px-4 py-2 rounded-full hover:bg-white/20 transition">App Fitness</a>
+                </div>
             </div>
         </div>
     </nav>
 
-    <main class="pt-28 pb-24 px-4 max-w-3xl mx-auto min-h-screen">
-        <div class="mb-8">
-            <h1 class="text-3xl md:text-4xl font-[900] tracking-tighter italic uppercase text-white">
-                Perfil de <span class="text-[#FFC300]">Comprador</span>
-            </h1>
-            <p class="text-gray-400 text-xs mt-2 font-medium">Requerido por ley para procesar envíos y facturación.</p>
+    <!-- MAIN DASHBOARD -->
+    <main class="pt-24 pb-24 px-4 max-w-7xl mx-auto flex-grow w-full">
+        
+        <!-- Header del Dashboard -->
+        <div class="mb-10 flex items-center gap-4">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-[#FFC300] to-orange-500 flex items-center justify-center text-black text-2xl font-black uppercase" id="avatar-initials">G</div>
+            <div>
+                <h1 class="text-3xl font-[900] tracking-tighter uppercase italic">Hola, <span id="user-greeting" class="text-[#FFC300]">Atleta</span></h1>
+                <p class="text-gray-400 text-xs font-medium uppercase tracking-widest">Panel de Control de Compras</p>
+            </div>
         </div>
 
-        <form id="buyer-profile-form" class="space-y-6">
+        <div class="flex flex-col lg:flex-row gap-8">
             
-            <div class="glass-panel p-6 md:p-8 rounded-[2rem]">
-                <div class="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
-                    <span class="text-2xl">⚖️</span>
-                    <h2 class="text-lg font-[900] tracking-tighter uppercase italic">Identidad Legal (Titular)</h2>
+            <!-- SIDEBAR MENÚ -->
+            <aside class="w-full lg:w-1/4">
+                <div class="glass-panel p-4 rounded-2xl sticky top-28 space-y-2">
+                    <button onclick="switchTab('pedidos', this)" class="tab-btn active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-bold text-gray-300 hover:bg-white/5 transition">
+                        <span>📦</span> Mis Pedidos
+                    </button>
+                    <button onclick="switchTab('deseos', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-bold text-gray-300 hover:bg-white/5 transition">
+                        <span>❤️</span> Lista de Deseos
+                    </button>
+                    <button onclick="switchTab('pagos', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-bold text-gray-300 hover:bg-white/5 transition">
+                        <span>💳</span> Historial de Pagos
+                    </button>
+                    <button onclick="switchTab('perfil', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-bold text-gray-300 hover:bg-white/5 transition">
+                        <span>⚙️</span> Configuración y Envíos
+                    </button>
                 </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="md:col-span-1">
-                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Documento</label>
-                        <select id="doc-type" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition cursor-pointer">
-                            <option value="V">Venezolano (V)</option>
-                            <option value="E">Extranjero (E)</option>
-                        </select>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Número de Cédula</label>
-                        <input type="text" id="doc-number" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition" placeholder="Ej: 12345678" required>
-                    </div>
-                </div>
+            </aside>
 
-                <div class="mt-4">
-                    <label class="block text-[9px] font-black uppercase tracking-widest text-[#FFC300] mb-2">Foto de Cédula (Seguridad Zero Trust)</label>
-                    <div class="relative w-full border-2 border-dashed border-white/20 rounded-xl p-6 text-center hover:border-[#FFC300]/50 transition group cursor-pointer" onclick="document.getElementById('cedula-upload').click()">
-                        <svg class="w-8 h-8 text-gray-500 mx-auto mb-2 group-hover:text-[#FFC300] transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        <span id="file-name-display" class="text-xs font-bold text-gray-400 group-hover:text-white transition">Toca para subir fotografía frontal...</span>
-                        <input type="file" id="cedula-upload" class="hidden" accept="image/*" onchange="document.getElementById('file-name-display').innerText = this.files[0].name">
-                    </div>
-                </div>
-            </div>
+            <!-- ZONA DE CONTENIDO (PANELES DINÁMICOS) -->
+            <section class="w-full lg:w-3/4">
 
-            <div class="glass-panel p-6 md:p-8 rounded-[2rem]">
-                <div class="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
-                    <span class="text-2xl">📦</span>
-                    <h2 class="text-lg font-[900] tracking-tighter uppercase italic">Logística de Envío</h2>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Estado</label>
-                        <select id="ship-state" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition cursor-pointer">
-                            <option value="">Selecciona tu Estado...</option>
-                            <option value="Bolívar">Bolívar</option>
-                            <option value="Distrito Capital">Distrito Capital</option>
-                            <option value="Carabobo">Carabobo</option>
-                            <option value="Zulia">Zulia</option>
-                        </select>
+                <!-- PESTAÑA: MIS PEDIDOS -->
+                <div id="tab-pedidos" class="tab-content active glass-panel p-8 rounded-[2rem] min-h-[400px]">
+                    <div class="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
+                        <h2 class="text-xl font-[900] tracking-tighter uppercase italic">Rastreo de Órdenes</h2>
+                        <span class="text-xs font-bold bg-[#FFC300]/10 text-[#FFC300] px-3 py-1 rounded-full">0 Activas</span>
                     </div>
-                    <div>
-                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Municipio</label>
-                        <input type="text" id="ship-municipality" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition" placeholder="Ej: Caroní" required>
+                    <!-- Estado Vacío -->
+                    <div class="text-center py-16">
+                        <div class="text-6xl mb-4 opacity-50">📦</div>
+                        <h3 class="text-lg font-bold text-white mb-2">Aún no tienes pedidos</h3>
+                        <p class="text-sm text-gray-400 mb-6">Explora nuestro catálogo y equipa tu entrenamiento.</p>
+                        <a href="/store/home.html" class="inline-block bg-[#FFC300] text-black px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-yellow-400 transition">Ir de Compras</a>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Ciudad</label>
-                        <input type="text" id="ship-city" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition" placeholder="Ej: Puerto Ordaz" required>
+                <!-- PESTAÑA: LISTA DE DESEOS -->
+                <div id="tab-deseos" class="tab-content glass-panel p-8 rounded-[2rem] min-h-[400px]">
+                    <div class="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
+                        <h2 class="text-xl font-[900] tracking-tighter uppercase italic">Guardados para después</h2>
                     </div>
-                    <div>
-                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Agencia Preferida</label>
-                        <select id="ship-courier" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition cursor-pointer">
-                            <option value="MRW">MRW</option>
-                            <option value="Tealca">Tealca</option>
-                            <option value="Zoom">Grupo Zoom</option>
-                        </select>
+                    <!-- Estado Vacío -->
+                    <div class="text-center py-16">
+                        <div class="text-6xl mb-4 opacity-50">❤️</div>
+                        <h3 class="text-lg font-bold text-white mb-2">Tu lista está vacía</h3>
+                        <p class="text-sm text-gray-400">Guarda los productos que te interesen para comprarlos más adelante.</p>
                     </div>
                 </div>
-            </div>
 
-            <button type="submit" id="btn-save" class="w-full bg-[#FFC300] text-black px-8 py-4 rounded-full font-[900] uppercase tracking-wider text-sm hover:bg-yellow-400 transition-all duration-300 shadow-[0_0_20px_rgba(255,195,0,0.3)]">
-                Guardar Perfil y Activar Compras
-            </button>
-            <p id="form-msg" class="text-center text-xs font-bold uppercase tracking-widest mt-4 hidden"></p>
+                <!-- PESTAÑA: PAGOS -->
+                <div id="tab-pagos" class="tab-content glass-panel p-8 rounded-[2rem] min-h-[400px]">
+                    <div class="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
+                        <h2 class="text-xl font-[900] tracking-tighter uppercase italic">Facturación y Pagos</h2>
+                    </div>
+                    <!-- Estado Vacío -->
+                    <div class="text-center py-16">
+                        <div class="text-6xl mb-4 opacity-50">🧾</div>
+                        <h3 class="text-lg font-bold text-white mb-2">Sin historial financiero</h3>
+                        <p class="text-sm text-gray-400">Tus facturas y recibos de pago confirmados aparecerán aquí.</p>
+                    </div>
+                </div>
 
-        </form>
+                <!-- PESTAÑA: CONFIGURACIÓN (EL FORMULARIO DE SEGURIDAD QUE YA FUNCIONA) -->
+                <div id="tab-perfil" class="tab-content">
+                    <form id="buyer-profile-form" class="space-y-6">
+                        
+                        <!-- Identidad Legal -->
+                        <div class="glass-panel p-6 md:p-8 rounded-[2rem]">
+                            <div class="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+                                <span class="text-2xl">⚖️</span>
+                                <h2 class="text-lg font-[900] tracking-tighter uppercase italic">Identidad para Facturación</h2>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="md:col-span-1">
+                                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Documento</label>
+                                    <select id="doc-type" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition cursor-pointer">
+                                        <option value="V">Venezolano (V)</option>
+                                        <option value="E">Extranjero (E)</option>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Número de Cédula</label>
+                                    <input type="text" id="doc-number" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition" placeholder="Ej: 12345678" required>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label class="block text-[9px] font-black uppercase tracking-widest text-[#FFC300] mb-2">Foto de Cédula (KYC)</label>
+                                <div class="relative w-full border-2 border-dashed border-white/20 rounded-xl p-6 text-center hover:border-[#FFC300]/50 transition group cursor-pointer" onclick="document.getElementById('cedula-upload').click()">
+                                    <svg class="w-8 h-8 text-gray-500 mx-auto mb-2 group-hover:text-[#FFC300] transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                                    <span id="file-name-display" class="text-xs font-bold text-gray-400 group-hover:text-white transition">Subir fotografía frontal...</span>
+                                    <input type="file" id="cedula-upload" class="hidden" accept="image/*" onchange="document.getElementById('file-name-display').innerText = this.files[0].name">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Logística -->
+                        <div class="glass-panel p-6 md:p-8 rounded-[2rem]">
+                            <div class="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+                                <span class="text-2xl">📦</span>
+                                <h2 class="text-lg font-[900] tracking-tighter uppercase italic">Dirección y Envíos (Venezuela)</h2>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Estado</label>
+                                    <select id="ship-state" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition cursor-pointer">
+                                        <option value="">Selecciona tu Estado...</option>
+                                        <option value="Bolívar">Bolívar</option>
+                                        <option value="Distrito Capital">Distrito Capital</option>
+                                        <option value="Carabobo">Carabobo</option>
+                                        <option value="Zulia">Zulia</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Municipio</label>
+                                    <input type="text" id="ship-municipality" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition" placeholder="Ej: Caroní" required>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Ciudad</label>
+                                    <input type="text" id="ship-city" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition" placeholder="Ej: Puerto Ordaz" required>
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Agencia Favorita</label>
+                                    <select id="ship-courier" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition cursor-pointer">
+                                        <option value="MRW">MRW</option>
+                                        <option value="Tealca">Tealca</option>
+                                        <option value="Zoom">Grupo Zoom</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="btn-save" class="w-full bg-white/5 border border-white/10 text-white px-8 py-4 rounded-full font-[900] uppercase tracking-wider text-sm hover:bg-[#FFC300] hover:text-black hover:border-transparent transition-all duration-300">
+                            Guardar Preferencias
+                        </button>
+                        <p id="form-msg" class="text-center text-xs font-bold uppercase tracking-widest mt-4 hidden"></p>
+                    </form>
+                </div>
+
+            </section>
+        </div>
     </main>
 
     <script src="/static/js/store/account.js"></script>
