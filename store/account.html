@@ -15,15 +15,17 @@
 </head>
 <body class="selection:bg-[#FFC300] selection:text-black">
 
+    <!-- Script de Single Sign-On (SSO) Ecosistema Gymenez -->
     <script>
         // Verificamos si existe el token universal de la App de Fitness
         const authToken = localStorage.getItem('gymenez_auth_token'); 
         if (!authToken) {
-            // Si no está logueado, lo mandamos al login universal de la App
-            window.location.href = '/login.html?redirect=/store/account.html';
+            // Enviamos al login real de la app y le decimos que regrese a la tienda al terminar
+            window.location.href = '/apps/start/login.html?redirect=/store/account.html';
         }
     </script>
 
+    <!-- NAVBAR SIMPLIFICADO -->
     <nav class="fixed w-full z-50 glass-nav border-b border-white/5">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
@@ -46,6 +48,7 @@
 
         <form id="buyer-profile-form" class="space-y-6">
             
+            <!-- SECCIÓN 1: KYC LEGAL -->
             <div class="glass-panel p-6 md:p-8 rounded-[2rem]">
                 <div class="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
                     <span class="text-2xl">⚖️</span>
@@ -76,6 +79,7 @@
                 </div>
             </div>
 
+            <!-- SECCIÓN 2: LOGÍSTICA VENEZUELA -->
             <div class="glass-panel p-6 md:p-8 rounded-[2rem]">
                 <div class="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
                     <span class="text-2xl">📦</span>
@@ -85,6 +89,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Estado</label>
+                        <!-- Aquí inyectaremos la data oficial de VE, por ahora quemamos los principales -->
                         <select id="ship-state" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition cursor-pointer">
                             <option value="">Selecciona tu Estado...</option>
                             <option value="Bolívar">Bolívar</option>
