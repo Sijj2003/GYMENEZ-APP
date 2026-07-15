@@ -46,7 +46,7 @@ function switchTab(tabId, btnElement) {
 }
 
 // ==========================================
-// CARGA Y VERIFICACIÓN CON BACKEND
+// CARGA Y VERIFICACIÓN CON BACKEND (ZERO KNOWLEDGE)
 // ==========================================
 async function loadBuyerProfile() {
     const token = localStorage.getItem(TOKEN_KEY);
@@ -66,32 +66,28 @@ async function loadBuyerProfile() {
         if (response.ok && data.success) {
             const p = data.profile;
             
-            // 1. Llenar Identidad Legal (KYC Inteligente)
-            if (p.kyc_cedula_url) {
-                // Ya está verificado: Ocultamos formulario, mostramos la tarjeta
+            // 1. Llenar Identidad Legal (Ocultando datos confidenciales)
+            if (p.is_kyc_verified) {
                 document.getElementById('kyc-form-container').classList.add('hidden');
                 document.getElementById('kyc-readonly-container').classList.remove('hidden');
-                
-                // CRÍTICO: Evita que el navegador bloquee el envío por un campo oculto
                 document.getElementById('doc-number').removeAttribute('required');
 
-                // Cambiar etiqueta visual a VERIFICADO
                 const badge = document.getElementById('kyc-status-badge');
                 badge.innerText = "Verificado";
                 badge.className = "text-[9px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full";
 
-                // Extraemos el nombre completo original de la base de datos de fitness
                 const fullName = p.full_name || p.name || 'Atleta Autorizado';
                 document.getElementById('readonly-fullname').innerText = fullName;
                 document.getElementById('readonly-doc').innerText = `${p.doc_type || 'V'}-${p.doc_number || ''}`;
-                document.getElementById('readonly-doc-btn').href = p.kyc_cedula_url;
+                
+                // NOTA: El botón de "Ver Documento" ya no existe por seguridad.
             } else {
-                // Es nuevo: Dejamos el formulario visible y pre-llenamos si hay datos básicos
+                // Es nuevo: Dejamos el formulario visible
                 if (p.doc_type) document.getElementById('doc-type').value = p.doc_type;
                 if (p.doc_number) document.getElementById('doc-number').value = p.doc_number;
             }
 
-            // 2. Llenar formulario de Logística (Siempre editable)
+            // 2. Llenar formulario de Logística
             if (p.shipping_state) document.getElementById('ship-state').value = p.shipping_state;
             if (p.shipping_municipality) document.getElementById('ship-municipality').value = p.shipping_municipality;
             if (p.shipping_city) document.getElementById('ship-city').value = p.shipping_city;
