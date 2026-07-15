@@ -57,7 +57,10 @@ async function loadShippingProfile() {
 
     try {
         const response = await fetch('https://sijj2003.pythonanywhere.com/api/store/athlete/profile', {
-            headers: { 'Authorization': `Bearer ${token}`, 'X-Device-ID': deviceId }
+            headers: { 
+                'Authorization': `Bearer ${token}`, 
+                'X-Device-ID': deviceId 
+            }
         });
         const data = await response.json();
 
@@ -83,9 +86,14 @@ async function loadShippingProfile() {
 // ==========================================
 async function fetchPaymentMethods() {
     const token = localStorage.getItem(TOKEN_KEY);
+    const deviceId = localStorage.getItem('gymen_device_id') || ''; 
+
     try {
         const response = await fetch('https://sijj2003.pythonanywhere.com/api/store/payment-methods', {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'X-Device-ID': deviceId // 🛡️ SOLUCIÓN: Agregada llave del dispositivo
+            }
         });
         const data = await response.json();
 
@@ -159,6 +167,8 @@ document.getElementById('checkout-form').addEventListener('submit', async (e) =>
     msg.classList.add('hidden');
 
     const token = localStorage.getItem(TOKEN_KEY);
+    const deviceId = localStorage.getItem('gymen_device_id') || ''; 
+
     const payload = {
         items: cartItems,
         totalAmount: cartTotal,
@@ -171,6 +181,7 @@ document.getElementById('checkout-form').addEventListener('submit', async (e) =>
             method: 'POST',
             headers: { 
                 'Authorization': `Bearer ${token}`,
+                'X-Device-ID': deviceId, // 🛡️ SOLUCIÓN: Agregada llave del dispositivo
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
