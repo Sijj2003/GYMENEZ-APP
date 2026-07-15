@@ -66,9 +66,12 @@ async function loadShippingProfile() {
 
         if (response.ok && data.success) {
             const p = data.profile;
-            if (p.store_profile_completed && p.is_kyc_verified) {
+            
+            // 🐛 CORRECCIÓN: Ahora validamos con 'kyc_cedula_url' que es la variable real de tu BD
+            if (p.store_profile_completed && p.kyc_cedula_url) {
                 isShippingComplete = true;
                 document.getElementById('shipping-info').classList.remove('hidden');
+                document.getElementById('shipping-warning').classList.add('hidden'); // Asegurarnos de ocultar la alerta
                 document.getElementById('ship-dest').innerText = `${p.shipping_city}, ${p.shipping_state}`;
                 document.getElementById('ship-agency').innerText = p.preferred_courier;
             } else {
