@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const sessionUser = JSON.parse(sessionString);
             if (sessionUser.name) {
-                // Formateamos el nombre para que se vea elegante (Ej: "ROBERTO" -> "Roberto")
                 const rawName = sessionUser.name.trim();
                 const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
                 
@@ -22,31 +21,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 2. Conectar al backend para la data logística y legal
     loadBuyerProfile();
 });
 
 // ==========================================
-// LÓGICA DE NAVEGACIÓN (PESTAÑAS SPA)
+// LÓGICA DE NAVEGACIÓN (PESTAÑAS)
 // ==========================================
 function switchTab(tabId, btnElement) {
-    // Ocultar todos los contenidos
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
     });
     
-    // Quitar estado activo a todos los botones
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     
-    // Mostrar el contenido y botón seleccionado
     document.getElementById(`tab-${tabId}`).classList.add('active');
     btnElement.classList.add('active');
 }
 
 // ==========================================
-// CARGA Y VERIFICACIÓN CON BACKEND (ZERO KNOWLEDGE)
+// CARGA Y CONEXIÓN CON BACKEND
 // ==========================================
 async function loadBuyerProfile() {
     const token = localStorage.getItem(TOKEN_KEY);
@@ -66,10 +61,13 @@ async function loadBuyerProfile() {
         if (response.ok && data.success) {
             const p = data.profile;
             
-            // 1. Llenar Identidad Legal (Ocultando datos confidenciales)
-            if (p.is_kyc_verified) {
+            // 1. Llenar Identidad Legal (KYC - Modo Lectura vs Modo Edición)
+            if (p.kyc_cedula_url) {
+                // Modo Verificado: Mostrar Nombre, Apellido y Cédula
                 document.getElementById('kyc-form-container').classList.add('hidden');
                 document.getElementById('kyc-readonly-container').classList.remove('hidden');
+                
+                // Evitamos que el formulario se bloquee por el input requerido
                 document.getElementById('doc-number').removeAttribute('required');
 
                 const badge = document.getElementById('kyc-status-badge');
@@ -79,15 +77,13 @@ async function loadBuyerProfile() {
                 const fullName = p.full_name || p.name || 'Atleta Autorizado';
                 document.getElementById('readonly-fullname').innerText = fullName;
                 document.getElementById('readonly-doc').innerText = `${p.doc_type || 'V'}-${p.doc_number || ''}`;
-                
-                // NOTA: El botón de "Ver Documento" ya no existe por seguridad.
             } else {
-                // Es nuevo: Dejamos el formulario visible
+                // Modo Formulario: Cargar datos básicos si existen
                 if (p.doc_type) document.getElementById('doc-type').value = p.doc_type;
                 if (p.doc_number) document.getElementById('doc-number').value = p.doc_number;
             }
 
-            // 2. Llenar formulario de Logística
+            // 2. Llenar formulario de Logística (Siempre editable)
             if (p.shipping_state) document.getElementById('ship-state').value = p.shipping_state;
             if (p.shipping_municipality) document.getElementById('ship-municipality').value = p.shipping_municipality;
             if (p.shipping_city) document.getElementById('ship-city').value = p.shipping_city;
@@ -99,7 +95,7 @@ async function loadBuyerProfile() {
 }
 
 // ==========================================
-// GUARDAR FORMULARIO (ACTUALIZAR PERFIL)
+// GUARDAR FORMULARIO DE LOGÍSTICA
 // ==========================================
 document.getElementById('buyer-profile-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -122,10 +118,13 @@ document.getElementById('buyer-profile-form').addEventListener('submit', async (
     formData.append('city', document.getElementById('ship-city').value);
     formData.append('courier', document.getElementById('ship-courier').value);
 
-    // Solo anexamos archivo si el usuario subió uno (solo visible para nuevos)
-    const imageFile = document.getElementById('cedula-upload').files[0];
-    if (imageFile) {
-        formData.append('cedula_image', imageFile);
+    // Adjuntar archivo solo si el contenedor del formulario KYC es visible
+    const isKycVisible = !document.getElementById('kyc-form-container').classList.contains('hidden');
+    if (isKycVisible) {
+        const imageFile = document.getElementById('cedula-upload').files[0];
+        if (imageFile) {
+            formData.append('cedula_image', imageFile);
+        }
     }
 
     try {
@@ -144,6 +143,11 @@ document.getElementById('buyer-profile-form').addEventListener('submit', async (
             msg.innerText = "¡Preferencias Guardadas con Éxito!";
             msg.className = "text-center text-xs font-bold uppercase tracking-widest mt-4 text-green-400";
             msg.classList.remove('hidden');
+            
+            // Recargar para que aparezca la etiqueta de verificado si subió foto
+            if (isKycVisible) {
+                setTimeout(() => location.reload(), 1500);
+            }
         } else {
             msg.innerText = data.error || "Error al actualizar perfil.";
             msg.className = "text-center text-xs font-bold uppercase tracking-widest mt-4 text-red-500";
