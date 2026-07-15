@@ -4,6 +4,25 @@
 const TOKEN_KEY = 'gymen_auth_token';
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. CARGA INSTANTÁNEA: Leer identidad desde la caché del SSO
+    const sessionString = localStorage.getItem('userSession');
+    if (sessionString) {
+        try {
+            const sessionUser = JSON.parse(sessionString);
+            if (sessionUser.name) {
+                // Formateamos el nombre para que se vea elegante (Ej: "ROBERTO" -> "Roberto")
+                const rawName = sessionUser.name.trim();
+                const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
+                
+                document.getElementById('user-greeting').innerText = formattedName;
+                document.getElementById('avatar-initials').innerText = rawName.charAt(0).toUpperCase();
+            }
+        } catch (e) {
+            console.warn("No se pudo parsear la sesión local.");
+        }
+    }
+
+    // 2. Cargar datos pesados (Logística) en segundo plano
     loadBuyerProfile();
 });
 
