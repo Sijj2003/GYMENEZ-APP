@@ -3,11 +3,35 @@
 // ==========================================
 const TOKEN_KEY = 'gymen_auth_token';
 
-document.addEventListener('DOMContentLoaded', loadBuyerProfile);
+document.addEventListener('DOMContentLoaded', () => {
+    loadBuyerProfile();
+});
 
+// ==========================================
+// LÓGICA DE NAVEGACIÓN (PESTAÑAS)
+// ==========================================
+function switchTab(tabId, btnElement) {
+    // Ocultar todos los contenidos
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Quitar color a todos los botones
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Mostrar el seleccionado
+    document.getElementById(`tab-${tabId}`).classList.add('active');
+    btnElement.classList.add('active');
+}
+
+// ==========================================
+// CARGA Y CONEXIÓN CON BACKEND
+// ==========================================
 async function loadBuyerProfile() {
     const token = localStorage.getItem(TOKEN_KEY);
-    const deviceId = localStorage.getItem('gymen_device_id') || ''; // Huella del SHIELD
+    const deviceId = localStorage.getItem('gymen_device_id') || ''; 
     
     if (!token) return; 
 
@@ -15,14 +39,21 @@ async function loadBuyerProfile() {
         const response = await fetch('https://sijj2003.pythonanywhere.com/api/store/athlete/profile', {
             headers: { 
                 'Authorization': `Bearer ${token}`,
-                'X-Device-ID': deviceId,  // Enviamos la huella al shield
-                'Device-ID': deviceId     // (Por si tu backend usa este nombre)
+                'X-Device-ID': deviceId
             }
         });
         const data = await response.json();
 
         if (response.ok && data.success) {
             const p = data.profile;
+            
+            // Llenar datos de saludo visual
+            if (p.name) {
+                document.getElementById('user-greeting').innerText = p.name;
+                document.getElementById('avatar-initials').innerText = p.name.charAt(0);
+            }
+
+            // Llenar formulario de Logística
             if (p.doc_type) document.getElementById('doc-type').value = p.doc_type;
             if (p.doc_number) document.getElementById('doc-number').value = p.doc_number;
             if (p.shipping_state) document.getElementById('ship-state').value = p.shipping_state;
@@ -32,7 +63,7 @@ async function loadBuyerProfile() {
             
             if (p.kyc_cedula_url) {
                 const display = document.getElementById('file-name-display');
-                display.innerText = "Cédula subida previamente (Toca para cambiar)";
+                display.innerText = "Cédula verificada (Toca para actualizar)";
                 display.classList.add('text-green-400');
             }
         }
@@ -41,18 +72,21 @@ async function loadBuyerProfile() {
     }
 }
 
+// ==========================================
+// GUARDAR FORMULARIO DE LOGÍSTICA
+// ==========================================
 document.getElementById('buyer-profile-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-save');
     const msg = document.getElementById('form-msg');
     const originalText = btn.innerText;
     
-    btn.innerText = "Sincronizando con Ecosistema...";
+    btn.innerText = "ACTUALIZANDO...";
     btn.disabled = true;
     msg.classList.add('hidden');
 
     const token = localStorage.getItem(TOKEN_KEY);
-    const deviceId = localStorage.getItem('gymen_device_id') || ''; // Huella del SHIELD
+    const deviceId = localStorage.getItem('gymen_device_id') || ''; 
     const formData = new FormData();
     
     formData.append('docType', document.getElementById('doc-type').value);
@@ -72,8 +106,7 @@ document.getElementById('buyer-profile-form').addEventListener('submit', async (
             method: 'PUT',
             headers: { 
                 'Authorization': `Bearer ${token}`,
-                'X-Device-ID': deviceId,
-                'Device-ID': deviceId
+                'X-Device-ID': deviceId
             },
             body: formData
         });
@@ -81,7 +114,7 @@ document.getElementById('buyer-profile-form').addEventListener('submit', async (
         const data = await response.json();
 
         if (response.ok && data.success) {
-            msg.innerText = "¡Perfil configurado! Ya puedes hacer compras.";
+            msg.innerText = "¡Preferencias Guardadas con Éxito!";
             msg.className = "text-center text-xs font-bold uppercase tracking-widest mt-4 text-green-400";
             msg.classList.remove('hidden');
         } else {
