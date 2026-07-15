@@ -39,9 +39,11 @@ window.addEventListener('load', () => {
         footer.classList.add('opacity-40');
     }, 1000);
 
-    // Si ya existe sesión activa localmente, mandar al Hub directo
+    // Si ya existe sesión activa localmente, mandar al destino correcto
     if (localStorage.getItem('userSession')) {
-        window.location.href = '/apps/start/inicio.html';
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectUrl = urlParams.get('redirect');
+        window.location.href = redirectUrl ? redirectUrl : '/apps/start/inicio.html';
     }
 });
 
@@ -119,10 +121,14 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         const data = await res.json();
 
         if (res.ok && data.success) {
-            // Guardado exitoso y redirección inmutable al Hub
+            // Guardado exitoso y redirección inteligente (SSO)
             localStorage.setItem('userSession', JSON.stringify(data.user));
             localStorage.setItem(AUTH_TOKEN_KEY, data.token);
-            window.location.href = '/apps/start/inicio.html';
+            
+            // Lógica de redirección dinámica
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = urlParams.get('redirect');
+            window.location.href = redirectUrl ? redirectUrl : '/apps/start/inicio.html';
         } else {
             btn.disabled = false;
             btn.textContent = 'Ingresar al Sistema';
@@ -209,7 +215,14 @@ document.getElementById('force-logout-form').addEventListener('submit', async (e
             localStorage.setItem('userSession', JSON.stringify(data.user));
             localStorage.setItem(AUTH_TOKEN_KEY, data.token);
             showUIFeedback('Sesión remota purgada con éxito. Ingresando...', 'success');
-            setTimeout(() => window.location.href = '/apps/start/inicio.html', 1200);
+            
+            // Lógica de redirección dinámica
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = urlParams.get('redirect');
+            
+            setTimeout(() => {
+                window.location.href = redirectUrl ? redirectUrl : '/apps/start/inicio.html';
+            }, 1200);
         } else {
             showUIFeedback(data.error || 'Código SHIELD incorrecto o caducado.', 'error');
             btn.disabled = false;
