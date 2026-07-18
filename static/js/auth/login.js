@@ -125,10 +125,22 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
             localStorage.setItem('userSession', JSON.stringify(data.user));
             localStorage.setItem(AUTH_TOKEN_KEY, data.token);
             
-            // Lógica de redirección dinámica
-            const urlParams = new URLSearchParams(window.location.search);
-            const redirectUrl = urlParams.get('redirect');
-            window.location.href = redirectUrl ? redirectUrl : '/apps/start/inicio.html';
+            // ========================================================
+            // INYECCIÓN BLOQUE 1: VERIFICAR INTERCEPTOR DE LA TIENDA
+            // ========================================================
+            const pendingActionRaw = sessionStorage.getItem('gymenez_pending_action');
+            
+            if (pendingActionRaw) {
+                const pendingState = JSON.parse(pendingActionRaw);
+                window.location.href = pendingState.returnUrl;
+            } else {
+                // Lógica de redirección dinámica original
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirectUrl = urlParams.get('redirect');
+                window.location.href = redirectUrl ? redirectUrl : '/apps/start/inicio.html';
+            }
+            // ========================================================
+
         } else {
             btn.disabled = false;
             btn.textContent = 'Ingresar al Sistema';
@@ -216,12 +228,21 @@ document.getElementById('force-logout-form').addEventListener('submit', async (e
             localStorage.setItem(AUTH_TOKEN_KEY, data.token);
             showUIFeedback('Sesión remota purgada con éxito. Ingresando...', 'success');
             
-            // Lógica de redirección dinámica
-            const urlParams = new URLSearchParams(window.location.search);
-            const redirectUrl = urlParams.get('redirect');
-            
             setTimeout(() => {
-                window.location.href = redirectUrl ? redirectUrl : '/apps/start/inicio.html';
+                // ========================================================
+                // INYECCIÓN BLOQUE 1: VERIFICAR INTERCEPTOR DE LA TIENDA
+                // ========================================================
+                const pendingActionRaw = sessionStorage.getItem('gymenez_pending_action');
+                if (pendingActionRaw) {
+                    const pendingState = JSON.parse(pendingActionRaw);
+                    window.location.href = pendingState.returnUrl;
+                } else {
+                    // Lógica de redirección dinámica original
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirectUrl = urlParams.get('redirect');
+                    window.location.href = redirectUrl ? redirectUrl : '/apps/start/inicio.html';
+                }
+                // ========================================================
             }, 1200);
         } else {
             showUIFeedback(data.error || 'Código SHIELD incorrecto o caducado.', 'error');
