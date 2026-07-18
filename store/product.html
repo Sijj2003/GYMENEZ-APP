@@ -26,7 +26,8 @@
                 <div class="flex items-center gap-6">
                     <a href="/store/checkout.html" class="relative text-gray-400 hover:text-[#FFC300] transition">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        <span id="cart-counter" class="absolute -top-2 -right-2 bg-[#FFC300] text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+                        <!-- CORRECCIÓN: ID unificado a cartCount para conectar con store_core.js -->
+                        <span id="cartCount" class="absolute -top-2 -right-2 bg-[#FFC300] text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">0</span>
                     </a>
                 </div>
             </div>
@@ -113,6 +114,8 @@
         <span class="text-xl">✅</span> Producto añadido a tu carrito.
     </div>
 
+    <!-- CORRECCIÓN: Inyección del Interceptor y Cerebro del Carrito -->
+    <script src="/static/js/store/store_core.js"></script>
     <script src="/static/js/store/product.js"></script>
 </body>
 </html>
