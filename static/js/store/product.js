@@ -2,8 +2,12 @@ let currentProduct = null;
 let currentQuantity = 1;
 let finalPrice = 0;
 
+const API_BASE_URL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' 
+    ? 'http://127.0.0.1:5000' 
+    : 'https://sijj2003.pythonanywhere.com';
+
 document.addEventListener('DOMContentLoaded', () => {
-    updateCartCounter();
+    // store_core.js maneja globalmente updateCartCount() de fondo
     const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get('id');
 
@@ -15,8 +19,23 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function loadProductData(id) {
+    // ⚡ ESTRATEGIA APPLE: Buscar primero en Caché del Catálogo para velocidad instantánea
+    const cachedCatalog = sessionStorage.getItem('gymenez_catalog');
+    
+    if (cachedCatalog) {
+        const catalogArray = JSON.parse(cachedCatalog);
+        const foundProduct = catalogArray.find(p => p.id === id);
+        
+        if (foundProduct) {
+            currentProduct = foundProduct;
+            renderProduct();
+            return; // Salimos de la función sin tocar el backend
+        }
+    }
+
+    // 🌍 ESTRATEGIA B: Si no hay caché (alguien abrió un enlace directo)
     try {
-        const response = await fetch(`https://sijj2003.pythonanywhere.com/api/store/catalog/${id}`);
+        const response = await fetch(`${API_BASE_URL}/api/store/catalog/${id}`);
         const data = await response.json();
 
         if (response.ok && data.success) {
@@ -63,7 +82,7 @@ function renderProduct() {
         document.getElementById('prod-old-price').classList.remove('hidden');
         
         const badge = document.getElementById('prod-discount-badge');
-        badge.innerText = `-${discount}%`;
+        badge.innerText = `-${discount}% OFF`; // Ajustado al estándar de la tienda
         badge.classList.remove('hidden');
     } else {
         finalPrice = basePrice;
@@ -85,7 +104,6 @@ function updateQty(delta) {
     if (newQty < 1) newQty = 1;
     if (newQty > currentProduct.stock) {
         newQty = currentProduct.stock;
-        // Opcional: Mostrar una sacudida o alerta de límite alcanzado
     }
 
     currentQuantity = newQty;
@@ -99,47 +117,47 @@ function updateTotalDisplay() {
 }
 
 // ==========================================
-// LÓGICA DEL CARRITO DE COMPRAS (LOCALSTORAGE)
+// LÓGICA DE COMPRA PROTEGIDA (ZERO TRUST)
 // ==========================================
 function addToCart() {
     if (!currentProduct || currentProduct.stock <= 0) return;
 
-    // Leer el carrito actual
-    let cart = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
+    // Preparamos los datos con el formato que entiende store_core.js y el checkout
+    const payload = {
+        id: currentProduct.id,
+        name: currentProduct.name,
+        storeName: currentProduct.store_name, // Estandarizado camelCase para store_core
+        price: finalPrice,
+        imageUrl: currentProduct.image_url,
+        qty: currentQuantity,
+        maxStock: currentProduct.stock
+    };
 
-    // Buscar si el producto ya está en el carrito
-    const existingIndex = cart.findIndex(item => item.id === currentProduct.id);
+    // 🛡️ ENVOLVEMOS LA ACCIÓN EN EL INTERCEPTOR DE AUTENTICACIÓN
+    requireAuth(() => {
+        // Leer el carrito actual
+        let cart = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
+        const existingIndex = cart.findIndex(item => item.id === payload.id);
 
-    if (existingIndex !== -1) {
-        // Si existe, sumar la cantidad (validando que no exceda el stock)
-        let totalQty = cart[existingIndex].quantity + currentQuantity;
-        if (totalQty > currentProduct.stock) totalQty = currentProduct.stock;
-        cart[existingIndex].quantity = totalQty;
-    } else {
-        // Si es nuevo, añadirlo al array
-        cart.push({
-            id: currentProduct.id,
-            name: currentProduct.name,
-            store_name: currentProduct.store_name,
-            price: finalPrice,
-            image_url: currentProduct.image_url,
-            quantity: currentQuantity,
-            max_stock: currentProduct.stock
-        });
-    }
+        if (existingIndex !== -1) {
+            // Si existe, sumar la cantidad validando stock
+            let totalQty = cart[existingIndex].qty + payload.qty;
+            if (totalQty > currentProduct.stock) totalQty = currentProduct.stock;
+            cart[existingIndex].qty = totalQty;
+        } else {
+            // Si es nuevo, añadirlo
+            cart.push(payload);
+        }
 
-    // Guardar en el navegador
-    localStorage.setItem('gymenez_cart', JSON.stringify(cart));
-    
-    // Actualizar icono y mostrar Toast de confirmación
-    updateCartCounter();
-    showToast();
-}
-
-function updateCartCounter() {
-    const cart = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    document.getElementById('cart-counter').innerText = totalItems;
+        // Guardar en LocalStorage
+        localStorage.setItem('gymenez_cart', JSON.stringify(cart));
+        
+        // Ejecutar utilidades de store_core.js
+        if(typeof updateCartCount === 'function') updateCartCount();
+        
+        showToast(); // Mostrar notificación visual
+        
+    }, { type: 'ADD_CART', payload: payload });
 }
 
 function showToast() {
