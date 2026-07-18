@@ -1,38 +1,46 @@
-body { 
-    background-color: #030305; 
-    color: white; 
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
+/* =========================================================
+   💀 SKELETON LOADERS (Shimmer Effect)
+   ========================================================= */
+.skeleton-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-/* Glassmorphism Ecosistema */
-.glass-nav {
-    background: rgba(3, 3, 5, 0.85);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+.skeleton-box {
+    background: #e2e5e7;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
 }
 
-.glass-panel {
-    background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.skeleton-box::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0,
+        rgba(255, 255, 255, 0.4) 20%,
+        rgba(255, 255, 255, 0.6) 60%,
+        rgba(255, 255, 255, 0)
+    );
+    animation: shimmer 1.5s infinite;
+    content: '';
 }
 
-.glass-panel:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 195, 0, 0.3);
-    transform: translateY(-4px);
-    box-shadow: 0 10px 40px -10px rgba(255, 195, 0, 0.1);
+@keyframes shimmer {
+    100% { transform: translateX(100%); }
 }
 
-/* Ocultar scrollbar horizontal para categorías y partners */
-.hide-scroll::-webkit-scrollbar { display: none; }
-.hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* Scrollbar personalizado vertical para la lista del Buscador */
-.custom-scroll::-webkit-scrollbar { width: 6px; }
-.custom-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 10px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,195,0,0.3); border-radius: 10px; }
-.custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,195,0,0.6); } scrollbar-width: none; }
+.skeleton-img { height: 200px; width: 100%; }
+.skeleton-title { height: 24px; width: 80%; }
+.skeleton-price { height: 20px; width: 40%; }
+.skeleton-btn { height: 40px; width: 100%; border-radius: 20px; }
