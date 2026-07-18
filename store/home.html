@@ -42,7 +42,7 @@
         @keyframes shimmer { 100% { transform: translateX(100%); } }
     </style>
 </head>
-<body class="selection:bg-[#FFC300] selection:text-black">
+<body class="bg-[#030305] text-white selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col">
 
     <nav class="fixed w-full z-50 glass-nav transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -87,13 +87,13 @@
                         <span id="cartCount" class="absolute top-0 right-0 bg-[#FFC300] text-black text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full">0</span>
                     </button>
                     
-                    <a href="/store/account" class="text-[10px] font-bold uppercase tracking-wider text-white hover:text-[#FFC300] transition whitespace-nowrap ml-2">Mi Cuenta</a>
+                    <a href="/store/account.html" class="text-[10px] font-bold uppercase tracking-wider text-white hover:text-[#FFC300] transition whitespace-nowrap ml-2">Mi Cuenta</a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main class="pt-28 pb-12 px-4 max-w-7xl mx-auto">
+    <main class="pt-28 pb-12 px-4 max-w-7xl mx-auto flex-grow w-full">
         <div class="relative rounded-[2rem] overflow-hidden bg-[#0a0a0f] border border-white/5 p-8 md:p-16 flex flex-col md:flex-row items-center justify-between shadow-2xl">
             <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FFC300]/5 rounded-full blur-[100px] pointer-events-none"></div>
 
@@ -153,7 +153,7 @@
         </div>
     </section>
 
-    <footer class="border-t border-white/5 pt-12 pb-8 px-4">
+    <footer class="border-t border-white/5 pt-12 pb-8 px-4 mt-auto">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
             <div class="text-center md:text-left">
                 <span class="text-lg font-[900] tracking-tighter uppercase italic text-gray-600 block mb-1">Gymenez<span class="text-gray-500">Store</span></span>
