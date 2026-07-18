@@ -13,17 +13,25 @@
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { gymenez: { dark: '#030305', accent: '#FFC300' } } } } }
     </script>
     <style>
-        /* Animaciones para las pestañas SPA */
+        /* Animaciones para las pestañas SPA y Timeline de Órdenes */
         .tab-content { display: none; opacity: 0; transition: opacity 0.3s ease; }
         .tab-content.active { display: block; opacity: 1; }
         .tab-btn.active { background: rgba(255,195,0,0.1); border-right: 3px solid #FFC300; color: #FFC300; }
+        
+        .timeline-item::before {
+            content: ''; position: absolute; left: 15px; top: 32px; bottom: -20px; width: 2px;
+            background: rgba(255,255,255,0.1); z-index: 0;
+        }
+        .timeline-item:last-child::before { display: none; }
+        .timeline-item.active::before { background: #FFC300; }
+        .timeline-item.active-emerald::before { background: #10B981; } /* Tailwind Emerald 500 */
     </style>
 </head>
 <body class="bg-[#030305] selection:bg-[#FFC300] selection:text-black text-white min-h-screen flex flex-col">
 
     <!-- Bloqueo SSO: Solo atletas autenticados -->
     <script>
-        const activeToken = localStorage.getItem('gymen_auth_token'); 
+        const activeToken = localStorage.getItem('gymen_auth_token') || localStorage.getItem('jwt_token'); 
         if (!activeToken) window.location.href = '/apps/start/login.html?redirect=/store/account.html';
     </script>
 
@@ -36,10 +44,10 @@
                     <span class="text-xs font-bold uppercase tracking-widest">Volver a la Tienda</span>
                 </a>
                 <div class="flex items-center gap-6">
-                    <!-- Icono Carrito -->
+                    <!-- Icono Carrito Mágico -->
                     <a href="/store/checkout.html" class="relative text-gray-400 hover:text-[#FFC300] transition">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        <span class="absolute -top-2 -right-2 bg-[#FFC300] text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+                        <span id="cartCount" class="absolute -top-2 -right-2 bg-[#FFC300] text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">0</span>
                     </a>
                     <a href="/apps/start/inicio.html" class="text-[10px] font-bold uppercase tracking-wider text-white bg-white/10 px-4 py-2 rounded-full hover:bg-white/20 transition">App Fitness</a>
                 </div>
@@ -52,7 +60,7 @@
         
         <!-- Header del Dashboard (Saludo Dinámico) -->
         <div class="mb-10 flex items-center gap-4">
-            <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-[#FFC300] to-orange-500 flex items-center justify-center text-black text-2xl font-black uppercase" id="avatar-initials">G</div>
+            <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-[#FFC300] to-orange-500 flex items-center justify-center text-black text-2xl font-black uppercase shadow-[0_0_20px_rgba(255,195,0,0.3)]" id="avatar-initials">G</div>
             <div>
                 <h1 class="text-3xl font-[900] tracking-tighter uppercase italic">Hola, <span id="user-greeting" class="text-[#FFC300]">Atleta</span></h1>
                 <p class="text-gray-400 text-xs font-medium uppercase tracking-widest">Panel de Control de Compras</p>
@@ -64,8 +72,9 @@
             <!-- MENÚ LATERAL (SIDEBAR) -->
             <aside class="w-full lg:w-1/4">
                 <div class="glass-panel p-4 rounded-2xl sticky top-28 space-y-2">
-                    <button onclick="switchTab('pedidos', this)" class="tab-btn active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-bold text-gray-300 hover:bg-white/5 transition">
-                        <span>📦</span> Mis Pedidos
+                    <button onclick="switchTab('pedidos', this)" class="tab-btn active w-full flex items-center justify-between px-4 py-3 rounded-xl text-left text-sm font-bold text-gray-300 hover:bg-white/5 transition">
+                        <div class="flex items-center gap-3"><span>📦</span> Mis Pedidos</div>
+                        <span id="badge-orders-count" class="text-[9px] bg-white/10 text-gray-400 px-2 py-0.5 rounded-full hidden">0</span>
                     </button>
                     <button onclick="switchTab('deseos', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-bold text-gray-300 hover:bg-white/5 transition">
                         <span>❤️</span> Lista de Deseos
@@ -83,16 +92,25 @@
             <section class="w-full lg:w-3/4">
 
                 <!-- PESTAÑA: MIS PEDIDOS -->
-                <div id="tab-pedidos" class="tab-content active glass-panel p-8 rounded-[2rem] min-h-[400px]">
+                <div id="tab-pedidos" class="tab-content active glass-panel p-6 md:p-8 rounded-[2rem] min-h-[400px]">
                     <div class="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
                         <h2 class="text-xl font-[900] tracking-tighter uppercase italic">Rastreo de Órdenes</h2>
-                        <span class="text-xs font-bold bg-[#FFC300]/10 text-[#FFC300] px-3 py-1 rounded-full">0 Activas</span>
                     </div>
-                    <div class="text-center py-16">
+                    
+                    <div id="orders-container" class="space-y-6">
+                        <!-- Skeletons Loader mientras el JS llama a la API -->
+                        <div class="animate-pulse flex flex-col gap-4">
+                            <div class="h-40 bg-white/5 rounded-2xl w-full"></div>
+                            <div class="h-40 bg-white/5 rounded-2xl w-full"></div>
+                        </div>
+                    </div>
+
+                    <!-- Estado Vacío -->
+                    <div id="orders-empty-state" class="hidden text-center py-16">
                         <div class="text-6xl mb-4 opacity-50">📦</div>
                         <h3 class="text-lg font-bold text-white mb-2">Aún no tienes pedidos</h3>
                         <p class="text-sm text-gray-400 mb-6">Explora nuestro catálogo y equipa tu entrenamiento.</p>
-                        <a href="/store/home.html" class="inline-block bg-[#FFC300] text-black px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-yellow-400 transition">Ir de Compras</a>
+                        <a href="/store/home.html" class="inline-block bg-[#FFC300] text-black px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-yellow-400 transition shadow-[0_0_20px_rgba(255,195,0,0.2)]">Ir de Compras</a>
                     </div>
                 </div>
 
@@ -124,7 +142,7 @@
                 <div id="tab-perfil" class="tab-content">
                     <form id="buyer-profile-form" class="space-y-6">
                         
-                        <!-- SECCIÓN 1: Identidad Legal (KYC INTELIGENTE ZERO KNOWLEDGE) -->
+                        <!-- SECCIÓN 1: Identidad Legal (KYC INTELIGENTE) -->
                         <div class="glass-panel p-6 md:p-8 rounded-[2rem]">
                             <div class="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
                                 <div class="flex items-center gap-3">
@@ -139,14 +157,14 @@
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div class="md:col-span-1">
                                         <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Documento</label>
-                                        <select id="doc-type" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition cursor-pointer">
+                                        <select id="doc-type" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition cursor-pointer">
                                             <option value="V">Venezolano (V)</option>
                                             <option value="E">Extranjero (E)</option>
                                         </select>
                                     </div>
                                     <div class="md:col-span-2">
                                         <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Número de Cédula</label>
-                                        <input type="text" id="doc-number" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition" placeholder="Ej: 12345678" required>
+                                        <input type="text" id="doc-number" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition placeholder-gray-600" placeholder="Ej: 12345678" required>
                                     </div>
                                 </div>
                                 <div class="mt-4">
@@ -168,11 +186,9 @@
                                         <p id="readonly-fullname" class="text-base font-bold text-white leading-tight">Cargando...</p>
                                         <p id="readonly-doc" class="text-sm font-medium text-gray-400 mt-0.5">V-00000000</p>
                                     </div>
-                                    <!-- Botón de ver documento completamente removido por políticas de seguridad -->
                                 </div>
 
                                 <div class="pt-2">
-                                    <!-- Recuerda cambiar NUMERODETUWHATSAPP -->
                                     <a href="https://api.whatsapp.com/send?phone=+584148780392&text=Hola%20equipo%20Gymenez,%20requiero%20asistencia%20para%20actualizar%20mis%20datos%20legales%20de%20facturaci%C3%B3n." target="_blank" class="w-full flex items-center justify-center gap-2 border border-white/10 text-gray-400 px-4 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-[#25D366]/10 hover:text-[#25D366] hover:border-[#25D366]/30 transition">
                                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
                                         Solicitar Actualización al Soporte
@@ -181,16 +197,16 @@
                             </div>
                         </div>
 
-                        <!-- SECCIÓN 2: Logística y Envíos (Siempre Editable) -->
+                        <!-- SECCIÓN 2: Logística y Envíos -->
                         <div class="glass-panel p-6 md:p-8 rounded-[2rem]">
                             <div class="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
                                 <span class="text-2xl">📦</span>
-                                <h2 class="text-lg font-[900] tracking-tighter uppercase italic">Dirección y Envíos (Venezuela)</h2>
+                                <h2 class="text-lg font-[900] tracking-tighter uppercase italic">Dirección y Envíos</h2>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Estado</label>
-                                    <select id="ship-state" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition cursor-pointer">
+                                    <select id="ship-state" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition cursor-pointer">
                                         <option value="">Selecciona tu Estado...</option>
                                         <option value="Bolívar">Bolívar</option>
                                         <option value="Distrito Capital">Distrito Capital</option>
@@ -200,19 +216,18 @@
                                 </div>
                                 <div>
                                     <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Municipio</label>
-                                    <input type="text" id="ship-municipality" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition" placeholder="Ej: Caroní" required>
+                                    <input type="text" id="ship-municipality" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition placeholder-gray-600" placeholder="Ej: Caroní" required>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Ciudad</label>
-                                    <input type="text" id="ship-city" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition" placeholder="Ej: Puerto Ordaz" required>
+                                    <input type="text" id="ship-city" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition placeholder-gray-600" placeholder="Ej: Puerto Ordaz" required>
                                 </div>
                                 <div>
                                     <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Agencia Favorita</label>
-                                    <select id="ship-courier" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FFC300] transition cursor-pointer">
+                                    <select id="ship-courier" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition cursor-pointer">
                                         <option value="MRW">MRW</option>
-                                        <option value="Tealca">Tealca</option>
                                         <option value="Zoom">Grupo Zoom</option>
                                     </select>
                                 </div>
@@ -231,5 +246,13 @@
     </main>
 
     <script src="/static/js/store/account.js"></script>
+    <script>
+        // Inicializar el carrito (Bloque 1)
+        document.addEventListener('DOMContentLoaded', () => {
+            const cart = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
+            const totalItems = cart.reduce((acc, item) => acc + (item.qty || 1), 0);
+            document.getElementById('cartCount').innerText = totalItems;
+        });
+    </script>
 </body>
 </html>
