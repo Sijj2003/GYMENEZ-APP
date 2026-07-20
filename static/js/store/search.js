@@ -1,22 +1,181 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Obtener la palabra clave de la URL (?q=palabra)
-    const urlParams = new URLSearchParams(window.location.search);
-    const query = urlParams.get('q') || '';
-    
-    document.getElementById('search-query-display').innerText = `"${query}"`;
-    document.getElementById('search-input-inner').value = query;
-
-    // Ejecutar búsqueda profunda
-    fetchAndFilterProducts(query);
-    
-    // Activar buscador interno
-    setupInnerSearch();
-});
-
-// Función Maestra: Elimina acentos y convierte a minúsculas
+// ==========================================
+// UTILS GLOBALES
+// ==========================================
 function normalizeText(text) {
     if (!text) return '';
     return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // --- 1. LÓGICA DE BÚSQUEDA INSTANTÁNEA (NAVBAR Y MÓVIL) ---
+    const desktopInput = document.getElementById('search-input');
+    const mobileInput = document.getElementById('mobile-search-input');
+
+    // Escuchar el buscador de Desktop
+    if (desktopInput) {
+        desktopInput.addEventListener('input', (e) => handleInstantSearch(e.target.value, 'desktop'));
+        
+        // Si el usuario presiona Enter en PC, ir a la página de resultados profundos
+        desktopInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const term = e.target.value.trim();
+                if (term) window.location.href = `/store/search.html?q=${encodeURIComponent(term)}`;
+            }
+        });
+        
+        // Ocultar dropdown al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#search-dropdown') && e.target !== desktopInput) {
+                const dropdown = document.getElementById('search-dropdown');
+                if(dropdown) dropdown.classList.add('hidden');
+            }
+        });
+    }
+
+    // Escuchar el buscador de Móvil
+    if (mobileInput) {
+        mobileInput.addEventListener('input', (e) => handleInstantSearch(e.target.value, 'mobile'));
+        
+        // Si presiona Enter/Ir en el teclado móvil
+        mobileInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const term = e.target.value.trim();
+                if (term) window.location.href = `/store/search.html?q=${encodeURIComponent(term)}`;
+            }
+        });
+    }
+
+    // --- 2. LÓGICA DE LA PÁGINA DE RESULTADOS PROFUNDOS (search.html) ---
+    // Detectamos si estamos en la página de resultados verificando si existe el display de query[cite: 7]
+    const searchQueryDisplay = document.getElementById('search-query-display');
+    if (searchQueryDisplay) {
+        initDeepSearch();
+    }
+});
+
+// ==========================================
+// MÓDULO A: BÚSQUEDA INSTANTÁNEA (HOME NAVBAR Y MODAL)
+// ==========================================
+function handleInstantSearch(query, platform) {
+    const q = normalizeText(query).trim();
+    const resultsContainer = platform === 'desktop' 
+        ? document.getElementById('search-dropdown') 
+        : document.getElementById('mobile-search-results');
+
+    if (!resultsContainer) return;
+
+    if (q.length < 2) {
+        if (platform === 'desktop') {
+            resultsContainer.classList.add('hidden');
+        } else {
+            resultsContainer.innerHTML = `
+                <div class="text-center py-20 opacity-50">
+                    <svg class="w-12 h-12 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Empieza a escribir...</p>
+                </div>`;
+        }
+        return;
+    }
+
+    // Usar caché para velocidad instantánea
+    const cachedCatalog = sessionStorage.getItem('gymenez_catalog');
+    let products = [];
+    if (cachedCatalog) {
+        products = JSON.parse(cachedCatalog);
+    }
+
+    const filtered = products.filter(p => {
+        const searchString = normalizeText(`${p.name} ${p.store_name || ''} ${p.category || ''}`);
+        return searchString.includes(q);
+    });
+
+    renderInstantResults(filtered, resultsContainer, platform, query);
+}
+
+function renderInstantResults(results, container, platform, originalQuery) {
+    if (platform === 'desktop') {
+        container.classList.remove('hidden');
+        container.classList.add('flex');
+    }
+
+    if (results.length === 0) {
+        container.innerHTML = `
+            <div class="p-8 text-center">
+                <p class="text-[#FFC300] font-bold text-lg mb-1">¡Ups!</p>
+                <p class="text-xs text-gray-500 uppercase tracking-widest font-black">No hay coincidencias</p>
+            </div>`;
+        return;
+    }
+
+    let html = results.slice(0, 6).map(item => `
+        <a href="/store/product.html?id=${item.id}" class="flex items-center gap-4 p-3 bg-[#0a0a0f] md:bg-transparent rounded-xl hover:bg-white/5 transition border-b border-white/5 md:border-b md:rounded-none md:last:border-0 group">
+            <div class="w-14 h-14 rounded-lg bg-white/5 p-1 flex-shrink-0 border border-white/10">
+                <img src="${item.image_url || item.imageUrl}" class="w-full h-full object-contain group-hover:scale-110 transition">
+            </div>
+            <div class="flex-grow min-w-0 pr-2">
+                <h4 class="text-sm font-bold text-white truncate">${item.name}</h4>
+                <p class="text-[9px] text-[#FFC300] uppercase tracking-widest">${item.store_name || 'Partner Oficial'}</p>
+            </div>
+            <div class="text-right flex-shrink-0">
+                <span class="text-white font-[900] italic text-sm">$${parseFloat(item.price_usd || item.price || 0).toFixed(2)}</span>
+            </div>
+        </a>
+    `).join('');
+
+    // Botón para ir a la página profunda si hay más resultados
+    if (results.length > 6) {
+        html += `
+        <a href="/store/search.html?q=${encodeURIComponent(originalQuery)}" class="block w-full p-3 text-center bg-white/5 hover:bg-[#FFC300] text-[#FFC300] hover:text-black transition text-[10px] font-black uppercase tracking-widest">
+            Ver todos los ${results.length} resultados
+        </a>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
+// Control del Modal Móvil (Nativo)
+window.toggleMobileSearch = function(show) {
+    const modal = document.getElementById('mobile-search-modal');
+    const input = document.getElementById('mobile-search-input');
+    
+    if (!modal) return;
+
+    if (show) {
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        document.body.style.overflow = 'hidden'; 
+        setTimeout(() => { if(input) input.focus(); }, 150);
+    } else {
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        document.body.style.overflow = '';
+        if(input) {
+            input.value = '';
+            handleInstantSearch('', 'mobile');
+        }
+    }
+};
+
+// ==========================================
+// MÓDULO B: PÁGINA PROFUNDA DE RESULTADOS (search.html)
+// ==========================================
+function initDeepSearch() {
+    // Obtener la palabra clave de la URL[cite: 7]
+    const urlParams = new URLSearchParams(window.location.search);
+    const query = urlParams.get('q') || '';
+    
+    const displayEl = document.getElementById('search-query-display');
+    const inputInner = document.getElementById('search-input-inner');
+    
+    if(displayEl) displayEl.innerText = `"${query}"`;
+    if(inputInner) inputInner.value = query;
+
+    // Ejecutar búsqueda profunda al servidor[cite: 7]
+    fetchAndFilterProducts(query);
+    
+    // Activar buscador interno de la página[cite: 7]
+    setupInnerSearch();
 }
 
 async function fetchAndFilterProducts(query) {
@@ -24,8 +183,8 @@ async function fetchAndFilterProducts(query) {
     const countDisplay = document.getElementById('search-count');
     
     if (!query.trim()) {
-        countDisplay.innerText = "Ingresa un término de búsqueda válido.";
-        grid.innerHTML = '';
+        if(countDisplay) countDisplay.innerText = "Ingresa un término de búsqueda válido.";
+        if(grid) grid.innerHTML = '';
         return;
     }
 
@@ -36,25 +195,25 @@ async function fetchAndFilterProducts(query) {
         if (response.ok && data.success) {
             const normalizedQuery = normalizeText(query);
             
-            // FILTRADO ULTRA-FLEXIBLE
+            // Filtrado ultra-flexible[cite: 7]
             const filteredProducts = data.products.filter(p => {
                 const searchString = normalizeText(`${p.name} ${p.store_name} ${p.category} ${p.description}`);
                 return searchString.includes(normalizedQuery);
             });
 
-            countDisplay.innerText = `${filteredProducts.length} coincidencias encontradas`;
-            renderResults(filteredProducts, grid);
+            if(countDisplay) countDisplay.innerText = `${filteredProducts.length} coincidencias encontradas`;
+            if(grid) renderDeepResults(filteredProducts, grid);
             
         } else {
             throw new Error('No se pudo cargar el catálogo');
         }
     } catch (error) {
-        countDisplay.innerText = "Error en el servidor.";
-        grid.innerHTML = '<p class="text-red-500">Ocurrió un problema al buscar. Intenta de nuevo.</p>';
+        if(countDisplay) countDisplay.innerText = "Error en el servidor.";
+        if(grid) grid.innerHTML = '<p class="text-red-500">Ocurrió un problema al buscar. Intenta de nuevo.</p>';
     }
 }
 
-function renderResults(productsToRender, grid) {
+function renderDeepResults(productsToRender, grid) {
     if (productsToRender.length === 0) {
         grid.innerHTML = `
             <div class="col-span-full py-20 flex flex-col items-center justify-center text-center">
@@ -104,7 +263,6 @@ function renderResults(productsToRender, grid) {
     }).join('');
 }
 
-// Búsqueda desde la misma página de resultados
 function setupInnerSearch() {
     const input = document.getElementById('search-input-inner');
     const btn = document.getElementById('search-btn-inner');
