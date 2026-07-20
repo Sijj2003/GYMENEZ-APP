@@ -3,7 +3,7 @@
 // ====================================================================
 
 const CART_KEY = 'gymenez_cart';
-const TOKEN_KEY = 'jwt_token';
+const TOKEN_KEY = 'gymen_auth_token';
 const PENDING_ACTION_KEY = 'gymenez_pending_action';
 
 document.addEventListener('DOMContentLoaded', () => {
