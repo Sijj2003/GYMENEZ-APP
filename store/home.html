@@ -79,8 +79,8 @@
                 <span class="text-[9px] font-bold">Inicio</span>
             </a>
 
-            <!-- Botón de Búsqueda Móvil (Abre modal/foco) -->
-            <button class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-white transition">
+            <!-- Botón de Búsqueda Móvil -->
+            <button onclick="toggleMobileSearch(true)" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-white transition">
                 <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 <span class="text-[9px] font-medium">Buscar</span>
             </button>
@@ -203,6 +203,28 @@
                 if(totalItems > 0) badgeMobile.classList.remove('hidden');
             }
         });
+
+        <!-- MODAL DE BÚSQUEDA MÓVIL (NATIVO) -->
+    <div id="mobile-search-modal" class="md:hidden fixed inset-0 z-[100] bg-[#030305]/95 backdrop-blur-2xl transition-all duration-300 opacity-0 pointer-events-none flex flex-col">
+        <!-- Barra de Búsqueda Superior -->
+        <div class="flex items-center px-4 h-20 border-b border-white/10 bg-[#0a0a0f]/50 mt-safe">
+            <svg class="w-5 h-5 text-[#FFC300] mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="mobile-search-input" class="w-full bg-transparent text-white text-base focus:outline-none placeholder-gray-600" placeholder="¿Qué estás buscando?">
+            <button onclick="toggleMobileSearch(false)" class="p-2 ml-2 text-gray-400 hover:text-[#FFC300] bg-white/5 rounded-full">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <!-- Resultados -->
+        <div id="mobile-search-results" class="flex-1 overflow-y-auto p-2 space-y-2 pb-24 hide-scroll">
+            <div class="text-center py-20 opacity-50">
+                <svg class="w-12 h-12 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Empieza a escribir...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DEL BUSCADOR -->
+    <script src="/static/js/store/search.js?v=1.0"></script>
     </script>
 </body>
 </html>
