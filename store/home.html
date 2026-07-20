@@ -2,182 +2,206 @@
 <html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gymenez Store | Marketplace</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/store/home.css?v=2.0">
+    <link rel="stylesheet" href="/static/css/store/home.css">
     
     <script>
-        tailwind.config = {
-            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { gymenez: { dark: '#030305', accent: '#FFC300' } } } }
-        }
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { gymenez: { dark: '#030305', accent: '#FFC300' } } } } }
     </script>
-
-    <!-- Estilos específicos para la animación del Skeleton Loader -->
-    <style>
-        .skeleton-box {
-            position: relative;
-            overflow: hidden;
-            background-color: rgba(255, 255, 255, 0.05); /* Adaptado a tu dark theme */
-        }
-        .skeleton-box::after {
-            position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
-            transform: translateX(-100%);
-            background-image: linear-gradient(
-                90deg,
-                rgba(255, 255, 255, 0) 0,
-                rgba(255, 255, 255, 0.05) 20%,
-                rgba(255, 255, 255, 0.1) 60%,
-                rgba(255, 255, 255, 0)
-            );
-            animation: shimmer 1.5s infinite;
-            content: '';
-        }
-        @keyframes shimmer { 100% { transform: translateX(100%); } }
-    </style>
 </head>
-<body class="bg-[#030305] text-white selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col">
+<body class="selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col relative pb-20 md:pb-0">
 
-    <nav class="fixed w-full z-50 glass-nav transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
+    <!-- ======================================================= -->
+    <!-- NAVBAR SUPERIOR (Dinámico: Completo en PC, Simple en Móvil) -->
+    <!-- ======================================================= -->
+    <nav class="fixed top-0 w-full z-50 glass-nav transition-all duration-300">
+        <!-- Usamos px-4 para móvil, y px-8 para PC para que abarque toda la pantalla -->
+        <div class="w-full px-4 md:px-8">
+            <div class="flex items-center justify-between h-16 md:h-20">
                 
+                <!-- IZQUIERDA: Logo -->
                 <div class="flex items-center gap-4">
-                    <a href="javascript:history.back()" class="p-2 -ml-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-all" title="Volver">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    <a href="javascript:history.back()" class="p-2 -ml-2 text-gray-400 hover:text-white transition hidden md:block">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     </a>
-                    <div class="h-5 w-px bg-white/10 hidden md:block"></div>
-                    <a href="/store" class="flex items-center leading-none group">
-                        <span class="text-xl font-[900] tracking-tighter uppercase italic text-[#FFC300] transition-transform group-hover:scale-105">Gym</span>
-                        <span class="text-xl font-[900] tracking-tighter uppercase italic text-white transition-transform group-hover:scale-105">enez</span>
-                        <span class="text-[9px] font-black uppercase tracking-[0.3em] text-white/70 ml-2 mt-1">Store</span>
+                    <a href="/store/home.html" class="flex items-center leading-none group">
+                        <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300] transition-transform group-hover:scale-105">Gym</span>
+                        <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white transition-transform group-hover:scale-105">enez</span>
+                        <span class="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-2 mt-1">Store</span>
                     </a>
                 </div>
 
-                <div class="hidden md:block flex-1 max-w-md mx-8 relative"> 
+                <!-- CENTRO: Buscador (Solo visible en Desktop) -->
+                <div class="hidden md:block flex-1 max-w-2xl mx-12 relative"> 
                     <div class="relative group">
-                        <button id="search-btn" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-500 hover:text-[#FFC300] transition z-10 pointer-events-auto">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        </button>
-                        <!-- El ID de tu buscador es "search-input", JS lo usará -->
-                        <input type="text" id="search-input" autocomplete="off" class="block w-full pl-10 pr-3 py-2 border border-white/10 rounded-full leading-5 bg-[#0a0a0f] text-gray-300 placeholder-gray-500 focus:outline-none focus:border-[#FFC300]/50 transition-all text-xs" placeholder="Buscar suplementos, ropa, marcas...">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
+                        <input type="text" id="search-input" autocomplete="off" class="block w-full pl-12 pr-4 py-3 border border-white/10 rounded-2xl leading-5 bg-white/5 text-gray-300 placeholder-gray-500 focus:outline-none focus:border-[#FFC300]/50 focus:bg-white/10 transition-all text-sm shadow-inner" placeholder="Buscar proteínas, creatinas, indumentaria...">
                     </div>
-                    
-                    <div id="search-dropdown" class="absolute top-full left-0 right-0 mt-2 bg-[#0a0a0f] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[100] hidden flex-col max-h-[350px] overflow-y-auto custom-scroll">
-                    </div>
+                    <div id="search-dropdown" class="absolute top-full left-0 right-0 mt-2 bg-[#0a0a0f] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[100] hidden flex-col max-h-[400px] overflow-y-auto hide-scroll"></div>
                 </div>
 
-                <div class="flex items-center gap-3 md:gap-5">
-                    <a href="/dashboard" class="flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest text-gray-300 hover:border-[#FFC300] hover:text-[#FFC300] transition-all">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        <span class="hidden md:inline">Fitness</span>
+                <!-- DERECHA: Iconos Profesionales (Desktop) -->
+                <div class="flex items-center gap-2 md:gap-6">
+                    <a href="/dashboard" class="hidden md:flex items-center gap-2 px-5 py-2 rounded-full border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-widest text-gray-300 hover:border-[#FFC300] hover:text-[#FFC300] transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <span>App Fitness</span>
                     </a>
-                    <div class="h-4 w-px bg-white/10"></div>
                     
-                    <!-- BOTÓN DE CARRITO ACTUALIZADO -->
-                    <button onclick="window.location.href='/store/checkout.html'" class="relative p-1.5 text-gray-400 hover:text-[#FFC300] transition cursor-pointer">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                        <!-- Se añadió el ID cartCount -->
-                        <span id="cartCount" class="absolute top-0 right-0 bg-[#FFC300] text-black text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full">0</span>
+                    <div class="h-6 w-px bg-white/10 hidden md:block"></div>
+                    
+                    <!-- Carrito Desktop -->
+                    <button onclick="window.location.href='/store/checkout.html'" class="relative p-2 text-gray-400 hover:text-[#FFC300] transition hidden md:block group">
+                        <svg class="w-6 h-6 transform group-hover:scale-110 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        <span id="cartCountDesktop" class="absolute top-0 right-0 bg-[#FFC300] text-black text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full shadow-[0_0_10px_rgba(255,195,0,0.5)]">0</span>
                     </button>
                     
-                    <a href="/store/account.html" class="text-[10px] font-bold uppercase tracking-wider text-white hover:text-[#FFC300] transition whitespace-nowrap ml-2">Mi Cuenta</a>
+                    <a href="/store/account.html" class="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:border-[#FFC300] text-gray-400 hover:text-[#FFC300] transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main class="pt-28 pb-12 px-4 max-w-7xl mx-auto flex-grow w-full">
-        <div class="relative rounded-[2rem] overflow-hidden bg-[#0a0a0f] border border-white/5 p-8 md:p-16 flex flex-col md:flex-row items-center justify-between shadow-2xl">
-            <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FFC300]/5 rounded-full blur-[100px] pointer-events-none"></div>
+    <!-- ======================================================= -->
+    <!-- BOTTOM NAV (Exclusivo para Móviles) -->
+    <!-- ======================================================= -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full z-50 mobile-bottom-nav">
+        <div class="flex items-center justify-around h-16 px-2">
+            
+            <a href="/store/home.html" class="flex flex-col items-center justify-center w-full h-full text-[#FFC300]">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <span class="text-[9px] font-bold">Inicio</span>
+            </a>
 
-            <div class="z-10 max-w-xl">
-                <span class="inline-block px-3 py-1 rounded-full border border-[#FFC300]/30 bg-[#FFC300]/10 text-[#FFC300] font-black tracking-widest text-[9px] uppercase mb-6">Marketplace Oficial</span>
-                <h1 class="text-4xl md:text-6xl font-[900] tracking-tighter mb-4 uppercase italic">Equípate <br>para el éxito.</h1>
-                <p class="text-gray-400 text-sm md:text-base mb-8 font-medium leading-relaxed max-w-md">
-                    Descubre suplementación premium, equipo táctico y vestimenta deportiva. Avalado por Gymenez y nuestros partners certificados.
-                </p>
-                <button onclick="document.getElementById('catalog-section').scrollIntoView({behavior: 'smooth'})" class="bg-[#FFC300] text-black px-8 py-3.5 rounded-full font-[900] uppercase tracking-wider text-xs hover:bg-yellow-400 transition-all duration-300 shadow-[0_0_20px_rgba(255,195,0,0.3)]">
-                    Explorar Catálogo
+            <!-- Botón de Búsqueda Móvil (Abre modal/foco) -->
+            <button class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <span class="text-[9px] font-medium">Buscar</span>
+            </button>
+
+            <a href="/store/checkout.html" class="relative flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-white transition">
+                <div class="relative">
+                    <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    <span id="cartCountMobile" class="absolute -top-1 -right-2 bg-[#FFC300] text-black text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full">0</span>
+                </div>
+                <span class="text-[9px] font-medium">Bolsa</span>
+            </a>
+
+            <a href="/store/account.html" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <span class="text-[9px] font-medium">Perfil</span>
+            </a>
+
+        </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- CONTENIDO PRINCIPAL (Diseño Fluido) -->
+    <!-- ======================================================= -->
+    <main class="pt-20 md:pt-28 flex-grow w-full">
+        
+        <!-- HERO BANNER FULL WIDTH -->
+        <div class="w-full px-4 md:px-8 mb-12 md:mb-20">
+            <div class="relative rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-gradient-to-br from-[#0a0a0f] to-[#030305] border border-white/5 p-8 md:p-20 flex flex-col md:flex-row items-center justify-between shadow-2xl">
+                
+                <div class="absolute top-0 right-0 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-[#FFC300]/5 rounded-full blur-[80px] md:blur-[120px] pointer-events-none"></div>
+
+                <div class="z-10 w-full md:w-1/2 text-center md:text-left">
+                    <span class="inline-block px-4 py-1.5 rounded-full border border-[#FFC300]/30 bg-[#FFC300]/10 text-[#FFC300] font-black tracking-widest text-[9px] uppercase mb-6 md:mb-8">Mercado Élite</span>
+                    <h1 class="text-5xl md:text-7xl lg:text-8xl font-[900] tracking-tighter mb-6 uppercase italic leading-none">Desata <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">tu potencial.</span></h1>
+                    <p class="text-gray-400 text-sm md:text-lg mb-10 font-medium leading-relaxed max-w-lg mx-auto md:mx-0">
+                        Suplementación de grado clínico, equipo táctico y vestimenta de alto rendimiento. Avalado por Gymenez.
+                    </p>
+                    <button onclick="document.getElementById('catalog-section').scrollIntoView({behavior: 'smooth'})" class="w-full md:w-auto bg-[#FFC300] text-black px-10 py-4 md:py-5 rounded-full font-[900] uppercase tracking-widest text-xs hover:bg-yellow-400 hover:scale-105 transition-all duration-300 shadow-[0_0_30px_rgba(255,195,0,0.3)]">
+                        Explorar Catálogo
+                    </button>
+                </div>
+                
+                <div class="mt-12 md:mt-0 z-10 w-full md:w-1/2 flex justify-center md:justify-end">
+                    <!-- Imagen adaptada para fluidez -->
+                    <div class="relative w-64 md:w-96 lg:w-[450px] aspect-square rounded-full border border-white/5 bg-white/5 flex items-center justify-center shadow-2xl overflow-hidden backdrop-blur-sm">
+                        <img src="https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover opacity-80 mix-blend-lighten hover:scale-110 transition-transform duration-700">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILTROS Y CATEGORÍAS (Deslizable Edge-to-Edge en Móvil) -->
+        <section class="w-full mb-12 relative z-20">
+            <!-- Quitamos px-4 en móvil para que los botones lleguen al borde de la pantalla, dando sensación nativa -->
+            <div class="flex gap-3 overflow-x-auto hide-scroll pl-4 pr-4 md:px-8 pb-4" id="category-filters">
+                <button class="category-btn active flex-shrink-0 px-6 py-3 rounded-full flex items-center gap-2 transition text-xs font-bold uppercase tracking-wider bg-[#FFC300] text-black shadow-[0_0_15px_rgba(255,195,0,0.3)]" data-category="all">
+                    Todos
+                </button>
+                <button class="category-btn flex-shrink-0 px-6 py-3 rounded-full flex items-center gap-2 transition text-xs font-bold uppercase tracking-wider bg-white/5 text-gray-300 border border-white/10 hover:border-[#FFC300]/50 hover:text-[#FFC300]" data-category="suplementos">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                    Suplementos
+                </button>
+                <button class="category-btn flex-shrink-0 px-6 py-3 rounded-full flex items-center gap-2 transition text-xs font-bold uppercase tracking-wider bg-white/5 text-gray-300 border border-white/10 hover:border-[#FFC300]/50 hover:text-[#FFC300]" data-category="ropa">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    Indumentaria
+                </button>
+                <button class="category-btn flex-shrink-0 px-6 py-3 rounded-full flex items-center gap-2 transition text-xs font-bold uppercase tracking-wider bg-white/5 text-gray-300 border border-white/10 hover:border-[#FFC300]/50 hover:text-[#FFC300]" data-category="accesorios">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Accesorios
                 </button>
             </div>
-            
-            <div class="mt-12 md:mt-0 z-10 w-full md:w-1/2 flex justify-center">
-                <img src="https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=600&auto=format&fit=crop" class="relative z-20 w-64 md:w-80 object-cover rounded-2xl rotate-[-5deg] hover:rotate-0 transition-all duration-700 shadow-2xl border border-white/10">
+        </section>
+
+        <!-- CATÁLOGO -->
+        <section id="catalog-section" class="w-full px-4 md:px-8 mb-24">
+            <div class="flex justify-between items-end mb-8 border-b border-white/5 pb-4">
+                <h2 class="text-2xl md:text-4xl font-[900] tracking-tighter italic uppercase" id="catalog-title">Catálogo <span class="text-[#FFC300]">Oficial</span></h2>
+                <span id="results-count" class="text-gray-500 text-[10px] md:text-xs uppercase font-bold tracking-widest"></span>
             </div>
-        </div>
+
+            <!-- Grilla Adaptativa: 2 columnas en móvil, 4 o 5 en desktop ultra ancho -->
+            <div id="catalog-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+                <!-- Skeletons inyectados por JS -->
+            </div>
+        </section>
+
     </main>
 
-    <section class="max-w-7xl mx-auto px-4 mb-12 relative z-20">
-        <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Nuestros Partners Oficiales</h3>
-        <div id="partners-grid" class="flex gap-4 overflow-x-auto hide-scroll pb-4">
-            <span class="text-gray-500 text-[10px] uppercase font-bold animate-pulse">Cargando aliados...</span>
-        </div>
-    </section>
-
-    <section class="max-w-7xl mx-auto px-4 mb-12 relative z-20">
-        <div class="flex gap-3 overflow-x-auto hide-scroll pb-4" id="category-filters">
-            <button class="category-btn active flex-shrink-0 px-6 py-2.5 rounded-full flex items-center gap-2 transition text-xs font-bold uppercase tracking-wider bg-white/10 text-white border border-[#FFC300]" data-category="all">
-                Todos
-            </button>
-            <button class="category-btn flex-shrink-0 px-6 py-2.5 rounded-full flex items-center gap-2 transition text-xs font-bold uppercase tracking-wider bg-white/5 text-gray-300 border border-white/10 hover:border-[#FFC300]/50 hover:text-[#FFC300]" data-category="suplementos">
-                <span class="text-base">💊</span> Suplementos
-            </button>
-            <button class="category-btn flex-shrink-0 px-6 py-2.5 rounded-full flex items-center gap-2 transition text-xs font-bold uppercase tracking-wider bg-white/5 text-gray-300 border border-white/10 hover:border-[#FFC300]/50 hover:text-[#FFC300]" data-category="ropa">
-                <span class="text-base">👕</span> Ropa
-            </button>
-            <button class="category-btn flex-shrink-0 px-6 py-2.5 rounded-full flex items-center gap-2 transition text-xs font-bold uppercase tracking-wider bg-white/5 text-gray-300 border border-white/10 hover:border-[#FFC300]/50 hover:text-[#FFC300]" data-category="accesorios">
-                <span class="text-base">🏋️</span> Accesorios
-            </button>
-            <button class="category-btn flex-shrink-0 px-6 py-2.5 rounded-full flex items-center gap-2 transition text-xs font-bold uppercase tracking-wider bg-white/5 text-gray-300 border border-white/10 hover:border-[#FFC300]/50 hover:text-[#FFC300]" data-category="cosmetica">
-                <span class="text-base">🧴</span> Cosmética
-            </button>
-        </div>
-    </section>
-
-    <section id="catalog-section" class="max-w-7xl mx-auto px-4 mb-24">
-        <div class="flex justify-between items-end mb-8">
-            <h2 class="text-2xl md:text-3xl font-[900] tracking-tighter italic uppercase" id="catalog-title">Catálogo <span class="text-[#FFC300]">Completo</span></h2>
-            <span id="results-count" class="text-gray-500 text-[10px] uppercase font-bold tracking-widest"></span>
-        </div>
-
-        <!-- AQUÍ SE INYECTAN LOS SKELETONS Y LUEGO LOS PRODUCTOS (JS) -->
-        <div id="catalog-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            <!-- Eliminé el loader viejo "Cargando catálogo en vivo..." porque catalog.js se encargará de inyectar los skeletons aquí inmediatamente -->
-        </div>
-    </section>
-
-    <footer class="border-t border-white/5 pt-12 pb-8 px-4 mt-auto">
+    <footer class="border-t border-white/5 pt-12 pb-24 md:pb-12 px-4 w-full bg-[#030305]">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
             <div class="text-center md:text-left">
-                <span class="text-lg font-[900] tracking-tighter uppercase italic text-gray-600 block mb-1">Gymenez<span class="text-gray-500">Store</span></span>
-                <p class="text-[9px] uppercase tracking-widest text-gray-600 font-bold">© 2026 Ecosistema de Rendimiento</p>
+                <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-gray-500 block mb-1">Gymenez<span class="text-gray-600">Store</span></span>
+                <p class="text-[9px] md:text-[10px] uppercase tracking-widest text-gray-600 font-bold">© 2026 Ecosistema de Rendimiento</p>
             </div>
-            <div class="flex gap-4 md:gap-6 flex-wrap justify-center">
-                <a href="/store/partner/login.html" class="text-[9px] font-black text-gray-500 hover:text-[#FFC300] transition uppercase tracking-widest border border-gray-800 hover:border-[#FFC300] px-3 py-1.5 rounded-full">Vender Aquí</a>
-                <a href="#" class="text-[9px] font-bold text-gray-500 hover:text-white transition uppercase tracking-widest py-1.5">Soporte</a>
+            <div class="flex gap-4 md:gap-8 flex-wrap justify-center">
+                <a href="/store/partner/login.html" class="flex items-center gap-2 text-[10px] font-black text-gray-400 hover:text-[#FFC300] transition uppercase tracking-widest border border-gray-800 hover:border-[#FFC300] px-4 py-2 rounded-full">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    Partner Hub
+                </a>
             </div>
         </div>
     </footer>
 
     <!-- INTERCEPTOR DE SESIÓN Y CARRITO -->
     <script src="/static/js/store/store_core.js"></script>
+    <script src="/static/js/store/catalog.js?v=2.1"></script>
     
-    <!-- LÓGICA DEL CATÁLOGO Y SKELETONS -->
-    <script src="/static/js/store/catalog.js?v=2.0"></script>
-    
-    <!-- INICIALIZADOR RÁPIDO DEL CONTADOR DEL CARRITO -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const cart = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
             const totalItems = cart.reduce((acc, item) => acc + (item.qty || 1), 0);
-            document.getElementById('cartCount').innerText = totalItems;
+            
+            // Actualizar ambos badges (Desktop y Mobile)
+            const badgeDesktop = document.getElementById('cartCountDesktop');
+            const badgeMobile = document.getElementById('cartCountMobile');
+            
+            if (badgeDesktop) badgeDesktop.innerText = totalItems;
+            if (badgeMobile) {
+                badgeMobile.innerText = totalItems;
+                if(totalItems > 0) badgeMobile.classList.remove('hidden');
+            }
         });
     </script>
 </body>
