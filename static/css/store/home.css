@@ -1,33 +1,72 @@
 /* =========================================================
-   💀 SKELETON LOADERS (DARK MODE Shimmer Effect)
+   FUNDACIÓN PREMIUM | GYMENEZ STORE
+   ========================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+
+:root {
+    --bg-dark: #030305;
+    --bg-panel: rgba(10, 10, 15, 0.6);
+    --accent-yellow: #FFC300;
+    --glass-border: rgba(255, 255, 255, 0.05);
+    --glass-hover: rgba(255, 255, 255, 0.1);
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    /* Sensación de App Nativa: Elimina el cuadro azul al tocar en móvil */
+    -webkit-tap-highlight-color: transparent; 
+}
+
+/* =========================================================
+   UI COMPONENTS (GLASSMORPHISM)
+   ========================================================= */
+.glass-nav {
+    background: rgba(3, 3, 5, 0.85);
+    border-bottom: 1px solid var(--glass-border);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
+.glass-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+/* Navegación inferior exclusiva para Móviles */
+.mobile-bottom-nav {
+    background: rgba(3, 3, 5, 0.90);
+    border-top: 1px solid var(--glass-border);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    /* Respeta la barra gestual de iPhone X y superiores */
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+/* Ocultar barras de scroll pero permitir deslizamiento táctil */
+.hide-scroll::-webkit-scrollbar { display: none; }
+.hide-scroll { -ms-overflow-style: none; scrollbar-width: none; scroll-behavior: smooth; }
+
+/* =========================================================
+   💀 SKELETON LOADERS (DARK MODE Shimmer)
    ========================================================= */
 .skeleton-box {
     position: relative;
     overflow: hidden;
-    /* Un gris muy sutil casi transparente para el fondo */
-    background-color: rgba(255, 255, 255, 0.05); 
+    background-color: rgba(255, 255, 255, 0.03); 
 }
-
 .skeleton-box::after {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
+    position: absolute; top: 0; right: 0; bottom: 0; left: 0;
     transform: translateX(-100%);
-    /* El brillo adaptado a modo oscuro */
-    background-image: linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0) 0,
-        rgba(255, 255, 255, 0.05) 20%,
-        rgba(255, 255, 255, 0.1) 60%,
-        rgba(255, 255, 255, 0)
-    );
+    background-image: linear-gradient(90deg, rgba(255,255,255,0) 0, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0));
     animation: shimmer 1.5s infinite;
     content: '';
 }
-
-@keyframes shimmer {
-    100% { transform: translateX(100%); }
-}
-.skeleton-btn { height: 40px; width: 100%; border-radius: 20px; }
+@keyframes shimmer { 100% { transform: translateX(100%); } }
