@@ -25,35 +25,105 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 1. DIBUJAR RESUMEN DEL CARRITO (Tu diseño exacto)
+// 1. DIBUJAR RESUMEN DEL CARRITO (INTERACTIVO)
 // ==========================================
 function renderCartSummary() {
     const container = document.getElementById('cart-items-container');
     container.innerHTML = '';
     cartTotal = 0;
 
-    cartItems.forEach(item => {
-        const itemTotal = item.price * (item.quantity || item.qty || 1);
+    cartItems.forEach((item, index) => {
         const qty = item.quantity || item.qty || 1;
+        const itemTotal = item.price * qty;
         cartTotal += itemTotal;
 
         container.innerHTML += `
-            <div class="flex gap-4 items-center bg-[#0a0a0f] p-3 rounded-xl border border-white/5">
+            <div class="flex gap-4 items-center bg-[#0a0a0f] p-3 rounded-xl border border-white/5 relative group transition-all duration-300">
+                
+                <!-- Botón Eliminar (Aparece al pasar el mouse) -->
+                <button onclick="removeCheckoutItem(${index})" class="absolute -top-2 -right-2 bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all z-10 shadow-lg" title="Eliminar producto">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+
+                <!-- Imagen -->
                 <div class="w-16 h-16 bg-white/5 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
                     <img src="${item.imageUrl || item.image_url}" alt="${item.name}" class="max-h-full object-contain">
                 </div>
-                <div class="flex-grow min-w-0">
+                
+                <!-- Info y Controles -->
+                <div class="flex-grow min-w-0 pr-2">
                     <p class="text-sm font-bold text-white truncate">${item.name}</p>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-widest">${item.storeName || item.store_name || 'Partner Oficial'}</p>
-                    <p class="text-xs text-gray-400 mt-1">Cant: ${qty} x $${parseFloat(item.price).toFixed(2)}</p>
+                    <p class="text-[10px] text-[#FFC300] uppercase tracking-widest">${item.storeName || item.store_name || 'Partner Oficial'}</p>
+                    
+                    <!-- Min-Controles de Cantidad -->
+                    <div class="flex items-center gap-3 mt-1.5">
+                        <div class="flex items-center bg-white/5 rounded border border-white/10 h-6">
+                            <button onclick="updateCheckoutItemQty(${index}, -1)" class="px-2 text-gray-400 hover:text-white hover:bg-white/10 transition font-bold">-</button>
+                            <span class="text-[10px] font-black text-white w-5 text-center">${qty}</span>
+                            <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-2 text-gray-400 hover:text-white hover:bg-white/10 transition font-bold">+</button>
+                        </div>
+                        <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">x $${parseFloat(item.price).toFixed(2)}</span>
+                    </div>
                 </div>
-                <div class="font-black text-white">$${itemTotal.toFixed(2)}</div>
+                
+                <!-- Total del Item -->
+                <div class="font-black text-white text-right flex-shrink-0">
+                    $${itemTotal.toFixed(2)}
+                </div>
             </div>
         `;
     });
 
     document.getElementById('summary-subtotal').innerText = `$${cartTotal.toFixed(2)}`;
     document.getElementById('summary-total').innerText = `$${cartTotal.toFixed(2)}`;
+
+    // Si eliminó todos los productos desde el checkout, mostrar pantalla vacía
+    if (cartItems.length === 0) {
+        document.getElementById('checkout-content').classList.add('hidden');
+        document.getElementById('checkout-container').classList.add('hidden');
+        document.getElementById('empty-cart-msg').classList.remove('hidden');
+    }
+}
+
+// ==========================================
+// 1.1 FUNCIONES DE EDICIÓN DEL CARRITO
+// ==========================================
+window.updateCheckoutItemQty = function(index, delta) {
+    let item = cartItems[index];
+    let newQty = (item.quantity || item.qty || 1) + delta;
+    
+    // Validar límites
+    if (newQty < 1) newQty = 1;
+    const max = item.maxStock || item.max_stock || 99; // Si tenemos el dato de stock, lo respetamos
+    if (newQty > max) newQty = max;
+
+    // Actualizar objeto en memoria
+    item.qty = newQty;
+    item.quantity = newQty; // Estandarizado
+    
+    saveAndReRenderCart();
+};
+
+window.removeCheckoutItem = function(index) {
+    cartItems.splice(index, 1);
+    saveAndReRenderCart();
+};
+
+function saveAndReRenderCart() {
+    // 1. Guardar en el navegador
+    localStorage.setItem('gymenez_cart', JSON.stringify(cartItems));
+    
+    // 2. Redibujar el componente derecho
+    renderCartSummary();
+    
+    // 3. Sincronizar el ícono de la barra de navegación (navbar)
+    if(typeof updateCartCount === 'function') {
+        updateCartCount(); // Si store_core.js está activo
+    } else {
+        const totalItems = cartItems.reduce((sum, item) => sum + (item.qty || item.quantity || 1), 0);
+        const badge = document.getElementById('cartCount');
+        if (badge) badge.innerText = totalItems;
+    }
 }
 
 // ==========================================
