@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (cartItems.length === 0) {
         document.getElementById('checkout-loader').classList.add('hidden');
+        document.getElementById('checkout-content').classList.remove('hidden'); // <-- AÑADIR ESTA LÍNEA
         document.getElementById('empty-cart-msg').classList.remove('hidden');
     } else {
         renderCartSummary();
@@ -88,6 +89,7 @@ async function initWizardData() {
         // Ocultar Skeletons y revelar Wizard
         document.getElementById('checkout-loader').classList.add('hidden');
         document.getElementById('checkout-content').classList.remove('hidden');
+        document.getElementById('checkout-container').classList.remove('hidden'); // <--- ¡AÑADE ESTA LÍNEA AQUÍ!
 
         // Evaluar Identidad (KYC)
         if (profileRes.ok && profileData.success) {
