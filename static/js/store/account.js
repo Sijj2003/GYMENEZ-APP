@@ -1,7 +1,6 @@
 // ==========================================
 // CONFIGURACIÓN DE SEGURIDAD (SSO & SHIELD)
 // ==========================================
-const TOKEN_KEY = 'gymen_auth_token';
 const API_BASE_URL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' 
     ? 'http://127.0.0.1:5000' 
     : 'https://sijj2003.pythonanywhere.com';
