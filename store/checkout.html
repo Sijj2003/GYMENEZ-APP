@@ -13,7 +13,6 @@
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { gymenez: { dark: '#030305', accent: '#FFC300' } } } } }
     </script>
     
-    <!-- Animaciones necesarias para los Skeletons y Bloqueos del Wizard -->
     <style>
         .skeleton-box { position: relative; overflow: hidden; background-color: rgba(255, 255, 255, 0.05); }
         .skeleton-box::after {
@@ -24,25 +23,26 @@
         @keyframes shimmer { 100% { transform: translateX(100%); } }
         .step-container { transition: all 0.4s ease; }
         .step-locked { opacity: 0.4; pointer-events: none; filter: grayscale(100%); }
+        /* Animación para el pulso del reloj cuando queda poco tiempo */
+        @keyframes pulse-red { 0%, 100% { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); } 50% { color: #fca5a5; text-shadow: 0 0 20px rgba(239, 68, 68, 0.8); } }
+        .timer-danger { animation: pulse-red 1s infinite; }
     </style>
 </head>
 <body class="bg-[#030305] selection:bg-[#FFC300] selection:text-black text-white min-h-screen flex flex-col">
 
-    <!-- Bloqueo SSO -->
     <script>
         const activeToken = localStorage.getItem('gymen_auth_token') || localStorage.getItem('jwt_token'); 
         if (!activeToken) window.location.href = '/apps/start/login.html?redirect=/store/checkout.html';
     </script>
 
-    <!-- NAVBAR SIMPLE (Sin distracciones para asegurar la compra) -->
     <nav class="fixed w-full z-50 bg-[#030305] border-b border-white/5 py-4">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <h1 class="text-xl font-[900] tracking-tighter uppercase italic text-white">GYMENEZ <span class="text-[#FFC300]">STORE</span></h1>
-            <a href="/store/home.html" class="text-xs font-bold text-gray-400 hover:text-white uppercase tracking-widest transition">Cancelar</a>
+            <a href="/store/home.html" class="text-xs font-bold text-gray-400 hover:text-white uppercase tracking-widest transition">Volver a Tienda</a>
         </div>
     </nav>
 
-    <!-- PANTALLA DE CARGA (Skeletons) -->
+    <!-- SKELETONS -->
     <div id="checkout-loader" class="pt-24 pb-24 px-4 max-w-7xl mx-auto w-full flex-grow grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
         <div class="lg:col-span-7 space-y-8">
             <div class="h-10 w-48 skeleton-box rounded-lg mb-8"></div>
@@ -56,7 +56,6 @@
 
     <main id="checkout-content" class="pt-24 pb-24 px-4 max-w-7xl mx-auto w-full flex-grow hidden">
         
-        <!-- Alerta de Carrito Vacío -->
         <div id="empty-cart-msg" class="hidden text-center py-20">
             <div class="text-6xl mb-4 opacity-50">🛒</div>
             <h2 class="text-2xl font-[900] uppercase italic tracking-tighter mb-2">Tu carrito está vacío</h2>
@@ -66,161 +65,193 @@
 
         <div id="checkout-container" class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 hidden">
             
-            <!-- COLUMNA IZQUIERDA: FLUJO DE PAGO (WIZARD DE 3 PASOS) -->
-            <div class="lg:col-span-7 space-y-8">
+            <!-- COLUMNA IZQUIERDA (VISTAS INTERCAMBIABLES) -->
+            <div class="lg:col-span-7">
                 
-                <h2 class="text-3xl font-[900] tracking-tighter uppercase italic mb-8">Finalizar <span class="text-[#FFC300]">Compra</span></h2>
+                <!-- =========================================================
+                     VISTA A: PREPARACIÓN (KYC y Logística)
+                     ========================================================= -->
+                <div id="wizard-view" class="space-y-8 block">
+                    <h2 class="text-3xl font-[900] tracking-tighter uppercase italic mb-8">Finalizar <span class="text-[#FFC300]">Compra</span></h2>
 
-                <!-- ==========================================
-                     PASO 1: IDENTIDAD LEGAL (KYC)
-                     ========================================== -->
-                <section id="step-1-card" class="step-container glass-panel p-6 md:p-8 rounded-[2rem] border border-white/10 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-[#FFC300]"></div>
-                    <div class="flex items-center gap-4 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-[#FFC300] text-black flex items-center justify-center font-black text-sm">1</div>
-                        <h3 class="text-lg font-bold uppercase italic text-white flex items-center gap-2">Identidad Legal <span class="text-gray-500 text-xs tracking-widest">(KYC)</span></h3>
-                    </div>
-                    
-                    <div id="kyc-form-container" class="space-y-4">
-                        <p class="text-xs text-gray-400 mb-4">Por regulaciones aduanales, necesitamos verificar tu identidad.</p>
-                        <form id="form-kyc">
-                            <div class="grid grid-cols-3 gap-4 mb-4">
-                                <div class="col-span-1">
-                                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Tipo</label>
-                                    <select id="kyc-doc-type" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition">
-                                        <option value="V">V</option>
-                                        <option value="E">E</option>
-                                        <option value="J">J</option>
+                    <!-- PASO 1: KYC -->
+                    <section id="step-1-card" class="step-container glass-panel p-6 md:p-8 rounded-[2rem] border border-white/10 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-[#FFC300]"></div>
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-8 h-8 rounded-full bg-[#FFC300] text-black flex items-center justify-center font-black text-sm">1</div>
+                            <h3 class="text-lg font-bold uppercase italic text-white flex items-center gap-2">Identidad Legal <span class="text-gray-500 text-xs tracking-widest">(KYC)</span></h3>
+                        </div>
+                        
+                        <div id="kyc-form-container" class="space-y-4">
+                            <p class="text-xs text-gray-400 mb-4">Por regulaciones aduanales, necesitamos verificar tu identidad.</p>
+                            <form id="form-kyc">
+                                <div class="grid grid-cols-3 gap-4 mb-4">
+                                    <div class="col-span-1">
+                                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Tipo</label>
+                                        <select id="kyc-doc-type" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition">
+                                            <option value="V">V</option>
+                                            <option value="E">E</option>
+                                            <option value="J">J</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Documento</label>
+                                        <input type="text" id="kyc-doc-number" required class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition placeholder-gray-600" placeholder="12345678">
+                                    </div>
+                                </div>
+                                <div class="mb-6">
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Foto de tu Cédula / RIF</label>
+                                    <input type="file" id="kyc-image" accept="image/*" required class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-2 text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-white/10 file:text-white hover:file:bg-[#FFC300] hover:file:text-black cursor-pointer transition">
+                                </div>
+                                <button type="submit" id="btn-submit-kyc" class="w-full md:w-auto bg-white/10 text-white px-8 py-3 rounded-full font-black uppercase tracking-wider text-[10px] border border-white/10 hover:bg-[#FFC300] hover:text-black hover:border-[#FFC300] transition-all">
+                                    Guardar Identidad
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div id="kyc-success-msg" class="hidden flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl">
+                            <span class="text-[10px] text-emerald-400 font-black tracking-widest uppercase">✅ Identidad verificada.</span>
+                        </div>
+                    </section>
+
+                    <!-- PASO 2: LOGÍSTICA -->
+                    <section id="step-2-card" class="step-container step-locked glass-panel p-6 md:p-8 rounded-[2rem] border border-white/10 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                        <div class="flex items-center gap-4 mb-6">
+                            <div id="badge-step-2" class="w-8 h-8 rounded-full bg-white/10 text-gray-400 flex items-center justify-center font-black text-sm transition-colors">2</div>
+                            <h3 class="text-lg font-bold uppercase italic flex items-center gap-2"><span class="text-emerald-500">Logística</span> y Envío</h3>
+                        </div>
+
+                        <div id="shipping-form-container" class="space-y-4">
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Agencia de Encomienda</label>
+                            <select id="shipping-courier" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition mb-4">
+                                <option value="">Elige MRW o Zoom...</option>
+                                <option value="MRW">MRW Venezuela</option>
+                                <option value="Zoom">Grupo ZOOM</option>
+                            </select>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Estado</label>
+                                    <select id="shipping-state" disabled class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition disabled:opacity-50">
+                                        <option value="">Elige un Courier primero...</option>
                                     </select>
                                 </div>
-                                <div class="col-span-2">
-                                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Documento</label>
-                                    <input type="text" id="kyc-doc-number" required class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition placeholder-gray-600" placeholder="12345678">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Sucursal de Destino</label>
+                                    <select id="shipping-agency" disabled class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition disabled:opacity-50">
+                                        <option value="">Elige un Estado primero...</option>
+                                    </select>
                                 </div>
                             </div>
-                            <div class="mb-6">
-                                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Foto de tu Cédula / RIF</label>
-                                <input type="file" id="kyc-image" accept="image/*" required class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-2 text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-white/10 file:text-white hover:file:bg-[#FFC300] hover:file:text-black cursor-pointer transition">
-                            </div>
-                            <button type="submit" id="btn-submit-kyc" class="w-full md:w-auto bg-white/10 text-white px-8 py-3 rounded-full font-black uppercase tracking-wider text-[10px] border border-white/10 hover:bg-[#FFC300] hover:text-black hover:border-[#FFC300] transition-all">
-                                Guardar Identidad
+                            
+                            <button id="btn-submit-shipping" disabled class="mt-6 w-full md:w-auto bg-white/10 text-white px-8 py-3 rounded-full font-black uppercase tracking-wider text-[10px] border border-white/10 hover:bg-[#FFC300] hover:text-black hover:border-[#FFC300] transition-all disabled:opacity-50 disabled:pointer-events-none">
+                                Fijar Destino
                             </button>
+                        </div>
+
+                        <!-- Botón de Transición a la Bóveda -->
+                        <div id="vault-entry-container" class="hidden mt-6 pt-6 border-t border-white/10">
+                            <p class="text-xs text-gray-400 mb-4">Tu perfil logístico está listo. Ahora congelaremos el stock de tu carrito durante 8 minutos para que puedas pagar con seguridad.</p>
+                            <button id="btn-enter-vault" class="w-full bg-[#FFC300] text-black px-8 py-4 rounded-xl font-[900] uppercase tracking-wider text-sm hover:bg-yellow-400 hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                <span>Asegurar Inventario y Pagar</span>
+                            </button>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- =========================================================
+                     VISTA B: LA BÓVEDA (Cronómetro y Pagos)
+                     ========================================================= -->
+                <div id="vault-view" class="space-y-6 hidden">
+                    
+                    <!-- Header Bóveda -->
+                    <div class="glass-panel p-6 rounded-[2rem] border border-[#FFC300]/30 bg-[#FFC300]/5 text-center relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#FFC300] to-transparent opacity-50"></div>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mb-2">Inventario Asegurado</p>
+                        <h2 id="vault-timer" class="text-6xl md:text-7xl font-[900] tracking-tighter text-white tabular-nums mb-2">08:00</h2>
+                        <p class="text-xs text-gray-400 max-w-sm mx-auto">Tus productos han sido retirados del estante temporalmente. Realiza tu transferencia antes de que el tiempo expire.</p>
+                    </div>
+
+                    <!-- Métodos de Pago -->
+                    <section class="glass-panel p-6 md:p-8 rounded-[2rem] border border-white/10">
+                        <h3 class="text-lg font-bold uppercase italic text-white mb-6">Método de Pago</h3>
+                        
+                        <div class="flex gap-4 mb-6">
+                            <button onclick="selectPayment('pago_movil')" id="btn-pm" class="flex-1 py-3 px-4 rounded-xl border-2 border-[#FFC300] bg-[#FFC300]/10 text-[#FFC300] font-bold text-xs uppercase tracking-widest transition">Pago Móvil</button>
+                            <button onclick="selectPayment('binance')" id="btn-binance" class="flex-1 py-3 px-4 rounded-xl border-2 border-white/10 text-gray-400 hover:border-white/30 font-bold text-xs uppercase tracking-widest transition">Binance</button>
+                        </div>
+
+                        <div id="payment-data-container" class="bg-[#0a0a0f] border border-white/5 rounded-xl p-5 mb-6">
+                            <div id="loading-payment" class="text-center text-gray-500 text-[10px] font-bold uppercase tracking-widest py-4 animate-pulse">Consultando bóveda segura...</div>
+                            
+                            <div id="data-pago-movil" class="hidden space-y-3">
+                                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                                    <span class="text-[10px] tracking-widest text-gray-500 uppercase font-bold">Banco</span>
+                                    <span id="pm-banco" class="text-sm font-bold text-white">---</span>
+                                </div>
+                                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                                    <span class="text-[10px] tracking-widest text-gray-500 uppercase font-bold">Teléfono</span>
+                                    <span id="pm-tlf" class="text-sm font-bold text-white">---</span>
+                                </div>
+                                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                                    <span class="text-[10px] tracking-widest text-gray-500 uppercase font-bold">Documento</span>
+                                    <span id="pm-doc" class="text-sm font-bold text-white">---</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[10px] tracking-widest text-gray-500 uppercase font-bold">Titular</span>
+                                    <span id="pm-nombre" class="text-sm font-bold text-[#FFC300]">---</span>
+                                </div>
+                            </div>
+
+                            <div id="data-binance" class="hidden space-y-4 text-center">
+                                <div>
+                                    <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest block mb-1">Pay ID</span>
+                                    <span id="bin-id" class="text-xl font-black text-[#FCD535] tracking-widest">---</span>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest block mb-1">Correo Asociado</span>
+                                    <span id="bin-email" class="text-sm font-bold text-white">---</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formulario Final y Botones de Acción -->
+                        <form id="form-checkout-final">
+                            <div class="mb-6">
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Referencia de Transferencia</label>
+                                <input type="text" id="pay-reference" required class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-4 text-sm text-white focus:outline-none focus:border-[#FFC300] transition placeholder-gray-600 text-center tracking-widest font-bold" placeholder="EJ: 0045612398">
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <button type="button" id="btn-cancel-vault" class="w-full sm:w-1/3 bg-transparent border border-red-500/30 text-red-500 px-4 py-4 rounded-xl font-bold uppercase tracking-wider text-xs hover:bg-red-500/10 transition-all duration-300">
+                                    Cancelar
+                                </button>
+                                <button type="submit" id="btn-process-order" disabled class="w-full sm:w-2/3 bg-[#FFC300] text-black px-8 py-4 rounded-xl font-[900] uppercase tracking-wider text-sm hover:bg-yellow-400 hover:scale-[1.02] transition-all duration-300 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center gap-2">
+                                    <span>Completar Compra</span>
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                </button>
+                            </div>
                         </form>
-                    </div>
-                    
-                    <div id="kyc-success-msg" class="hidden flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl">
-                        <span class="text-[10px] text-emerald-400 font-black tracking-widest uppercase">✅ Identidad verificada.</span>
-                    </div>
-                </section>
+                    </section>
+                </div>
 
-                <!-- ==========================================
-                     PASO 2: LOGÍSTICA (MRW/ZOOM)
-                     ========================================== -->
-                <section id="step-2-card" class="step-container step-locked glass-panel p-6 md:p-8 rounded-[2rem] border border-white/10 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
-                    <div class="flex items-center gap-4 mb-6">
-                        <div id="badge-step-2" class="w-8 h-8 rounded-full bg-white/10 text-gray-400 flex items-center justify-center font-black text-sm transition-colors">2</div>
-                        <h3 class="text-lg font-bold uppercase italic flex items-center gap-2"><span class="text-emerald-500">Logística</span> y Envío</h3>
-                    </div>
-
-                    <div class="space-y-4">
-                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Agencia de Encomienda</label>
-                        <select id="shipping-courier" class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition mb-4">
-                            <option value="">Elige MRW o Zoom...</option>
-                            <option value="MRW">MRW Venezuela</option>
-                            <option value="Zoom">Grupo ZOOM</option>
-                        </select>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Estado</label>
-                                <select id="shipping-state" disabled class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition disabled:opacity-50">
-                                    <option value="">Elige un Courier primero...</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Sucursal de Destino</label>
-                                <select id="shipping-agency" disabled class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFC300] transition disabled:opacity-50">
-                                    <option value="">Elige un Estado primero...</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <button id="btn-submit-shipping" disabled class="mt-6 w-full md:w-auto bg-white/10 text-white px-8 py-3 rounded-full font-black uppercase tracking-wider text-[10px] border border-white/10 hover:bg-[#FFC300] hover:text-black hover:border-[#FFC300] transition-all disabled:opacity-50 disabled:pointer-events-none">
-                            Fijar Destino
-                        </button>
-                    </div>
-                </section>
-
-                <!-- ==========================================
-                     PASO 3: PAGO (Zero Trust)
-                     ========================================== -->
-                <section id="step-3-card" class="step-container step-locked glass-panel p-6 md:p-8 rounded-[2rem] border border-white/10 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-[#FFC300]"></div>
-                    <div class="flex items-center gap-4 mb-6">
-                        <div id="badge-step-3" class="w-8 h-8 rounded-full bg-white/10 text-gray-400 flex items-center justify-center font-black text-sm transition-colors">3</div>
-                        <h3 class="text-lg font-bold uppercase italic text-white">Método de Pago</h3>
-                    </div>
-                    
-                    <div class="flex gap-4 mb-6">
-                        <button onclick="selectPayment('pago_movil')" id="btn-pm" class="flex-1 py-3 px-4 rounded-xl border-2 border-[#FFC300] bg-[#FFC300]/10 text-[#FFC300] font-bold text-xs uppercase tracking-widest transition">Pago Móvil</button>
-                        <button onclick="selectPayment('binance')" id="btn-binance" class="flex-1 py-3 px-4 rounded-xl border-2 border-white/10 text-gray-400 hover:border-white/30 font-bold text-xs uppercase tracking-widest transition">Binance</button>
-                    </div>
-
-                    <div id="payment-data-container" class="bg-[#0a0a0f] border border-white/5 rounded-xl p-5 mb-6">
-                        <div id="loading-payment" class="text-center text-gray-500 text-[10px] font-bold uppercase tracking-widest py-4 animate-pulse">Consultando bóveda segura...</div>
-                        
-                        <!-- Pago Móvil -->
-                        <div id="data-pago-movil" class="hidden space-y-3">
-                            <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                                <span class="text-[10px] tracking-widest text-gray-500 uppercase font-bold">Banco</span>
-                                <span id="pm-banco" class="text-sm font-bold text-white">---</span>
-                            </div>
-                            <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                                <span class="text-[10px] tracking-widest text-gray-500 uppercase font-bold">Teléfono</span>
-                                <span id="pm-tlf" class="text-sm font-bold text-white">---</span>
-                            </div>
-                            <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                                <span class="text-[10px] tracking-widest text-gray-500 uppercase font-bold">Documento</span>
-                                <span id="pm-doc" class="text-sm font-bold text-white">---</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-[10px] tracking-widest text-gray-500 uppercase font-bold">Titular</span>
-                                <span id="pm-nombre" class="text-sm font-bold text-[#FFC300]">---</span>
-                            </div>
-                        </div>
-
-                        <!-- Binance -->
-                        <div id="data-binance" class="hidden space-y-4 text-center">
-                            <div>
-                                <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest block mb-1">Pay ID</span>
-                                <span id="bin-id" class="text-xl font-black text-[#FCD535] tracking-widest">---</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest block mb-1">Correo Asociado</span>
-                                <span id="bin-email" class="text-sm font-bold text-white">---</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <form id="form-checkout-final">
-                        <div class="mb-6">
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Referencia de Transferencia</label>
-                            <input type="text" id="pay-reference" required class="w-full bg-[#0a0a0f] border border-white/10 rounded-xl px-4 py-4 text-sm text-white focus:outline-none focus:border-[#FFC300] transition placeholder-gray-600" placeholder="0045612398">
-                        </div>
-
-                        <button type="submit" id="btn-process-order" disabled class="w-full bg-[#FFC300] text-black px-8 py-4 rounded-xl font-[900] uppercase tracking-wider text-sm hover:bg-yellow-400 hover:scale-[1.02] transition-all duration-300 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center gap-2">
-                            <span>Procesar Orden Segura</span>
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                        </button>
-                    </form>
-                </section>
+                <!-- =========================================================
+                     VISTA C: ÉXITO
+                     ========================================================= -->
+                <div id="success-view" class="col-span-12 text-center py-24 glass-panel rounded-[2rem] border border-emerald-500/30 bg-emerald-500/5 hidden">
+                    <div class="text-7xl mb-6">✅</div>
+                    <h2 class="text-4xl font-[900] uppercase italic tracking-tighter text-emerald-400 mb-4">¡Orden Recibida!</h2>
+                    <p class="text-gray-300 text-lg max-w-xl mx-auto mb-8">Tu número de referencia <strong id="success-ref" class="text-white"></strong> ha sido enviado a nuestro equipo para su verificación.</p>
+                    <a href="/store/account.html" class="bg-white/10 text-white px-8 py-4 rounded-full font-bold uppercase tracking-widest text-sm hover:bg-white/20 transition">Ver en Mis Pedidos</a>
+                </div>
 
             </div>
 
-            <!-- COLUMNA DERECHA: RESUMEN DE COMPRA -->
+            <!-- COLUMNA DERECHA: RESUMEN DE COMPRA (ESTA NO CAMBIA) -->
             <div class="lg:col-span-5">
-                <div class="glass-panel p-6 md:p-8 rounded-[2rem] border border-white/10 sticky top-28">
+                <div class="glass-panel p-6 md:p-8 rounded-[2rem] border border-white/10 sticky top-28 transition-all duration-500" id="summary-panel">
                     <h3 class="text-lg font-bold uppercase italic mb-6 border-b border-white/5 pb-4">Resumen de Orden</h3>
                     
                     <div id="cart-items-container" class="space-y-4 mb-6 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
