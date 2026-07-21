@@ -78,11 +78,27 @@ function handleInstantSearch(query, platform) {
         return;
     }
 
-    // Usar caché para velocidad instantánea
-    const cachedCatalog = sessionStorage.getItem('gymenez_catalog');
+    // 🕒 VALIDACIÓN INTELIGENTE DE CACHÉ (5 Minutos)
+    const rawCache = sessionStorage.getItem('gymenez_catalog');
     let products = [];
-    if (cachedCatalog) {
-        products = JSON.parse(cachedCatalog);
+
+    if (rawCache) {
+        try {
+            const cachedData = JSON.parse(rawCache);
+            if (!Array.isArray(cachedData) && cachedData.products && cachedData.timestamp) {
+                const now = new Date().getTime();
+                const CACHE_LIMIT = 5 * 60 * 1000; // 5 minutos
+                
+                if (now - cachedData.timestamp < CACHE_LIMIT) {
+                    products = cachedData.products; // Usar caché válido
+                } else {
+                    sessionStorage.removeItem('gymenez_catalog'); // Expiró, limpiar
+                }
+            }
+        } catch (e) {
+            console.warn("Caché corrupto, limpiando...");
+            sessionStorage.removeItem('gymenez_catalog');
+        }
     }
 
     const filtered = products.filter(p => {
@@ -123,7 +139,7 @@ function renderInstantResults(results, container, platform, originalQuery) {
             </div>
             <div class="flex-grow min-w-0 pr-2">
                 <h4 class="text-sm font-bold text-white truncate">${item.name}</h4>
-                <p class="text-[9px] text-[#FFC300] uppercase tracking-widest">${item.store_name || 'Partner Oficial'}</p>
+                <p class="text-[9px] text-[#FFC300] uppercase tracking-widest truncate">${item.store_name || 'Gymenez Store'}</p>
             </div>
             <div class="text-right flex-shrink-0 flex flex-col items-end justify-center">
                 ${hasDiscount ? `<span class="text-[9px] text-gray-500 line-through leading-none mb-0.5">$${price.toFixed(2)}</span>` : ''}
@@ -193,24 +209,53 @@ async function fetchAndFilterProducts(query) {
         return;
     }
 
-    try {
-        const response = await fetch('https://sijj2003.pythonanywhere.com/api/store/catalog');
-        const data = await response.json();
+    const normalizedQuery = normalizeText(query);
+    let products = [];
+    let needsFetch = true;
 
-        if (response.ok && data.success) {
-            const normalizedQuery = normalizeText(query);
-            
-            const filteredProducts = data.products.filter(p => {
-                const searchString = normalizeText(`${p.name} ${p.store_name} ${p.category} ${p.description}`);
-                return searchString.includes(normalizedQuery);
-            });
-
-            if(countDisplay) countDisplay.innerText = `${filteredProducts.length} coincidencias encontradas`;
-            if(grid) renderDeepResults(filteredProducts, grid);
-            
-        } else {
-            throw new Error('No se pudo cargar el catálogo');
+    // 🕒 VALIDACIÓN INTELIGENTE DE CACHÉ (También en búsqueda profunda)
+    const rawCache = sessionStorage.getItem('gymenez_catalog');
+    if (rawCache) {
+        try {
+            const cachedData = JSON.parse(rawCache);
+            if (!Array.isArray(cachedData) && cachedData.products && cachedData.timestamp) {
+                const now = new Date().getTime();
+                if (now - cachedData.timestamp < 5 * 60 * 1000) {
+                    products = cachedData.products;
+                    needsFetch = false; // El caché es válido, nos ahorramos la petición al backend
+                }
+            }
+        } catch (e) {
+            console.warn("Caché corrupto, ignorando...");
         }
+    }
+
+    try {
+        if (needsFetch) {
+            const response = await fetch('https://sijj2003.pythonanywhere.com/api/store/catalog');
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                products = data.products;
+                // Guardamos el nuevo caché
+                sessionStorage.setItem('gymenez_catalog', JSON.stringify({
+                    products: products,
+                    timestamp: new Date().getTime()
+                }));
+            } else {
+                throw new Error('No se pudo cargar el catálogo');
+            }
+        }
+        
+        // Filtramos sobre la data final (ya sea de caché o recién descargada)
+        const filteredProducts = products.filter(p => {
+            const searchString = normalizeText(`${p.name} ${p.store_name || ''} ${p.category || ''} ${p.description || ''}`);
+            return searchString.includes(normalizedQuery);
+        });
+
+        if(countDisplay) countDisplay.innerText = `${filteredProducts.length} coincidencias encontradas`;
+        if(grid) renderDeepResults(filteredProducts, grid);
+        
     } catch (error) {
         if(countDisplay) countDisplay.innerText = "Error en el servidor.";
         if(grid) grid.innerHTML = '<p class="text-red-500">Ocurrió un problema al buscar. Intenta de nuevo.</p>';
@@ -237,16 +282,9 @@ function renderDeepResults(productsToRender, grid) {
         const discount = parseInt(p.discount_percentage || p.discount || 0);
         const hasDiscount = discount > 0;
         const finalPrice = hasDiscount ? (price * (1 - discount / 100)) : price;
-        
-        const storeName = p.store_name || 'Gymenez Partner';
-        const isOfficial = storeName.toLowerCase().includes('gymenez');
-        const badgeColor = isOfficial ? 'text-[#FFC300]' : 'text-white';
 
         return `
         <a href="/store/product.html?id=${p.id}" class="glass-panel p-4 rounded-2xl group cursor-pointer relative flex flex-col hover:border-[#FFC300]/50 transition-all">
-            <div class="absolute top-6 left-6 z-10 bg-black/80 backdrop-blur-md px-2 py-1 rounded border border-white/10 text-[8px] font-black uppercase tracking-widest text-gray-300">
-                Por <span class="${badgeColor}">${storeName}</span>
-            </div>
             
             <div class="aspect-square bg-[#050508] rounded-xl mb-4 overflow-hidden relative border border-white/5">
                 <img src="${p.image_url || p.imageUrl}" alt="${p.name}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
@@ -255,14 +293,15 @@ function renderDeepResults(productsToRender, grid) {
             
             <div class="flex-grow">
                 <h3 class="font-bold text-sm text-gray-100 leading-tight mb-1 truncate">${p.name}</h3>
-                <p class="text-gray-500 text-[10px] uppercase tracking-wider mb-3">${p.category} • ${p.stock > 0 ? 'En Stock' : 'Agotado'}</p>
+                <p class="text-[10px] text-[#FFC300] uppercase tracking-widest font-black truncate mb-3">${p.store_name || 'Gymenez Store'}</p>
             </div>
             
             <div class="flex items-center justify-between mt-auto">
-                ${hasDiscount 
-                    ? `<div class="flex flex-col"><span class="text-xs text-gray-500 line-through leading-none">$${price.toFixed(2)}</span><span class="text-[#FFC300] font-black text-lg leading-none mt-1">$${finalPrice.toFixed(2)}</span></div>` 
-                    : `<p class="text-white font-black text-lg">$${finalPrice.toFixed(2)}</p>`
-                }
+                <div class="flex flex-col">
+                    ${hasDiscount ? `<span class="text-[9px] text-gray-500 line-through leading-none">$${price.toFixed(2)}</span>` : ''}
+                    <p class="text-white font-black text-lg leading-none ${hasDiscount ? 'mt-1' : ''}">$${finalPrice.toFixed(2)}</p>
+                </div>
+                <span class="text-[9px] text-gray-500 uppercase tracking-widest">${p.category}</span>
             </div>
         </a>
         `;
