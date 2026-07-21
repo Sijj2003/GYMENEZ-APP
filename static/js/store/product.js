@@ -19,21 +19,35 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function loadProductData(id) {
-    // ⚡ ESTRATEGIA APPLE: Buscar primero en Caché del Catálogo para velocidad instantánea
-    const cachedCatalog = sessionStorage.getItem('gymenez_catalog');
+    // ⚡ ESTRATEGIA APPLE: Buscar primero en Caché Inteligente (con validación de tiempo)
+    const rawCache = sessionStorage.getItem('gymenez_catalog');
     
-    if (cachedCatalog) {
-        const catalogArray = JSON.parse(cachedCatalog);
-        const foundProduct = catalogArray.find(p => p.id === id);
-        
-        if (foundProduct) {
-            currentProduct = foundProduct;
-            renderProduct();
-            return; // Salimos de la función sin tocar el backend
+    if (rawCache) {
+        try {
+            const cachedData = JSON.parse(rawCache);
+            
+            // Validamos que tenga la nueva estructura con timestamp
+            if (!Array.isArray(cachedData) && cachedData.products && cachedData.timestamp) {
+                const now = new Date().getTime();
+                const CACHE_LIMIT = 5 * 60 * 1000; // 5 minutos de vida útil
+                
+                if (now - cachedData.timestamp < CACHE_LIMIT) {
+                    // Si el caché es válido (menos de 5 min), buscamos el producto en la memoria
+                    const foundProduct = cachedData.products.find(p => String(p.id) === String(id));
+                    
+                    if (foundProduct) {
+                        currentProduct = foundProduct;
+                        renderProduct();
+                        return; // Salimos de la función sin tocar el backend (Velocidad instantánea)
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn("Caché local corrupto o con formato viejo. Ignorando...");
         }
     }
 
-    // 🌍 ESTRATEGIA B: Si no hay caché (alguien abrió un enlace directo)
+    // 🌍 ESTRATEGIA B: Si no hay caché válido, expiró, o entraron directo por URL
     try {
         const response = await fetch(`${API_BASE_URL}/api/store/catalog/${id}`);
         const data = await response.json();
@@ -56,7 +70,7 @@ function renderProduct() {
     document.getElementById('product-container').classList.remove('hidden');
 
     // Llenar Datos Visuales
-    document.getElementById('prod-img').src = currentProduct.image_url;
+    document.getElementById('prod-img').src = currentProduct.image_url || currentProduct.imageUrl;
     document.getElementById('prod-title').innerText = currentProduct.name;
     document.getElementById('prod-store').innerText = currentProduct.store_name || "Gymenez Partner";
     document.getElementById('prod-desc').innerText = currentProduct.description || "Sin descripción disponible.";
@@ -73,8 +87,8 @@ function renderProduct() {
     }
 
     // Calcular Precio y Descuento
-    const basePrice = parseFloat(currentProduct.price_usd);
-    const discount = parseInt(currentProduct.discount_percentage) || 0;
+    const basePrice = parseFloat(currentProduct.price_usd || currentProduct.price);
+    const discount = parseInt(currentProduct.discount_percentage || currentProduct.discount) || 0;
     
     if (discount > 0) {
         finalPrice = basePrice - (basePrice * (discount / 100));
@@ -128,7 +142,7 @@ function addToCart() {
         name: currentProduct.name,
         storeName: currentProduct.store_name, // Estandarizado camelCase para store_core
         price: finalPrice,
-        imageUrl: currentProduct.image_url,
+        imageUrl: currentProduct.image_url || currentProduct.imageUrl,
         qty: currentQuantity,
         maxStock: currentProduct.stock
     };
@@ -137,7 +151,7 @@ function addToCart() {
     requireAuth(() => {
         // Leer el carrito actual
         let cart = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
-        const existingIndex = cart.findIndex(item => item.id === payload.id);
+        const existingIndex = cart.findIndex(item => String(item.id) === String(payload.id));
 
         if (existingIndex !== -1) {
             // Si existe, sumar la cantidad validando stock
