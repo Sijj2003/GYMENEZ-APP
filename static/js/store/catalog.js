@@ -47,7 +47,7 @@ async function loadPartners() {
 }
 
 // ==========================================
-// 2. CARGAR PRODUCTOS Y MEMORIZARLOS (Caché y Skeletons)
+// 2. CARGAR PRODUCTOS Y MEMORIZARLOS (Caché con Expiración)
 // ==========================================
 async function loadStoreCatalog() {
     const grid = document.getElementById('catalog-grid');
@@ -57,16 +57,29 @@ async function loadStoreCatalog() {
     grid.innerHTML = renderSkeletons(8);
 
     // 2. Revisar si tenemos los productos guardados en caché (Session Storage)
-    const cachedCatalog = sessionStorage.getItem('gymenez_catalog');
+    const rawCache = sessionStorage.getItem('gymenez_catalog');
 
-    if (cachedCatalog) {
-        // Si hay caché, lo parseamos y lo renderizamos instantáneamente
-        window.allProducts = JSON.parse(cachedCatalog);
-        applyCategoryFilter();
-        return; // Salimos, no molestamos al backend
+    if (rawCache) {
+        try {
+            const cachedData = JSON.parse(rawCache);
+            // Validamos que tenga la nueva estructura de caché con timestamp
+            if (!Array.isArray(cachedData) && cachedData.products && cachedData.timestamp) {
+                const now = new Date().getTime();
+                const CACHE_LIMIT = 5 * 60 * 1000; // 5 minutos en milisegundos
+                
+                if (now - cachedData.timestamp < CACHE_LIMIT) {
+                    // Si el caché tiene menos de 5 minutos, lo usamos
+                    window.allProducts = cachedData.products;
+                    applyCategoryFilter();
+                    return; // Salimos, no molestamos al backend
+                }
+            }
+        } catch (e) {
+            console.warn("Caché corrupto o antiguo, recargando...");
+        }
     }
 
-    // 3. Si no hay caché, pedimos al backend
+    // 3. Si no hay caché o ya expiró, pedimos al backend
     try {
         const response = await fetch('https://sijj2003.pythonanywhere.com/api/store/catalog');
         const data = await response.json();
@@ -74,8 +87,12 @@ async function loadStoreCatalog() {
         if (response.ok && data.success) {
             window.allProducts = data.products; 
             
-            // Guardamos en la bóveda local para futuras visitas rápidas
-            sessionStorage.setItem('gymenez_catalog', JSON.stringify(data.products));
+            // Guardamos en la bóveda local incluyendo el timestamp actual
+            const cachePayload = {
+                products: data.products,
+                timestamp: new Date().getTime()
+            };
+            sessionStorage.setItem('gymenez_catalog', JSON.stringify(cachePayload));
             
             applyCategoryFilter(); 
         } else {
