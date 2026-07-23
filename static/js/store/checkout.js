@@ -77,7 +77,7 @@ function renderCartSummary() {
                 </div>
                 <div class="flex-grow min-w-0 pr-2">
                     <p class="text-sm font-bold text-white truncate">${item.name}</p>
-                    <p class="text-[10px] text-[#FFC300] uppercase tracking-widest">${item.storeName || item.store_name || 'Partner Oficial'}</p>
+                    <p class="text-[10px] text-[#FFC300] uppercase tracking-widest">${item.storeName || item.store_name || 'Gymenez Store'}</p>
                     ${controlsHtml}
                 </div>
                 <div class="font-black text-white text-right flex-shrink-0">
@@ -89,6 +89,33 @@ function renderCartSummary() {
 
     document.getElementById('summary-subtotal').innerText = `$${cartTotal.toFixed(2)}`;
     document.getElementById('summary-total').innerText = `$${cartTotal.toFixed(2)}`;
+
+    // 💱 LÓGICA DE DIBUJADO BCV Y PROTECCIÓN
+    const vesContainer = document.getElementById('summary-ves-container');
+    const warningMsg = document.getElementById('bcv-warning-msg');
+    const btnProcess = document.getElementById('btn-process-order');
+
+    if (isBcvValid && currentBcvRate > 0) {
+        // MODO SEGURO: Tasa de hoy confirmada
+        const totalBs = (cartTotal * currentBcvRate).toFixed(2);
+        if(document.getElementById('summary-total-ves')) document.getElementById('summary-total-ves').innerText = `Bs. ${totalBs}`;
+        if(document.getElementById('bcv-rate-display')) document.getElementById('bcv-rate-display').innerText = `Tasa BCV: Bs. ${currentBcvRate.toFixed(2)}`;
+        
+        if(vesContainer) vesContainer.classList.remove('hidden');
+        if(warningMsg) warningMsg.classList.add('hidden');
+
+        if(currentPaymentMethod === 'pago_movil' && btnProcess) {
+             btnProcess.querySelector('span').innerText = `Pagar Bs. ${totalBs}`;
+        }
+    } else {
+        // 🚨 MODO PROTECCIÓN: API caída y caché del día anterior
+        if(vesContainer) vesContainer.classList.add('hidden');
+        if(warningMsg) warningMsg.classList.remove('hidden');
+        
+        if(currentPaymentMethod === 'pago_movil' && btnProcess) {
+             btnProcess.querySelector('span').innerText = `Completar Compra (Verificar Tasa)`;
+        }
+    }
 
     if (cartItems.length === 0) {
         document.getElementById('checkout-content').classList.add('hidden');
@@ -151,7 +178,13 @@ async function initWizardData() {
         const paymentsData = await paymentsRes.json();
 
         if (agenciesRes.ok) globalAgencies = agenciesData.agencies || agenciesData;
-        if (paymentsRes.ok && paymentsData.success) setupPaymentUI(paymentsData.methods);
+        
+        // 👇 CAPTURA DE TASA BCV DESDE EL BACKEND
+        if (paymentsRes.ok && paymentsData.success) {
+            currentBcvRate = paymentsData.bcv_rate || 0;
+            isBcvValid = paymentsData.bcv_valid || false; 
+            setupPaymentUI(paymentsData.methods);
+        }
 
         document.getElementById('checkout-loader').classList.add('hidden');
         document.getElementById('checkout-content').classList.remove('hidden');
@@ -434,7 +467,7 @@ async function executeVaultEntry() {
         btn.disabled = false;
         btn.innerHTML = '<span>Asegurar Inventario y Pagar</span>';
     }
- }
+}
 
 // ==========================================
 // 5. MOTOR DEL CRONÓMETRO Y CANCELACIÓN
@@ -516,6 +549,7 @@ window.selectPayment = function(method) {
     const btnBinance = document.getElementById('btn-binance');
     const dataPm = document.getElementById('data-pago-movil');
     const dataBinance = document.getElementById('data-binance');
+    const btnProcess = document.getElementById('btn-process-order');
 
     btnPm.className = "flex-1 py-3 px-4 rounded-xl border-2 border-white/10 text-gray-400 hover:border-white/30 font-bold text-xs uppercase tracking-widest transition";
     btnBinance.className = "flex-1 py-3 px-4 rounded-xl border-2 border-white/10 text-gray-400 hover:border-white/30 font-bold text-xs uppercase tracking-widest transition";
@@ -525,9 +559,17 @@ window.selectPayment = function(method) {
     if (method === 'pago_movil') {
         btnPm.className = "flex-1 py-3 px-4 rounded-xl border-2 border-[#FFC300] bg-[#FFC300]/10 text-[#FFC300] font-bold text-xs uppercase tracking-widest transition";
         dataPm.classList.remove('hidden');
+        
+        // Ajuste inteligente del botón para BCV
+        if (isBcvValid && currentBcvRate > 0) {
+            if(btnProcess) btnProcess.querySelector('span').innerText = `Pagar Bs. ${(cartTotal * currentBcvRate).toFixed(2)}`;
+        } else {
+            if(btnProcess) btnProcess.querySelector('span').innerText = `Completar Compra (Verificar Tasa)`;
+        }
     } else {
         btnBinance.className = "flex-1 py-3 px-4 rounded-xl border-2 border-[#FCD535] bg-[#FCD535]/10 text-[#FCD535] font-bold text-xs uppercase tracking-widest transition";
         dataBinance.classList.remove('hidden');
+        if(btnProcess) btnProcess.querySelector('span').innerText = `Completar Compra`;
     }
     validateFinalButton();
 };
