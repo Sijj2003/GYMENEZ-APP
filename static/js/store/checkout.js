@@ -19,6 +19,11 @@ let temporaryKycData = null;
 let currentBcvRate = 0;
 let isBcvValid = false;
 
+// 💰 Formateador de moneda (Estilo VE: 1.000.000,00)
+function formatMoney(amount) {
+    return Number(amount).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 // 🛡️ Variables de la Bóveda Segura
 let vaultInterval = null;
 let isCartLocked = false;
@@ -65,7 +70,7 @@ function renderCartSummary() {
                     <span class="text-[10px] font-black text-white w-5 text-center">${qty}</span>
                     <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-2 text-gray-400 hover:text-white hover:bg-white/10 transition font-bold">+</button>
                 </div>
-                <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">x $${parseFloat(item.price).toFixed(2)}</span>
+                <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">x $${formatMoney(item.price)}</span>
             </div>
         `;
 
@@ -81,14 +86,14 @@ function renderCartSummary() {
                     ${controlsHtml}
                 </div>
                 <div class="font-black text-white text-right flex-shrink-0">
-                    $${itemTotal.toFixed(2)}
+                    $${formatMoney(itemTotal)}
                 </div>
             </div>
         `;
     });
 
-    document.getElementById('summary-subtotal').innerText = `$${cartTotal.toFixed(2)}`;
-    document.getElementById('summary-total').innerText = `$${cartTotal.toFixed(2)}`;
+    document.getElementById('summary-subtotal').innerText = `$${formatMoney(cartTotal)}`;
+    document.getElementById('summary-total').innerText = `$${formatMoney(cartTotal)}`;
 
     // 💱 LÓGICA DE DIBUJADO BCV Y PROTECCIÓN
     const vesContainer = document.getElementById('summary-ves-container');
@@ -97,9 +102,9 @@ function renderCartSummary() {
 
     if (isBcvValid && currentBcvRate > 0) {
         // MODO SEGURO: Tasa de hoy confirmada
-        const totalBs = (cartTotal * currentBcvRate).toFixed(2);
+        const totalBs = formatMoney(cartTotal * currentBcvRate);
         if(document.getElementById('summary-total-ves')) document.getElementById('summary-total-ves').innerText = `Bs. ${totalBs}`;
-        if(document.getElementById('bcv-rate-display')) document.getElementById('bcv-rate-display').innerText = `Tasa BCV: Bs. ${currentBcvRate.toFixed(2)}`;
+        if(document.getElementById('bcv-rate-display')) document.getElementById('bcv-rate-display').innerText = `Tasa BCV: Bs. ${formatMoney(currentBcvRate)}`;
         
         if(vesContainer) vesContainer.classList.remove('hidden');
         if(warningMsg) warningMsg.classList.add('hidden');
@@ -562,7 +567,7 @@ window.selectPayment = function(method) {
         
         // Ajuste inteligente del botón para BCV
         if (isBcvValid && currentBcvRate > 0) {
-            if(btnProcess) btnProcess.querySelector('span').innerText = `Pagar Bs. ${(cartTotal * currentBcvRate).toFixed(2)}`;
+            if(btnProcess) btnProcess.querySelector('span').innerText = `Pagar Bs. ${formatMoney(cartTotal * currentBcvRate)}`;
         } else {
             if(btnProcess) btnProcess.querySelector('span').innerText = `Completar Compra (Verificar Tasa)`;
         }
