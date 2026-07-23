@@ -17,7 +17,8 @@ let temporaryKycData = null;
 
 // 🛡️ Variables de la Bóveda Segura
 let vaultInterval = null;
-let isCartLocked = false; 
+let isCartLocked = false;
+let hasAcceptedMultiStore = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     cartItems = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
@@ -341,18 +342,63 @@ document.getElementById('btn-submit-shipping').addEventListener('click', async (
 });
 
 // ==========================================
-// 4. TRANSICIÓN A LA BÓVEDA (RESERVA DE STOCK)
+// 4. TRANSICIÓN A LA BÓVEDA (RESERVA DE STOCK Y MULTI-TIENDA)
 // ==========================================
-document.getElementById('btn-enter-vault').addEventListener('click', async (e) => {
-    const btn = e.target;
+document.getElementById('btn-enter-vault').addEventListener('click', (e) => {
+    // Detectamos tiendas únicas en el carrito
+    const uniqueStores = new Set(cartItems.map(item => item.storeName || item.store_name || 'Gymenez Store'));
+    
+    // Si hay más de 1 tienda y no ha aceptado la advertencia, mostramos el modal
+    if (uniqueStores.size > 1 && !hasAcceptedMultiStore) {
+        document.getElementById('modal-stores-count').innerText = `${uniqueStores.size}`;
+        const modal = document.getElementById('multi-store-modal');
+        const modalContent = document.getElementById('multi-store-modal-content');
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        // Pequeño timeout para la animación de entrada
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modalContent.classList.remove('scale-95');
+        }, 10);
+        return; // Detenemos la ejecución aquí hasta que acepte
+    }
+
+    // Si ya aceptó o es 1 sola tienda, ejecutamos el proceso normal
+    executeVaultEntry();
+});
+
+// Funciones del Modal
+window.closeMultiStoreModal = function() {
+    const modal = document.getElementById('multi-store-modal');
+    const modalContent = document.getElementById('multi-store-modal-content');
+    modal.classList.add('opacity-0');
+    modalContent.classList.add('scale-95');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+}
+
+window.acceptMultiStoreAndProceed = function() {
+    hasAcceptedMultiStore = true; // Ya no le volvemos a preguntar
+    closeMultiStoreModal();
+    executeVaultEntry(); // Lanzamos la bóveda
+}
+
+// La lógica original de entrar a la bóveda (ahora envuelta en una función)
+async function executeVaultEntry() {
+    const btn = document.getElementById('btn-enter-vault');
     const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('jwt_token');
     btn.disabled = true;
     btn.innerHTML = 'Verificando Inventario... <div class="animate-spin inline-block w-4 h-4 border-2 border-black rounded-full border-t-transparent ml-2"></div>';
 
+    // 👈 INYECTAMOS STORE NAME PARA EL BACKEND
     const cleanItems = cartItems.map(item => ({
         id: item.id,
         name: item.name,
-        qty: item.quantity || item.qty || 1
+        qty: item.quantity || item.qty || 1,
+        storeName: item.storeName || item.store_name || 'Gymenez Store' 
     }));
 
     try {
@@ -364,20 +410,18 @@ document.getElementById('btn-enter-vault').addEventListener('click', async (e) =
         const data = await res.json();
 
         if (res.ok && data.success) {
-            // Guardamos el tiempo futuro (+ 8 Minutos exactos)
             const expiresAt = new Date().getTime() + (8 * 60 * 1000);
             localStorage.setItem('gymen_vault_expires_at', expiresAt);
             
-            // Cambiar UI a la Bóveda
             document.getElementById('wizard-view').classList.add('hidden');
             document.getElementById('vault-view').classList.remove('hidden');
             isCartLocked = true;
-            renderCartSummary(); // Recarga carrito (ahora bloqueado visualmente)
+            renderCartSummary(); 
             startVaultTimer(expiresAt);
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-            alert(data.error || "No pudimos asegurar el stock. Alguien se te adelantó o ocurrió un error.");
+            alert(data.error || "No pudimos asegurar el stock. Alguien se te adelantó.");
             btn.disabled = false;
             btn.innerHTML = '<span>Asegurar Inventario y Pagar</span>';
         }
@@ -386,7 +430,7 @@ document.getElementById('btn-enter-vault').addEventListener('click', async (e) =
         btn.disabled = false;
         btn.innerHTML = '<span>Asegurar Inventario y Pagar</span>';
     }
-});
+ }
 
 // ==========================================
 // 5. MOTOR DEL CRONÓMETRO Y CANCELACIÓN
@@ -513,7 +557,8 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
         id: item.id,
         name: item.name,
         price: item.price,
-        qty: item.quantity || item.qty || 1
+        qty: item.quantity || item.qty || 1,
+        storeName: item.storeName || item.store_name || 'Gymenez Store'
     }));
 
     const payload = {
