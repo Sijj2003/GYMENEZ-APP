@@ -15,6 +15,10 @@ let isShippingComplete = false;
 let globalAgencies = []; 
 let temporaryKycData = null; 
 
+// 💱 Variables de Divisas (Tasa BCV)
+let currentBcvRate = 0;
+let isBcvValid = false;
+
 // 🛡️ Variables de la Bóveda Segura
 let vaultInterval = null;
 let isCartLocked = false;
