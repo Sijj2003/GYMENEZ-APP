@@ -2,119 +2,102 @@
 <html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Producto | Gymenez Store</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Detalle de Producto | Gymenez Store</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/store/home.css">
     
     <script>
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { gymenez: { dark: '#030305', accent: '#FFC300' } } } } }
     </script>
 </head>
-<body class="bg-[#030305] selection:bg-[#FFC300] selection:text-black text-white min-h-screen flex flex-col">
+<body class="selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col relative pb-20 md:pb-0 bg-[#030305] text-white">
 
-    <!-- NAVBAR PREMIUM -->
-    <nav class="fixed w-full z-50 glass-nav border-b border-white/5">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <a href="/store/home.html" class="flex items-center gap-2 text-[#FFC300] hover:text-white transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    <span class="text-xs font-bold uppercase tracking-widest">Catálogo</span>
-                </a>
-                <div class="flex items-center gap-6">
-                    <a href="/store/checkout.html" class="relative text-gray-400 hover:text-[#FFC300] transition">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        <!-- CORRECCIÓN: ID unificado a cartCount para conectar con store_core.js -->
-                        <span id="cartCount" class="absolute -top-2 -right-2 bg-[#FFC300] text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+    <!-- COPIA EXACTA DEL NAVBAR SUPERIOR DE HOME.HTML -->
+    <nav class="fixed top-0 w-full z-50 glass-nav transition-all duration-300">
+        <div class="w-full px-4 md:px-8">
+            <div class="flex items-center justify-between h-16 md:h-20">
+                <!-- Botón de Volver nativo y Logo -->
+                <div class="flex items-center gap-4">
+                    <a href="javascript:history.back()" class="p-2 -ml-2 text-gray-400 hover:text-white transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </a>
+                    <a href="/store/home.html" class="flex items-center leading-none group hidden md:flex">
+                        <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
+                        <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+                        <span class="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-2 mt-1">Store</span>
+                    </a>
+                </div>
+
+                <!-- DERECHA: Iconos Profesionales (Desktop) -->
+                <div class="flex items-center gap-2 md:gap-6">
+                    <button onclick="window.location.href='/store/checkout.html'" class="relative p-2 text-gray-400 hover:text-[#FFC300] transition hidden md:block group">
+                        <svg class="w-6 h-6 transform group-hover:scale-110 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        <span id="cartCountDesktop" class="absolute top-0 right-0 bg-[#FFC300] text-black text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full">0</span>
+                    </button>
+                    <a href="/store/account.html" class="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:border-[#FFC300] text-gray-400 hover:text-[#FFC300] transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- FICHA DE PRODUCTO -->
-    <main class="pt-24 pb-24 px-4 max-w-7xl mx-auto flex-grow w-full">
+    <!-- MAIN PRODUCT CONTENT -->
+    <!-- En móvil el padding top es justo para la imagen, en PC damos espacio -->
+    <main class="pt-16 md:pt-28 flex-grow w-full max-w-7xl mx-auto px-0 md:px-8 flex flex-col md:flex-row md:gap-12 pb-24 md:pb-12">
         
-        <!-- Contenedor Principal de Carga -->
-        <div id="loading-spinner" class="flex justify-center items-center py-20">
-            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FFC300]"></div>
+        <!-- IMAGEN (Edge-to-edge en móvil, Esquinas redondeadas en PC) -->
+        <div class="w-full md:w-1/2 aspect-square md:aspect-auto md:h-[600px] bg-gradient-to-b from-[#0a0a0f] to-[#030305] md:rounded-[3rem] md:border border-b border-white/5 relative flex items-center justify-center p-8 overflow-hidden shadow-2xl">
+            <!-- Destello de fondo -->
+            <div class="absolute inset-0 bg-[#FFC300]/5 blur-[100px]"></div>
+            
+            <img id="product-image" src="" alt="Producto" class="relative z-10 w-full h-full object-contain filter drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)] skeleton-box">
+            
+            <span id="product-stock-badge" class="absolute top-6 right-6 z-20 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full backdrop-blur-md hidden">
+                En Stock
+            </span>
         </div>
 
-        <!-- Ficha del Producto (Oculta hasta cargar) -->
-        <div id="product-container" class="hidden grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
-            
-            <!-- COLUMNA IZQUIERDA: IMAGEN -->
-            <div class="relative w-full aspect-square bg-[#0a0a0f] rounded-[2rem] border border-white/5 overflow-hidden flex items-center justify-center p-8 group">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10"></div>
-                <img id="prod-img" src="" alt="Producto" class="relative z-0 max-h-full object-contain drop-shadow-[0_0_30px_rgba(255,195,0,0.15)] group-hover:scale-105 transition duration-500">
-                
-                <!-- Etiqueta de Descuento -->
-                <div id="prod-discount-badge" class="absolute top-6 left-6 z-20 bg-red-500 text-white text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-widest hidden">
-                    -0%
-                </div>
+        <!-- DETALLES DEL PRODUCTO -->
+        <div class="w-full md:w-1/2 px-6 md:px-0 py-8 md:py-4 flex flex-col">
+            <div class="mb-6">
+                <span id="product-store" class="text-[#FFC300] text-[10px] md:text-xs font-black uppercase tracking-widest mb-2 block skeleton-box w-32 h-4 rounded"></span>
+                <h1 id="product-title" class="text-3xl md:text-5xl font-[900] tracking-tighter uppercase italic leading-none mb-4 skeleton-box w-3/4 h-10 rounded"></h1>
+                <p id="product-price" class="text-4xl md:text-5xl font-black text-white skeleton-box w-40 h-12 rounded"></p>
             </div>
 
-            <!-- COLUMNA DERECHA: INFO Y COMPRA -->
-            <div class="flex flex-col justify-center">
-                <!-- Vendedor / Tienda -->
-                <div class="flex items-center gap-2 mb-3">
-                    <span class="text-xl">🏪</span>
-                    <span id="prod-store" class="text-[10px] font-black text-[#FFC300] uppercase tracking-widest bg-[#FFC300]/10 px-3 py-1 rounded-full">Tienda</span>
-                </div>
+            <!-- Divisor -->
+            <div class="w-full h-px bg-white/5 my-6"></div>
 
-                <!-- Título -->
-                <h1 id="prod-title" class="text-3xl lg:text-5xl font-[900] tracking-tighter uppercase italic leading-tight mb-4">Cargando Producto...</h1>
+            <div class="mb-8">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Descripción Oficial</h3>
+                <p id="product-desc" class="text-sm md:text-base text-gray-300 leading-relaxed skeleton-box w-full h-24 rounded"></p>
+            </div>
+
+            <!-- CONTROLES DE COMPRA (Sticky en móvil) -->
+            <div class="mt-auto bg-[#030305] md:bg-transparent fixed md:relative bottom-16 md:bottom-auto left-0 w-full md:w-auto p-4 md:p-0 border-t border-white/10 md:border-none z-40 flex items-center gap-4">
                 
-                <!-- Precios -->
-                <div class="flex items-end gap-4 mb-6">
-                    <span id="prod-price" class="text-4xl lg:text-5xl font-black text-white">$0.00</span>
-                    <span id="prod-old-price" class="text-xl font-bold text-gray-500 line-through mb-1 hidden">$0.00</span>
+                <div class="flex items-center glass-panel rounded-2xl h-14 border-white/10 px-2">
+                    <button id="btn-minus" class="p-4 text-gray-400 hover:text-white transition font-bold">-</button>
+                    <span id="qty-display" class="font-black text-white w-6 text-center text-lg">1</span>
+                    <button id="btn-plus" class="p-4 text-gray-400 hover:text-white transition font-bold">+</button>
                 </div>
 
-                <div class="w-full h-px bg-white/10 mb-6"></div>
-
-                <!-- Descripción -->
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Descripción del Producto</h3>
-                <p id="prod-desc" class="text-gray-300 text-sm leading-relaxed mb-8">...</p>
-
-                <!-- Panel de Compra Glassmorphism -->
-                <div class="glass-panel p-6 rounded-3xl border border-white/10">
-                    <div class="flex justify-between items-end mb-4">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Cantidad</label>
-                        <span id="prod-stock" class="text-xs font-medium text-emerald-400">0 disponibles</span>
-                    </div>
-
-                    <!-- SELECTOR DE CANTIDAD PROFESIONAL -->
-                    <div class="flex items-center gap-4 mb-6">
-                        <div class="flex items-center bg-[#0a0a0f] border border-white/20 rounded-xl overflow-hidden h-14">
-                            <button onclick="updateQty(-1)" class="px-5 text-gray-400 hover:text-[#FFC300] hover:bg-white/5 transition h-full text-xl font-bold">-</button>
-                            <input type="number" id="prod-qty" value="1" min="1" class="w-16 text-center bg-transparent text-white font-bold text-lg border-none focus:ring-0 pointer-events-none" readonly>
-                            <button onclick="updateQty(1)" class="px-5 text-gray-400 hover:text-[#FFC300] hover:bg-white/5 transition h-full text-xl font-bold">+</button>
-                        </div>
-                        <div class="text-sm font-bold text-gray-500">
-                            Total: <span id="prod-total-price" class="text-white text-lg">$0.00</span>
-                        </div>
-                    </div>
-
-                    <!-- Botón Añadir al Carrito -->
-                    <button id="btn-add-cart" onclick="addToCart()" class="w-full bg-[#FFC300] text-black h-14 rounded-xl font-[900] uppercase tracking-widest text-sm hover:bg-yellow-400 hover:scale-[1.02] transition-all flex items-center justify-center gap-3">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        Agregar al Carrito
-                    </button>
-                </div>
-
+                <button id="btn-add-cart" class="flex-1 bg-[#FFC300] text-black h-14 rounded-2xl font-[900] uppercase tracking-widest text-xs md:text-sm hover:bg-yellow-400 hover:scale-105 transition-all duration-300 shadow-[0_0_30px_rgba(255,195,0,0.2)]">
+                    Añadir a la Bolsa
+                </button>
             </div>
         </div>
     </main>
 
-    <!-- Notificación Toast de Éxito -->
-    <div id="toast-cart" class="fixed bottom-5 right-5 bg-emerald-500 text-white px-6 py-4 rounded-xl font-bold text-sm shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
-        <span class="text-xl">✅</span> Producto añadido a tu carrito.
+    <!-- COPIA EXACTA DEL BOTTOM NAV DE HOME.HTML (Para Móviles) -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full z-50 mobile-bottom-nav">
+        <!-- Pega aquí exactamente el mismo div.flex.items-center.justify-around que tienes en home.html -->
     </div>
 
-    <!-- CORRECCIÓN: Inyección del Interceptor y Cerebro del Carrito -->
+    <!-- Scripts -->
     <script src="/static/js/store/store_core.js"></script>
     <script src="/static/js/store/product.js"></script>
 </body>
