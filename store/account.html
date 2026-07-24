@@ -3,82 +3,401 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Cuenta | Gymenez Store</title>
+    <title>Mi Hub | Gymenez Store</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/store/home.css">
-    <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }</script>
+    
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { gymenez: { dark: '#030305', accent: '#FFC300' } } } } }
+    </script>
+    <style>
+        /* Animaciones SPA y Timeline */
+        .tab-content { display: none; opacity: 0; transition: opacity 0.4s ease, transform 0.4s ease; transform: translateY(10px); }
+        .tab-content.active { display: block; opacity: 1; transform: translateY(0); }
+        .tab-btn.active { background: rgba(255,195,0,0.05); border-right: 3px solid #FFC300; color: #FFC300; }
+        .tab-btn.active svg { color: #FFC300; }
+        
+        .timeline-item::before {
+            content: ''; position: absolute; left: 15px; top: 32px; bottom: -20px; width: 2px;
+            background: rgba(255,255,255,0.1); z-index: 0;
+        }
+        .timeline-item:last-child::before { display: none; }
+        .timeline-item.active::before { background: #FFC300; box-shadow: 0 0 10px rgba(255,195,0,0.3); }
+        .timeline-item.active-emerald::before { background: #10B981; box-shadow: 0 0 10px rgba(16,185,129,0.3); }
+    </style>
 </head>
-<body class="min-h-screen flex flex-col bg-[#030305] text-white pb-20 md:pb-0">
+<body class="bg-[#030305] selection:bg-[#FFC300] selection:text-black text-white min-h-screen flex flex-col relative pb-20 md:pb-0">
 
-    <!-- NAVBAR SUPERIOR -->
+    <!-- Bloqueo SSO Seguro -->
+    <script>
+        const activeToken = localStorage.getItem('gymen_auth_token') || localStorage.getItem('jwt_token'); 
+        if (!activeToken) window.location.href = '/apps/start/login.html?redirect=/store/account.html';
+    </script>
+
+    <!-- ======================================================= -->
+    <!-- NAVBAR SUPERIOR (Centrado Perfecto y Limpio) -->
+    <!-- ======================================================= -->
     <nav class="fixed top-0 w-full z-50 glass-nav transition-all duration-300">
-        <!-- (Pega aquí el mismo Top Nav de home.html) -->
+        <div class="w-full px-4 md:px-8">
+            <div class="flex items-center justify-between h-16 md:h-20 relative">
+                
+                <!-- IZQUIERDA: Botón Volver y Logo Completo -->
+                <div class="flex items-center gap-2 md:gap-4 flex-shrink-0 z-20">
+                    <a href="javascript:history.back()" class="p-2 -ml-2 text-gray-400 hover:text-white transition">
+                        <svg class="w-6 h-6 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </a>
+                    <a href="/store/home.html" class="flex items-center leading-none group">
+                        <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300] transition-transform group-hover:scale-105">Gym</span>
+                        <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white transition-transform group-hover:scale-105">enez</span>
+                        <span class="hidden sm:block text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-2 mt-1">Store</span>
+                    </a>
+                </div>
+
+                <!-- CENTRO: Buscador PC -->
+                <div class="hidden md:block absolute left-1/2 transform -translate-x-1/2 w-full max-w-xl z-10">
+                    <div class="w-full relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
+                        <input type="text" id="search-input" autocomplete="off" class="block w-full pl-12 pr-4 py-2.5 border border-white/10 rounded-full leading-5 bg-[#0a0a0f] text-gray-300 placeholder-gray-500 focus:outline-none focus:border-[#FFC300]/50 transition-all text-sm shadow-inner" placeholder="Buscar productos...">
+                        <div id="search-dropdown" class="absolute top-full left-0 right-0 mt-2 bg-[#0a0a0f] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[100] hidden flex-col max-h-[400px] overflow-y-auto hide-scroll"></div>
+                    </div>
+                </div>
+
+                <!-- DERECHA: Iconos PC -->
+                <div class="hidden md:flex items-center justify-end gap-6 flex-shrink-0 z-20">
+                    <button onclick="window.location.href='/store/checkout.html'" class="relative p-2 text-gray-400 hover:text-[#FFC300] transition group">
+                        <svg class="w-6 h-6 transform group-hover:scale-110 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        <span id="cartCountDesktop" class="absolute top-0 right-0 bg-[#FFC300] text-black text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full shadow-[0_0_10px_rgba(255,195,0,0.5)]">0</span>
+                    </button>
+                    <a href="/store/account.html" class="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-[#FFC300] text-[#FFC300] shadow-[0_0_15px_rgba(255,195,0,0.2)] transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
     </nav>
 
-    <main class="pt-24 md:pt-32 flex-grow w-full max-w-7xl mx-auto px-4 md:px-8 mb-12">
-        <div class="flex flex-col md:flex-row gap-6 md:gap-8">
+    <!-- ======================================================= -->
+    <!-- BOTTOM NAV (Exclusivo para Móviles) -->
+    <!-- ======================================================= -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full z-50 mobile-bottom-nav">
+        <div class="flex items-center justify-around h-16 px-2">
+            <a href="/store/home.html" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <span class="text-[9px] font-medium">Inicio</span>
+            </a>
+            <button onclick="toggleMobileSearch(true)" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <span class="text-[9px] font-medium">Buscar</span>
+            </button>
+            <a href="/store/checkout.html" class="relative flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-white transition">
+                <div class="relative">
+                    <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    <span id="cartCountMobile" class="absolute -top-1 -right-2 bg-[#FFC300] text-black text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full">0</span>
+                </div>
+                <span class="text-[9px] font-medium">Bolsa</span>
+            </a>
+            <a href="/store/account.html" class="flex flex-col items-center justify-center w-full h-full text-[#FFC300] transition">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <span class="text-[9px] font-bold">Perfil</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- PANEL PRINCIPAL (DASHBOARD) -->
+    <!-- ======================================================= -->
+    <main class="pt-24 md:pt-32 pb-24 md:pb-16 px-4 max-w-7xl mx-auto flex-grow w-full">
+        
+        <!-- Header del Dashboard -->
+        <div class="mb-10 md:mb-16 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="flex items-center gap-5">
+                <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-[#FFC300] to-yellow-600 flex items-center justify-center text-black text-2xl md:text-3xl font-black uppercase shadow-[0_10px_30px_rgba(255,195,0,0.3)]" id="avatar-initials">G</div>
+                <div>
+                    <h1 class="text-3xl md:text-5xl font-[900] tracking-tighter uppercase italic leading-none mb-1">Hola, <span id="user-greeting" class="text-transparent bg-clip-text bg-gradient-to-r from-[#FFC300] to-white">Atleta</span></h1>
+                    <p class="text-gray-400 text-[10px] md:text-xs font-bold uppercase tracking-widest">Panel de Control & Ajustes</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
             
-            <!-- COLUMNA IZQUIERDA: Tarjeta de Usuario -->
-            <div class="w-full md:w-1/3 flex flex-col gap-6">
-                
-                <div class="glass-panel p-6 rounded-[2rem] border border-white/5 text-center relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-[#FFC300]/20 to-transparent opacity-50"></div>
+            <!-- ======================================================= -->
+            <!-- MENÚ LATERAL (SIDEBAR TIPO APPLE SETTINGS) -->
+            <!-- ======================================================= -->
+            <aside class="w-full lg:w-1/4">
+                <div class="bg-[#0a0a0f] p-3 md:p-4 rounded-[2rem] sticky top-28 space-y-1 border border-white/5 shadow-2xl">
                     
-                    <div class="w-20 h-20 mx-auto bg-[#0a0a0f] border-2 border-[#FFC300] rounded-full flex items-center justify-center mb-4 relative z-10 shadow-[0_0_20px_rgba(255,195,0,0.3)]">
-                        <svg class="w-10 h-10 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                    </div>
+                    <button onclick="switchTab('pedidos', this)" class="tab-btn active w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-left text-sm font-bold text-gray-400 hover:text-white transition group">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5 text-gray-500 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                            Mis Pedidos
+                        </div>
+                        <span id="badge-orders-count" class="text-[10px] font-black bg-white/10 text-white px-2.5 py-1 rounded-full hidden">0</span>
+                    </button>
                     
-                    <h2 id="user-fullname" class="text-xl font-[900] uppercase tracking-widest italic skeleton-box w-3/4 mx-auto h-6 rounded mb-2"></h2>
-                    <p id="user-email" class="text-xs text-gray-400 font-medium tracking-wider skeleton-box w-1/2 mx-auto h-4 rounded"></p>
+                    <button onclick="switchTab('deseos', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left text-sm font-bold text-gray-400 hover:text-white transition group">
+                        <svg class="w-5 h-5 text-gray-500 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                        Lista de Deseos
+                    </button>
                     
-                    <button onclick="logout()" class="mt-8 w-full py-3 rounded-xl border border-red-500/30 text-red-400 text-xs font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
+                    <button onclick="switchTab('pagos', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left text-sm font-bold text-gray-400 hover:text-white transition group">
+                        <svg class="w-5 h-5 text-gray-500 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                        Facturación
+                    </button>
+                    
+                    <button onclick="switchTab('perfil', this)" class="tab-btn w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-left text-sm font-bold text-gray-400 hover:text-white transition group">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-5 h-5 text-gray-500 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            Ajustes Logísticos
+                        </div>
+                        <div class="w-2 h-2 bg-red-500 rounded-full shadow-[0_0_5px_rgba(239,68,68,0.8)]" id="kyc-alert-dot"></div>
+                    </button>
+                    
+                    <div class="w-full h-px bg-white/5 my-2"></div>
+                    
+                    <!-- Enlace directo a la App (Visible en móvil) -->
+                    <a href="/apps/start/inicio.html" class="md:hidden w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left text-sm font-bold text-gray-400 hover:text-white transition group">
+                        <svg class="w-5 h-5 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        App Fitness
+                    </a>
+
+                    <!-- BOTÓN: Cerrar Sesión -->
+                    <button onclick="logoutAthlete()" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left text-sm font-bold text-red-500/80 hover:text-red-400 hover:bg-red-500/10 transition group">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                         Cerrar Sesión
                     </button>
                 </div>
+            </aside>
 
-                <!-- Estado del KYC Logístico -->
-                <div id="kyc-status-card" class="glass-panel p-5 rounded-2xl border border-white/5 flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] uppercase font-bold tracking-widest text-gray-500 mb-1">Perfil Logístico</p>
-                        <p id="kyc-status-text" class="text-sm font-black text-white">Verificando...</p>
+            <!-- ======================================================= -->
+            <!-- ZONA DE CONTENIDO (PANELES) -->
+            <!-- ======================================================= -->
+            <section class="w-full lg:w-3/4">
+
+                <!-- PESTAÑA: MIS PEDIDOS -->
+                <div id="tab-pedidos" class="tab-content active min-h-[400px]">
+                    <div class="flex justify-between items-center mb-6 md:mb-8 pb-4 border-b border-white/5">
+                        <h2 class="text-2xl md:text-3xl font-[900] tracking-tighter uppercase italic">Rastreo de <span class="text-[#FFC300]">Órdenes</span></h2>
                     </div>
-                    <div id="kyc-status-icon" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
-                        <div class="animate-spin w-4 h-4 border-2 border-[#FFC300] border-t-transparent rounded-full"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- COLUMNA DERECHA: Órdenes y Actividad -->
-            <div class="w-full md:w-2/3">
-                <div class="flex justify-between items-end mb-6 border-b border-white/5 pb-4">
-                    <h3 class="text-2xl font-[900] uppercase italic tracking-tighter">Historial de <span class="text-[#FFC300]">Compras</span></h3>
-                </div>
-
-                <!-- Contenedor de Órdenes -->
-                <div id="orders-container" class="space-y-4">
-                    <!-- Ejemplo de cómo se vería una orden inyectada por JS -->
-                    <div class="glass-panel p-5 rounded-2xl border border-white/5 hover:border-white/20 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <p class="text-[10px] text-[#FFC300] uppercase font-bold tracking-widest mb-1">ORD-109283</p>
-                            <p class="text-sm font-black text-white">2 x Productos Oficiales</p>
-                            <p class="text-xs text-gray-500 mt-1">Realizado el: 23 Jul, 2026</p>
-                        </div>
-                        <div class="flex items-center justify-between md:flex-col md:items-end gap-2">
-                            <span class="text-lg font-[900] text-white">Bs. 3.060,00</span>
-                            <span class="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded">Verificando Pago</span>
+                    
+                    <div id="orders-container" class="space-y-6">
+                        <div class="animate-pulse flex flex-col gap-6">
+                            <div class="h-40 bg-[#0a0a0f] border border-white/5 rounded-[2rem] w-full"></div>
                         </div>
                     </div>
-                </div>
-            </div>
 
+                    <div id="orders-empty-state" class="hidden text-center py-20 md:py-32 glass-panel rounded-[3rem] border border-white/5">
+                        <div class="flex justify-center mb-6 opacity-30">
+                            <svg class="w-20 h-20 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                        </div>
+                        <h3 class="text-xl md:text-2xl font-[900] uppercase italic text-white mb-2">Sin actividad reciente</h3>
+                        <p class="text-sm text-gray-400 mb-8 max-w-sm mx-auto px-4">Tu historial de compras está vacío. Es el momento perfecto para equiparte.</p>
+                        <a href="/store/home.html" class="inline-block bg-[#FFC300] text-black px-8 py-4 rounded-full text-[10px] md:text-xs font-[900] uppercase tracking-widest hover:scale-105 transition-all shadow-[0_10px_20px_rgba(255,195,0,0.2)]">Explorar Catálogo</a>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA: LISTA DE DESEOS -->
+                <div id="tab-deseos" class="tab-content min-h-[400px]">
+                    <div class="flex justify-between items-center mb-6 md:mb-8 pb-4 border-b border-white/5">
+                        <h2 class="text-2xl md:text-3xl font-[900] tracking-tighter uppercase italic">Lista de <span class="text-[#FFC300]">Deseos</span></h2>
+                    </div>
+                    <div class="text-center py-20 md:py-32 glass-panel rounded-[3rem] border border-white/5">
+                        <div class="flex justify-center mb-6 opacity-30">
+                            <svg class="w-20 h-20 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                        </div>
+                        <h3 class="text-xl md:text-2xl font-[900] uppercase italic text-white mb-2">Tu bóveda está vacía</h3>
+                        <p class="text-sm text-gray-400 max-w-sm mx-auto px-4">Guarda aquí los productos que te interesen para adquirirlos en tu próxima sesión.</p>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA: PAGOS -->
+                <div id="tab-pagos" class="tab-content min-h-[400px]">
+                    <div class="flex justify-between items-center mb-6 md:mb-8 pb-4 border-b border-white/5">
+                        <h2 class="text-2xl md:text-3xl font-[900] tracking-tighter uppercase italic">Historial de <span class="text-[#FFC300]">Facturación</span></h2>
+                    </div>
+                    <div class="text-center py-20 md:py-32 glass-panel rounded-[3rem] border border-white/5">
+                        <div class="flex justify-center mb-6 opacity-30">
+                            <svg class="w-20 h-20 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <h3 class="text-xl md:text-2xl font-[900] uppercase italic text-white mb-2">Sin historial financiero</h3>
+                        <p class="text-sm text-gray-400 max-w-sm mx-auto px-4">Tus recibos y facturas legales aparecerán aquí tras tu primera compra confirmada.</p>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA: CONFIGURACIÓN LOGÍSTICA -->
+                <div id="tab-perfil" class="tab-content">
+                    <form id="buyer-profile-form" class="space-y-8">
+                        
+                        <!-- SECCIÓN 1: KYC -->
+                        <div class="bg-[#0a0a0f] p-6 md:p-10 rounded-[2.5rem] border border-white/5 relative overflow-hidden shadow-2xl">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FFC300] to-yellow-600"></div>
+                            
+                            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 border-b border-white/5 pb-6 gap-4">
+                                <h2 class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic flex items-center gap-3">
+                                    <svg class="w-6 h-6 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                    Identidad Legal (KYC)
+                                </h2>
+                                <span id="kyc-status-badge" class="text-[9px] font-black uppercase tracking-widest bg-white/5 border border-white/10 text-gray-400 px-4 py-1.5 rounded-full w-max">Pendiente</span>
+                            </div>
+
+                            <!-- MODO A: FORMULARIO -->
+                            <div id="kyc-form-container" class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div class="md:col-span-1">
+                                        <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 pl-1">Nacionalidad</label>
+                                        <div class="relative">
+                                            <select id="doc-type" class="w-full bg-[#12121a] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition cursor-pointer appearance-none shadow-inner">
+                                                <option value="V">Venezolano (V)</option>
+                                                <option value="E">Extranjero (E)</option>
+                                            </select>
+                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 pl-1">Cédula de Identidad</label>
+                                        <input type="text" id="doc-number" class="w-full bg-[#12121a] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition placeholder-gray-600 shadow-inner" placeholder="Ej: 12345678" required>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-[10px] font-bold uppercase tracking-widest text-[#FFC300] mb-2 pl-1">Fotografía del Documento</label>
+                                    <div class="relative w-full border-2 border-dashed border-white/10 hover:border-[#FFC300]/50 rounded-[2rem] p-8 md:p-10 text-center bg-[#12121a] transition-all group cursor-pointer" onclick="document.getElementById('cedula-upload').click()">
+                                        <svg class="w-10 h-10 text-gray-600 mx-auto mb-4 group-hover:text-[#FFC300] transition transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        <span id="file-name-display" class="block text-sm font-bold text-gray-400 group-hover:text-white transition mb-1">Toca para subir un archivo...</span>
+                                        <span class="text-[10px] font-medium text-gray-600">Formatos soportados: JPG, PNG (Max. 2MB)</span>
+                                        <input type="file" id="cedula-upload" class="hidden" accept="image/*" onchange="document.getElementById('file-name-display').innerText = this.files[0].name">
+                                    </div>
+                                    <p class="text-[9px] text-gray-500 mt-4 text-center uppercase tracking-widest font-bold">Requisito obligatorio por regulaciones de encomienda nacional.</p>
+                                </div>
+                            </div>
+
+                            <!-- MODO B: SOLO LECTURA -->
+                            <div id="kyc-readonly-container" class="hidden space-y-4">
+                                <div class="bg-gradient-to-r from-emerald-500/10 to-transparent border border-emerald-500/20 rounded-[2rem] p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6">
+                                    <div class="text-center md:text-left">
+                                        <p class="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-2 flex items-center justify-center md:justify-start gap-2">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                            Titular Verificado
+                                        </p>
+                                        <p id="readonly-fullname" class="text-2xl font-[900] uppercase italic text-white">Cargando...</p>
+                                        <p id="readonly-doc" class="text-sm font-bold text-gray-400 mt-1">V-00000000</p>
+                                    </div>
+                                    <a href="https://api.whatsapp.com/send?phone=+584148780392&text=Requiero%20asistencia%20legal%20para%20cambio%20de%20titularidad." target="_blank" class="flex-shrink-0 bg-[#030305] hover:bg-white/5 border border-white/10 px-6 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest text-white transition flex items-center gap-2 shadow-xl">
+                                        <svg class="w-4 h-4 text-[#25D366]" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                                        Soporte / Cambio
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN 2: LOGÍSTICA INTELIGENTE -->
+                        <div class="bg-[#0a0a0f] p-6 md:p-10 rounded-[2.5rem] border border-white/5 relative overflow-hidden shadow-2xl">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-emerald-800"></div>
+                            <div class="flex items-center gap-3 mb-8 border-b border-white/5 pb-6">
+                                <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                <h2 class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic">Destino Predeterminado</h2>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 pl-1">Agencia de Encomienda</label>
+                                    <div class="relative">
+                                        <select id="ship-courier" class="w-full bg-[#12121a] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition cursor-pointer appearance-none shadow-inner">
+                                            <option value="">Cargando couriers...</option>
+                                        </select>
+                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 pl-1">Estado</label>
+                                        <div class="relative">
+                                            <select id="ship-state" disabled class="w-full bg-[#12121a] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition disabled:opacity-50 cursor-pointer appearance-none shadow-inner">
+                                                <option value="">Selecciona Courier primero...</option>
+                                            </select>
+                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 pl-1">Sucursal / Oficina</label>
+                                        <div class="relative">
+                                            <select id="ship-agency" disabled class="w-full bg-[#12121a] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition disabled:opacity-50 cursor-pointer appearance-none shadow-inner">
+                                                <option value="">Selecciona Estado primero...</option>
+                                            </select>
+                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botón de Guardado -->
+                        <div class="pt-4 pb-8 md:pb-0">
+                            <button type="submit" id="btn-save" class="w-full bg-[#FFC300] text-black px-8 py-5 rounded-full font-[900] uppercase tracking-widest text-sm shadow-[0_10px_30px_rgba(255,195,0,0.2)] hover:bg-yellow-400 hover:shadow-[0_15px_40px_rgba(255,195,0,0.4)] hover:scale-[1.02] transition-all duration-300 flex justify-center items-center gap-2">
+                                Guardar Perfil Seguro
+                            </button>
+                            <p id="form-msg" class="text-center text-[10px] font-black uppercase tracking-widest mt-4 hidden"></p>
+                        </div>
+                    </form>
+                </div>
+
+            </section>
         </div>
     </main>
 
-    <!-- BOTTOM NAV MÓVIL -->
-    <div class="md:hidden fixed bottom-0 left-0 w-full z-50 mobile-bottom-nav">
-        <!-- (Pega aquí el mismo Bottom Nav de home.html) -->
+    <!-- ======================================================= -->
+    <!-- MODAL DE BÚSQUEDA MÓVIL NATAL -->
+    <!-- ======================================================= -->
+    <div id="mobile-search-modal" class="md:hidden fixed inset-0 z-[100] bg-[#030305]/95 backdrop-blur-2xl transition-all duration-300 opacity-0 pointer-events-none flex flex-col">
+        <div class="flex items-center px-4 h-20 border-b border-white/10 bg-[#0a0a0f]/50 mt-safe">
+            <svg class="w-5 h-5 text-[#FFC300] mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="mobile-search-input" class="w-full bg-transparent text-white text-base focus:outline-none placeholder-gray-600" placeholder="Buscar productos...">
+            <button onclick="toggleMobileSearch(false)" class="p-2 ml-2 text-gray-400 hover:text-white bg-white/5 rounded-full transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div id="mobile-search-results" class="flex-1 overflow-y-auto p-2 space-y-2 pb-24 hide-scroll">
+            <div class="text-center py-20 opacity-50">
+                <svg class="w-12 h-12 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Escribe para buscar...</p>
+            </div>
+        </div>
     </div>
 
+    <!-- UTILIDADES CORE -->
+    <script src="/static/js/store/store_core.js"></script>
     <script src="/static/js/store/account.js"></script>
+    <script src="/static/js/store/search.js?v=1.0"></script>
+    <script src="/static/js/auth/auth_middleware.js"></script>
+    
+    <script>
+        // Actualizador de Carrito Unificado
+        function updateVisualCartBadges() {
+            const cart = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
+            const totalItems = cart.reduce((acc, item) => acc + (item.qty || item.quantity || 1), 0);
+            const badgeDesktop = document.getElementById('cartCountDesktop');
+            const badgeMobile = document.getElementById('cartCountMobile');
+            
+            if (badgeDesktop) badgeDesktop.innerText = totalItems;
+            if (badgeMobile) {
+                badgeMobile.innerText = totalItems;
+                if(totalItems > 0) badgeMobile.classList.remove('hidden');
+                else badgeMobile.classList.add('hidden');
+            }
+        }
+        document.addEventListener('DOMContentLoaded', updateVisualCartBadges);
+    </script>
 </body>
 </html>
