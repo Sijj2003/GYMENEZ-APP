@@ -98,16 +98,16 @@
             <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
         </div>
 
-        <div id="product-container" class="hidden flex-col md:flex-row gap-8 lg:gap-16">
+        <div id="product-container" class="hidden flex-col md:flex-row gap-8 lg:gap-16 items-start">
             
             <!-- COLUMNA IZQUIERDA: IMAGEN (Apple Style / Minimalista) -->
-            <div class="w-full md:w-1/2">
-                <!-- Fondo súper limpio, borde muy sutil y bordes muy redondeados (rounded-3xl) -->
+            <div class="w-full md:w-1/2 sticky top-28">
+                <!-- Fondo súper limpio, borde muy sutil y bordes muy redondeados -->
                 <div class="relative w-full aspect-square bg-[#0a0a0f] rounded-[2rem] md:rounded-[2.5rem] border border-white/5 overflow-hidden flex items-center justify-center p-8 md:p-12 group shadow-2xl">
                     <!-- Detalle de luz tenue superior tipo reflejo de cristal -->
                     <div class="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none"></div>
                     
-                    <!-- Imagen con sombra natural en vez de relieve -->
+                    <!-- Imagen con sombra natural -->
                     <img id="prod-img" src="" alt="Producto" class="relative z-10 w-full h-full object-contain filter drop-shadow-2xl transition-transform duration-500 group-hover:scale-105">
                     
                     <!-- Descuento Minimalista -->
@@ -132,12 +132,22 @@
                 </div>
 
                 <!-- Descripción Limpia -->
-                <p id="prod-desc" class="text-sm md:text-base text-gray-400 leading-relaxed mb-10 font-medium">...</p>
+                <p id="prod-desc" class="text-sm md:text-base text-gray-400 leading-relaxed mb-8 font-medium">...</p>
+
+                <!-- ========================================== -->
+                <!-- CONSTRUCTOR DE VARIANTES VISUAL (APPLE STYLE) -->
+                <!-- ========================================== -->
+                <div id="variants-container" class="hidden mb-8 border-t border-white/5 pt-6">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4">Opciones Disponibles</h3>
+                    <div id="variants-list" class="flex flex-wrap gap-3">
+                        <!-- Las píldoras de variantes se inyectan por product.js -->
+                    </div>
+                </div>
 
                 <!-- ========================================== -->
                 <!-- PANEL DE COMPRA TIPO APPLE (Píldora Central) -->
                 <!-- ========================================== -->
-                <div class="bg-[#0a0a0f] p-6 md:p-8 rounded-[2rem] border border-white/5 mt-auto relative z-10">
+                <div class="bg-[#0a0a0f] p-6 md:p-8 rounded-[2rem] border border-white/5 mt-auto relative z-10 shadow-xl">
                     
                     <!-- Resumen Arriba -->
                     <div class="flex justify-between items-end mb-8">
@@ -146,7 +156,7 @@
                             <span id="prod-total-price" class="text-2xl font-black text-[#FFC300]">$0.00</span>
                         </div>
                         <div class="text-right">
-                            <span id="prod-stock" class="text-[9px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md">0 disponibles</span>
+                            <span id="prod-stock" class="text-[9px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md">Calculando...</span>
                         </div>
                     </div>
 
@@ -160,8 +170,8 @@
                         </div>
                     </div>
 
-                    <!-- Botón de Acción Sólido y Limpio -->
-                    <button id="btn-add-cart" onclick="addToCart()" class="w-full bg-[#FFC300] text-black h-14 rounded-full font-[900] uppercase tracking-widest text-xs hover:bg-yellow-400 hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
+                    <!-- Botón de Acción Sólido y Limpio (Deshabilitado por defecto hasta seleccionar variante) -->
+                    <button id="btn-add-cart" onclick="addToCart()" disabled class="w-full bg-[#FFC300] text-black h-14 rounded-full font-[900] uppercase tracking-widest text-xs hover:bg-yellow-400 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(255,195,0,0.3)] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-none">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                         Añadir a la Bolsa
                     </button>
