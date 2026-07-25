@@ -1,3 +1,4 @@
+// Array global para guardar el catálogo en memoria
 window.myProducts = [];
 let activeVariants = []; // Memoria temporal para el constructor de variantes
 
@@ -25,7 +26,7 @@ function logout() {
     window.location.href = '/store/partner/login.html';
 }
 
-function switchTab(tabId, element) { /* Igual que antes */
+function switchTab(tabId, element) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('bg-white/5', 'text-white', 'border-white/5');
@@ -40,7 +41,7 @@ function switchTab(tabId, element) { /* Igual que antes */
     if(activeSvg && !element.querySelector('span.bg-red-500')) activeSvg.classList.add('text-[#FFC300]');
 }
 
-function switchTabMobile(tabId, element) { /* Igual que antes */
+function switchTabMobile(tabId, element) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
         btn.classList.remove('text-[#FFC300]');
@@ -277,14 +278,24 @@ function renderVariantsList() {
     });
 
     listEl.innerHTML = html;
-    globalStockEl.value = totalStock; // El stock global es automático
+    globalStockEl.value = totalStock; // El stock global se actualiza solo
 }
 
 // ==========================================
-// CONTROL DEL MODAL (RESTO)
+// CONTROL DEL MODAL (AQUÍ ESTÁ LA CORRECCIÓN)
 // ==========================================
+let modal;
+let modalInner;
+
+function initModals() {
+    modal = document.getElementById('product-modal');
+    modalInner = modal ? modal.querySelector('div') : null;
+}
+
 function openModal() {
+    if (!modal) initModals(); // Aseguramos que exista
     if (!modal) return;
+    
     document.getElementById('add-product-form').reset();
     document.getElementById('prod-id').value = '';
     document.getElementById('file-name-display').innerText = 'Tocar para subir JPG o PNG...';
@@ -302,8 +313,6 @@ function openModal() {
     }, 10);
 }
 
-// Editar no se ha adaptado 100% para variantes complejas por longitud de código, 
-// pero se cierra el modal igual. Lo simplificamos a cerrarModal.
 function closeModal() {
     if (!modal) return;
     modal.classList.add('opacity-0');
@@ -326,7 +335,7 @@ function updateFileName(input) {
 }
 
 // ==========================================
-// ENVÍO DE DATOS AL BACKEND (Seguridad)
+// ENVÍO DE DATOS AL BACKEND (Seguridad & Peso)
 // ==========================================
 async function submitProduct(e) {
     e.preventDefault();
@@ -504,8 +513,110 @@ function renderProducts(products) {
     }).join('');
 }
 
+// ==========================================
+// NUEVA LÓGICA DEL PERFIL DE LA TIENDA
+// ==========================================
+let profileModal, profileModalInner;
+
+async function openProfileModal() {
+    profileModal = document.getElementById('profile-modal');
+    profileModalInner = profileModal ? profileModal.querySelector('div') : null;
+    if (!profileModal) return;
+
+    profileModal.classList.remove('hidden');
+    setTimeout(() => {
+        profileModal.classList.remove('opacity-0');
+        profileModalInner.classList.remove('scale-95');
+        profileModalInner.classList.add('scale-100');
+    }, 10);
+
+    try {
+        const token = localStorage.getItem('gymenez_partner_token');
+        const res = await fetch('https://sijj2003.pythonanywhere.com/api/partner/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+            const p = data.profile;
+            document.getElementById('prof-name').value = p.store_name || 'No definido';
+            document.getElementById('prof-doc').value = `${p.doc_type || 'V'}-${p.doc_number || ''}`;
+            document.getElementById('prof-phone').value = p.phone || 'No definido';
+            document.getElementById('prof-email').value = p.email || 'No definido';
+
+            const logoEl = document.getElementById('modal-profile-logo');
+            if (p.logo_url) {
+                logoEl.innerHTML = `<img src="${p.logo_url}" class="w-full h-full object-cover">`;
+            } else {
+                logoEl.innerHTML = p.store_name ? p.store_name.charAt(0).toUpperCase() : 'P';
+            }
+        }
+    } catch (error) {
+        console.error('Error cargando perfil:', error);
+    }
+}
+
+function closeProfileModal() {
+    if (!profileModal) return;
+    profileModal.classList.add('opacity-0');
+    profileModalInner.classList.remove('scale-100');
+    profileModalInner.classList.add('scale-95');
+    setTimeout(() => { profileModal.classList.add('hidden'); }, 300);
+}
+
+// ==========================================
+// SUBIR NUEVO LOGO CON RESTRICCIONES
+// ==========================================
+async function uploadNewLogo(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) { 
+        alert("La imagen es demasiado pesada (Máximo 2MB).");
+        return;
+    }
+
+    const logoEl = document.getElementById('modal-profile-logo');
+    const headerLogoEl = document.getElementById('header-logo');
+    logoEl.innerHTML = `<span class="animate-pulse text-[9px] uppercase tracking-widest text-white">Subiendo...</span>`;
+
+    const token = localStorage.getItem('gymenez_partner_token');
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    try {
+        const response = await fetch('https://sijj2003.pythonanywhere.com/api/partner/profile/logo', {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            localStorage.setItem('gymenez_partner_token', data.token);
+            
+            logoEl.innerHTML = `<img src="${data.logo_url}" class="w-full h-full object-cover">`;
+            if (headerLogoEl) headerLogoEl.innerHTML = `<img src="${data.logo_url}" class="w-full h-full object-cover">`;
+            
+            alert("¡Foto de perfil actualizada exitosamente!");
+        } else {
+            alert(data.error || "Error al actualizar la foto.");
+            openProfileModal(); 
+        }
+    } catch (error) {
+        alert("Error de conexión al subir la imagen.");
+        openProfileModal();
+    } finally {
+        input.value = ''; 
+    }
+}
+
+// ==========================================
 // INICIALIZADOR
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
+    initModals();
     const token = localStorage.getItem('gymenez_partner_token');
     if (token) {
         const decodedToken = parseJwt(token);
