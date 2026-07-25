@@ -210,10 +210,10 @@
     </main>
 
     <!-- ======================================================= -->
-    <!-- MODAL: CONSTRUCTOR DE PRODUCTOS Y VARIANTES -->
+    <!-- MODAL: CONSTRUCTOR DE PRODUCTOS Y VARIANTES AVANZADO -->
     <!-- ======================================================= -->
     <div id="product-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm hidden flex items-end md:items-center justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-3xl rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500 flex flex-col max-h-[90vh] md:max-h-[85vh]">
+        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-4xl rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500 flex flex-col max-h-[95vh] md:max-h-[90vh]">
             
             <div class="flex justify-between items-center p-6 md:p-8 border-b border-white/5 shrink-0">
                 <h3 class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white">Gestor de <span class="text-[#FFC300]">Inventario</span></h3>
@@ -233,9 +233,24 @@
                             <h4 class="text-sm font-bold uppercase tracking-widest text-white">Información Principal</h4>
                         </div>
                         
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Título Oficial del Producto</label>
-                            <input type="text" id="prod-name" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner" placeholder="Ej: Whey Protein Isolate Dymatize 5Lbs" required>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="md:col-span-2">
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Título Oficial del Producto</label>
+                                <input type="text" id="prod-name" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner" placeholder="Ej: Whey Protein Isolate Dymatize 5Lbs" required>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Categoría General</label>
+                                <div class="relative">
+                                    <select id="prod-category" onchange="toggleVariantFields()" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-blue-500 transition appearance-none cursor-pointer shadow-inner">
+                                        <option value="general">Equipamiento Genérico</option>
+                                        <option value="suplementos">Suplementación</option>
+                                        <option value="ropa">Indumentaria y Calzado</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -257,7 +272,7 @@
 
                         <div>
                             <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Descripción de Ventas</label>
-                            <textarea id="prod-desc" rows="3" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition resize-none shadow-inner" placeholder="Beneficios, uso recomendado, advertencias..." required></textarea>
+                            <textarea id="prod-desc" rows="3" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition resize-none shadow-inner custom-scroll" placeholder="Beneficios, uso recomendado, advertencias..." required></textarea>
                         </div>
                     </div>
 
@@ -272,19 +287,20 @@
                             <div>
                                 <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1 flex justify-between">
                                     <span>Peso P/Envío (Kg)</span>
-                                    <span class="text-red-400">*Vital para MRW</span>
+                                    <span class="text-emerald-500">Min 0.5 - Max 50</span>
                                 </label>
-                                <input type="number" id="prod-weight" step="0.1" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-emerald-500 transition shadow-inner" placeholder="Ej: 2.5" required>
+                                <input type="number" id="prod-weight" step="0.1" min="0.5" max="50" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-emerald-500 transition shadow-inner" placeholder="Ej: 2.5" required>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Inventario (Unidades)</label>
-                                <input type="number" id="prod-stock" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-emerald-500 transition shadow-inner" placeholder="Ej: 50" required>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Inventario Global (Unidades)</label>
+                                <input type="number" id="prod-stock" min="1" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-emerald-500 transition shadow-inner disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Ej: 50" required>
+                                <p id="stock-helper" class="text-[9px] text-gray-500 mt-2 hidden">Se calcula automáticamente basado en las variantes.</p>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Fotografía HD</label>
-                            <div class="relative w-full border-2 border-dashed border-white/10 hover:border-emerald-500/50 rounded-2xl p-6 text-center bg-[#030305] transition group cursor-pointer" onclick="document.getElementById('prod-image').click()">
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Fotografía HD Oficial</label>
+                            <div class="relative w-full border-2 border-dashed border-white/10 hover:border-emerald-500/50 rounded-[2rem] p-6 text-center bg-[#030305] transition group cursor-pointer" onclick="document.getElementById('prod-image').click()">
                                 <svg class="w-8 h-8 text-gray-600 mx-auto mb-2 group-hover:text-emerald-500 transition transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 <span id="file-name-display" class="block text-xs font-bold text-gray-400 group-hover:text-white transition">Tocar para subir JPG o PNG...</span>
                                 <input type="file" id="prod-image" accept="image/*" class="hidden" onchange="updateFileName(this)">
@@ -292,47 +308,28 @@
                         </div>
                     </div>
 
-                    <!-- Bloque 3: Constructor de Variantes Inteligente -->
-                    <div class="space-y-6 bg-[#12121a] p-6 rounded-[2rem] border border-white/5">
-                        <div class="flex items-center gap-2 mb-4 border-b border-white/5 pb-2">
-                            <span class="w-6 h-6 rounded-full bg-blue-500 text-white font-black text-xs flex items-center justify-center">3</span>
-                            <h4 class="text-sm font-bold uppercase tracking-widest text-white">Variantes y Opciones</h4>
+                    <!-- Bloque 3: Constructor de Variantes Inteligente (El Cerebro) -->
+                    <div id="variants-master-container" class="space-y-6 bg-[#12121a] p-6 rounded-[2rem] border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.1)] hidden">
+                        <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-blue-500 text-white font-black text-xs flex items-center justify-center">3</span>
+                                <h4 class="text-sm font-bold uppercase tracking-widest text-white">Constructor de Stock & Variantes</h4>
+                            </div>
+                            <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest">Matriz Activa</span>
                         </div>
                         
+                        <!-- Controles Dinámicos Inyectados por JS -->
+                        <div id="variant-builder-controls" class="bg-[#030305] p-5 rounded-2xl border border-white/5">
+                            <!-- Se llena por JS dependiendo si es Ropa o Suplemento -->
+                        </div>
+
+                        <!-- Lista Visual de Variantes Agregadas -->
                         <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Tipo de Producto</label>
-                            <select id="prod-category" onchange="toggleVariantFields()" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-blue-500 transition appearance-none cursor-pointer">
-                                <option value="general">Accesorio General (Sin Variantes)</option>
-                                <option value="suplementos">Suplementación (Sabores / Tamaños)</option>
-                                <option value="ropa">Indumentaria y Calzado (Tallas / Colores)</option>
-                            </select>
-                        </div>
-
-                        <!-- Panel de Suplementos -->
-                        <div id="variants-supplements" class="hidden grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/5">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2 pl-1">Sabores (Opcional)</label>
-                                <input type="text" id="var-flavors" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-blue-500 transition shadow-inner" placeholder="Ej: Chocolate, Vainilla, Fresa">
-                                <p class="text-[9px] text-gray-500 mt-2">Separa con comas (,)</p>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2 pl-1">Presentación / Tamaño</label>
-                                <input type="text" id="var-sizes-supp" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-blue-500 transition shadow-inner" placeholder="Ej: 30 Serv, 5 Lbs, 500g">
-                                <p class="text-[9px] text-gray-500 mt-2">Separa con comas (,)</p>
-                            </div>
-                        </div>
-
-                        <!-- Panel de Ropa/Calzado -->
-                        <div id="variants-apparel" class="hidden grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/5">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2 pl-1">Tallas Disponibles</label>
-                                <input type="text" id="var-sizes-apparel" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-blue-500 transition shadow-inner" placeholder="Ej: S, M, L, XL ó 40, 41, 42">
-                                <p class="text-[9px] text-gray-500 mt-2">Separa con comas (,)</p>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2 pl-1">Colores Disponibles</label>
-                                <input type="text" id="var-colors" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-blue-500 transition shadow-inner" placeholder="Ej: Negro, Blanco, Rojo">
-                                <p class="text-[9px] text-gray-500 mt-2">Separa con comas (,)</p>
+                            <h5 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3 pl-1">Variantes en Catálogo</h5>
+                            <div id="variants-list" class="space-y-2">
+                                <div class="text-center py-6 border border-dashed border-white/10 rounded-xl">
+                                    <p class="text-xs font-bold text-gray-500">Agrega variantes arriba para armar tu stock.</p>
+                                </div>
                             </div>
                         </div>
 
@@ -342,7 +339,8 @@
 
             <div class="p-6 md:p-8 border-t border-white/5 shrink-0 flex flex-col md:flex-row justify-end gap-4 bg-[#0a0a0f] rounded-b-[2.5rem]">
                 <button onclick="closeModal()" class="w-full md:w-auto px-8 py-4 rounded-full text-xs font-black uppercase tracking-widest text-gray-400 border border-white/10 hover:text-white hover:bg-white/5 transition">Cancelar Publicación</button>
-                <button onclick="submitProduct(event)" id="btn-save-prod" class="w-full md:w-auto bg-[#FFC300] text-black px-10 py-4 rounded-full text-xs font-[900] uppercase tracking-widest hover:bg-yellow-400 transition shadow-[0_10px_20px_rgba(255,195,0,0.3)]">
+                <button onclick="submitProduct(event)" id="btn-save-prod" class="w-full md:w-auto bg-[#FFC300] text-black px-10 py-4 rounded-full text-xs font-[900] uppercase tracking-widest hover:bg-yellow-400 transition shadow-[0_10px_20px_rgba(255,195,0,0.3)] flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                     Publicar Producto
                 </button>
             </div>
