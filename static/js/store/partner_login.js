@@ -8,15 +8,47 @@ function toggleForms(target) {
     const registerForm = document.getElementById('register-form');
 
     if (target === 'register') {
-        loginForm.classList.remove('active-form');
-        loginForm.classList.add('hidden-form');
-        registerForm.classList.remove('hidden-form');
-        registerForm.classList.add('active-form');
+        // Ocultar Login
+        loginForm.classList.add('opacity-0', 'scale-95');
+        setTimeout(() => {
+            loginForm.classList.add('hidden');
+            // Mostrar Register
+            registerForm.classList.remove('hidden');
+            // Pequeño delay para que aplique el display:block antes de la opacidad
+            setTimeout(() => {
+                registerForm.classList.remove('opacity-0');
+            }, 50);
+        }, 300);
     } else {
-        registerForm.classList.remove('active-form');
-        registerForm.classList.add('hidden-form');
-        loginForm.classList.remove('hidden-form');
-        loginForm.classList.add('active-form');
+        // Ocultar Register
+        registerForm.classList.add('opacity-0');
+        setTimeout(() => {
+            registerForm.classList.add('hidden');
+            // Mostrar Login
+            loginForm.classList.remove('hidden');
+            setTimeout(() => {
+                loginForm.classList.remove('opacity-0', 'scale-95');
+            }, 50);
+        }, 300);
+    }
+}
+
+// Función para actualizar los labels visuales de los archivos subidos (Cédula, RIF, Logo)
+function updateFileLabel(input, labelId) {
+    const label = document.getElementById(labelId);
+    if (input.files && input.files[0]) {
+        label.innerText = input.files[0].name;
+        // Cambiamos el color para indicar éxito
+        if(labelId === 'label-logo') {
+            label.classList.remove('text-gray-500');
+            label.classList.add('text-[#FFC300]');
+        } else {
+            label.classList.remove('text-gray-500');
+            label.classList.add('text-emerald-400');
+        }
+    } else {
+        label.innerText = 'Tocar para subir...';
+        label.className = 'text-xs text-gray-500 transition truncate w-40'; // Reset clases
     }
 }
 
@@ -25,21 +57,28 @@ function showToast(message, type = 'success') {
     const msgObj = document.getElementById('toast-msg');
     const iconObj = document.getElementById('toast-icon');
 
-    toast.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-[100] glass-panel px-6 py-3 rounded-full border flex items-center gap-3 show';
+    // Reseteamos estilos
+    toast.className = 'transform opacity-0 -translate-y-10 transition-all duration-500 ease-out bg-white/95 backdrop-blur-xl text-black px-6 py-3.5 rounded-full font-bold text-sm shadow-[0_20px_40px_rgba(0,0,0,0.4)] flex items-center gap-3 border border-black/5';
     
     if (type === 'success') {
-        toast.classList.add('border-green-500/30', 'bg-green-500/10', 'text-green-400');
-        iconObj.innerHTML = '✓';
+        iconObj.innerHTML = '<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
     } else {
-        toast.classList.add('border-red-500/30', 'bg-red-500/10', 'text-red-400');
-        iconObj.innerHTML = '⚠';
+        iconObj.innerHTML = '<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
     }
 
     msgObj.innerText = message;
 
+    // Mostrar (Baja y se hace visible)
     setTimeout(() => {
-        toast.classList.remove('show', 'border-green-500/30', 'bg-green-500/10', 'text-green-400', 'border-red-500/30', 'bg-red-500/10', 'text-red-400');
-    }, 5000);
+        toast.classList.remove('opacity-0', '-translate-y-10');
+        toast.classList.add('opacity-100', 'translate-y-0');
+    }, 10);
+
+    // Ocultar después de 4 segundos
+    setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', '-translate-y-10');
+    }, 4000);
 }
 
 // =====================================
@@ -48,8 +87,8 @@ function showToast(message, type = 'success') {
 document.getElementById('form-login-action').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-login');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<span class="animate-pulse">Verificando...</span>';
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
     btn.disabled = true;
 
     const email = document.getElementById('login-email').value;
@@ -70,11 +109,12 @@ document.getElementById('form-login-action').addEventListener('submit', async (e
             setTimeout(() => { window.location.href = '/store/partner/dashboard.html'; }, 1500);
         } else {
             showToast(data.error || 'Credenciales inválidas', 'error');
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
         }
     } catch (error) {
         showToast('Error de red. Verifica tu conexión.', 'error');
-    } finally {
-        btn.innerHTML = originalText;
+        btn.innerHTML = originalContent;
         btn.disabled = false;
     }
 });
@@ -85,8 +125,8 @@ document.getElementById('form-login-action').addEventListener('submit', async (e
 document.getElementById('form-register-action').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-register');
-    const originalText = btn.innerText;
-    btn.innerText = 'Subiendo documentos KYC...';
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div><span class="ml-2">Subiendo documentos...</span>';
     btn.disabled = true;
 
     const formData = new FormData();
@@ -117,14 +157,21 @@ document.getElementById('form-register-action').addEventListener('submit', async
         if (response.ok && data.success) {
             showToast('¡Documentos enviados a auditoría exitosamente!', 'success');
             e.target.reset();
-            setTimeout(() => { toggleForms('login'); }, 4000);
+            // Resetear labels de archivos
+            document.getElementById('label-cedula').innerText = 'Tocar para subir...';
+            document.getElementById('label-rif').innerText = 'Tocar para subir...';
+            document.getElementById('label-logo').innerText = 'Tocar para subir...';
+            
+            setTimeout(() => { toggleForms('login'); }, 3000);
         } else {
             showToast(data.error || 'Error en el registro', 'error');
         }
     } catch (error) {
         showToast('Error de red al subir los documentos.', 'error');
     } finally {
-        btn.innerText = originalText;
-        btn.disabled = false;
+        if(btn.disabled) { // Solo resetea si no fue exitoso (si fue exitoso se cambió de vista)
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+        }
     }
 });
