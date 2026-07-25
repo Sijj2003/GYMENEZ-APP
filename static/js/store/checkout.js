@@ -37,12 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('checkout-content').classList.remove('hidden'); 
         document.getElementById('empty-cart-msg').classList.remove('hidden');
     } else {
-        initWizardData(); // Inicia la carga paralela y verifica si hay reservas vivas
+        initWizardData(); 
     }
 });
 
 // ==========================================
-// 1. DIBUJAR RESUMEN DEL CARRITO (Dinámico/Bloqueado)
+// 1. DIBUJAR RESUMEN DEL CARRITO (TARJETAS PREMIUM)
 // ==========================================
 function renderCartSummary() {
     const container = document.getElementById('cart-items-container');
@@ -54,38 +54,59 @@ function renderCartSummary() {
         const itemTotal = item.price * qty;
         cartTotal += itemTotal;
 
-        // Si estamos en la bóveda, bloqueamos la edición
+        // 🧠 Parseo Inteligente de Variante y Título
+        let displayName = item.name;
+        let variantBadgeHtml = '';
+        
+        // Buscamos si el nombre trae variante entre paréntesis, ej: "Producto X (Talla M - Rojo)"
+        const variantMatch = item.name.match(/(.*)\s\((.*)\)$/);
+        if (variantMatch) {
+            displayName = variantMatch[1].trim();
+            variantBadgeHtml = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-inner mt-1 inline-block">${variantMatch[2]}</span>`;
+        }
+
+        // Píldora de Peso
+        const weight = item.weight_kg || 1;
+        const weightBadgeHtml = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-inner mt-1 inline-block">${weight} Kg</span>`;
+
+        // Bloqueo y Botones Visuales
         const deleteBtnHtml = isCartLocked ? '' : `
-            <button onclick="removeCheckoutItem(${index})" class="absolute -top-2 -right-2 bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all z-10 shadow-lg" title="Eliminar producto">
+            <button onclick="removeCheckoutItem(${index})" class="absolute -top-2 -right-2 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all z-10 shadow-xl backdrop-blur-sm" title="Eliminar producto">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         `;
 
         const controlsHtml = isCartLocked ? `
-            <div class="mt-1.5"><span class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">Asegurado: ${qty} und</span></div>
+            <div class="mt-2"><span class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 shadow-inner">Reservado: ${qty} und</span></div>
         ` : `
-            <div class="flex items-center gap-3 mt-1.5">
-                <div class="flex items-center bg-white/5 rounded border border-white/10 h-6">
-                    <button onclick="updateCheckoutItemQty(${index}, -1)" class="px-2 text-gray-400 hover:text-white hover:bg-white/10 transition font-bold">-</button>
-                    <span class="text-[10px] font-black text-white w-5 text-center">${qty}</span>
-                    <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-2 text-gray-400 hover:text-white hover:bg-white/10 transition font-bold">+</button>
+            <div class="flex items-center gap-3 mt-2">
+                <div class="flex items-center bg-[#030305] rounded-full border border-white/10 h-7 shadow-inner">
+                    <button onclick="updateCheckoutItemQty(${index}, -1)" class="px-3 text-gray-400 hover:text-white transition font-black">-</button>
+                    <span class="text-[10px] font-black text-white w-4 text-center">${qty}</span>
+                    <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-3 text-gray-400 hover:text-white transition font-black">+</button>
                 </div>
-                <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">x $${formatMoney(item.price)}</span>
+                <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest block">x $${formatMoney(item.price)} c/u</span>
             </div>
         `;
 
         container.innerHTML += `
-            <div class="flex gap-4 items-center bg-[#0a0a0f] p-3 rounded-xl border ${isCartLocked ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5'} relative group transition-all duration-300">
+            <div class="flex gap-4 items-center bg-[#12121a] p-4 rounded-2xl border ${isCartLocked ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 hover:border-white/20'} relative group transition-all duration-300 shadow-lg">
                 ${deleteBtnHtml}
-                <div class="w-16 h-16 bg-white/5 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
-                    <img src="${item.imageUrl || item.image_url}" alt="${item.name}" class="max-h-full object-contain">
+                <div class="w-20 h-20 bg-[#0a0a0f] rounded-xl border border-white/5 overflow-hidden flex-shrink-0 flex items-center justify-center p-2 shadow-inner">
+                    <img src="${item.imageUrl || item.image_url}" alt="${displayName}" class="max-h-full object-contain filter drop-shadow-md transition-transform group-hover:scale-105">
                 </div>
                 <div class="flex-grow min-w-0 pr-2">
-                    <p class="text-sm font-bold text-white truncate">${item.name}</p>
-                    <p class="text-[10px] text-[#FFC300] uppercase tracking-widest">${item.storeName || item.store_name || 'Gymenez Store'}</p>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-[8px] text-[#FFC300] uppercase font-black tracking-widest px-2 py-0.5 border border-[#FFC300]/20 bg-[#FFC300]/10 rounded shadow-sm truncate max-w-[100px]">${item.storeName || item.store_name || 'Gymenez Store'}</span>
+                    </div>
+                    <p class="text-sm font-[900] text-white truncate leading-tight">${displayName}</p>
+                    <div class="flex flex-wrap gap-1">
+                        ${variantBadgeHtml}
+                        ${weightBadgeHtml}
+                    </div>
                     ${controlsHtml}
                 </div>
-                <div class="font-black text-white text-right flex-shrink-0">
+                <div class="font-black text-white text-right flex-shrink-0 text-lg italic">
                     $${formatMoney(itemTotal)}
                 </div>
             </div>
@@ -101,10 +122,9 @@ function renderCartSummary() {
     const btnProcess = document.getElementById('btn-process-order');
 
     if (isBcvValid && currentBcvRate > 0) {
-        // MODO SEGURO: Tasa de hoy confirmada
         const totalBs = formatMoney(cartTotal * currentBcvRate);
         if(document.getElementById('summary-total-ves')) document.getElementById('summary-total-ves').innerText = `Bs. ${totalBs}`;
-        if(document.getElementById('bcv-rate-display')) document.getElementById('bcv-rate-display').innerText = `Tasa BCV: Bs. ${formatMoney(currentBcvRate)}`;
+        if(document.getElementById('bcv-rate-display')) document.getElementById('bcv-rate-display').innerText = `Tasa Oficial BCV: Bs. ${formatMoney(currentBcvRate)}`;
         
         if(vesContainer) vesContainer.classList.remove('hidden');
         if(warningMsg) warningMsg.classList.add('hidden');
@@ -113,12 +133,11 @@ function renderCartSummary() {
              btnProcess.querySelector('span').innerText = `Pagar Bs. ${totalBs}`;
         }
     } else {
-        // 🚨 MODO PROTECCIÓN: API caída y caché del día anterior
         if(vesContainer) vesContainer.classList.add('hidden');
         if(warningMsg) warningMsg.classList.remove('hidden');
         
         if(currentPaymentMethod === 'pago_movil' && btnProcess) {
-             btnProcess.querySelector('span').innerText = `Completar Compra (Verificar Tasa)`;
+             btnProcess.querySelector('span').innerText = `Completar Compra (Calcular BCV)`;
         }
     }
 
@@ -150,18 +169,16 @@ window.removeCheckoutItem = function(index) {
 function saveAndReRenderCart() {
     localStorage.setItem('gymenez_cart', JSON.stringify(cartItems));
     renderCartSummary();
-    if(typeof updateCartCount === 'function') {
-        updateCartCount(); 
-    } else {
-        const totalItems = cartItems.reduce((sum, item) => sum + (item.qty || item.quantity || 1), 0);
-        const badgeDesktop = document.getElementById('cartCountDesktop');
-        const badgeMobile = document.getElementById('cartCountMobile');
-        if (badgeDesktop) badgeDesktop.innerText = totalItems;
-        if (badgeMobile) {
-            badgeMobile.innerText = totalItems;
-            if(totalItems > 0) badgeMobile.classList.remove('hidden');
-            else badgeMobile.classList.add('hidden');
-        }
+    
+    const totalItems = cartItems.reduce((sum, item) => sum + (item.qty || item.quantity || 1), 0);
+    const badgeDesktop = document.getElementById('cartCountDesktop');
+    const badgeMobile = document.getElementById('cartCountMobile');
+    
+    if (badgeDesktop) badgeDesktop.innerText = totalItems;
+    if (badgeMobile) {
+        badgeMobile.innerText = totalItems;
+        if(totalItems > 0) badgeMobile.classList.remove('hidden');
+        else badgeMobile.classList.add('hidden');
     }
 }
 
@@ -184,7 +201,7 @@ async function initWizardData() {
 
         if (agenciesRes.ok) globalAgencies = agenciesData.agencies || agenciesData;
         
-        // 👇 CAPTURA DE TASA BCV DESDE EL BACKEND
+        // CAPTURA DE TASA BCV DESDE EL BACKEND
         if (paymentsRes.ok && paymentsData.success) {
             currentBcvRate = paymentsData.bcv_rate || 0;
             isBcvValid = paymentsData.bcv_valid || false; 
@@ -200,14 +217,13 @@ async function initWizardData() {
             evaluateUserProfile(profileData.profile);
         }
 
-        // 🛡️ PERSISTENCIA DE LA BÓVEDA: ¿El usuario ya tenía una reserva activa?
+        // 🛡️ PERSISTENCIA DE LA BÓVEDA (Si recarga la página)
         const vaultExpiration = localStorage.getItem('gymen_vault_expires_at');
         if (vaultExpiration) {
             const now = new Date().getTime();
             if (now < parseInt(vaultExpiration)) {
-                // Recuperar la bóveda
                 isCartLocked = true;
-                isShippingComplete = true; // Asumimos que si llegó a la bóveda, ya configuró envío
+                isShippingComplete = true; 
                 document.getElementById('wizard-view').classList.add('hidden');
                 document.getElementById('vault-view').classList.remove('hidden');
                 startVaultTimer(parseInt(vaultExpiration));
@@ -216,11 +232,11 @@ async function initWizardData() {
             }
         }
         
-        renderCartSummary(); // Renderizar final ya sea libre o bloqueado
+        renderCartSummary(); 
 
     } catch (error) {
         console.error("Error en pre-carga del Checkout:", error);
-        alert("Error de red conectando con la Bóveda Segura. Recarga la página.");
+        alert("Fallo al sincronizar con la Bóveda Segura. Recargue la página.");
     }
 }
 
@@ -228,22 +244,31 @@ function evaluateUserProfile(p) {
     if (p.store_profile_completed && p.kyc_cedula_url) {
         isShippingComplete = true;
         
+        // Minimizar KYC
         document.getElementById('kyc-form-container').classList.add('hidden');
         document.getElementById('kyc-success-msg').classList.remove('hidden');
+        document.getElementById('link-edit-kyc').classList.remove('hidden'); // Mostrar botón editar
         
+        // Pre-Llenar Logística
         const step2Container = document.getElementById('step-2-card');
         document.getElementById('shipping-form-container').innerHTML = `
-            <div class="mt-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-                <p class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-1">Destino Pre-configurado</p>
-                <p class="text-sm text-white font-bold">${p.preferred_courier} - ${p.shipping_city}, ${p.shipping_state}</p>
+            <div class="mt-2 p-5 bg-[#12121a] border border-emerald-500/30 rounded-2xl flex items-center justify-between shadow-inner">
+                <div>
+                    <p class="text-[9px] text-emerald-500 font-black uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Destino Principal Guardado
+                    </p>
+                    <p class="text-sm text-white font-bold tracking-wide">${p.preferred_courier} - ${p.shipping_city}, ${p.shipping_state}</p>
+                </div>
+                <a href="/store/account.html" class="text-[9px] font-black text-gray-500 uppercase tracking-widest hover:text-[#FFC300] transition">Cambiar</a>
             </div>
         `;
+        
         step2Container.classList.remove('step-locked');
-        document.getElementById('badge-step-2').innerHTML = '✓';
-        document.getElementById('badge-step-2').classList.replace('text-gray-400', 'text-black');
-        document.getElementById('badge-step-2').classList.replace('bg-white/10', 'bg-emerald-500');
+        const badge = document.getElementById('badge-step-2');
+        badge.innerHTML = '<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+        badge.className = 'w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.5)]';
 
-        // Mostrar Botón para entrar a la bóveda
         document.getElementById('vault-entry-container').classList.remove('hidden');
     } else {
         setupShippingCascade();
@@ -255,8 +280,7 @@ function unlockStep(stepNumber) {
     const badge = document.getElementById(`badge-step-${stepNumber}`);
     if (card) card.classList.remove('step-locked');
     if (badge) {
-        badge.classList.remove('bg-white/10', 'text-gray-400');
-        badge.classList.add('bg-[#FFC300]', 'text-black');
+        badge.className = 'w-8 h-8 rounded-full bg-[#FFC300] text-black flex items-center justify-center font-black text-sm shadow-[0_0_15px_rgba(255,195,0,0.4)]';
     }
 }
 
@@ -270,7 +294,7 @@ document.getElementById('form-kyc').addEventListener('submit', (e) => {
     const imageFile = document.getElementById('kyc-image').files[0];
 
     if (imageFile && imageFile.size > 2 * 1024 * 1024) {
-        alert("La imagen excede el límite de 2MB.");
+        alert("La fotografía excede el límite de 2MB. Por favor comprima la imagen.");
         return;
     }
 
@@ -357,7 +381,7 @@ document.getElementById('btn-submit-shipping').addEventListener('click', async (
     }
 
     btn.disabled = true;
-    btn.textContent = 'Asegurando Perfil...';
+    btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>';
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/store/athlete/profile`, {
@@ -369,28 +393,31 @@ document.getElementById('btn-submit-shipping').addEventListener('click', async (
         
         if (res.ok && data.success) {
             isShippingComplete = true; 
+            
+            const badge = document.getElementById('badge-step-2');
+            badge.innerHTML = '<svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+            badge.className = 'w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.5)]';
+            
             document.getElementById('shipping-form-container').classList.add('hidden');
             document.getElementById('vault-entry-container').classList.remove('hidden');
         } else {
-            alert(data.error || "Fallo al registrar datos logísticos.");
+            alert(data.error || "Fallo al registrar datos logísticos. Revise la información.");
             btn.disabled = false;
-            btn.textContent = 'Reintentar';
+            btn.textContent = 'Reintentar Registro';
         }
     } catch (error) {
-        alert("Fallo de comunicación perimetral.");
+        alert("Fallo de comunicación con servidores de logística.");
         btn.disabled = false;
-        btn.textContent = 'Fijar Destino';
+        btn.textContent = 'Confirmar Datos de Envío';
     }
 });
 
 // ==========================================
-// 4. TRANSICIÓN A LA BÓVEDA (RESERVA DE STOCK Y MULTI-TIENDA)
+// 4. TRANSICIÓN A LA BÓVEDA Y PAYLOAD DE VARIANTES
 // ==========================================
 document.getElementById('btn-enter-vault').addEventListener('click', (e) => {
-    // Detectamos tiendas únicas en el carrito
     const uniqueStores = new Set(cartItems.map(item => item.storeName || item.store_name || 'Gymenez Store'));
     
-    // Si hay más de 1 tienda y no ha aceptado la advertencia, mostramos el modal
     if (uniqueStores.size > 1 && !hasAcceptedMultiStore) {
         document.getElementById('modal-stores-count').innerText = `${uniqueStores.size}`;
         const modal = document.getElementById('multi-store-modal');
@@ -398,19 +425,16 @@ document.getElementById('btn-enter-vault').addEventListener('click', (e) => {
         
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-        // Pequeño timeout para la animación de entrada
         setTimeout(() => {
             modal.classList.remove('opacity-0');
             modalContent.classList.remove('scale-95');
         }, 10);
-        return; // Detenemos la ejecución aquí hasta que acepte
+        return; 
     }
 
-    // Si ya aceptó o es 1 sola tienda, ejecutamos el proceso normal
     executeVaultEntry();
 });
 
-// Funciones del Modal
 window.closeMultiStoreModal = function() {
     const modal = document.getElementById('multi-store-modal');
     const modalContent = document.getElementById('multi-store-modal-content');
@@ -423,24 +447,26 @@ window.closeMultiStoreModal = function() {
 }
 
 window.acceptMultiStoreAndProceed = function() {
-    hasAcceptedMultiStore = true; // Ya no le volvemos a preguntar
+    hasAcceptedMultiStore = true; 
     closeMultiStoreModal();
-    executeVaultEntry(); // Lanzamos la bóveda
+    executeVaultEntry(); 
 }
 
-// La lógica original de entrar a la bóveda (ahora envuelta en una función)
 async function executeVaultEntry() {
     const btn = document.getElementById('btn-enter-vault');
     const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('jwt_token');
     btn.disabled = true;
-    btn.innerHTML = 'Verificando Inventario... <div class="animate-spin inline-block w-4 h-4 border-2 border-black rounded-full border-t-transparent ml-2"></div>';
+    btn.innerHTML = '<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Reservando Inventario...</span>';
 
-    // 👈 INYECTAMOS STORE NAME PARA EL BACKEND
+    // 🧠 PAYLOAD PERFECTO PARA EL BACKEND (Maneja el Real ID y el Peso)
     const cleanItems = cartItems.map(item => ({
-        id: item.id,
+        id: item.id, // ID Único del carrito (Ej: prod123_Talla-M-Rojo)
+        real_id: item.real_id || item.id, // ID Real en Firestore
         name: item.name,
+        price: item.price,
         qty: item.quantity || item.qty || 1,
-        storeName: item.storeName || item.store_name || 'Gymenez Store' 
+        storeName: item.storeName || item.store_name || 'Gymenez Store',
+        weight_kg: item.weight_kg || 1 
     }));
 
     try {
@@ -452,7 +478,7 @@ async function executeVaultEntry() {
         const data = await res.json();
 
         if (res.ok && data.success) {
-            const expiresAt = new Date().getTime() + (8 * 60 * 1000);
+            const expiresAt = new Date().getTime() + (8 * 60 * 1000); // 8 minutos
             localStorage.setItem('gymen_vault_expires_at', expiresAt);
             
             document.getElementById('wizard-view').classList.add('hidden');
@@ -463,14 +489,14 @@ async function executeVaultEntry() {
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-            alert(data.error || "No pudimos asegurar el stock. Alguien se te adelantó.");
+            alert(data.error || "Imposible reservar el inventario. Es probable que algún producto ya no tenga stock suficiente.");
             btn.disabled = false;
-            btn.innerHTML = '<span>Asegurar Inventario y Pagar</span>';
+            btn.innerHTML = '<span>Proceder al Pago</span>';
         }
     } catch (error) {
-        alert("Fallo de red al conectar con el inventario.");
+        alert("Fallo de red al conectar con el inventario maestro.");
         btn.disabled = false;
-        btn.innerHTML = '<span>Asegurar Inventario y Pagar</span>';
+        btn.innerHTML = '<span>Proceder al Pago</span>';
     }
 }
 
@@ -496,7 +522,7 @@ function startVaultTimer(expiresAt) {
 
         timerEl.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-        if (distance < 60000) { // Queda menos de 1 minuto
+        if (distance < 60000) { 
             timerEl.classList.add('timer-danger');
         }
     }, 1000);
@@ -504,8 +530,8 @@ function startVaultTimer(expiresAt) {
 
 async function handleVaultExpiration() {
     localStorage.removeItem('gymen_vault_expires_at');
-    alert("⏳ ¡Tiempo agotado! Tu sesión expiró y los productos han regresado a la tienda. Intenta realizar la compra de nuevo.");
-    window.location.reload(); // Obliga a limpiar UI y buscar stock fresco
+    alert("⏳ ¡Sesión expirada! Los productos han sido devueltos a la tienda pública.");
+    window.location.reload(); 
 }
 
 document.getElementById('btn-cancel-vault').addEventListener('click', async () => {
@@ -513,7 +539,7 @@ document.getElementById('btn-cancel-vault').addEventListener('click', async () =
     const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('jwt_token');
     
     btn.disabled = true;
-    btn.innerText = 'Devolviendo Productos...';
+    btn.innerText = 'Liberando...';
     clearInterval(vaultInterval);
     localStorage.removeItem('gymen_vault_expires_at');
 
@@ -522,9 +548,7 @@ document.getElementById('btn-cancel-vault').addEventListener('click', async () =
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
-    } catch (e) {
-        console.warn("Fallo silencioso al liberar, el basurero del backend lo arreglará.");
-    }
+    } catch (e) { console.warn("Fallo en release manual."); }
     window.location.reload(); 
 });
 
@@ -556,25 +580,24 @@ window.selectPayment = function(method) {
     const dataBinance = document.getElementById('data-binance');
     const btnProcess = document.getElementById('btn-process-order');
 
-    btnPm.className = "flex-1 py-3 px-4 rounded-xl border-2 border-white/10 text-gray-400 hover:border-white/30 font-bold text-xs uppercase tracking-widest transition";
-    btnBinance.className = "flex-1 py-3 px-4 rounded-xl border-2 border-white/10 text-gray-400 hover:border-white/30 font-bold text-xs uppercase tracking-widest transition";
+    btnPm.className = "flex-1 py-4 px-4 rounded-2xl border-2 border-white/5 bg-[#12121a] text-gray-400 hover:text-white hover:border-white/20 font-black text-[10px] uppercase tracking-widest transition";
+    btnBinance.className = "flex-1 py-4 px-4 rounded-2xl border-2 border-white/5 bg-[#12121a] text-gray-400 hover:text-white hover:border-white/20 font-black text-[10px] uppercase tracking-widest transition";
     dataPm.classList.add('hidden');
     dataBinance.classList.add('hidden');
 
     if (method === 'pago_movil') {
-        btnPm.className = "flex-1 py-3 px-4 rounded-xl border-2 border-[#FFC300] bg-[#FFC300]/10 text-[#FFC300] font-bold text-xs uppercase tracking-widest transition";
+        btnPm.className = "flex-1 py-4 px-4 rounded-2xl border-2 border-[#FFC300] bg-[#FFC300]/10 text-[#FFC300] font-black text-[10px] uppercase tracking-widest transition shadow-inner";
         dataPm.classList.remove('hidden');
         
-        // Ajuste inteligente del botón para BCV
         if (isBcvValid && currentBcvRate > 0) {
             if(btnProcess) btnProcess.querySelector('span').innerText = `Pagar Bs. ${formatMoney(cartTotal * currentBcvRate)}`;
         } else {
-            if(btnProcess) btnProcess.querySelector('span').innerText = `Completar Compra (Verificar Tasa)`;
+            if(btnProcess) btnProcess.querySelector('span').innerText = `Procesar Compra`;
         }
     } else {
-        btnBinance.className = "flex-1 py-3 px-4 rounded-xl border-2 border-[#FCD535] bg-[#FCD535]/10 text-[#FCD535] font-bold text-xs uppercase tracking-widest transition";
+        btnBinance.className = "flex-1 py-4 px-4 rounded-2xl border-2 border-[#FCD535] bg-[#FCD535]/10 text-[#FCD535] font-black text-[10px] uppercase tracking-widest transition shadow-inner";
         dataBinance.classList.remove('hidden');
-        if(btnProcess) btnProcess.querySelector('span').innerText = `Completar Compra`;
+        if(btnProcess) btnProcess.querySelector('span').innerText = `Procesar Compra`;
     }
     validateFinalButton();
 };
@@ -591,7 +614,7 @@ function validateFinalButton() {
     }
 }
 
-// 🛡️ SUBMIT FINAL DE LA ORDEN A LA BASE DE DATOS
+// 🛡️ SUBMIT FINAL DE LA ORDEN AL BACKEND PYTHON
 document.getElementById('form-checkout-final').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -599,17 +622,19 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
     const reference = document.getElementById('pay-reference').value.trim();
     const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('jwt_token');
     
-    btn.innerHTML = `<div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-black"></div> Procesando...`;
+    btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Procesando...</span>`;
     btn.disabled = true;
-    document.getElementById('btn-cancel-vault').disabled = true; // Desactivar cancelar
-    clearInterval(vaultInterval); // Pausar reloj mientras procesamos
+    document.getElementById('btn-cancel-vault').disabled = true; 
+    clearInterval(vaultInterval); // Pausar reloj mientras se procesa
 
     const cleanItems = cartItems.map(item => ({
         id: item.id,
+        real_id: item.real_id || item.id,
         name: item.name,
         price: item.price,
         qty: item.quantity || item.qty || 1,
-        storeName: item.storeName || item.store_name || 'Gymenez Store'
+        storeName: item.storeName || item.store_name || 'Gymenez Store',
+        weight_kg: item.weight_kg || 1
     }));
 
     const payload = {
@@ -633,26 +658,24 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
         const data = await response.json();
 
         if (response.ok && data.success) {
-            // COMPRA COMPLETADA
+            // COMPRA EXITOSA 
             localStorage.removeItem('gymenez_cart');
             localStorage.removeItem('gymen_vault_expires_at');
             
-            // Transición limpia de pantallas
             document.getElementById('vault-view').classList.add('hidden');
-            document.getElementById('summary-panel').classList.add('opacity-0'); // Ocultar resumen de la derecha
+            document.getElementById('summary-panel').classList.add('opacity-0'); 
             document.getElementById('success-view').classList.remove('hidden');
             document.getElementById('success-ref').innerText = reference;
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-            alert(data.error || "Error al procesar la orden.");
+            alert(data.error || "Transacción rechazada por el servidor.");
             resetBtn(btn);
-            // Si falló, reactivar reloj (Le damos 1 minuto extra por las dudas)
             startVaultTimer(new Date().getTime() + 60000); 
             document.getElementById('btn-cancel-vault').disabled = false;
         }
     } catch (error) {
-        alert("Fallo de conexión. Intenta de nuevo.");
+        alert("Pérdida de conexión segura. Intente nuevamente.");
         resetBtn(btn);
         startVaultTimer(new Date().getTime() + 60000); 
         document.getElementById('btn-cancel-vault').disabled = false;
@@ -662,7 +685,7 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
 function resetBtn(btn) {
     btn.disabled = false;
     btn.innerHTML = `
-        <span>Completar Compra</span>
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <span>Procesar Compra</span>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
     `;
 }
