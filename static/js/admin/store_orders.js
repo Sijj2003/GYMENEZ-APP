@@ -51,9 +51,12 @@ function renderAdminStoreOrders(orders) {
     tbody.innerHTML = orders.map(o => {
         const date = new Date(o.created_at).toLocaleDateString('es-VE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
         
-        // Etiquetas de tiendas involucradas
-        const storesHtml = (o.involved_stores || []).map(s => `
-            <span class="bg-white/5 border border-white/10 px-2.5 py-1 rounded-sm text-[8px] font-black uppercase tracking-widest text-gray-400 mr-1 mb-1 inline-block shadow-inner">${s}</span>
+        // 👇 NUEVO: Mostrar los productos exactos y a qué tienda pertenecen
+        const itemsHtml = (o.items || []).map(item => `
+            <div class="mb-2 last:mb-0 bg-[#030305] border border-white/5 p-2.5 rounded-lg shadow-inner">
+                <span class="text-[10px] font-bold text-white block leading-tight mb-1">${item.qty}x ${item.name}</span>
+                <span class="text-[8px] font-black tracking-widest uppercase text-[#FFC300] bg-[#FFC300]/10 px-1.5 py-0.5 rounded border border-[#FFC300]/20 inline-block">${item.storeName || item.store_name || 'Gymenez Store'}</span>
+            </div>
         `).join('');
         
         // Identidad visual de la pasarela de pago
@@ -77,8 +80,10 @@ function renderAdminStoreOrders(orders) {
                         <span class="text-[9px] font-black text-white uppercase tracking-widest bg-white/10 px-2 py-0.5 rounded border border-white/5">REF: ${o.payment_reference}</span>
                     </div>
                 </td>
-                <td class="p-5 align-middle">
-                    <div class="max-w-[200px] flex flex-wrap gap-1">${storesHtml}</div>
+                <td class="p-5 align-middle min-w-[220px]">
+                    <div class="flex flex-col gap-1 max-h-[120px] overflow-y-auto hide-scroll pr-2">
+                        ${itemsHtml}
+                    </div>
                 </td>
                 <td class="p-5 pr-8 align-middle">
                     <div class="relative">
