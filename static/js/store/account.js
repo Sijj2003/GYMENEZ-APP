@@ -5,7 +5,8 @@ const API_BASE_URL = window.location.hostname === '127.0.0.1' || window.location
     ? 'http://127.0.0.1:5000' 
     : 'https://sijj2003.pythonanywhere.com';
 
-let globalAgencies = []; // Memoria para la cascada logística
+let globalAgencies = [];// Memoria para la cascada logística
+let myStoreOrders = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. CARGA INSTANTÁNEA: Leer identidad desde la caché del SSO
