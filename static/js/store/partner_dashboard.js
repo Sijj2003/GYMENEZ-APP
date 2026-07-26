@@ -759,5 +759,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         loadMyProducts();
+        loadMyOrders();        
     }
 });
