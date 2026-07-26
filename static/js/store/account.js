@@ -371,8 +371,22 @@ function generateReceipt(orderId) {
     const date = new Date(order.created_at).toLocaleDateString('es-VE', { year: 'numeric', month: 'long', day: 'numeric' });
     const tracking = order.shipping_info?.tracking_number || 'Pendiente de asignación';
     const courier = order.shipping_info?.courier || 'MRW';
+    const state = order.shipping_info?.state || 'Estado no registrado';
     
-    // Extracción robusta de los items por si vienen del Checkout viejo o nuevo
+    // 👇 NUEVO: Buscamos la dirección exacta en la memoria de Agencias
+    const agencyId = order.shipping_info?.municipality;
+    let agencyName = order.shipping_info?.city || 'Agencia Destino';
+    let agencyAddress = '';
+    
+    if (agencyId && globalAgencies && globalAgencies.length > 0) {
+        const foundAgency = globalAgencies.find(a => a.id === agencyId);
+        if (foundAgency) {
+            agencyName = foundAgency.name;
+            agencyAddress = foundAgency.address;
+        }
+    }
+    
+    // Extracción robusta de los items
     let itemsArray = [];
     if (order.items && order.items.length > 0) {
         itemsArray = order.items;
@@ -397,7 +411,6 @@ function generateReceipt(orderId) {
         </tr>
     `).join('');
 
-    // Prevenir errores en órdenes donde no haya tasa registrada
     const exchangeRate = order.exchange_rate || 0;
     const totalVes = order.total_ves || (order.total_usd * exchangeRate);
 
@@ -462,10 +475,12 @@ function generateReceipt(orderId) {
                         <p>${order.buyer_name || 'Atleta Gymenez'}</p>
                         <p style="font-size: 11px; font-weight: normal; margin-top: 2px;">C.I: ${order.buyer_doc || 'No registrada'}</p>
                     </div>
+                    <!-- 👇 NUEVA ESTRUCTURA DEL RECUADRO LOGÍSTICO -->
                     <div class="info-box">
                         <h4>Información Logística</h4>
-                        <p>Agencia: ${courier}</p>
-                        <p style="font-size: 11px; font-weight: normal; margin-top: 2px;">Guía: <strong>${tracking}</strong></p>
+                        <p>${courier} - ${agencyName}</p>
+                        ${agencyAddress ? `<p style="font-size: 10px; font-weight: normal; margin-top: 4px; color: #555555; line-height: 1.4;">${agencyAddress} (Edo. ${state})</p>` : `<p style="font-size: 10px; font-weight: normal; margin-top: 4px; color: #555555;">Edo. ${state}</p>`}
+                        <p style="font-size: 11px; font-weight: normal; margin-top: 8px;">N° Guía: <strong style="font-size: 13px; color: #111111;">${tracking}</strong></p>
                     </div>
                 </div>
 
