@@ -106,29 +106,32 @@ function renderAdminStoreOrders(orders) {
 async function updateStoreOrderStatus(orderId, newStatus) {
     const token = localStorage.getItem('gymen_admin_token') || localStorage.getItem('jwt_token');
     
-    // Podemos inyectar un pequeño efecto visual aquí en el futuro
+    let trackingNumber = null;
+    
+    // Si seleccionas "En Tránsito", te pedimos la guía
+    if (newStatus === 'shipped') {
+        trackingNumber = prompt("Introduce el Número de Guía de MRW/Zoom para generar el recibo:");
+        if (!trackingNumber) {
+            alert("Operación cancelada. El número de guía es obligatorio para despachar.");
+            loadAdminStoreOrders(); // Revierte el select
+            return;
+        }
+    }
     
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}/status`, {
             method: 'PUT',
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ status: newStatus })
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus, tracking_number: trackingNumber }) // Enviamos la guía
         });
         
         const data = await response.json();
-        if (response.ok && data.success) {
-            console.log(`Orden ${orderId} actualizada a: ${newStatus}`);
-            // No recargamos toda la tabla para mantener la experiencia fluida,
-            // el selector ya muestra el nuevo estado.
-        } else {
-            alert("Error al actualizar estado: " + data.error);
-            loadAdminStoreOrders(); // Recargamos para revertir el selector
+        if (!response.ok || !data.success) {
+            alert("Error al actualizar: " + data.error);
+            loadAdminStoreOrders();
         }
     } catch (error) {
-        alert("Fallo de conexión al intentar actualizar.");
-        loadAdminStoreOrders(); // Recargamos para revertir el selector
+        alert("Fallo de conexión.");
+        loadAdminStoreOrders();
     }
 }
