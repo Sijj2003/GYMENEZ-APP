@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Auditoría E-Commerce</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { gymenez: { dark: '#030305', accent: '#FFC300' } } } } }
+    </script>
+    <style>
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-[#030305] text-white selection:bg-[#FFC300] selection:text-black">
+
+    <!-- CONTENEDOR PRINCIPAL DEL MÓDULO -->
+    <main class="p-6 md:p-10 w-full max-w-7xl mx-auto animate-fade-in relative z-10">
+        
+        <!-- ENCABEZADO -->
+        <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/5 pb-6">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-[900] tracking-tighter uppercase italic text-white mb-2">Auditoría <span class="text-[#FFC300]">E-Commerce</span></h1>
+                <p class="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Panel central de verificación de pagos y liberación de despachos.</p>
+            </div>
+            <button onclick="loadAdminStoreOrders()" class="bg-[#12121a] hover:bg-white/5 border border-white/10 text-white px-5 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-inner">
+                <svg class="w-4 h-4 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                Refrescar Datos
+            </button>
+        </div>
+
+        <!-- TABLA DE DATOS -->
+        <div class="bg-[#0a0a0f] border border-white/5 rounded-[2rem] overflow-hidden shadow-2xl relative">
+            
+            <!-- Brillo sutil de fondo -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="w-[500px] h-[500px] bg-white/5 rounded-full blur-[100px]"></div>
+            </div>
+
+            <div class="overflow-x-auto hide-scroll relative z-10">
+                <table class="w-full text-left border-collapse min-w-[1000px]">
+                    <thead class="bg-[#12121a] border-b border-white/5">
+                        <tr class="text-gray-500 text-[9px] uppercase font-black tracking-widest">
+                            <th class="p-5 whitespace-nowrap pl-8">Cod. Orden / Fecha</th>
+                            <th class="p-5 whitespace-nowrap">Comprador</th>
+                            <th class="p-5 whitespace-nowrap">Monto / Referencia</th>
+                            <th class="p-5 whitespace-nowrap">Partners Involucrados</th>
+                            <th class="p-5 whitespace-nowrap pr-8">Control Operativo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-orders-tbody" class="divide-y divide-white/5">
+                        <!-- El Spinner inicial -->
+                        <tr>
+                            <td colspan="5" class="p-16 text-center">
+                                <div class="w-8 h-8 border-2 border-[#FFC300] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] animate-pulse">Conectando con la Bóveda...</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="/static/js/admin/admin_middleware.js"></script>
+    <script src="/static/js/admin/store_orders.js"></script>
+</body>
+</html>
