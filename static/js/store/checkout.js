@@ -83,9 +83,14 @@ function renderCartSummary() {
     `;
 
     const controlsHtml = isCartLocked ? `
-        <div class="mt-2"><span class="text-[9px] md:text-[10px] text-emerald-400 font-bold uppercase tracking-widest bg-emerald-500/10 px-2 py-1 md:px-3 md:py-1 rounded-full border border-emerald-500/20 shadow-inner">Reservado: ${qty} und</span></div>
+        <div class="flex items-center mt-1 md:mt-2">
+            <span class="text-[8px] md:text-[9px] text-emerald-400 font-black uppercase tracking-widest bg-emerald-500/10 px-2 md:px-2.5 py-1 rounded-md border border-emerald-500/20 flex items-center gap-1.5 shadow-inner">
+                <svg class="w-3 h-3 text-emerald-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Reservado: ${qty}
+            </span>
+        </div>
     ` : `
-        <div class="flex items-center gap-2 mt-2">
+        <div class="flex items-center gap-2 mt-1 md:mt-2">
             <div class="flex items-center bg-[#030305] rounded-full border border-white/10 h-7 md:h-8 shadow-inner">
                 <button onclick="updateCheckoutItemQty(${index}, -1)" class="px-2 md:px-3 text-gray-400 hover:text-white transition font-black text-xs md:text-sm">-</button>
                 <span class="text-[10px] font-black text-white w-3 md:w-4 text-center">${qty}</span>
