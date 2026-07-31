@@ -151,8 +151,8 @@ function buildOrderTimeline(order) {
 
     const receiptButton = (isShipped || isDelivered) 
         ? `<button onclick="generateReceipt('${order.id}')" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-6 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest text-white transition hover:text-[#FFC300] hover:border-[#FFC300]/50 shadow-md">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-4h2v4zm0-6h-2V7h2v3z"/></svg>
-            Descargar Recibo PDF
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Descargar Recibo
         </button>`
         : '';
 
@@ -204,7 +204,7 @@ function buildOrderTimeline(order) {
                 <!-- FOOTER DE LA ORDEN (Courier y PDF) -->
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2 bg-[#050508] p-4 md:p-5 rounded-2xl border border-white/5">
                     <div class="flex items-center gap-2 w-full sm:w-auto text-gray-400 text-xs">
-                        <svg class="w-4 h-4 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <svg class="w-4 h-4 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         <span>Courier: <strong class="text-white">${order.shipping_info?.courier || 'Envío Standard'}</strong></span>
                     </div>
                     ${receiptButton}
