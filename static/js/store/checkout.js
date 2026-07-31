@@ -503,8 +503,17 @@ async function executeVaultEntry() {
         const data = await res.json();
 
         if (res.ok && data.success) {
-            const expiresAt = new Date().getTime() + (8 * 60 * 1000); // 8 minutos
-            localStorage.setItem('gymen_vault_expires_at', expiresAt);
+            // 🧠 Lógica Inteligente: Verificar si ya había un tiempo corriendo guardado en memoria
+            let expiresAt = localStorage.getItem('gymen_vault_expires_at');
+            
+            // Si NO hay tiempo guardado o el tiempo que estaba ya expiró, creamos uno nuevo de 8 min
+            if (!expiresAt || new Date().getTime() > parseInt(expiresAt)) {
+                expiresAt = new Date().getTime() + (8 * 60 * 1000); 
+                localStorage.setItem('gymen_vault_expires_at', expiresAt);
+            } else {
+                // Si recargó la página, rescatamos el tiempo exacto que le quedaba
+                expiresAt = parseInt(expiresAt);
+            }
             
             document.getElementById('wizard-view').classList.add('hidden');
             document.getElementById('vault-view').classList.remove('hidden');
@@ -532,11 +541,12 @@ function startVaultTimer(expiresAt) {
     const timerEl = document.getElementById('vault-timer');
     clearInterval(vaultInterval);
 
-    vaultInterval = setInterval(() => {
+    // Creamos la lógica en una función aislada
+    function updateTimer() {
         const now = new Date().getTime();
         const distance = expiresAt - now;
 
-        if (distance < 0) {
+        if (distance <= 0) {
             clearInterval(vaultInterval);
             handleVaultExpiration();
             return;
@@ -545,12 +555,19 @@ function startVaultTimer(expiresAt) {
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
+        // Formateo 00:00
         timerEl.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
+        // Alerta roja en el último minuto
         if (distance < 60000) { 
             timerEl.classList.add('timer-danger');
+        } else {
+            timerEl.classList.remove('timer-danger');
         }
-    }, 1000);
+    }
+
+    updateTimer(); // <-- Ejecución INMEDIATA para matar el parpadeo
+    vaultInterval = setInterval(updateTimer, 1000);
 }
 
 async function handleVaultExpiration() {
