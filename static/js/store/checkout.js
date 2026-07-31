@@ -71,58 +71,53 @@ function renderCartSummary() {
 
         // Bloqueo y Botones Visuales
         const deleteBtnHtml = isCartLocked ? '' : `
-            <button onclick="removeCheckoutItem(${index})" class="absolute -top-2 -right-2 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all z-10 shadow-xl backdrop-blur-sm" title="Eliminar producto">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        `;
+        <button onclick="removeCheckoutItem(${index})" class="absolute -top-2 -right-2 md:top-2 md:right-2 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white rounded-full p-1.5 md:p-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all z-10 shadow-xl backdrop-blur-sm" title="Eliminar producto">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+    `;
 
-        const controlsHtml = isCartLocked ? `
-            <div class="mt-2"><span class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 shadow-inner">Reservado: ${qty} und</span></div>
-        ` : `
-            <div class="flex items-center gap-3 mt-2">
-                <div class="flex items-center bg-[#030305] rounded-full border border-white/10 h-7 shadow-inner">
-                    <button onclick="updateCheckoutItemQty(${index}, -1)" class="px-3 text-gray-400 hover:text-white transition font-black">-</button>
-                    <span class="text-[10px] font-black text-white w-4 text-center">${qty}</span>
-                    <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-3 text-gray-400 hover:text-white transition font-black">+</button>
-                </div>
-                <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest block">x $${formatMoney(item.price)} c/u</span>
+    const controlsHtml = isCartLocked ? `
+        <div class="mt-2"><span class="text-[9px] md:text-[10px] text-emerald-400 font-bold uppercase tracking-widest bg-emerald-500/10 px-2 py-1 md:px-3 md:py-1 rounded-full border border-emerald-500/20 shadow-inner">Reservado: ${qty} und</span></div>
+    ` : `
+        <div class="flex items-center gap-2 mt-2">
+            <div class="flex items-center bg-[#030305] rounded-full border border-white/10 h-7 md:h-8 shadow-inner">
+                <button onclick="updateCheckoutItemQty(${index}, -1)" class="px-2 md:px-3 text-gray-400 hover:text-white transition font-black text-xs md:text-sm">-</button>
+                <span class="text-[10px] font-black text-white w-3 md:w-4 text-center">${qty}</span>
+                <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-2 md:px-3 text-gray-400 hover:text-white transition font-black text-xs md:text-sm">+</button>
             </div>
-        `;
+            <span class="text-[8px] md:text-[9px] text-gray-500 font-bold uppercase tracking-widest hidden sm:block">x $${formatMoney(item.price)}</span>
+        </div>
+    `;
 
-        container.innerHTML += `
-            <div class="flex gap-4 md:gap-5 items-center bg-[#050508]/50 p-4 rounded-[1.5rem] border ${isCartLocked ? 'border-emerald-500/30 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-white/5 hover:border-white/20'} relative group transition-all duration-300">
-                
-                <!-- Botón eliminar lógico (inyectado por JS si no está bloqueado) -->
-                ${deleteBtnHtml}
-                
-                <!-- Imagen Espaciosa -->
-                <div class="w-20 h-20 md:w-24 md:h-24 bg-white/5 rounded-xl border border-white/5 overflow-hidden flex-shrink-0 flex items-center justify-center p-2 shadow-inner">
-                    <img src="${item.imageUrl || item.image_url}" alt="${displayName}" class="max-h-full object-contain filter drop-shadow-md transition-transform group-hover:scale-105">
-                </div>
-                
-                <!-- Info del Producto -->
-                <div class="flex-grow min-w-0 pr-2 flex flex-col justify-center">
-                    <h4 class="text-sm md:text-base font-bold text-white truncate leading-tight mb-1">${displayName}</h4>
+    container.innerHTML += `
+        <div class="flex flex-row gap-3 md:gap-5 items-start bg-[#050508]/50 p-3 md:p-4 rounded-[1.5rem] border ${isCartLocked ? 'border-emerald-500/30 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-white/5 hover:border-white/20'} relative group transition-all duration-300">
+            
+            ${deleteBtnHtml}
+            
+            <div class="w-20 h-20 md:w-24 md:h-24 bg-white/5 rounded-xl border border-white/5 overflow-hidden flex-shrink-0 flex items-center justify-center p-2 shadow-inner">
+                <img src="${item.imageUrl || item.image_url}" alt="${displayName}" class="max-h-full object-contain filter drop-shadow-md transition-transform group-hover:scale-105">
+            </div>
+            
+            <div class="flex-grow min-w-0 flex flex-col justify-between h-full min-h-[5rem] md:min-h-[6rem]">
+                <div>
+                    <h4 class="text-xs md:text-base font-bold text-white truncate leading-tight mb-0.5 pr-4 md:pr-0">${displayName}</h4>
+                    <span class="text-[8px] md:text-[10px] text-[#FFC300] uppercase font-bold tracking-widest mb-1 truncate block">${item.storeName || item.store_name || 'Gymenez Store'}</span>
                     
-                    <!-- Tienda sutil en lugar de un bloque gigante -->
-                    <span class="text-[9px] md:text-[10px] text-[#FFC300] uppercase font-bold tracking-widest mb-2 truncate">${item.storeName || item.store_name || 'Gymenez Store'}</span>
-                    
-                    <!-- Píldoras de variante y peso generadas por tu JS -->
                     <div class="flex flex-wrap gap-1 mb-1">
                         ${variantBadgeHtml}
                         ${weightBadgeHtml}
                     </div>
-                    
-                    <!-- Controles de Cantidad (+ / -) generados por tu JS -->
-                    ${controlsHtml}
                 </div>
                 
-                <!-- Total del Ítem (Limpiamos la itálica) -->
-                <div class="font-black text-white text-right flex-shrink-0 text-base md:text-lg">
-                    $${formatMoney(itemTotal)}
+                <div class="flex items-end justify-between w-full mt-2 md:mt-auto">
+                    ${controlsHtml}
+                    <div class="font-black text-white text-right text-sm md:text-lg tracking-tight">
+                        $${formatMoney(itemTotal)}
+                    </div>
                 </div>
             </div>
-        `;
+        </div>
+     `;
     });
 
     document.getElementById('summary-subtotal').innerText = `$${formatMoney(cartTotal)}`;
