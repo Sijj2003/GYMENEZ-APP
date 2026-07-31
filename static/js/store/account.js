@@ -97,67 +97,117 @@ function buildOrderTimeline(order) {
     const isProcessing = s === 'processing';
     const isShipped = s === 'shipped';
     const isDelivered = s === 'delivered';
-    const isDenied = s === 'denied' || s === 'rejected'; // Agregamos rejected por si acaso
+    const isDenied = s === 'denied' || s === 'rejected';
 
-    const orderDate = order.created_at ? new Date(order.created_at).toLocaleDateString() : 'Reciente';
+    const orderDate = order.created_at ? new Date(order.created_at).toLocaleDateString('es-VE', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Reciente';
 
-    const timelineHtml = isDenied ? 
-        `<div class="bg-red-500/10 border border-red-500/20 p-4 rounded-xl mt-6">
-            <p class="text-xs text-red-500 font-black uppercase tracking-widest text-center">❌ Orden Cancelada o Rechazada</p>
-        </div>` 
-        : 
-        `<div class="relative mt-8 pt-2 pl-6 md:pl-10">
-            <div class="timeline-item relative pb-8 ${isPending || isProcessing || isShipped || isDelivered ? 'active' : ''}">
-                <div class="absolute -left-10 md:-left-14 top-0 w-8 h-8 rounded-full border-[6px] border-[#0a0a0f] ${isPending ? 'bg-[#FFC300]' : (isProcessing||isShipped||isDelivered ? 'bg-[#FFC300]' : 'bg-white/20')} z-10"></div>
-                <h4 class="text-sm font-bold ${isPending ? 'text-white' : 'text-gray-400'}">Verificando Pago</h4>
-                <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">${isPending ? 'Ref: '+order.payment_reference : 'Confirmado'}</p>
-            </div>
+    // LÓGICA DE COLORES DEL TIMELINE
+    let hLine = 'h-[15%]';
+    let s1 = 'STATE_ACTIVE', s2 = 'STATE_PENDING', s3 = 'STATE_PENDING', s4 = 'STATE_PENDING';
+    
+    if (isProcessing) { hLine = 'h-[45%]'; s1 = 'STATE_COMPLETED'; s2 = 'STATE_ACTIVE'; }
+    else if (isShipped) { hLine = 'h-[75%]'; s1 = 'STATE_COMPLETED'; s2 = 'STATE_COMPLETED'; s3 = 'STATE_ACTIVE'; }
+    else if (isDelivered) { hLine = 'h-full'; s1 = 'STATE_COMPLETED'; s2 = 'STATE_COMPLETED'; s3 = 'STATE_COMPLETED'; s4 = 'STATE_COMPLETED'; }
+    else if (isDenied) { hLine = 'h-0'; s1 = 'STATE_ERROR'; }
 
-            <div class="timeline-item relative pb-8 ${isProcessing || isShipped || isDelivered ? 'active' : ''}">
-                <div class="absolute -left-10 md:-left-14 top-0 w-8 h-8 rounded-full border-[6px] border-[#0a0a0f] ${isProcessing ? 'bg-[#FFC300]' : (isShipped||isDelivered ? 'bg-[#FFC300]' : 'bg-white/20')} z-10"></div>
-                <h4 class="text-sm font-bold ${isProcessing ? 'text-white' : 'text-gray-400'}">Procesando Envío</h4>
-                <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Preparando paquete</p>
-            </div>
-
-            <div class="timeline-item relative pb-8 ${isShipped || isDelivered ? 'active-emerald' : ''}">
-                <div class="absolute -left-10 md:-left-14 top-0 w-8 h-8 rounded-full border-[6px] border-[#0a0a0f] ${isShipped ? 'bg-emerald-500' : (isDelivered ? 'bg-emerald-500' : 'bg-white/20')} z-10"></div>
-                <h4 class="text-sm font-bold ${isShipped ? 'text-white' : 'text-gray-400'}">En Tránsito</h4>
-                <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">${order.shipping_info?.tracking_number ? `Guía: <span class="text-emerald-400 font-black">${order.shipping_info.tracking_number}</span>` : 'En camino'}</p>
-            </div>
-
-            <div class="timeline-item relative pb-2 ${isDelivered ? 'active-emerald' : ''}">
-                <div class="absolute -left-10 md:-left-14 top-0 w-8 h-8 rounded-full border-[6px] border-[#0a0a0f] ${isDelivered ? 'bg-emerald-500' : 'bg-white/20'} z-10"></div>
-                <h4 class="text-sm font-bold ${isDelivered ? 'text-emerald-400' : 'text-gray-400'}">Entregado</h4>
-                <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Llegó a destino</p>
-            </div>
+    // Generador de Nodos (Círculos)
+    function getNodeHTML(state, title, subtitle) {
+        let circleHtml = '';
+        let textClass = '';
+        if (state === 'STATE_COMPLETED') {
+            circleHtml = '<div class="absolute -left-[31px] md:-left-[39px] top-1 w-3 h-3 md:w-4 md:h-4 rounded-full border-2 md:border-4 border-[#050508] bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] z-10"></div>';
+            textClass = 'text-gray-300';
+        } else if (state === 'STATE_ACTIVE') {
+            circleHtml = '<div class="absolute -left-[31px] md:-left-[39px] top-1 w-3 h-3 md:w-4 md:h-4 rounded-full border-2 md:border-4 border-[#050508] bg-[#FFC300] shadow-[0_0_10px_rgba(255,195,0,0.5)] animate-pulse z-10"></div>';
+            textClass = 'text-[#FFC300]';
+        } else if (state === 'STATE_ERROR') {
+            circleHtml = '<div class="absolute -left-[31px] md:-left-[39px] top-1 w-3 h-3 md:w-4 md:h-4 rounded-full border-2 md:border-4 border-[#050508] bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] z-10"></div>';
+            textClass = 'text-red-500';
+        } else {
+            circleHtml = '<div class="absolute -left-[31px] md:-left-[39px] top-1 w-3 h-3 md:w-4 md:h-4 rounded-full border-2 md:border-4 border-[#050508] bg-white/20 z-10"></div>';
+            textClass = 'text-gray-600';
+        }
+        return `
+        <div class="relative">
+            ${circleHtml}
+            <span class="text-xs md:text-sm font-bold ${textClass} block">${title}</span>
+            <span class="text-[9px] md:text-[10px] text-gray-500 uppercase tracking-widest font-bold block mt-0.5">${subtitle}</span>
         </div>`;
+    }
+
+    const timelineHtml = `
+        <div class="flex flex-col gap-6 mb-8 border-l-2 border-white/10 ml-2 md:ml-4 pl-6 md:pl-8 relative py-2">
+            <div class="absolute top-0 left-[-2px] w-[2px] ${hLine} bg-[#FFC300] shadow-[0_0_10px_rgba(255,195,0,0.5)] transition-all duration-1000"></div>
+            ${getNodeHTML(s1, isDenied ? 'Orden Cancelada' : 'Pago Confirmado', isDenied ? 'Rechazado por el sistema' : (isPending ? 'Auditando transferencia' : 'Auditado por finanzas'))}
+            ${getNodeHTML(s2, 'En Preparación', 'Empacando tus artículos')}
+            ${getNodeHTML(s3, 'Enviado', order.shipping_info?.tracking_number ? 'Guía: <span class="text-emerald-400 font-black">' + order.shipping_info.tracking_number + '</span>' : 'En tránsito nacional')}
+            ${getNodeHTML(s4, 'Entregado', 'Listo en destino')}
+        </div>
+    `;
 
     const itemsHtml = order.items && Array.isArray(order.items) 
-        ? order.items.map(i => `<span class="inline-block bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-300 mr-2 mb-2">${i.qty || i.quantity || 1}x ${i.name.substring(0,25)}</span>`).join('') 
+        ? order.items.map(i => `<span class="inline-block bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-300 mr-2 mb-2 shadow-inner">${i.qty || i.quantity || 1}x ${i.name.substring(0,35)}${i.name.length>35?'...':''}</span>`).join('') 
         : '<span class="text-xs text-gray-500">Productos no listados</span>';
 
-    // 👈 AQUÍ INYECTAMOS EL BOTÓN DE RECIBO SI ESTÁ ENVIADO O ENTREGADO
     const receiptButton = (isShipped || isDelivered) 
-        ? `<button onclick="generateReceipt('${order.id}')" class="bg-[#12121a] text-white hover:bg-[#FFC300] hover:text-black hover:border-transparent px-4 py-3 md:py-2 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 shadow-inner"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><span class="hidden md:inline">Ver Recibo</span></button>`
+        ? `<button onclick="generateReceipt('${order.id}')" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-6 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest text-white transition hover:text-[#FFC300] hover:border-[#FFC300]/50 shadow-md">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-4h2v4zm0-6h-2V7h2v3z"/></svg>
+            Descargar Recibo PDF
+        </button>`
         : '';
 
+    const shortId = order.id.slice(-6).toUpperCase();
+
+    // AQUÍ INICIA LA TARJETA PLEGABLE (CERRADA POR DEFECTO)
     return `
-    <div class="bg-[#0a0a0f] border border-white/5 rounded-3xl p-6 md:p-8 shadow-2xl mb-8 group transition-all hover:border-[#FFC300]/20">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/10 pb-6 mb-6 gap-4">
-            <div>
-                <span class="text-[10px] font-black uppercase tracking-widest text-gray-500">Orden del ${orderDate}</span>
-                <p class="text-2xl font-[900] uppercase italic text-white leading-none mt-2">Total: <span class="text-[#FFC300]">$${parseFloat(order.total_usd).toFixed(2)}</span></p>
+    <div class="bg-[#050508]/50 border border-white/5 hover:border-[#FFC300]/30 rounded-[1.5rem] overflow-hidden transition-all duration-300 group hover:shadow-[0_0_20px_rgba(255,195,0,0.1)] mb-4">
+        
+        <!-- Cabecera Resumen (Clickable) -->
+        <div class="p-5 md:p-6 cursor-pointer flex flex-wrap md:flex-nowrap items-center justify-between gap-4" onclick="toggleOrderDetails('${order.id}')">
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-[#FFC300] transition-colors shadow-inner flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                </div>
+                <div>
+                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-0.5">Orden #${shortId}</p>
+                    <p class="text-sm md:text-base font-bold text-white">${orderDate}</p>
+                </div>
             </div>
-            <div class="flex items-stretch md:items-center gap-3 w-full md:w-auto">
-                ${receiptButton}
-                <div class="flex-1 md:flex-none bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-right max-w-full">
-                    <span class="text-[9px] font-black uppercase tracking-widest text-gray-500 block mb-1">Destino Fijo</span>
-                    <p class="text-xs text-gray-300 font-bold truncate">${order.shipping_info?.city || 'Ciudad'}, ${order.shipping_info?.state || 'Estado'}</p>
+            <div class="flex items-center justify-between w-full md:w-auto gap-6">
+                <div class="text-left md:text-right">
+                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-0.5">Monto Total</p>
+                    <p class="text-base md:text-lg font-black text-white">$${parseFloat(order.total_usd).toFixed(2)}</p>
+                </div>
+                <!-- El icono inicia apuntando abajo (0deg) en color gris -->
+                <div class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 transform rotate-0 transition-all duration-300 flex-shrink-0" id="icon-${order.id}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
             </div>
         </div>
-        <div class="mb-4">${itemsHtml}</div>
-        ${timelineHtml}
+
+        <!-- Acordeón Desplegable (Inicia con max-height: 0px para estar estrictamente cerrado) -->
+        <div id="details-${order.id}" class="overflow-hidden transition-all duration-500 ease-in-out bg-white/[0.02]" style="max-height: 0px;">
+            <div class="p-5 md:p-8 border-t border-white/5">
+                
+                <!-- Resumen de Productos -->
+                <div class="mb-8">
+                    <h5 class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3">Artículos Adquiridos</h5>
+                    <div class="flex flex-wrap">${itemsHtml}</div>
+                </div>
+
+                <!-- TIMELINE VERTICAL PREMIUM -->
+                ${timelineHtml}
+
+                <!-- FOOTER DE LA ORDEN (Courier y PDF) -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2 bg-[#050508] p-4 md:p-5 rounded-2xl border border-white/5">
+                    <div class="flex items-center gap-2 w-full sm:w-auto text-gray-400 text-xs">
+                        <svg class="w-4 h-4 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>Courier: <strong class="text-white">${order.shipping_info?.courier || 'Envío Standard'}</strong></span>
+                    </div>
+                    ${receiptButton}
+                </div>
+            </div>
+        </div>
     </div>
     `;
 }
