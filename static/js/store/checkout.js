@@ -90,23 +90,35 @@ function renderCartSummary() {
         `;
 
         container.innerHTML += `
-            <div class="flex gap-4 items-center bg-[#12121a] p-4 rounded-2xl border ${isCartLocked ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 hover:border-white/20'} relative group transition-all duration-300 shadow-lg">
+            <div class="flex gap-4 md:gap-5 items-center bg-[#050508]/50 p-4 rounded-[1.5rem] border ${isCartLocked ? 'border-emerald-500/30 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-white/5 hover:border-white/20'} relative group transition-all duration-300">
+                
+                <!-- Botón eliminar lógico (inyectado por JS si no está bloqueado) -->
                 ${deleteBtnHtml}
-                <div class="w-20 h-20 bg-[#0a0a0f] rounded-xl border border-white/5 overflow-hidden flex-shrink-0 flex items-center justify-center p-2 shadow-inner">
+                
+                <!-- Imagen Espaciosa -->
+                <div class="w-20 h-20 md:w-24 md:h-24 bg-white/5 rounded-xl border border-white/5 overflow-hidden flex-shrink-0 flex items-center justify-center p-2 shadow-inner">
                     <img src="${item.imageUrl || item.image_url}" alt="${displayName}" class="max-h-full object-contain filter drop-shadow-md transition-transform group-hover:scale-105">
                 </div>
-                <div class="flex-grow min-w-0 pr-2">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="text-[8px] text-[#FFC300] uppercase font-black tracking-widest px-2 py-0.5 border border-[#FFC300]/20 bg-[#FFC300]/10 rounded shadow-sm truncate max-w-[100px]">${item.storeName || item.store_name || 'Gymenez Store'}</span>
-                    </div>
-                    <p class="text-sm font-[900] text-white truncate leading-tight">${displayName}</p>
-                    <div class="flex flex-wrap gap-1">
+                
+                <!-- Info del Producto -->
+                <div class="flex-grow min-w-0 pr-2 flex flex-col justify-center">
+                    <h4 class="text-sm md:text-base font-bold text-white truncate leading-tight mb-1">${displayName}</h4>
+                    
+                    <!-- Tienda sutil en lugar de un bloque gigante -->
+                    <span class="text-[9px] md:text-[10px] text-[#FFC300] uppercase font-bold tracking-widest mb-2 truncate">${item.storeName || item.store_name || 'Gymenez Store'}</span>
+                    
+                    <!-- Píldoras de variante y peso generadas por tu JS -->
+                    <div class="flex flex-wrap gap-1 mb-1">
                         ${variantBadgeHtml}
                         ${weightBadgeHtml}
                     </div>
+                    
+                    <!-- Controles de Cantidad (+ / -) generados por tu JS -->
                     ${controlsHtml}
                 </div>
-                <div class="font-black text-white text-right flex-shrink-0 text-lg italic">
+                
+                <!-- Total del Ítem (Limpiamos la itálica) -->
+                <div class="font-black text-white text-right flex-shrink-0 text-base md:text-lg">
                     $${formatMoney(itemTotal)}
                 </div>
             </div>
