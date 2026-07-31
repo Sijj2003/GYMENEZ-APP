@@ -33,8 +33,14 @@ document.addEventListener('DOMContentLoaded', () => {
     cartItems = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
     
     if (cartItems.length === 0) {
+        // Quitar el spinner de carga
         document.getElementById('checkout-loader').classList.add('hidden');
+        // MOSTRAR el contenedor principal completo
         document.getElementById('checkout-content').classList.remove('hidden'); 
+        // OCULTAR los paneles de formulario y pago
+        const checkoutContainer = document.getElementById('checkout-container');
+        if(checkoutContainer) checkoutContainer.classList.add('hidden');
+        // MOSTRAR el aviso de "Tu bolsa está vacía"
         document.getElementById('empty-cart-msg').classList.remove('hidden');
     } else {
         initWizardData(); 
@@ -149,9 +155,16 @@ function renderCartSummary() {
     }
 
     if (cartItems.length === 0) {
-        document.getElementById('checkout-content').classList.add('hidden');
-        document.getElementById('checkout-container').classList.add('hidden');
-        document.getElementById('empty-cart-msg').classList.remove('hidden');
+        // Mantener visible el contenedor principal
+        document.getElementById('checkout-content').classList.remove('hidden'); 
+        // Ocultar toda la interfaz de cobro (el Wizard)
+        document.getElementById('checkout-container').classList.add('hidden'); 
+        // Mostrar el mensaje de carrito vacío
+        document.getElementById('empty-cart-msg').classList.remove('hidden'); 
+    } else {
+        // Si hay productos, asegurar que el wizard se vea y el mensaje vacío desaparezca
+        document.getElementById('checkout-container').classList.remove('hidden');
+        document.getElementById('empty-cart-msg').classList.add('hidden');
     }
 }
 
