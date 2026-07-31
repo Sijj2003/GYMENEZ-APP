@@ -284,35 +284,38 @@ function renderProductsGrid(productsToRender) {
         const finalPrice = hasDiscount ? (p.price_usd * (1 - discount/100)).toFixed(2) : p.price_usd.toFixed(2);
         
         const storeName = p.store_name || 'Gymenez Partner';
-        const isOfficial = storeName.toLowerCase().includes('gymenez');
-        const badgeColor = isOfficial ? 'text-[#FFC300]' : 'text-white';
 
+        // AQUÍ EMPIEZA LA NUEVA TARJETA REDISEÑADA
         return `
-        <a href="/store/product.html?id=${p.id}" class="glass-panel p-4 rounded-2xl group cursor-pointer relative flex flex-col hover:border-[#FFC300]/50 transition-all">
-            <div class="absolute top-6 left-6 z-10 bg-black/80 backdrop-blur-md px-2 py-1 rounded border border-white/10 text-[8px] font-black uppercase tracking-widest text-gray-300">
-                Por <span class="${badgeColor}">${storeName}</span>
-            </div>
+        <a href="/store/product.html?id=${p.id}" class="group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all cursor-pointer">
             
-            <div class="aspect-square bg-[#050508] rounded-xl mb-4 overflow-hidden relative border border-white/5">
-                <img src="${p.image_url}" alt="${p.name}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+            <!-- IMAGEN LIMPIA Y SIN TEXTO -->
+            <div class="relative w-full aspect-square overflow-hidden bg-black/50 border-b border-white/5">
+                <img src="${p.image_url}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="${p.name}">
                 ${hasDiscount ? `<span class="absolute top-2 right-2 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-1 rounded shadow-lg">-${discount}%</span>` : ''}
+            </div>
+            
+            <!-- INFORMACIÓN DEBAJO -->
+            <div class="p-4 flex flex-col flex-grow">
+                <!-- Título -->
+                <h3 class="text-sm md:text-base font-bold text-white mb-1 uppercase tracking-tight truncate">${p.name}</h3>
                 
-                <!-- El botón flotante lleva directo al producto -->
-                <div class="absolute bottom-3 right-3 bg-white/10 backdrop-blur-md border border-white/20 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 group-hover:bg-[#FFC300] group-hover:border-[#FFC300] group-hover:text-black">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                <!-- Categoría y Unidades -->
+                <p class="text-[10px] md:text-xs text-gray-400 mb-2 font-medium capitalize">${p.category} • ${p.stock > 0 ? p.stock + ' unidades' : 'Agotado'}</p>
+                
+                <!-- Nombre de la Tienda (Estilo Premium y Limpio) -->
+                <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${storeName}</span>
+                
+                <!-- Precio y Botón -->
+                <div class="flex items-center justify-between mt-4 border-t border-white/5 pt-3">
+                    ${hasDiscount 
+                        ? `<div class="flex flex-col"><span class="text-xs text-gray-500 line-through leading-none">$${p.price_usd.toFixed(2)}</span><span class="text-white font-black text-sm md:text-base leading-none mt-1">$${finalPrice}</span></div>` 
+                        : `<span class="text-sm md:text-base font-black text-white">$${finalPrice}</span>`
+                    }
+                    <div class="bg-white/10 p-2 rounded-full text-white group-hover:bg-[#FFC300] group-hover:text-black transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="flex-grow">
-                <h3 class="font-bold text-sm text-gray-100 leading-tight mb-1 truncate">${p.name}</h3>
-                <p class="text-gray-500 text-[10px] uppercase tracking-wider mb-3">${p.category} • ${p.stock > 0 ? 'En Stock' : 'Agotado'}</p>
-            </div>
-            
-            <div class="flex items-center justify-between mt-auto">
-                ${hasDiscount 
-                    ? `<div class="flex flex-col"><span class="text-xs text-gray-500 line-through leading-none">$${p.price_usd.toFixed(2)}</span><span class="text-[#FFC300] font-black text-lg leading-none mt-1">$${finalPrice}</span></div>` 
-                    : `<p class="text-white font-black text-lg">$${finalPrice}</p>`
-                }
             </div>
         </a>
         `;
