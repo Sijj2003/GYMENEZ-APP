@@ -157,14 +157,17 @@ function buildOrderTimeline(order) {
         : '';
 
     const shortId = order.id.slice(-6).toUpperCase();
+    
+    // CREAMOS UN ID SEGURO Y ÚNICO PARA QUE NO ABRAN TODOS AL MISMO TIEMPO
+    const uniqueContainerId = 'ord_' + order.id;
 
-    // AQUÍ INICIA LA TARJETA PLEGABLE (CERRADA POR DEFECTO)
+    // AQUÍ INICIA LA TARJETA MODO LISTA (CERRADA POR DEFECTO)
     return `
     <div class="bg-[#050508]/50 border border-white/5 hover:border-[#FFC300]/30 rounded-[1.5rem] overflow-hidden transition-all duration-300 group hover:shadow-[0_0_20px_rgba(255,195,0,0.1)] mb-4">
         
-        <!-- Cabecera Resumen (Clickable) -->
-        <div class="p-5 md:p-6 cursor-pointer flex flex-wrap md:flex-nowrap items-center justify-between gap-4" onclick="toggleOrderDetails('${order.id}')">
-            <div class="flex items-center gap-4 w-full md:w-auto">
+        <!-- Cabecera Resumen (Visible estando cerrado: Fecha, Codigo y Monto) -->
+        <div class="p-5 md:p-6 cursor-pointer flex items-center justify-between gap-4" onclick="toggleOrderDetails('${uniqueContainerId}')">
+            <div class="flex items-center gap-4">
                 <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-[#FFC300] transition-colors shadow-inner flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                 </div>
@@ -173,20 +176,20 @@ function buildOrderTimeline(order) {
                     <p class="text-sm md:text-base font-bold text-white">${orderDate}</p>
                 </div>
             </div>
-            <div class="flex items-center justify-between w-full md:w-auto gap-6">
-                <div class="text-left md:text-right">
-                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-0.5">Monto Total</p>
+            <div class="flex items-center gap-4 md:gap-6">
+                <div class="text-right">
+                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-0.5">Total</p>
                     <p class="text-base md:text-lg font-black text-white">$${parseFloat(order.total_usd).toFixed(2)}</p>
                 </div>
-                <!-- El icono inicia apuntando abajo (0deg) en color gris -->
-                <div class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 transform rotate-0 transition-all duration-300 flex-shrink-0" id="icon-${order.id}">
+                <!-- Icono apuntando hacia abajo indicando que está cerrado -->
+                <div class="w-8 h-8 rounded-full bg-white/5 group-hover:bg-white/10 flex items-center justify-center text-gray-400 transform rotate-0 transition-all duration-300 flex-shrink-0" id="icon-${uniqueContainerId}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
             </div>
         </div>
 
-        <!-- Acordeón Desplegable (Inicia con max-height: 0px para estar estrictamente cerrado) -->
-        <div id="details-${order.id}" class="overflow-hidden transition-all duration-500 ease-in-out bg-white/[0.02]" style="max-height: 0px;">
+        <!-- Acordeón Desplegable (CERRADO por defecto usando style="max-height: 0px") -->
+        <div id="details-${uniqueContainerId}" class="overflow-hidden transition-all duration-500 ease-in-out bg-white/[0.02]" style="max-height: 0px;">
             <div class="p-5 md:p-8 border-t border-white/5">
                 
                 <!-- Resumen de Productos -->
