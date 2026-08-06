@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Términos y Condiciones | Ecosistema Gymenez</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = { 
+            theme: { 
+                extend: { 
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { gymenez: { dark: '#030305', accent: '#FFC300' } }
+                } 
+            } 
+        }
+    </script>
+    <style>
+        /* CSS para darle estilo al texto inyectado desde el backend */
+        #terms-container h3 { 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            margin-top: 2.5rem; 
+            margin-bottom: 1rem; 
+            color: #FFC300; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em; 
+        }
+        #terms-container p { 
+            margin-bottom: 1rem; 
+            line-height: 1.7; 
+            color: #9ca3af; /* text-gray-400 */
+        }
+        #terms-container ul { 
+            margin-bottom: 1.5rem; 
+            padding-left: 1.5rem; 
+            color: #9ca3af; 
+        }
+        #terms-container li { 
+            margin-bottom: 0.5rem; 
+            position: relative; 
+        }
+        /* Viñetas personalizadas amarillas */
+        #terms-container li::before { 
+            content: '•'; 
+            position: absolute; 
+            left: -1.2rem; 
+            color: #FFC300; 
+            font-weight: bold; 
+        }
+        #terms-container strong { 
+            color: #e5e7eb; /* texto un poco más blanco para los bold */
+        }
+    </style>
+</head>
+<body class="bg-[#030305] selection:bg-[#FFC300] selection:text-black text-white min-h-screen flex flex-col relative overflow-x-hidden">
+
+    <!-- Iluminación ambiental de fondo (Efecto Premium) -->
+    <div class="fixed top-0 left-0 w-full h-full pointer-events-none z-0 flex justify-center items-start opacity-30">
+        <div class="w-[600px] h-[600px] bg-[#FFC300]/5 rounded-full blur-[120px] -translate-y-1/2"></div>
+    </div>
+
+    <!-- NAVBAR SUPERIOR MINIMALISTA -->
+    <nav class="fixed top-0 w-full z-50 transition-all duration-300 bg-[#030305]/80 backdrop-blur-md border-b border-white/5">
+        <div class="max-w-4xl mx-auto px-4 md:px-8">
+            <div class="flex items-center justify-between h-16 md:h-20 w-full relative">
+                
+                <!-- Botón Volver -->
+                <div class="flex items-center z-20">
+                    <a href="javascript:history.back()" class="p-2 -ml-2 text-gray-400 hover:text-white transition flex items-center gap-2">
+                        <svg class="w-6 h-6 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        <span class="text-xs font-bold uppercase tracking-widest hidden md:block">Volver</span>
+                    </a>
+                </div>
+
+                <!-- LOGO (Centrado) -->
+                <a href="/store/home.html" class="absolute left-1/2 transform -translate-x-1/2 flex items-center leading-none group z-10">
+                    <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
+                    <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ÁREA DE LECTURA LEGAL -->
+    <main class="pt-24 md:pt-32 pb-24 px-4 md:px-8 w-full max-w-4xl mx-auto flex-grow relative z-10">
+        
+        <!-- Cabecera del Documento -->
+        <div class="mb-10 text-center border-b border-white/5 pb-8">
+            <h1 class="text-3xl md:text-4xl font-black tracking-tight text-white uppercase mb-3">Términos y Condiciones</h1>
+            <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Última actualización: <span id="last-updated" class="text-[#FFC300]">Cargando...</span></p>
+        </div>
+
+        <!-- Contenedor del Texto Dinámico -->
+        <div class="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-10 shadow-2xl backdrop-blur-xl">
+            
+            <!-- Skeleton Loader (Animación de carga mientras el JS hace el fetch) -->
+            <div id="loading-skeleton" class="animate-pulse space-y-6">
+                <div class="h-4 bg-white/10 rounded w-3/4"></div>
+                <div class="h-4 bg-white/10 rounded w-full"></div>
+                <div class="h-4 bg-white/10 rounded w-5/6"></div>
+                <div class="h-10"></div> <!-- Espaciador -->
+                <div class="h-6 bg-white/10 rounded w-1/3 mb-4"></div>
+                <div class="h-4 bg-white/10 rounded w-full"></div>
+                <div class="h-4 bg-white/10 rounded w-4/5"></div>
+            </div>
+
+            <!-- Aquí se inyectará el texto desde el servidor -->
+            <div id="terms-container" class="hidden text-sm md:text-base"></div>
+            
+        </div>
+    </main>
+
+    <!-- Footer Standard -->
+    <footer class="border-t border-white/5 pt-12 pb-12 px-4 w-full bg-[#030305] relative z-10">
+        <div class="max-w-4xl mx-auto text-center">
+            <span class="text-xl font-[900] tracking-tighter uppercase text-gray-500 block mb-2">Gymenez<span class="text-gray-600">Corp</span></span>
+            <p class="text-[9px] md:text-[10px] uppercase tracking-widest text-gray-600 font-bold">© 2026 Ecosistema de Rendimiento. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- LÓGICA DE CONEXIÓN AL BACKEND -->
+    <script>
+        // Configuración de la URL de tu API
+        // Cambia la URL en producción por la de tu dominio si es necesario
+        const API_BASE_URL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' 
+            ? 'http://127.0.0.1:5000' 
+            : 'https://sijj2003.pythonanywhere.com';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const skeleton = document.getElementById('loading-skeleton');
+            const container = document.getElementById('terms-container');
+            const dateSpan = document.getElementById('last-updated');
+
+            try {
+                // Llamamos a la ruta de tu Blueprint
+                const response = await fetch(`${API_BASE_URL}/api/legal/terms`);
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Ocultamos el skeleton loader
+                    skeleton.classList.add('hidden');
+                    
+                    // Inyectamos el contenido y la fecha que viene del backend
+                    container.innerHTML = data.content;
+                    dateSpan.innerText = data.last_updated || 'Agosto de 2026';
+                    
+                    // Mostramos el contenedor con el texto legal
+                    container.classList.remove('hidden');
+                } else {
+                    throw new Error("No se pudo cargar el documento.");
+                }
+            } catch (error) {
+                // Manejo de errores visual por si el servidor falla
+                skeleton.classList.add('hidden');
+                container.innerHTML = `
+                    <div class="text-center py-10">
+                        <svg class="w-12 h-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <h3 class="text-lg font-bold text-white mb-2">Documento no disponible</h3>
+                        <p class="text-sm text-gray-400">Hubo un problema de conexión con el servidor. Por favor, recarga la página o intenta más tarde.</p>
+                    </div>
+                `;
+                container.classList.remove('hidden');
+                dateSpan.innerText = 'Desconocida';
+            }
+        });
+    </script>
+</body>
+</html>
