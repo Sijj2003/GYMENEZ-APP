@@ -15,18 +15,30 @@ async function loadAthleteBiometricsDashboard() {
     }
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/profile/me`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        const data = await res.json();
+        // 🔄 PETICIÓN DOBLE: Consultamos métricas Y perfil en paralelo para tener ambas bases de datos
+        const [resMetrics, resProfile] = await Promise.all([
+            fetch(`${API_BASE_URL}/api/client/metrics`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            }),
+            fetch(`${API_BASE_URL}/api/profile/me`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+        ]);
 
-        if (data.success) {
-            const m = data.metrics || {};
-            const p = data.profile || {};
+        const dataMetrics = await resMetrics.json();
+        const dataProfile = await resProfile.json();
+
+        if (dataMetrics.success && dataProfile.success) {
+            const m = dataMetrics.metrics || {};   // <--- Aquí vienen tus medidas corporales
+            const p = dataProfile.profile || {};   // <--- Aquí viene tu fecha de vencimiento y nivel
 
             // Si el atleta no tiene registros de composición corporal, activamos el botón de solicitud
             if (!m.weight && !m.height && requestContainer) {
@@ -40,7 +52,7 @@ async function loadAthleteBiometricsDashboard() {
                     target.textContent = (value !== undefined && value !== null && value !== '') ? value : fallback;
                 }
             };
-
+            
             // 1. ACOPLAMIENTO DE TARJETA DE IDENTIDAD
             if (p) {
                 console.log("Datos del backend:", p);
