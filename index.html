@@ -77,12 +77,11 @@
             </span>
         </div>
 
-        <!-- MENÚ CENTRAL (Con Enlace a Store) -->
+        <!-- MENÚ CENTRAL -->
         <div class="hidden md:flex gap-10 items-center">
             <a href="information/fitness.html" class="text-[10px] font-black tracking-[0.3em] text-gray-400 hover:text-white transition uppercase">Fitness</a>
             <a href="information/eats.html" class="text-[10px] font-black tracking-[0.3em] text-gray-400 hover:text-emerald-400 transition uppercase">Eats</a>
             <a href="information/on.html" class="text-[10px] font-black tracking-[0.3em] text-gray-400 hover:text-red-500 transition uppercase">ON</a>
-            <!-- NUEVO BOTÓN STORE -->
             <a href="/store/home.html" class="flex items-center gap-2 text-[10px] font-black tracking-[0.3em] text-[#FFC300] hover:text-yellow-300 transition uppercase group relative">
                 Store
                 <span class="absolute -bottom-2 left-0 w-full h-[2px] bg-[#FFC300] transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
@@ -139,14 +138,17 @@
     <section class="parallax-section min-h-screen flex items-center px-6 md:px-16 py-20" style="background-image: url('https://images.unsplash.com/photo-1593079831268-3381b0db4a77?q=80&w=2069');">
         <div class="parallax-overlay bg-gradient-to-r from-[#030305] via-[#030305]/80 to-transparent"></div>
         <div class="relative z-10 w-full max-w-7xl mx-auto flex justify-start reveal">
-            <div class="glass-panel p-10 md:p-14 rounded-[2.5rem] max-w-xl border-l-4 border-l-[#FFC300]">
+            <div class="glass-panel p-10 md:p-14 rounded-[2.5rem] max-w-xl border-l-4 border-l-[#FFC300] flex flex-col">
                 <span class="text-[#FFC300] font-black text-[10px] tracking-[0.3em] uppercase mb-4 block">Fuerza Inteligente</span>
                 <h2 class="text-4xl md:text-6xl font-[900] italic uppercase tracking-tighter mb-6">GYMENEZ <br><span class="text-[#FFC300] text-glow-gold">FITNESS</span></h2>
-                <p class="text-gray-300 text-sm md:text-base leading-relaxed mb-8 font-medium">
+                <p class="text-gray-300 text-sm md:text-base leading-relaxed mb-10 font-medium">
                     Tu biología dicta el ritmo. Algoritmos de progresión que calibran cada peso y cada serie basándose en tu descanso y energía diaria. Progreso máximo, cero lesiones.
                 </p>
-                <a href="information/fitness.html" class="inline-flex items-center gap-3 text-[10px] font-black text-[#FFC300] uppercase tracking-widest hover:text-white transition group">
-                    Explorar entrenamiento <span class="group-hover:translate-x-2 transition-transform">→</span>
+                
+                <!-- BOTÓN ESTÉTICO FITNESS -->
+                <a href="information/fitness.html" class="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-[#FFC300]/10 border border-[#FFC300]/30 text-[#FFC300] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#FFC300] hover:text-black transition-all duration-300 shadow-[0_0_15px_rgba(255,195,0,0.1)] hover:shadow-[0_0_25px_rgba(255,195,0,0.4)] group w-max">
+                    Explorar Entrenamiento 
+                    <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </a>
             </div>
         </div>
@@ -156,14 +158,17 @@
     <section class="parallax-section min-h-screen flex items-center px-6 md:px-16 py-20" style="background-image: url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=2053');">
         <div class="parallax-overlay bg-gradient-to-l from-[#030305] via-[#030305]/80 to-transparent"></div>
         <div class="relative z-10 w-full max-w-7xl mx-auto flex justify-end reveal">
-            <div class="glass-panel p-10 md:p-14 rounded-[2.5rem] max-w-xl border-r-4 border-r-emerald-500 text-right">
+            <div class="glass-panel p-10 md:p-14 rounded-[2.5rem] max-w-xl border-r-4 border-r-emerald-500 text-right flex flex-col items-end">
                 <span class="text-emerald-400 font-black text-[10px] tracking-[0.3em] uppercase mb-4 block">Combustible de Élite</span>
                 <h2 class="text-4xl md:text-6xl font-[900] italic uppercase tracking-tighter mb-6">GYMENEZ <br><span class="text-emerald-500 text-glow-emerald">EATS</span></h2>
-                <p class="text-gray-300 text-sm md:text-base leading-relaxed mb-8 font-medium">
+                <p class="text-gray-300 text-sm md:text-base leading-relaxed mb-10 font-medium">
                     Come para rendir, no para restringirte. Nutrición dinámica que recalcula tus necesidades macro según el esfuerzo exacto que invertiste hoy en el gimnasio.
                 </p>
-                <a href="information/eats.html" class="inline-flex flex-row-reverse items-center gap-3 text-[10px] font-black text-emerald-400 uppercase tracking-widest hover:text-white transition group">
-                    Ver enfoque nutricional <span class="group-hover:-translate-x-2 transition-transform">←</span>
+                
+                <!-- BOTÓN ESTÉTICO EATS -->
+                <a href="information/eats.html" class="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-500 hover:text-black transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] group w-max">
+                    Ver Enfoque Nutricional 
+                    <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </a>
             </div>
         </div>
@@ -173,14 +178,17 @@
     <section class="parallax-section min-h-screen flex items-center px-6 md:px-16 py-20" style="background-image: url('https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=2070');">
         <div class="parallax-overlay bg-gradient-to-r from-[#030305] via-[#030305]/80 to-transparent"></div>
         <div class="relative z-10 w-full max-w-7xl mx-auto flex justify-start reveal">
-            <div class="glass-panel p-10 md:p-14 rounded-[2.5rem] max-w-xl border-l-4 border-l-red-600">
+            <div class="glass-panel p-10 md:p-14 rounded-[2.5rem] max-w-xl border-l-4 border-l-red-600 flex flex-col">
                 <span class="text-red-500 font-black text-[10px] tracking-[0.3em] uppercase mb-4 block">Mentalidad Imparable</span>
                 <h2 class="text-4xl md:text-6xl font-[900] italic uppercase tracking-tighter mb-6">GYMENEZ <br><span class="text-red-600 text-glow-red">ON</span></h2>
-                <p class="text-gray-300 text-sm md:text-base leading-relaxed mb-8 font-medium">
+                <p class="text-gray-300 text-sm md:text-base leading-relaxed mb-10 font-medium">
                     El cuerpo sigue a la mente. Accede a masterclasses en 4K, análisis biomecánico detallado y psicología deportiva. Forja la disciplina de los mejores.
                 </p>
-                <a href="information/on.html" class="inline-flex items-center gap-3 text-[10px] font-black text-red-500 uppercase tracking-widest hover:text-white transition group">
-                    Descubrir educación <span class="group-hover:translate-x-2 transition-transform">→</span>
+                
+                <!-- BOTÓN ESTÉTICO ON -->
+                <a href="information/on.html" class="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-red-600/10 border border-red-600/30 text-red-500 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-red-600 hover:text-white transition-all duration-300 shadow-[0_0_15px_rgba(220,38,38,0.1)] hover:shadow-[0_0_25px_rgba(220,38,38,0.4)] group w-max">
+                    Descubrir Educación 
+                    <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </a>
             </div>
         </div>
@@ -221,7 +229,7 @@
         </p>
     </footer>
 
-    <!-- SOCIAL DOCK (Intacto, igual a como lo tenías) -->
+    <!-- SOCIAL DOCK -->
     <div id="social-dock" class="fixed bottom-6 right-6 z-[100] flex flex-col items-center gap-3">
         <div id="social-menu" class="flex flex-col gap-3 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] transform translate-y-10 opacity-0 pointer-events-none origin-bottom">
             <a href="https://www.tiktok.com/@gymenezperformance?_r=1&_t=ZS-97g0ZrAu1Gm" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:border-[#00f2fe] hover:shadow-[0_0_15px_rgba(0,242,254,0.3)] transition-all transform hover:scale-110 group">
@@ -250,7 +258,7 @@
     </div>
     
     <script>
-        // Animación de aparición al hacer scroll (Revelar elementos)
+        // Animación de aparición al hacer scroll
         function reveal() {
             var reveals = document.querySelectorAll(".reveal");
             for (var i = 0; i < reveals.length; i++) {
@@ -263,9 +271,9 @@
             }
         }
         window.addEventListener("scroll", reveal);
-        reveal(); // Llamada inicial para los elementos visibles al cargar
+        reveal(); 
         
-        // Mantener el script de tus redes sociales
+        // Menú Social
         const socialBtn = document.getElementById('social-toggle-btn');
         const socialMenu = document.getElementById('social-menu');
         const iconOpen = document.getElementById('social-icon-open');
