@@ -142,7 +142,7 @@
                         <p id="p-email" class="text-gray-400 text-xs md:text-sm font-medium tracking-widest break-words">--</p>
                     </div>
                     
-                    <div class="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-white/10 pt-6 relative z-10">
+                    <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-white/10 pt-6 relative z-10">
                         <div class="bg-black/20 p-3 rounded-2xl border border-white/5">
                             <p class="text-[8px] md:text-[9px] text-gray-500 uppercase font-black tracking-widest">Nacimiento</p>
                             <p id="p-dob" class="text-white font-bold text-xs md:text-sm mt-1">--</p>
@@ -151,12 +151,17 @@
                             <p class="text-[8px] md:text-[9px] text-gray-500 uppercase font-black tracking-widest">Sexo Biológico</p>
                             <p id="p-sex" class="text-white font-bold text-xs md:text-sm mt-1">--</p>
                         </div>
-                        <div class="col-span-2 sm:col-span-1 bg-[#10b981]/5 p-3 rounded-2xl border border-[#10b981]/20">
+                        <div class="bg-[#10b981]/5 p-3 rounded-2xl border border-[#10b981]/20">
                             <p class="text-[8px] md:text-[9px] text-[#10b981] uppercase font-black tracking-widest">Activo Desde</p>
                             <p id="p-active-since" class="text-white font-bold text-xs md:text-sm mt-1">--</p>
                         </div>
+                        <!-- NUEVA CAJA: Vencimiento de Suscripción -->
+                        <div class="bg-white/5 p-3 rounded-2xl border border-white/10 relative overflow-hidden group">
+                            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                            <p class="text-[8px] md:text-[9px] text-gray-400 uppercase font-black tracking-widest relative z-10">Vencimiento Plan</p>
+                            <p id="p-subscription-expire" class="text-white font-black text-xs md:text-sm mt-1 tracking-tighter relative z-10">--</p>
+                        </div>
                     </div>
-                </div>
 
                 <!-- 2. MÉTRICAS BASE EXPANDIDAS SIMÉTRICAMENTE (4 Columnas) -->
                 <div id="card-metrics-base" class="md:col-span-2 bento-card rounded-[2rem] p-6 md:p-8 flex flex-col justify-center relative overflow-hidden bg-gradient-to-br from-white/5 to-transparent fade-in-up" style="animation-delay: 0.3s;">
