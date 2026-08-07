@@ -61,36 +61,17 @@
             box-shadow: 0 15px 30px -5px rgba(255, 195, 0, 0.4);
         }
 
-        /* Hide Scrollbar for KYC Form */
+        /* Hide Scrollbar */
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Transiciones de formulario */
-        .form-panel {
-            transition: opacity 0.5s ease, transform 0.5s ease;
-        }
-        .form-hidden {
-            opacity: 0;
-            pointer-events: none;
-            transform: scale(0.98);
-            position: absolute;
-            visibility: hidden;
-        }
-        .form-active {
-            opacity: 1;
-            pointer-events: auto;
-            transform: scale(1);
-            position: relative;
-            visibility: visible;
-        }
     </style>
 </head>
-<body class="selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col relative">
+<body class="selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col relative overflow-hidden">
 
     <div class="ambient-bg"></div>
 
     <!-- NAVBAR ENTERPRISE -->
-    <nav class="w-full z-50 px-6 py-6 flex justify-between items-center max-w-7xl mx-auto fixed top-0 left-0 right-0 apple-glass border-x-0 border-t-0 border-b border-white/5 h-20">
+    <nav class="w-full z-40 px-6 py-6 flex justify-between items-center max-w-7xl mx-auto fixed top-0 left-0 right-0 apple-glass border-x-0 border-t-0 border-b border-white/5 h-20">
         <div class="flex items-center gap-4">
             <a href="/index.html" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition group">
                 <svg class="w-4 h-4 transform group-hover:-translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
@@ -117,8 +98,8 @@
         </div>
     </div>
 
-    <!-- LOBBY PRINCIPAL -->
-    <main class="flex-1 flex items-center justify-center p-4 pt-28 pb-12 relative z-10 w-full max-w-7xl mx-auto min-h-screen">
+    <!-- LOBBY PRINCIPAL (LOGIN ESTÁTICO) -->
+    <main class="flex-1 flex items-center justify-center p-4 pt-20 relative z-10 w-full max-w-7xl mx-auto h-screen">
         <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             
             <!-- COLUMNA IZQUIERDA: Presentación Enterprise -->
@@ -147,13 +128,9 @@
                 </div>
             </div>
 
-            <!-- COLUMNA DERECHA: Centro de Autenticación Unificado -->
-            <div class="w-full max-w-md mx-auto relative">
-                
-                <!-- ====================================== -->
-                <!-- VISTA 1: LOGIN (Activa por defecto) -->
-                <!-- ====================================== -->
-                <div id="login-form" class="apple-glass p-8 md:p-12 rounded-[2.5rem] w-full form-panel form-active">
+            <!-- COLUMNA DERECHA: Autenticación -->
+            <div class="w-full max-w-md mx-auto">
+                <div id="login-form" class="apple-glass p-8 md:p-12 rounded-[2.5rem] w-full">
                     <div class="text-center mb-10">
                         <h2 class="text-2xl font-[900] tracking-tighter uppercase text-white mb-2">Acceso <span class="text-[#FFC300]">Partner</span></h2>
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Identidad Verificada Requerida</p>
@@ -182,143 +159,149 @@
 
                     <div class="mt-8 pt-8 border-t border-white/5 text-center">
                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-4">¿Aún no operas en nuestra red?</p>
-                        <button onclick="toggleForms('register')" class="w-full bg-transparent text-white font-bold text-[10px] uppercase tracking-widest py-3.5 rounded-2xl border border-white/10 hover:bg-white/5 transition-all flex items-center justify-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            Solicitar Apertura Comercial
+                        <!-- BOTÓN MODIFICADO PARA ABRIR MODAL -->
+                        <button onclick="openRegisterModal()" class="w-full bg-transparent text-white font-bold text-[10px] uppercase tracking-widest py-3.5 rounded-2xl border border-white/10 hover:bg-white/5 transition-all flex items-center justify-center gap-2 group">
+                            <svg class="w-4 h-4 text-gray-400 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Solicitar Cuenta de Comercio
                         </button>
                     </div>
                 </div>
-
-                <!-- ====================================== -->
-                <!-- VISTA 2: REGISTRO (KYC) (Oculta) -->
-                <!-- ====================================== -->
-                <div id="register-form" class="apple-glass p-6 md:p-10 rounded-[2.5rem] w-full form-panel form-hidden overflow-hidden flex flex-col max-h-[85vh]">
-                    
-                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/5 shrink-0">
-                        <div>
-                            <h2 class="text-xl font-[900] tracking-tighter uppercase text-white mb-1">Auditoría KYC</h2>
-                            <p class="text-[9px] uppercase tracking-widest text-emerald-500 font-black">Incorporación de Empresa</p>
-                        </div>
-                        <button onclick="toggleForms('login')" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                    </div>
-
-                    <div class="overflow-y-auto hide-scroll flex-1 pr-2">
-                        <form id="form-register-action" class="space-y-5">
-                            <!-- Datos de Entidad -->
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Nombre Comercial Registrado</label>
-                                    <input type="text" id="reg-storeName" required class="w-full apple-input rounded-xl px-4 py-3.5 text-xs font-bold" placeholder="Ej: Titan Supplements">
-                                </div>
-
-                                <div class="grid grid-cols-3 gap-3">
-                                    <div class="col-span-1">
-                                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Tipo</label>
-                                        <div class="relative">
-                                            <select id="reg-docType" class="w-full apple-input rounded-xl px-3 py-3.5 text-xs font-bold appearance-none cursor-pointer">
-                                                <option value="V" class="bg-[#12121a]">V</option>
-                                                <option value="E" class="bg-[#12121a]">E</option>
-                                                <option value="J" class="bg-[#12121a]">J</option>
-                                            </select>
-                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-span-2">
-                                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">N° Documento / RIF</label>
-                                        <input type="text" id="reg-docNumber" required class="w-full apple-input rounded-xl px-4 py-3.5 text-xs font-bold" placeholder="Ej: 12345678">
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Correo Institucional</label>
-                                    <input type="email" id="reg-email" required class="w-full apple-input rounded-xl px-4 py-3.5 text-xs font-bold" placeholder="empresa@correo.com">
-                                </div>
-                                
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Línea Móvil</label>
-                                        <input type="text" id="reg-phone" required class="w-full apple-input rounded-xl px-4 py-3.5 text-xs font-bold" placeholder="+58...">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Contraseña Máster</label>
-                                        <input type="password" id="reg-password" required class="w-full apple-input rounded-xl px-4 py-3.5 text-xs font-mono tracking-wider">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Documentación Legal (Premium UI) -->
-                            <div class="pt-6 mt-6 border-t border-white/5 space-y-4">
-                                <p class="text-[9px] text-emerald-500 uppercase tracking-widest font-black flex items-center gap-2 mb-4">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                                    Requisitos Regulatorios
-                                </p>
-                                
-                                <!-- Archivos (Cédula, RIF, Logo) con diseño en cuadrícula -->
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div class="relative w-full border border-dashed border-white/10 hover:border-emerald-500/50 rounded-xl p-3 flex flex-col items-center text-center overflow-hidden group cursor-pointer bg-black/20 transition" onclick="document.getElementById('reg-cedula').click()">
-                                        <svg class="w-5 h-5 text-gray-500 group-hover:text-emerald-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
-                                        <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">ID / Cédula</span>
-                                        <span id="label-cedula" class="text-[8px] text-gray-500 group-hover:text-emerald-400 truncate w-full mt-1">Cargar Archivo...</span>
-                                        <input type="file" id="reg-cedula" accept="image/*,.pdf" class="hidden" required onchange="updateFileLabel(this, 'label-cedula')">
-                                    </div>
-
-                                    <div class="relative w-full border border-dashed border-white/10 hover:border-emerald-500/50 rounded-xl p-3 flex flex-col items-center text-center overflow-hidden group cursor-pointer bg-black/20 transition" onclick="document.getElementById('reg-rif').click()">
-                                        <svg class="w-5 h-5 text-gray-500 group-hover:text-emerald-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                        <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">Planilla RIF</span>
-                                        <span id="label-rif" class="text-[8px] text-gray-500 group-hover:text-emerald-400 truncate w-full mt-1">Cargar Archivo...</span>
-                                        <input type="file" id="reg-rif" accept="image/*,.pdf" class="hidden" required onchange="updateFileLabel(this, 'label-rif')">
-                                    </div>
-
-                                    <div class="relative w-full sm:col-span-2 border border-dashed border-white/10 hover:border-[#FFC300]/50 rounded-xl p-3 flex items-center justify-between overflow-hidden group cursor-pointer bg-black/20 transition" onclick="document.getElementById('reg-logo').click()">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-500 group-hover:text-[#FFC300] transition">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                            </div>
-                                            <div class="flex flex-col text-left">
-                                                <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">Logo Comercial <span class="text-gray-600">(Opcional)</span></span>
-                                                <span id="label-logo" class="text-[8px] text-gray-500 group-hover:text-[#FFC300] truncate max-w-[150px]">Formato JPG/PNG...</span>
-                                            </div>
-                                        </div>
-                                        <input type="file" id="reg-logo" accept="image/*" class="hidden" onchange="updateFileLabel(this, 'label-logo')">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="pt-4 shrink-0">
-                                <button type="submit" id="btn-register" class="w-full btn-gold-pro font-[900] text-[10px] uppercase tracking-widest py-4 rounded-2xl flex justify-center items-center gap-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    Remitir al Dept. de Auditoría
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
             </div>
         </div>
     </main>
 
-    <!-- Script de lógica original de partners -->
-    <script>
-        // Función para alternar entre el formulario de Login y Registro manteniendo la UI Apple-style
-        function toggleForms(target) {
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
+    <!-- ==================================================================== -->
+    <!-- MODAL (OVERLAY): AUDITORÍA KYC / REGISTRO DE COMERCIO -->
+    <!-- ==================================================================== -->
+    <div id="register-modal" class="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="apple-glass w-full max-w-3xl rounded-[2.5rem] flex flex-col max-h-[90vh] transform scale-95 transition-transform duration-300">
             
-            if (target === 'register') {
-                loginForm.classList.replace('form-active', 'form-hidden');
-                registerForm.classList.replace('form-hidden', 'form-active');
-            } else {
-                registerForm.classList.replace('form-active', 'form-hidden');
-                loginForm.classList.replace('form-hidden', 'form-active');
-            }
+            <!-- HEADER MODAL -->
+            <div class="flex items-center justify-between p-6 md:p-8 border-b border-white/5 shrink-0">
+                <div>
+                    <h2 class="text-xl md:text-2xl font-[900] tracking-tighter uppercase text-white mb-1">Auditoría KYC</h2>
+                    <p class="text-[9px] uppercase tracking-widest text-emerald-500 font-black">Incorporación de Nueva Empresa</p>
+                </div>
+                <button onclick="closeRegisterModal()" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-500 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- CUERPO SCROLLABLE DEL MODAL -->
+            <div class="overflow-y-auto hide-scroll p-6 md:p-8 flex-1">
+                <form id="form-register-action" class="space-y-6">
+                    
+                    <!-- Grid Principal -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Nombre Comercial Registrado</label>
+                            <input type="text" id="reg-storeName" required class="w-full apple-input rounded-xl px-5 py-4 text-xs font-bold" placeholder="Ej: Gymenez Performance">
+                        </div>
+
+                        <div>
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">N° Documento / RIF</label>
+                            <div class="flex gap-2">
+                                <select id="reg-docType" class="w-20 apple-input rounded-xl px-3 py-4 text-xs font-bold appearance-none text-center cursor-pointer">
+                                    <option value="V" class="bg-[#12121a]">V</option>
+                                    <option value="E" class="bg-[#12121a]">E</option>
+                                    <option value="J" class="bg-[#12121a]">J</option>
+                                </select>
+                                <input type="text" id="reg-docNumber" required class="flex-1 apple-input rounded-xl px-4 py-4 text-xs font-bold" placeholder="Ej: 31103356">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Correo Institucional</label>
+                            <input type="email" id="reg-email" required class="w-full apple-input rounded-xl px-5 py-4 text-xs font-bold" placeholder="empresa@correo.com">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Línea Móvil (WhatsApp)</label>
+                            <input type="text" id="reg-phone" required class="w-full apple-input rounded-xl px-5 py-4 text-xs font-bold" placeholder="+58...">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Contraseña Máster</label>
+                            <input type="password" id="reg-password" required class="w-full apple-input rounded-xl px-5 py-4 text-xs font-mono tracking-wider" placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <!-- Documentación Legal -->
+                    <div class="pt-6 mt-6 border-t border-white/5 space-y-4">
+                        <p class="text-[9px] text-emerald-500 uppercase tracking-widest font-black flex items-center gap-2 mb-4">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            Requisitos Regulatorios Obligatorios
+                        </p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Cédula -->
+                            <div class="relative w-full border border-dashed border-white/10 hover:border-emerald-500/50 rounded-xl p-4 flex flex-col items-center justify-center text-center overflow-hidden group cursor-pointer bg-black/20 transition h-28" onclick="document.getElementById('reg-cedula').click()">
+                                <svg class="w-6 h-6 text-gray-500 group-hover:text-emerald-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
+                                <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">ID / Cédula</span>
+                                <span id="label-cedula" class="text-[8px] text-gray-500 group-hover:text-emerald-400 truncate w-full mt-1">Subir Archivo...</span>
+                                <input type="file" id="reg-cedula" accept="image/*,.pdf" class="hidden" required onchange="updateFileLabel(this, 'label-cedula')">
+                            </div>
+
+                            <!-- RIF -->
+                            <div class="relative w-full border border-dashed border-white/10 hover:border-emerald-500/50 rounded-xl p-4 flex flex-col items-center justify-center text-center overflow-hidden group cursor-pointer bg-black/20 transition h-28" onclick="document.getElementById('reg-rif').click()">
+                                <svg class="w-6 h-6 text-gray-500 group-hover:text-emerald-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">Planilla RIF</span>
+                                <span id="label-rif" class="text-[8px] text-gray-500 group-hover:text-emerald-400 truncate w-full mt-1">Subir Archivo...</span>
+                                <input type="file" id="reg-rif" accept="image/*,.pdf" class="hidden" required onchange="updateFileLabel(this, 'label-rif')">
+                            </div>
+
+                            <!-- Logo -->
+                            <div class="relative w-full border border-dashed border-white/10 hover:border-[#FFC300]/50 rounded-xl p-4 flex flex-col items-center justify-center text-center overflow-hidden group cursor-pointer bg-black/20 transition h-28" onclick="document.getElementById('reg-logo').click()">
+                                <svg class="w-6 h-6 text-gray-500 group-hover:text-[#FFC300] mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">Logo <span class="text-gray-600">(Opcional)</span></span>
+                                <span id="label-logo" class="text-[8px] text-gray-500 group-hover:text-[#FFC300] truncate w-full mt-1">Subir JPG/PNG...</span>
+                                <input type="file" id="reg-logo" accept="image/*" class="hidden" onchange="updateFileLabel(this, 'label-logo')">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- FOOTER MODAL (BOTÓN FIJO ABAJO) -->
+            <div class="p-6 md:p-8 border-t border-white/5 shrink-0 bg-[#000000]/20 rounded-b-[2.5rem]">
+                <button type="submit" form="form-register-action" id="btn-register" class="w-full btn-gold-pro font-[900] text-[10px] uppercase tracking-widest py-4 rounded-2xl flex justify-center items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Remitir al Dept. de Auditoría
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SCRIPT CONTROL DE UI -->
+    <script>
+        function openRegisterModal() {
+            const modal = document.getElementById('register-modal');
+            const modalInner = modal.querySelector('div');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalInner.classList.remove('scale-95');
+            }, 10);
         }
 
-        // Si partner_login.js no tiene la función updateFileLabel nativamente, la agregamos para seguridad
+        function closeRegisterModal() {
+            const modal = document.getElementById('register-modal');
+            const modalInner = modal.querySelector('div');
+            modal.classList.add('opacity-0');
+            modalInner.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                // Limpiar el form al cerrar
+                document.getElementById('form-register-action').reset();
+                ['label-cedula', 'label-rif', 'label-logo'].forEach(id => {
+                    const label = document.getElementById(id);
+                    label.textContent = id.includes('logo') ? 'Subir JPG/PNG...' : 'Subir Archivo...';
+                    label.className = `text-[8px] text-gray-500 truncate w-full mt-1 group-hover:${id.includes('logo') ? 'text-[#FFC300]' : 'text-emerald-400'}`;
+                });
+            }, 300);
+        }
+
         function updateFileLabel(input, labelId) {
             const label = document.getElementById(labelId);
             if (input.files && input.files[0]) {
@@ -330,12 +313,14 @@
                     label.classList.add('text-emerald-400');
                 }
             } else {
-                label.textContent = 'Cargar Archivo...';
+                label.textContent = labelId.includes('logo') ? 'Subir JPG/PNG...' : 'Subir Archivo...';
                 label.classList.add('text-gray-500');
                 label.classList.remove('text-emerald-400', 'text-[#FFC300]');
             }
         }
     </script>
+
+    <!-- SCRIPT DE BACKEND (Mantiene los event listeners en los IDs originales) -->
     <script src="/static/js/store/partner_login.js"></script>
 </body>
 </html>
