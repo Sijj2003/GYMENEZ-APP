@@ -69,7 +69,7 @@
             box-shadow: 0 0 15px rgba(255, 195, 0, 0.1);
         }
         
-        /* Select Premium (para remover flecha por defecto y darle estilo) */
+        /* Select Premium */
         select.glass-input option {
             background-color: #0a0a0f;
             color: white;
@@ -129,13 +129,16 @@
                     <span class="text-white font-[900] text-xl md:text-2xl italic tracking-tighter transition-transform group-hover:scale-105">ENEZ</span>
                 </a>
 
-                <!-- DERECHA: ¿Ya eres usuario? -> Ingresar -->
-                <div class="flex items-center gap-3 z-20 flex-shrink-0">
-                    <span class="hidden md:block text-gray-400 text-[9px] font-bold tracking-widest uppercase">¿Ya eres usuario?</span>
-                    <a href="/apps/start/login.html" class="border border-white/10 bg-white/5 text-white hover:bg-white hover:text-black px-5 py-2 md:py-2.5 rounded-full text-[9px] font-black tracking-[0.2em] transition-all uppercase whitespace-nowrap shadow-lg">
+                <!-- DERECHA: (Sólo en PC) ¿Ya eres usuario? -> Ingresar -->
+                <div class="hidden md:flex items-center gap-3 z-20 flex-shrink-0">
+                    <span class="text-gray-400 text-[9px] font-bold tracking-widest uppercase">¿Ya eres usuario?</span>
+                    <a href="/apps/start/login.html" class="border border-white/10 bg-white/5 text-white hover:bg-white hover:text-black px-5 py-2.5 rounded-full text-[9px] font-black tracking-[0.2em] transition-all uppercase whitespace-nowrap shadow-lg">
                         Ingresar
                     </a>
                 </div>
+                
+                <!-- DERECHA: Espaciador invisible para móviles para centrar bien el logo -->
+                <div class="md:hidden w-8 z-20 flex-shrink-0"></div>
             </div>
         </div>
     </nav>
@@ -172,14 +175,22 @@
                     </div>
                     <div>
                         <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Correo Electrónico</label>
-                        <!-- SOLUCIÓN: maxlength="70" para evitar el corte prematuro del correo -->
                         <input type="email" id="reg-email" required maxlength="70" class="w-full glass-input px-5 py-3.5 md:py-4 rounded-2xl text-xs font-medium placeholder-gray-600" placeholder="atleta@gymenez.com">
                     </div>
+                    
                     <div class="pt-6">
                         <button type="button" id="btn-next-1" class="btn-gold-premium w-full py-4 md:py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 group">
                             Continuar
                             <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                         </button>
+                        
+                        <!-- ENLACE LOGIN MÓVIL (Solo visible en cel y desaparece al ir al Paso 2) -->
+                        <div class="md:hidden mt-6 pt-5 border-t border-white/5 text-center">
+                            <span class="block text-gray-500 text-[9px] font-bold tracking-widest uppercase mb-3">¿Ya tienes cuenta?</span>
+                            <a href="/apps/start/login.html" class="flex items-center justify-center w-full py-3.5 rounded-2xl border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white font-black text-[9px] uppercase tracking-[0.2em] transition-all">
+                                Ingresar
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -269,7 +280,6 @@
         <p class="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.5em] text-gray-600">© 2026 GYMENEZ • EL ESTÁNDAR DE EXCELENCIA</p>
     </footer>
 
-    <!-- TU SCRIPT SE MANTIENE INTACTO -->
     <script src="/static/js/auth/register.js"></script>
 </body>
 </html>
