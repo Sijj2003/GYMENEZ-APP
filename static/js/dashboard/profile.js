@@ -43,6 +43,8 @@ async function loadAthleteBiometricsDashboard() {
 
             // 1. ACOPLAMIENTO DE TARJETA DE IDENTIDAD
             if (p) {
+                console.log("Datos del backend:", p);
+                
                 safeInject('p-fullname', `${p.name || ''} ${p.last_name || ''}`.trim());
                 safeInject('p-email', p.email);
                 safeInject('p-dob', p.dob);
