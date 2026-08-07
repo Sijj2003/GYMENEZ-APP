@@ -61,6 +61,13 @@ async function loadAthleteBiometricsDashboard() {
                         subBadge.className = "px-3 py-1 bg-gray-500/10 text-gray-400 text-[8px] md:text-[9px] font-black rounded border border-gray-500/20 uppercase tracking-widest inline-block mb-4 shadow-sm";
                     }
                 }
+
+                // Lógica de inyección para la fecha de vencimiento
+                const expireText = (p.subscription_level && p.subscription_level.toUpperCase() === 'BASICO') 
+                    ? 'ILIMITADO' 
+                    : p.subscription_expires_at;
+                
+                safeInject('p-subscription-expire', expireText);
             }
 
             // 2. ACOPLAMIENTO DE MÉTRICAS BASE
