@@ -80,6 +80,7 @@ async function loadAthleteBiometricsDashboard() {
                     : formattedExpire;
                 
                 safeInject('p-subscription-expire', expireText);
+              }  
 
             // 2. ACOPLAMIENTO DE MÉTRICAS BASE
             safeInject('m-peso', m.weight);
