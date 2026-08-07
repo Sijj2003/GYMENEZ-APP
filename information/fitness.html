@@ -2,12 +2,12 @@
 <html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GYMENEZ | Fitness de Alto Rendimiento</title>
     
     <link rel="icon" type="image/svg+xml" href="../static/img/logos/mini_logo.svg">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     
     <style>
         body { 
@@ -17,6 +17,7 @@
             overflow-x: hidden;
         }
 
+        /* 🚀 EFECTO PARALLAX NATIVO */
         .parallax-hero {
             background-image: url('https://images.unsplash.com/photo-1550345332-09e3ac987658?q=80&w=1887');
             background-attachment: fixed;
@@ -29,138 +30,204 @@
         .parallax-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to bottom, rgba(3,3,5,0.85) 0%, rgba(3,3,5,0.5) 60%, rgba(3,3,5,1) 100%);
+            background: linear-gradient(to bottom, rgba(3,3,5,0.85) 0%, rgba(3,3,5,0.4) 50%, rgba(3,3,5,1) 100%);
             z-index: 1;
         }
 
+        /* Glassmorphism Premium Apple-Style */
         .glass-panel {
-            background: rgba(15, 15, 20, 0.4);
+            background: rgba(10, 10, 15, 0.4);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8);
         }
 
         .glass-nav {
-            background: rgba(3, 3, 5, 0.7);
-            backdrop-filter: blur(15px);
+            background: rgba(3, 3, 5, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .text-glow-gold { text-shadow: 0 0 20px rgba(255, 195, 0, 0.4); }
-        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        /* Botón Dorado Premium */
+        .btn-gold-premium {
+            background: rgba(255, 195, 0, 0.1);
+            border: 1px solid rgba(255, 195, 0, 0.3);
+            color: #FFC300;
+            transition: all 0.3s ease;
+        }
+        .btn-gold-premium:hover {
+            background: #FFC300;
+            color: #000;
+            box-shadow: 0 0 25px rgba(255, 195, 0, 0.4);
+        }
+
+        /* Tipografía y Brillos Sutiles */
+        .text-glow-gold { text-shadow: 0 0 40px rgba(255, 195, 0, 0.4); }
+        .text-glow-white { text-shadow: 0 0 30px rgba(255, 255, 255, 0.2); }
+        
+        /* Animación de entrada al hacer scroll */
+        .reveal { opacity: 0; transform: translateY(40px); transition: all 1s cubic-bezier(0.16, 1, 0.3, 1); }
         .reveal.active { opacity: 1; transform: translateY(0); }
     </style>
 </head>
 <body class="selection:bg-[#FFC300] selection:text-black">
 
-    <!-- 🧭 NAVEGACIÓN -->
-    <nav class="fixed w-full z-[100] glass-nav py-4 px-6 md:px-12 flex justify-between items-center">
-        <div class="flex items-center cursor-pointer" onclick="window.location.href='../index.html'">
-            <span class="text-[#FFC300] font-[900] text-xl md:text-2xl italic tracking-tighter">GYM</span>
-            <span class="text-white font-[900] text-xl md:text-2xl italic tracking-tighter">ENEZ</span>
+    <!-- 🧭 NAVEGACIÓN MINIMALISTA -->
+    <nav class="fixed top-0 w-full z-50 glass-nav transition-all duration-500" id="main-nav">
+        <div class="w-full px-4 md:px-8">
+            <div class="flex items-center justify-between h-16 md:h-20 w-full relative">
+                
+                <!-- IZQUIERDA: Botón Volver -->
+                <div class="flex items-center z-20 flex-shrink-0">
+                    <a href="../index.html" class="p-2 -ml-2 text-gray-400 hover:text-white transition flex items-center gap-2 group">
+                        <svg class="w-6 h-6 md:w-5 md:h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        <span class="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] hidden md:block">Regresar</span>
+                    </a>
+                </div>
+
+                <!-- CENTRO: LOGO -->
+                <a href="../index.html" class="absolute left-1/2 transform -translate-x-1/2 flex items-center leading-none group z-10 cursor-pointer">
+                    <span class="text-[#FFC300] font-[900] text-xl md:text-2xl italic tracking-tighter transition-transform group-hover:scale-105">GYM</span>
+                    <span class="text-white font-[900] text-xl md:text-2xl italic tracking-tighter transition-transform group-hover:scale-105">ENEZ</span>
+                </a>
+
+                <!-- DERECHA: Espaciador -->
+                <div class="w-10 z-20 flex-shrink-0"></div>
+            </div>
         </div>
-        <a href="../index.html" class="text-xs font-bold uppercase tracking-widest text-white border border-white/10 px-5 py-2 rounded-full hover:bg-white/5 transition-all bg-[#111]">
-            Regresar
-        </a>
     </nav>
 
-    <!-- 🎬 HERO -->
-    <section class="parallax-hero min-h-[85vh] flex items-center px-6 md:px-16">
+    <!-- 🎬 HERO SECTION -->
+    <section class="parallax-hero min-h-[90vh] flex items-center px-4 md:px-16 pb-12">
         <div class="parallax-overlay"></div>
-        <div class="relative z-10 w-full max-w-4xl mt-16 reveal active">
-            <span class="bg-[#FFC300] text-black text-[9px] md:text-[10px] font-[900] px-3 py-1 rounded-full uppercase tracking-widest mb-4 inline-block shadow-lg">Módulo de Planificación Física</span>
-            <h1 class="text-4xl sm:text-6xl md:text-8xl font-[900] leading-[0.9] italic tracking-tighter mb-6 uppercase">
+        <div class="relative z-10 w-full max-w-5xl mt-24 reveal active">
+            <span class="inline-block px-5 py-2 rounded-full border border-[#FFC300]/20 bg-[#FFC300]/10 text-[#FFC300] font-black tracking-[0.4em] text-[8px] md:text-[9px] uppercase mb-6 backdrop-blur-md shadow-[0_0_15px_rgba(255,195,0,0.1)]">
+                Módulo de Planificación Física
+            </span>
+            <h1 class="text-5xl sm:text-7xl md:text-[6rem] font-[900] leading-[0.85] italic tracking-tighter mb-8 uppercase drop-shadow-2xl">
                 TU PROGRESO, <br><span class="text-[#FFC300] text-glow-gold">SIN ADIVINANZAS.</span>
             </h1>
-            <p class="text-base md:text-xl text-gray-300 max-w-2xl font-medium leading-relaxed italic">
-                Ir al gimnasio a levantar siempre los mismos kilos o cambiar de rutina cada semana es la receta para estancarte. Diseñamos un sistema de entrenamiento que se adapta a tu energía diaria para asegurar que cada serie sume a tus resultados.
+            <p class="text-base md:text-xl text-gray-300 max-w-2xl font-medium leading-relaxed mb-10 drop-shadow-lg">
+                Ir al gimnasio a levantar siempre los mismos kilos o cambiar de rutina cada semana es la receta para estancarte. Diseñamos un sistema que calibra tu entrenamiento basándose en tu energía diaria.
             </p>
         </div>
     </section>
 
-    <!-- 🔍 CÓMO FUNCIONA -->
-    <section class="py-24 px-6 md:px-16 bg-white text-black relative z-20">
-        <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <div class="space-y-6 md:space-y-8 reveal">
-                <h2 class="text-3xl md:text-5xl font-[900] italic tracking-tighter uppercase leading-none text-gray-900">Tu entrenamiento <br>tiene un plan.</h2>
-                <div class="w-16 h-1.5 bg-[#FFC300]"></div>
-                <p class="text-base md:text-lg text-gray-600 font-medium italic leading-relaxed">
+    <!-- 🔍 CÓMO FUNCIONA (Widgets Apple-Style) -->
+    <section class="py-24 md:py-32 px-6 md:px-16 bg-[#030305] relative z-20">
+        <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+            
+            <div class="space-y-8 md:space-y-10 reveal">
+                <div>
+                    <h2 class="text-4xl md:text-6xl font-[900] italic tracking-tighter uppercase leading-[0.9] text-white text-glow-white mb-6">Tu entrenamiento <br><span class="text-gray-500">tiene un plan.</span></h2>
+                    <div class="w-16 h-1.5 bg-gradient-to-r from-[#FFC300] to-yellow-500 rounded-full"></div>
+                </div>
+                
+                <p class="text-base md:text-lg text-gray-400 font-medium leading-relaxed">
                     No necesitas pasar horas calculando porcentajes o pensando qué ejercicio hacer hoy. Cada vez que inicias sesión, el sistema evalúa tu historial y prescribe el esfuerzo óptimo para tus músculos, dándote la seguridad de que vas por el camino correcto.
                 </p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="p-5 border-l-4 border-black bg-gray-50 rounded-r-xl">
-                        <span class="block text-lg font-black italic uppercase">Cargas Progresivas</span>
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">Estímulos microscópicos para ganar fuerza real</span>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <!-- Widget 1 -->
+                    <div class="p-6 md:p-8 border border-white/10 bg-white/5 backdrop-blur-xl rounded-[2rem] hover:bg-white/10 transition-colors duration-300 group">
+                        <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                        <span class="block text-lg font-black italic uppercase text-white mb-1">Cargas Progresivas</span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed block">Estímulos microscópicos para ganar fuerza real</span>
                     </div>
-                    <div class="p-5 border-l-4 border-[#FFC300] bg-gray-50 rounded-r-xl">
-                        <span class="block text-lg font-black italic uppercase">Autorregulación</span>
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">La rutina cambia si tu cuerpo lo necesita</span>
+                    <!-- Widget 2 -->
+                    <div class="p-6 md:p-8 border border-[#FFC300]/30 bg-[#FFC300]/5 backdrop-blur-xl rounded-[2rem] hover:bg-[#FFC300]/10 transition-colors duration-300 group shadow-[0_0_20px_rgba(255,195,0,0.05)]">
+                        <div class="w-10 h-10 rounded-full bg-[#FFC300]/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <svg class="w-5 h-5 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        </div>
+                        <span class="block text-lg font-black italic uppercase text-[#FFC300] mb-1">Autorregulación</span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed block">La rutina cambia si tu cuerpo lo necesita</span>
                     </div>
                 </div>
             </div>
-            <div class="rounded-[24px] md:rounded-[40px] overflow-hidden shadow-2xl aspect-video bg-gray-100 reveal">
-                <img src="https://images.unsplash.com/photo-1593079831268-3381b0db4a77?q=80&w=2069" class="w-full h-full object-cover" alt="Entrenamiento de Fuerza">
+
+            <!-- Imagen Estilo Producto Premium -->
+            <div class="relative reveal">
+                <div class="absolute inset-0 bg-gradient-to-tr from-[#FFC300]/20 to-transparent blur-3xl transform scale-95"></div>
+                <div class="rounded-[2.5rem] md:rounded-[3rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 relative z-10 aspect-[4/5] md:aspect-square">
+                    <img src="https://images.unsplash.com/photo-1593079831268-3381b0db4a77?q=80&w=2069" class="w-full h-full object-cover transform hover:scale-105 transition-transform duration-1000" alt="Entrenamiento de Fuerza">
+                    <div class="absolute inset-0 bg-black/20"></div>
+                </div>
             </div>
+            
         </div>
     </section>
 
-    <!-- 🧬 PILARES HUMANOS -->
-    <section class="py-24 px-6 md:px-16 bg-[#050505] relative z-20 border-t border-white/5">
-        <div class="max-w-6xl mx-auto space-y-16">
-            <div class="text-center max-w-2xl mx-auto reveal">
-                <h3 class="text-2xl md:text-4xl font-black uppercase italic tracking-tight mb-4">Tres defensas contra el estancamiento</h3>
-                <p class="text-gray-400 text-sm font-medium">Diseñamos esta experiencia pensando en los problemas reales del gimnasio: la falta de sueño, el dolor en las articulaciones y la falta de rumbo.</p>
+    <!-- 🧬 PILARES HUMANOS (Tarjetas de Cristal) -->
+    <section class="py-24 md:py-32 px-6 md:px-16 bg-[#050505] relative z-20 border-t border-white/5">
+        <div class="max-w-7xl mx-auto space-y-16 md:space-y-24">
+            
+            <div class="text-center max-w-3xl mx-auto reveal">
+                <h3 class="text-3xl md:text-5xl font-[900] uppercase italic tracking-tighter mb-6">Tres defensas contra <br>el <span class="text-gray-600">estancamiento.</span></h3>
+                <p class="text-gray-400 text-sm md:text-base font-medium leading-relaxed">Diseñamos esta experiencia pensando en los problemas reales del gimnasio: la falta de sueño, el dolor articular y la falta de rumbo. Resolvemos los tres.</p>
             </div>
 
             <div class="grid md:grid-cols-3 gap-6 md:gap-8">
                 <!-- Morning Check-In -->
-                <div class="glass-panel p-6 md:p-8 rounded-3xl border-t border-t-white/10 reveal">
-                    <div class="text-[#FFC300] text-2xl mb-4">🛌</div>
-                    <h4 class="text-lg font-black uppercase italic text-white mb-2">Tu estado cada mañana</h4>
-                    <p class="text-gray-400 text-xs leading-relaxed font-medium">Antes de levantar la primera barra, te preguntamos cómo dormiste y cómo te sientes. Si pasaste una mala noche o estás bajo mucho estrés, el sistema reduce el peso de la sesión de manera inteligente para cuidarte sin perder el estímulo.</p>
+                <div class="glass-panel p-8 md:p-12 rounded-[2.5rem] border-t border-t-white/10 reveal hover:-translate-y-2 transition-transform duration-500">
+                    <div class="w-14 h-14 rounded-full bg-[#FFC300]/10 flex items-center justify-center mb-6 border border-[#FFC300]/20 shadow-[0_0_15px_rgba(255,195,0,0.1)]">
+                        <svg class="w-6 h-6 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </div>
+                    <h4 class="text-xl md:text-2xl font-[900] uppercase italic text-white mb-4">Estado Inicial</h4>
+                    <p class="text-gray-400 text-xs md:text-sm leading-relaxed font-medium">Antes de levantar la primera barra, evaluamos cómo dormiste y tu nivel de estrés. Si pasaste una mala noche, el sistema ajusta el peso de la sesión instantáneamente para protegerte.</p>
                 </div>
 
                 <!-- Cuidado Articular -->
-                <div class="glass-panel p-6 md:p-8 rounded-3xl border-t border-t-white/10 reveal">
-                    <div class="text-red-400 text-2xl mb-4">🛡️</div>
-                    <h4 class="text-lg font-black uppercase italic text-white mb-2">Protección ante molestias</h4>
-                    <p class="text-gray-400 text-xs leading-relaxed font-medium">Entrenar con dolor destruye tu progreso. Si reportas una molestia en el hombro o la rodilla, la planificación retira inmediatamente los ejercicios libres peligrosos y los sustituye por variantes guiadas que aíslan la articulación afectada.</p>
+                <div class="glass-panel p-8 md:p-12 rounded-[2.5rem] border-t border-t-white/10 reveal hover:-translate-y-2 transition-transform duration-500 delay-100">
+                    <div class="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mb-6 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+                        <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    </div>
+                    <h4 class="text-xl md:text-2xl font-[900] uppercase italic text-white mb-4">Protección</h4>
+                    <p class="text-gray-400 text-xs md:text-sm leading-relaxed font-medium">Entrenar con dolor destruye tu progreso. Si reportas una molestia, la planificación retira inmediatamente los ejercicios libres peligrosos y sugiere variantes guiadas y seguras.</p>
                 </div>
 
                 <!-- Historial de Victorias -->
-                <div class="glass-panel p-6 md:p-8 rounded-3xl border-t border-t-white/10 reveal">
-                    <div class="text-emerald-400 text-2xl mb-4">📈</div>
-                    <h4 class="text-lg font-black uppercase italic text-white mb-2">Tu diario de evolución</h4>
-                    <p class="text-gray-400 text-xs leading-relaxed font-medium">Cada repetición cuenta. Llevamos una bitácora precisa de lo que levantas en cada entrenamiento. Ver en una gráfica limpia cómo sube tu capacidad física es el combustible definitivo para mantenerte constante.</p>
+                <div class="glass-panel p-8 md:p-12 rounded-[2.5rem] border-t border-t-white/10 reveal hover:-translate-y-2 transition-transform duration-500 delay-200">
+                    <div class="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mb-6 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                        <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    </div>
+                    <h4 class="text-xl md:text-2xl font-[900] uppercase italic text-white mb-4">Evolución</h4>
+                    <p class="text-gray-400 text-xs md:text-sm leading-relaxed font-medium">Cada repetición cuenta. Llevamos una bitácora precisa de lo que levantas. Ver en una gráfica limpia cómo sube tu capacidad física es el combustible para mantenerte constante.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 💳 CALL TO ACTION -->
-    <section class="py-24 bg-[#030305] text-center px-4 relative z-20 border-t border-white/5">
-        <div class="max-w-2xl mx-auto reveal">
-            <h3 class="text-3xl md:text-5xl font-[900] italic uppercase tracking-tighter mb-4">Llegó el momento de <span class="text-[#FFC300]">avanzar en serio.</span></h3>
-            <p class="text-gray-400 text-xs md:text-sm font-medium mb-8 leading-relaxed">
-                Únete a un programa que te entiende, te cuida y te exige lo justo para evolucionar semana tras semana.
+    <!-- 💳 CALL TO ACTION FINAL -->
+    <section class="py-32 bg-[#030305] text-center px-6 relative z-20 border-t border-white/5">
+        <div class="max-w-3xl mx-auto reveal">
+            <h3 class="text-4xl md:text-6xl font-[900] italic uppercase tracking-tighter mb-6">El momento de <br><span class="text-[#FFC300]">Avanzar.</span></h3>
+            <p class="text-gray-400 text-sm md:text-base font-medium mb-12 leading-relaxed max-w-xl mx-auto">
+                Únete a un programa que te entiende, te cuida y te exige exactamente lo justo para evolucionar semana tras semana.
             </p>
-            <a href="../billing/planes.html" class="inline-block px-10 py-4 bg-white text-black font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-[#FFC300] hover:shadow-[0_0_20px_rgba(255,195,0,0.4)] transition transform hover:scale-105">
+            <a href="../billing/planes.html" class="inline-flex items-center justify-center gap-3 px-10 py-4 md:py-5 btn-gold-premium rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.2em] transform hover:scale-105 group">
                 Ver Planes de Entrenamiento
+                <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             </a>
         </div>
     </section>
 
-    <!-- 🏁 FOOTER -->
-    <footer class="py-12 text-center border-t border-white/5 opacity-40 bg-[#030305]">
-        <p class="text-[8px] md:text-[9px] font-black uppercase tracking-[0.5em]">© 2026 GYMENEZ PERFORMANCE • TU MEJOR VERSIÓN</p>
+    <!-- 🏁 FOOTER MINIMALISTA -->
+    <footer class="py-12 text-center border-t border-white/5 bg-[#030305]">
+        <p class="text-[8px] md:text-[9px] font-black uppercase tracking-[0.5em] text-gray-600">© 2026 GYMENEZ PERFORMANCE • TU MEJOR VERSIÓN</p>
     </footer>
 
     <script>
+        // Animación fluida de revelado al hacer scroll
         const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('active');
+                    entry.target.classList.remove('opacity-0', 'translate-y-[40px]');
                     observer.unobserve(entry.target);
                 }
             });
