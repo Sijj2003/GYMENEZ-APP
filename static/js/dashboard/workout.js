@@ -436,7 +436,12 @@ function renderRoutineForSelectedDay() {
             </div>
         `;
         if (listEl) listEl.appendChild(card);
-    });
+
+        // 🔄 NUEVO: Revisar si la caché restaurada ya completó todas las rondas.
+        if (!ex.isSaved && !isRoutineLocked) {
+            setTimeout(() => checkAllSetsCompleted(ex.id), 50);
+        }
+    }); // <-- Aquí termina el forEach
 
     if (isRoutineLocked) {
         const progressBar = document.getElementById('workout-progress-bar');
