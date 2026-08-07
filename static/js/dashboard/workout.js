@@ -181,6 +181,9 @@ async function saveToJournal(exId) {
         if (!res.ok) throw new Error("Fallo al actualizar sesión.");
 
         showFeedback('registrado en el Journal.');
+
+        // 🧹 NUEVO: Limpiar la caché local una vez que el backend confirma el guardado
+        localStorage.removeItem(`${CACHE_KEY_PREFIX}${sessionId}_${exId}`);
         
         if (!todayProgressData[selectedDay]) {
             todayProgressData[selectedDay] = { status: journalData.status, exercises: {} };
