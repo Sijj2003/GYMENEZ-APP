@@ -15,7 +15,7 @@ async function loadAthleteBiometricsDashboard() {
     }
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/client/metrics`, {
+        const res = await fetch(`${API_BASE_URL}/api/profile/me`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
