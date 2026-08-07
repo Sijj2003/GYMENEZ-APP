@@ -13,13 +13,13 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #000000; /* iOS True Black */
+            background-color: #000000;
             color: white; 
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* 🌌 Fondos y Ambientes */
+        /* Fondos y Ambientes */
         .ambient-glow {
             position: fixed;
             top: -20%; left: -10%;
@@ -39,7 +39,7 @@
             pointer-events: none;
         }
 
-        /* 🪟 Componentes de Cristal */
+        /* Componentes de Cristal (Se mantiene el PC intacto, móvil se ajusta con Tailwind) */
         .glass-nav {
             background: rgba(10, 10, 15, 0.65);
             backdrop-filter: blur(30px);
@@ -65,13 +65,11 @@
             }
         }
 
-        /* 🎨 Efectos de color por módulo */
         .hover-gold:hover { box-shadow: 0 20px 40px -10px rgba(255, 195, 0, 0.15); border-color: rgba(255, 195, 0, 0.3); }
         .hover-emerald:hover { box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); }
         .hover-red:hover { box-shadow: 0 20px 40px -10px rgba(220, 38, 38, 0.15); border-color: rgba(220, 38, 38, 0.3); }
         .hover-sky:hover { box-shadow: 0 20px 40px -10px rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.3); }
 
-        /* Imágenes de fondo para tarjetas */
         .bg-workout {
             background-image: linear-gradient(to top, rgba(5,5,10,0.95), rgba(5,5,10,0.3)), url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000');
             background-size: cover;
@@ -88,11 +86,9 @@
             background-position: center;
         }
 
-        /* 📱 NATIVO MÓVIL: Ocultar barra de scroll para el deslizamiento horizontal */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* 💫 Animaciones de Entrada */
         .fade-in-up {
             opacity: 0;
             transform: translateY(20px);
@@ -100,6 +96,11 @@
         }
         @keyframes fadeInUp {
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Utilidad para el SafeArea en iOS Nav Inferior */
+        @media (max-width: 767px) {
+            .pb-safe { padding-bottom: env(safe-area-inset-bottom, 1rem); }
         }
     </style>
 </head>
@@ -116,9 +117,10 @@
 
     <div id="dashboard-screen" class="min-h-screen w-full relative z-10 flex flex-col pb-24 md:pb-0">
         
-        <!-- 🧭 NAVBAR SUPERIOR (Diferente en Móvil y PC) -->
-        <header class="w-full glass-nav sticky top-0 z-50 transition-all duration-300">
-            <div class="max-w-[1400px] mx-auto px-5 md:px-8 h-16 md:h-20 flex justify-between items-center">
+        <!-- 🧭 NAVBAR SUPERIOR -->
+        <!-- Update Móvil: Fondo y cristal similares al Navbar de la Store -->
+        <header class="w-full sticky top-0 z-50 transition-all duration-300 bg-[#030305]/90 backdrop-blur-xl border-b border-white/5 md:glass-nav md:border-b md:border-white/5 md:bg-transparent md:backdrop-blur-none">
+            <div class="max-w-[1400px] mx-auto px-4 md:px-8 h-16 md:h-20 flex justify-between items-center">
                 
                 <!-- Logo -->
                 <div class="flex items-center gap-1.5 cursor-pointer group" onclick="window.location.href='/index.html'">
@@ -156,7 +158,7 @@
         </header>
 
         <!-- 🎛️ CONTENIDO PRINCIPAL (App Experience) -->
-        <main class="max-w-[1400px] mx-auto w-full px-5 md:px-8 py-6 md:py-12 flex-grow">
+        <main class="max-w-[1400px] mx-auto w-full px-4 md:px-8 py-6 md:py-12 flex-grow">
             
             <!-- Saludo Nativo iOS Style -->
             <div class="mb-6 md:mb-12 fade-in-up" style="animation-delay: 0.1s;">
@@ -166,12 +168,13 @@
                 </h2>
             </div>
 
-            <!-- 🧱 GRID DINÁMICO (Scroll en Móvil, Grid en PC) -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-auto">
+            <!-- 🧱 GRID DINÁMICO -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 auto-rows-auto">
 
                 <!-- 1. FITNESS PERFORMANCE (Héroe) -->
-                <div class="col-span-2 md:col-span-2 lg:col-span-2 row-span-2 bento-card hover-gold rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 flex flex-col justify-between relative bg-workout fade-in-up group" style="animation-delay: 0.2s;">
-                    <div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors duration-500"></div>
+                <!-- Update Móvil: Sombra y borde premium tipo Store -->
+                <div class="col-span-2 md:col-span-2 lg:col-span-2 row-span-2 bento-card hover-gold rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 flex flex-col justify-between relative bg-workout fade-in-up group shadow-[0_10px_30px_rgba(255,195,0,0.1)] border border-[#FFC300]/20 md:border-white/5 md:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)]" style="animation-delay: 0.2s;">
+                    <div class="absolute inset-0 bg-black/40 md:bg-black/30 group-hover:bg-black/10 transition-colors duration-500"></div>
                     
                     <div class="relative z-10">
                         <span class="px-3 py-1.5 bg-[#FFC300]/20 text-[#FFC300] text-[9px] md:text-[9px] font-black rounded-full border border-[#FFC300]/30 uppercase tracking-[0.2em] inline-block mb-4 backdrop-blur-md">
@@ -196,11 +199,12 @@
                 </div>
 
                 <!-- ↔️ CONTENEDOR HORIZONTAL EN MÓVIL / GRID EN PC -->
-                <div class="col-span-2 md:col-span-2 lg:col-span-2 flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 md:gap-6 -mx-5 px-5 md:mx-0 md:px-0 md:grid md:grid-cols-2 md:overflow-visible">
+                <!-- Update Móvil: Ajuste de padding/gap tipo categoría de la Store -->
+                <div class="col-span-2 md:col-span-2 lg:col-span-2 flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-3 md:gap-6 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 md:overflow-visible">
                     
                     <!-- 2. GYMENEZ EATS -->
-                    <a href="/apps/user/eats.html" id="card-eats" class="min-w-[85%] md:min-w-0 snap-center flex-shrink-0 col-span-1 bento-card hover-emerald rounded-[2rem] p-6 md:p-8 bg-eats flex flex-col justify-end min-h-[220px] md:min-h-[240px] fade-in-up group relative overflow-hidden" style="animation-delay: 0.3s;">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent group-hover:from-black/70 transition-colors"></div>
+                    <a href="/apps/user/eats.html" id="card-eats" class="min-w-[88%] md:min-w-0 snap-center flex-shrink-0 col-span-1 bento-card hover-emerald rounded-[2rem] p-6 md:p-8 bg-eats flex flex-col justify-end min-h-[220px] md:min-h-[240px] fade-in-up group relative overflow-hidden" style="animation-delay: 0.3s;">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent md:from-black/90 md:via-black/40 group-hover:from-black/70 transition-colors"></div>
                         <div class="relative z-10">
                             <span class="text-[9px] md:text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-2 block">Nutrición Dinámica</span>
                             <h3 class="text-2xl md:text-2xl font-[900] uppercase tracking-tighter text-white group-hover:text-emerald-300 transition-colors">GYMENEZ <br>EATS</h3>
@@ -208,8 +212,8 @@
                     </a>
 
                     <!-- 3. GYMENEZ ON -->
-                    <a href="/apps/user/on.html" id="card-on" class="min-w-[85%] md:min-w-0 snap-center flex-shrink-0 col-span-1 bento-card hover-red rounded-[2rem] p-6 md:p-8 bg-on flex flex-col justify-end min-h-[220px] md:min-h-[240px] fade-in-up group relative overflow-hidden" style="animation-delay: 0.4s;">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent group-hover:from-black/70 transition-colors"></div>
+                    <a href="/apps/user/on.html" id="card-on" class="min-w-[88%] md:min-w-0 snap-center flex-shrink-0 col-span-1 bento-card hover-red rounded-[2rem] p-6 md:p-8 bg-on flex flex-col justify-end min-h-[220px] md:min-h-[240px] fade-in-up group relative overflow-hidden" style="animation-delay: 0.4s;">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent md:from-black/90 md:via-black/40 group-hover:from-black/70 transition-colors"></div>
                         <div class="relative z-10">
                             <span class="bg-red-600 text-white text-[8px] md:text-[8px] font-black px-2.5 py-1 rounded-sm uppercase tracking-widest mb-3 inline-block">Exclusivo</span>
                             <h3 class="text-2xl md:text-2xl font-[900] uppercase tracking-tighter text-white group-hover:text-red-400 transition-colors">GYMENEZ <br>ON</h3>
@@ -219,7 +223,7 @@
                 </div> <!-- Fin contenedor horizontal -->
 
                 <!-- 4. MIS OBJETIVOS -->
-                <a href="/apps/user/goals.html" id="card-goals" class="col-span-1 lg:col-span-1 bento-card rounded-[2rem] p-5 md:p-8 flex flex-col justify-between min-h-[160px] md:min-h-[200px] fade-in-up group hover:border-[#FFC300]/30" style="animation-delay: 0.5s;">
+                <a href="/apps/user/goals.html" id="card-goals" class="col-span-1 lg:col-span-1 bento-card rounded-[2rem] p-5 md:p-8 flex flex-col justify-between min-h-[160px] md:min-h-[200px] fade-in-up group hover:border-[#FFC300]/30 bg-white/[0.02] md:bg-transparent" style="animation-delay: 0.5s;">
                     <div class="text-[#FFC300] mb-4 bg-[#FFC300]/10 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                         <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
@@ -230,7 +234,7 @@
                 </a>
 
                 <!-- 5. PULSE CENTER -->
-                <a href="/apps/user/pulse.html" class="col-span-1 lg:col-span-1 bento-card hover-sky rounded-[2rem] p-5 md:p-8 flex flex-col justify-between min-h-[160px] md:min-h-[200px] fade-in-up group" style="animation-delay: 0.6s;">
+                <a href="/apps/user/pulse.html" class="col-span-1 lg:col-span-1 bento-card hover-sky rounded-[2rem] p-5 md:p-8 flex flex-col justify-between min-h-[160px] md:min-h-[200px] fade-in-up group bg-white/[0.02] md:bg-transparent" style="animation-delay: 0.6s;">
                     <div class="text-sky-400 mb-4 flex justify-between items-start">
                         <div class="bg-sky-400/10 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                             <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z"></path></svg>
@@ -244,12 +248,16 @@
                 </a>
 
                 <!-- 6. UPGRADE BANNER -->
-                <div class="col-span-2 md:col-span-3 lg:col-span-4 bento-card rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 flex flex-col sm:flex-row items-center justify-between border border-[#FFC300]/20 bg-gradient-to-r from-[#FFC300]/10 to-transparent fade-in-up relative overflow-hidden" style="animation-delay: 0.7s;">
-                    <div class="mb-5 sm:mb-0 text-center sm:text-left relative z-10">
+                <!-- Update Móvil: Fondo radial tipo héroe y botón adaptado de Store -->
+                <div class="col-span-2 md:col-span-3 lg:col-span-4 bento-card rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 flex flex-col sm:flex-row items-center justify-between border border-white/5 md:border-[#FFC300]/20 bg-gradient-to-br from-[#0a0a0f] to-[#030305] md:bg-gradient-to-r md:from-[#FFC300]/10 md:to-transparent fade-in-up relative overflow-hidden shadow-2xl md:shadow-none" style="animation-delay: 0.7s;">
+                    <!-- Orbe de luz extraído del banner de la tienda, visible solo en móvil (md:hidden anula el orbe en pc porque en pc ya tenías un estilo lineal) -->
+                    <div class="absolute top-0 right-0 w-[200px] md:w-[300px] h-[200px] md:h-[300px] bg-[#FFC300]/10 rounded-full blur-[60px] md:blur-[80px] pointer-events-none"></div>
+
+                    <div class="mb-5 sm:mb-0 text-center sm:text-left relative z-10 w-full sm:w-auto">
                         <h4 id="upgrade-banner-title" class="text-xl md:text-2xl font-[900] uppercase tracking-tighter text-white">Desbloquea tu potencial</h4>
-                        <p id="upgrade-banner-desc" class="text-[10px] md:text-xs text-gray-300 max-w-md mt-2 font-medium leading-relaxed">Lleva tus resultados al límite contratando el Plan Ultra. Nutrición dinámica y Contenido educativo sin restricciones.</p>
+                        <p id="upgrade-banner-desc" class="text-[10px] md:text-xs text-gray-400 md:text-gray-300 max-w-md mt-2 font-medium leading-relaxed">Lleva tus resultados al límite contratando el Plan Ultra. Nutrición dinámica y Contenido educativo sin restricciones.</p>
                     </div>
-                    <a href="/billing/planes.html" id="upgrade-banner-btn" class="relative z-10 px-8 py-3.5 md:px-10 md:py-4 rounded-full bg-white text-black font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-[#FFC300] hover:text-black transition-all whitespace-nowrap shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:scale-105">
+                    <a href="/billing/planes.html" id="upgrade-banner-btn" class="relative z-10 w-full sm:w-auto text-center justify-center flex px-8 py-4 md:px-10 md:py-4 rounded-full bg-[#FFC300] md:bg-white text-black font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-[#FFC300] hover:text-black transition-all whitespace-nowrap shadow-[0_0_20px_rgba(255,195,0,0.3)] md:shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:scale-105">
                         Mejorar Plan
                     </a>
                 </div>
@@ -263,22 +271,22 @@
         </footer>
     </div>
 
-    <!-- 📱 TAB BAR INFERIOR (Solo Móvil - iOS Style) -->
-    <nav class="md:hidden fixed bottom-0 w-full glass-nav border-t border-white/10 z-[100] pb-safe pt-2 px-6 flex justify-between items-center">
+    <!-- 📱 TAB BAR INFERIOR (Solo Móvil - iOS Style idéntico a Store) -->
+    <nav class="md:hidden fixed bottom-0 left-0 w-full z-[100] bg-[#030305]/95 backdrop-blur-xl border-t border-white/10 pb-safe pt-2 px-1 flex justify-around items-center h-[72px]">
         <!-- Hub (Activo) -->
-        <a href="#" class="flex flex-col items-center gap-1.5 text-[#FFC300] w-16">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3l8 6v12h-5v-7H9v7H4V9l8-6z"></path></svg>
+        <a href="#" class="flex flex-col items-center justify-center w-full h-full text-[#FFC300]">
+            <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3l8 6v12h-5v-7H9v7H4V9l8-6z"></path></svg>
             <span class="text-[9px] font-[900] tracking-widest uppercase">Hub</span>
         </a>
         <!-- Store -->
-        <a href="/store/home.html" class="flex flex-col items-center gap-1.5 text-gray-500 hover:text-white transition-colors w-16">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-            <span class="text-[9px] font-bold tracking-widest uppercase">Store</span>
+        <a href="/store/home.html" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-white transition-colors">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+            <span class="text-[9px] font-medium tracking-widest uppercase">Store</span>
         </a>
         <!-- Perfil -->
-        <a href="/apps/user/profile.html" class="flex flex-col items-center gap-1.5 text-gray-500 hover:text-white transition-colors w-16">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-            <span class="text-[9px] font-bold tracking-widest uppercase">Perfil</span>
+        <a href="/apps/user/profile.html" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-white transition-colors">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            <span class="text-[9px] font-medium tracking-widest uppercase">Perfil</span>
         </a>
     </nav>
 
