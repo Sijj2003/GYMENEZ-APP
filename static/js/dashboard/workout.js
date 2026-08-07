@@ -1,5 +1,6 @@
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
+const CACHE_KEY_PREFIX = 'gymenez_workout_cache_';
 
 let currentWeekData = {};
 let todayProgressData = {}; 
@@ -87,6 +88,8 @@ function toggleSetComplete(exId, setIndex) {
         repInput.disabled = false; weightInput.disabled = false;
     }
 
+    localStorage.setItem(`${CACHE_KEY_PREFIX}${sessionId}_${exId}`, JSON.stringify(exerciseStates[exId].sets));
+    
     checkAllSetsCompleted(exId);
 }
 
@@ -344,8 +347,16 @@ function renderRoutineForSelectedDay() {
         if (ex.isSaved) {
             exerciseStates[ex.id] = { rpe: ex.savedData.rpe, sets: ex.savedData.sets_execution.map(s => ({ done: true, reps: s.reps, weight: s.weight })) };
             completedExercises.add(ex.id);
+            // Si ya está guardado en el Journal, limpiamos su caché local
+            localStorage.removeItem(`${CACHE_KEY_PREFIX}${sessionId}_${ex.id}`); 
         } else {
-            exerciseStates[ex.id] = { rpe: null, sets: Array(numSets).fill(null).map(() => ({ done: false, reps: '', weight: '' })) };
+            // 💾 NUEVO: Intentar recuperar el progreso temporal desde LocalStorage
+            const cachedSets = localStorage.getItem(`${CACHE_KEY_PREFIX}${sessionId}_${ex.id}`);
+            if (cachedSets) {
+                exerciseStates[ex.id] = { rpe: null, sets: JSON.parse(cachedSets) };
+            } else {
+                exerciseStates[ex.id] = { rpe: null, sets: Array(numSets).fill(null).map(() => ({ done: false, reps: '', weight: '' })) };
+            }
         }
         
         const memState = exerciseStates[ex.id];
