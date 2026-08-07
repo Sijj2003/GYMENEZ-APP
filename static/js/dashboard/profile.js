@@ -64,13 +64,22 @@ async function loadAthleteBiometricsDashboard() {
                     }
                 }
 
-                // Lógica de inyección para la fecha de vencimiento
+                // Lógica de inyección para la fecha de vencimiento con formateo a DD/MM/YYYY
+                let formattedExpire = p.subscription_expires_at;
+                
+                // Si la fecha existe y tiene formato YYYY-MM-DD o YYYY/MM/DD, la invertimos
+                if (formattedExpire && formattedExpire.length === 10) {
+                    const parts = formattedExpire.split(/[-/]/);
+                    if (parts.length === 3 && parts[0].length === 4) {
+                        formattedExpire = `${parts[2]}/${parts[1]}/${parts[0]}`; // Cambia a DD/MM/YYYY
+                    }
+                }
+
                 const expireText = (p.subscription_level && p.subscription_level.toUpperCase() === 'BASICO') 
                     ? 'ILIMITADO' 
-                    : p.subscription_expires_at;
+                    : formattedExpire;
                 
                 safeInject('p-subscription-expire', expireText);
-            }
 
             // 2. ACOPLAMIENTO DE MÉTRICAS BASE
             safeInject('m-peso', m.weight);
