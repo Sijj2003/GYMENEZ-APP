@@ -1,5 +1,150 @@
 const API_URL = 'https://sijj2003.pythonanywhere.com/api/partner';
 
+
+// ==========================================
+// 1. AUTO REDIRECCIÓN SI YA ESTÁ LOGUEADO
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('gymenez_partner_token');
+    if (token) {
+        // Redirige instantáneamente al lobby si ya hay sesión
+        window.location.href = '/store/partner/dashboard.html';
+    }
+});
+
+// ==========================================
+// 2. OBTENER NOMBRE DEL DISPOSITIVO
+// ==========================================
+function getDeviceName() {
+    const ua = navigator.userAgent;
+    let browser = "Navegador Desconocido";
+    if(ua.includes("Firefox")) browser = "Firefox";
+    else if(ua.includes("Chrome") && !ua.includes("Edg")) browser = "Chrome";
+    else if(ua.includes("Safari") && !ua.includes("Chrome")) browser = "Safari";
+    else if(ua.includes("Edg")) browser = "Edge";
+
+    let os = "OS Desconocido";
+    if(ua.includes("Win")) os = "Windows";
+    else if(ua.includes("Mac")) os = "Mac";
+    else if(ua.includes("Linux") && !ua.includes("Android")) os = "Linux";
+    else if(ua.includes("Android")) os = "Android";
+    else if(ua.includes("like Mac")) os = "iOS";
+
+    return `${browser} en ${os}`;
+}
+
+// Variables globales para el cierre de sesión
+let pendingLoginEmail = '';
+let pendingLoginPassword = '';
+
+// ==========================================
+// 3. ACTUALIZAR FUNCIÓN DE LOGIN
+// ==========================================
+document.getElementById('form-login-action').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-login');
+    const originalText = btn.innerHTML;
+    
+    pendingLoginEmail = document.getElementById('login-email').value;
+    pendingLoginPassword = document.getElementById('login-password').value;
+
+    btn.innerHTML = '<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch('https://sijj2003.pythonanywhere.com/api/partner/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                email: pendingLoginEmail, 
+                password: pendingLoginPassword,
+                device_name: getDeviceName() // 🛡️ Enviamos el dispositivo
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.status === 409 && data.requires_session_kill) {
+            // 🛡️ LÍMITE ALCANZADO: MUESTRA EL MODAL
+            openSessionModal(data.active_sessions);
+        } else if (response.ok && data.success) {
+            localStorage.setItem('gymenez_partner_token', data.token);
+            showFrontendToast("✅", "Terminal autenticada. Entrando...");
+            setTimeout(() => { window.location.href = '/store/partner/dashboard.html'; }, 1000);
+        } else {
+            showFrontendToast("❌", data.error || "Fallo de autenticación.");
+        }
+    } catch (error) {
+        showFrontendToast("⚠️", "No hay conexión con el servidor central.");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
+
+// ==========================================
+// 4. LÓGICA DEL MODAL DE SESIONES
+// ==========================================
+function openSessionModal(sessions) {
+    const modal = document.getElementById('session-limit-modal');
+    const list = document.getElementById('active-sessions-list');
+    
+    list.innerHTML = sessions.map(s => `
+        <button onclick="killSessionAndLogin('${s.session_id}')" class="w-full flex items-center justify-between p-4 bg-[#12121a] border border-white/10 rounded-2xl hover:border-red-500 hover:bg-red-500/10 transition-colors group">
+            <div class="flex flex-col text-left">
+                <span class="text-sm font-bold text-white group-hover:text-red-400 transition-colors">${s.device_name}</span>
+                <span class="text-[9px] uppercase tracking-widest text-gray-500 mt-1">Cerrar esta sesión</span>
+            </div>
+            <svg class="w-5 h-5 text-gray-600 group-hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6"></path></svg>
+        </button>
+    `).join('');
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.querySelector('div').classList.remove('scale-95');
+    }, 10);
+}
+
+function closeSessionModal() {
+    const modal = document.getElementById('session-limit-modal');
+    modal.classList.add('opacity-0');
+    modal.querySelector('div').classList.add('scale-95');
+    setTimeout(() => { modal.classList.add('hidden'); }, 300);
+}
+
+async function killSessionAndLogin(sessionIdToKill) {
+    closeSessionModal();
+    const btn = document.getElementById('btn-login');
+    btn.innerHTML = '<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
+    
+    try {
+        const response = await fetch('https://sijj2003.pythonanywhere.com/api/partner/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                email: pendingLoginEmail, 
+                password: pendingLoginPassword,
+                device_name: getDeviceName(),
+                session_to_kill: sessionIdToKill // 🛡️ Enviamos el ID a matar
+            })
+        });
+
+        const data = await response.json();
+        if (response.ok && data.success) {
+            localStorage.setItem('gymenez_partner_token', data.token);
+            showFrontendToast("✅", "Sesión remota finalizada. Entrando...");
+            setTimeout(() => { window.location.href = '/store/partner/dashboard.html'; }, 1000);
+        } else {
+            showFrontendToast("❌", data.error || "No se pudo cerrar la sesión remota.");
+        }
+    } catch (error) {
+        showFrontendToast("⚠️", "Fallo de conexión.");
+    } finally {
+        btn.innerHTML = 'Autenticar Terminal';
+    }
+}
+
 // =====================================
 // LÓGICA DE INTERFAZ & ANIMACIONES
 // =====================================
