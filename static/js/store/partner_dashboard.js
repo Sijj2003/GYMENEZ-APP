@@ -22,7 +22,6 @@ async function verifyPartnerSession() {
     }
 
     try {
-        // Hacemos un ping rápido al servidor (puedes usar la ruta profile que ya tenemos)
         const response = await fetch('https://sijj2003.pythonanywhere.com/api/partner/profile', {
             method: 'GET',
             headers: { 
@@ -35,13 +34,15 @@ async function verifyPartnerSession() {
 
         // 🪓 AQUÍ OCURRE LA MAGIA: Si el servidor dice que la sesión fue revocada...
         if (response.status === 401 && data.session_expired) {
-            console.warn("Gymenez Shield: Sesión revocada desde otro dispositivo.");
+            console.warn("Gymenez Shield: Sesión finalizada.");
             
             // 1. Destruimos el token local (Matamos al Zombi)
             localStorage.removeItem('gymenez_partner_token');
             
-            // 2. Le avisamos al usuario y lo sacamos a patadas de la plataforma
-            alert("🔒 Por seguridad, esta sesión fue cerrada desde otro de tus dispositivos.");
+            // 2. Usamos el mensaje DINÁMICO que envía tu Python B2B
+            const mensajeBloqueo = data.error || "🔒 Tu sesión ha expirado o fue revocada por seguridad.";
+            alert(mensajeBloqueo);
+            
             window.location.replace('/store/partner/login.html');
         }
 
