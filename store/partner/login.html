@@ -304,6 +304,59 @@
         </div>
     </div>
 
+    <!-- ==================================================================== -->
+    <!-- MODAL: RECUPERACIÓN DE CREDENCIALES (OTP) -->
+    <!-- ==================================================================== -->
+    <div id="recovery-modal" class="fixed inset-0 z-[400] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="apple-glass w-full max-w-md rounded-[2.5rem] flex flex-col transform scale-95 transition-transform duration-300 relative overflow-hidden">
+            
+            <div class="flex items-center justify-between p-6 md:p-8 border-b border-white/5 bg-[#12121a]/80">
+                <div>
+                    <h2 class="text-xl font-[900] tracking-tighter uppercase text-white mb-1">Restablecer Acceso</h2>
+                    <p class="text-[9px] uppercase tracking-widest text-[#FFC300] font-black">Zero Trust OTP Auth</p>
+                </div>
+                <button onclick="closeRecoveryModal()" class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="p-6 md:p-8 relative min-h-[250px]">
+                
+                <!-- PASO 1: PEDIR CORREO -->
+                <form id="form-recovery-step1" class="space-y-5 transition-all duration-300">
+                    <p class="text-xs text-gray-400 leading-relaxed mb-4">Ingresa tu ID corporativo. Si está en nuestra red, enviaremos una llave temporal de un solo uso (OTP).</p>
+                    <div>
+                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Correo Institucional</label>
+                        <input type="email" id="recovery-email" required class="w-full apple-input rounded-2xl px-5 py-4 text-sm font-medium placeholder-gray-600" placeholder="admin@tumarca.com">
+                    </div>
+                    <button type="submit" id="btn-recovery-step1" class="w-full bg-white text-black font-[900] text-[10px] uppercase tracking-widest py-4 rounded-2xl hover:bg-gray-200 transition-colors flex justify-center items-center gap-2">
+                        Solicitar Llave
+                    </button>
+                </form>
+
+                <!-- PASO 2: INGRESAR OTP Y NUEVA CLAVE (Oculto inicialmente) -->
+                <form id="form-recovery-step2" class="space-y-5 absolute top-6 left-6 right-6 opacity-0 pointer-events-none translate-x-10 transition-all duration-300">
+                    <p class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-4 text-center">Código enviado exitosamente.</p>
+                    
+                    <div>
+                        <label class="block text-[9px] font-black uppercase tracking-widest text-[#FFC300] mb-2 pl-1 text-center">Código OTP (6 Dígitos)</label>
+                        <input type="text" id="recovery-otp" required maxlength="6" class="w-full apple-input rounded-2xl px-5 py-4 text-center text-2xl tracking-[0.5em] font-mono font-bold text-white placeholder-gray-700" placeholder="000000">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Nueva Contraseña Máster</label>
+                        <input type="password" id="recovery-new-password" required minlength="6" class="w-full apple-input rounded-2xl px-5 py-4 text-sm font-mono tracking-widest placeholder-gray-600" placeholder="••••••••">
+                    </div>
+                    
+                    <button type="submit" id="btn-recovery-step2" class="w-full btn-gold-pro font-[900] text-[10px] uppercase tracking-widest py-4 rounded-2xl flex justify-center items-center gap-2">
+                        Autorizar Cambio
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPT CONTROL DE UI AVANZADO -->
     <script>
         function openRegisterModal() {
