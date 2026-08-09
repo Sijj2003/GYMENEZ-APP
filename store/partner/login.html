@@ -165,6 +165,33 @@
         </div>
     </main>
 
+
+    <!-- ==================================================================== -->
+    <!-- MODAL: LÍMITE DE SESIONES (CIERRE REMOTO) -->
+    <!-- ==================================================================== -->
+    <div id="session-limit-modal" class="fixed inset-0 z-[300] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="apple-glass w-full max-w-md rounded-[2.5rem] flex flex-col transform scale-95 transition-transform duration-300 relative overflow-hidden">
+            
+            <div class="p-8 text-center border-b border-white/5 bg-[#12121a]/80">
+                <div class="w-16 h-16 bg-[#FFC300]/10 border border-[#FFC300]/20 rounded-full flex items-center justify-center mb-4 mx-auto text-[#FFC300]">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                </div>
+                <h2 class="text-xl font-[900] tracking-tighter uppercase text-white mb-1">Límite Alcanzado</h2>
+                <p class="text-[9px] uppercase tracking-widest text-gray-400 font-black leading-relaxed">Solo permitimos 3 dispositivos conectados. Cierra uno para continuar.</p>
+            </div>
+
+            <div class="p-6">
+                <div id="active-sessions-list" class="space-y-3">
+                    <!-- Los dispositivos activos se inyectarán aquí mediante JS -->
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-white/5 text-center">
+                <button onclick="closeSessionModal()" class="text-[9px] font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-colors">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================================================================== -->
     <!-- MODAL (OVERLAY): AUDITORÍA KYC / REGISTRO DE COMERCIO -->
     <!-- ==================================================================== -->
