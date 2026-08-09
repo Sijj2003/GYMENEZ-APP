@@ -312,7 +312,17 @@ function closeRecoveryModal() {
     const modalInner = modal.querySelector('div');
     modal.classList.add('opacity-0');
     modalInner.classList.add('scale-95');
-    setTimeout(() => { modal.classList.add('hidden'); }, 300);
+    
+    setTimeout(() => { 
+        modal.classList.add('hidden'); 
+        
+        // 🛡️ RESETEAR BOTONES AL CERRAR (Destraba el botón si el usuario cancela manualmente)
+        const btn1 = document.getElementById('btn-recovery-step1');
+        if(btn1) { btn1.innerHTML = 'Solicitar Llave'; btn1.disabled = false; }
+        
+        const btn2 = document.getElementById('btn-recovery-step2');
+        if(btn2) { btn2.innerHTML = 'Autorizar Cambio'; btn2.disabled = false; }
+    }, 300);
 }
 
 let storedRecoveryEmail = '';
@@ -345,6 +355,10 @@ document.getElementById('form-recovery-step1').addEventListener('submit', async 
             step1.classList.add('opacity-0', 'pointer-events-none', '-translate-x-10');
             setTimeout(() => {
                 step2.classList.remove('opacity-0', 'pointer-events-none', 'translate-x-10');
+                
+                // 🛡️ DESBLOQUEAR EL BOTÓN 1 (Queda listo por si vuelven a abrir la ventana luego)
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }, 300);
             
             showToast("Código solicitado. Revisa tu bandeja de entrada.", "success");
@@ -386,11 +400,16 @@ document.getElementById('form-recovery-step2').addEventListener('submit', async 
 
         if (response.ok && data.success) {
             showToast("✅ Credencial actualizada. Las sesiones previas fueron cerradas.", "success");
+            
             setTimeout(() => {
                 closeRecoveryModal();
-                // Opcional: Llenar el input del login con la nueva data para facilitarle la vida
+                // Llenar el input del login con la nueva data para facilitarle la vida
                 document.getElementById('login-email').value = storedRecoveryEmail;
                 document.getElementById('login-password').value = newPassword;
+                
+                // 🛡️ DESBLOQUEAR EL BOTÓN 2 (Queda listo para el futuro)
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }, 1500);
         } else {
             showToast(data.error || "Código inválido o expirado.", "error");
