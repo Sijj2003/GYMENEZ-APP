@@ -9,6 +9,52 @@ const shoeSizeMap = {
     "11": "45", "11.5": "45.5", "12": "46", "13": "47", "14": "48"
 };
 
+// =========================================================
+// 🛡️ SHIELD: VERIFICACIÓN DE SESIÓN EN TIEMPO REAL
+// =========================================================
+async function verifyPartnerSession() {
+    const token = localStorage.getItem('gymenez_partner_token');
+    
+    // Si no hay token, lo mandamos al login directo
+    if (!token) {
+        window.location.href = '/store/partner/login.html';
+        return;
+    }
+
+    try {
+        // Hacemos un ping rápido al servidor (puedes usar la ruta profile que ya tenemos)
+        const response = await fetch('https://sijj2003.pythonanywhere.com/api/partner/profile', {
+            method: 'GET',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        // 🪓 AQUÍ OCURRE LA MAGIA: Si el servidor dice que la sesión fue revocada...
+        if (response.status === 401 && data.session_expired) {
+            console.warn("Gymenez Shield: Sesión revocada desde otro dispositivo.");
+            
+            // 1. Destruimos el token local (Matamos al Zombi)
+            localStorage.removeItem('gymenez_partner_token');
+            
+            // 2. Le avisamos al usuario y lo sacamos a patadas de la plataforma
+            alert("🔒 Por seguridad, esta sesión fue cerrada desde otro de tus dispositivos.");
+            window.location.replace('/store/partner/login.html');
+        }
+
+    } catch (error) {
+        console.error("Error validando el estado de la sesión B2B:", error);
+    }
+}
+
+// Ejecutar inmediatamente cuando cargue la página del Dashboard
+document.addEventListener('DOMContentLoaded', () => {
+    verifyPartnerSession();
+});
+
 // ==========================================
 // UTILIDADES & AUTENTICACIÓN
 // ==========================================
