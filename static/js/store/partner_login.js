@@ -284,3 +284,122 @@ document.getElementById('form-register-action').addEventListener('submit', async
         }
     }
 });
+
+// =====================================
+// 5. RECUPERACIÓN DE CONTRASEÑA (OTP)
+// =====================================
+
+function openRecoveryModal() {
+    const modal = document.getElementById('recovery-modal');
+    const modalInner = modal.querySelector('div');
+    
+    // Resetear vistas al estado inicial
+    document.getElementById('form-recovery-step1').classList.remove('opacity-0', 'pointer-events-none', '-translate-x-10');
+    document.getElementById('form-recovery-step2').classList.add('opacity-0', 'pointer-events-none', 'translate-x-10');
+    document.getElementById('recovery-email').value = document.getElementById('login-email').value; // Autocompletar si ya había escrito algo
+    document.getElementById('recovery-otp').value = '';
+    document.getElementById('recovery-new-password').value = '';
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modalInner.classList.remove('scale-95');
+    }, 10);
+}
+
+function closeRecoveryModal() {
+    const modal = document.getElementById('recovery-modal');
+    const modalInner = modal.querySelector('div');
+    modal.classList.add('opacity-0');
+    modalInner.classList.add('scale-95');
+    setTimeout(() => { modal.classList.add('hidden'); }, 300);
+}
+
+let storedRecoveryEmail = '';
+
+// PASO 1: Solicitar el Código
+document.getElementById('form-recovery-step1').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-recovery-step1');
+    const originalText = btn.innerHTML;
+    const email = document.getElementById('recovery-email').value;
+
+    btn.innerHTML = '<div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(`${API_URL}/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            storedRecoveryEmail = email; // Guardamos el correo para el paso 2
+            
+            // Transición animada al Paso 2
+            const step1 = document.getElementById('form-recovery-step1');
+            const step2 = document.getElementById('form-recovery-step2');
+            
+            step1.classList.add('opacity-0', 'pointer-events-none', '-translate-x-10');
+            setTimeout(() => {
+                step2.classList.remove('opacity-0', 'pointer-events-none', 'translate-x-10');
+            }, 300);
+            
+            showToast("Código solicitado. Revisa tu bandeja de entrada.", "success");
+        } else {
+            showToast(data.error || "Error al solicitar el código.", "error");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    } catch (error) {
+        showToast("Error de conexión.", "error");
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
+
+// PASO 2: Verificar OTP y Cambiar Clave
+document.getElementById('form-recovery-step2').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-recovery-step2');
+    const originalText = btn.innerHTML;
+    
+    const otp = document.getElementById('recovery-otp').value;
+    const newPassword = document.getElementById('recovery-new-password').value;
+
+    btn.innerHTML = '<div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(`${API_URL}/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                email: storedRecoveryEmail,
+                otp: otp,
+                new_password: newPassword
+            })
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            showToast("✅ Credencial actualizada. Las sesiones previas fueron cerradas.", "success");
+            setTimeout(() => {
+                closeRecoveryModal();
+                // Opcional: Llenar el input del login con la nueva data para facilitarle la vida
+                document.getElementById('login-email').value = storedRecoveryEmail;
+                document.getElementById('login-password').value = newPassword;
+            }, 1500);
+        } else {
+            showToast(data.error || "Código inválido o expirado.", "error");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    } catch (error) {
+        showToast("Error de conexión.", "error");
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
