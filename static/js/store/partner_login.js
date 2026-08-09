@@ -1,13 +1,11 @@
 const API_URL = 'https://sijj2003.pythonanywhere.com/api/partner';
 
-
 // ==========================================
 // 1. AUTO REDIRECCIÓN SI YA ESTÁ LOGUEADO
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('gymenez_partner_token');
     if (token) {
-        // Redirige instantáneamente al lobby si ya hay sesión
         window.location.href = '/store/partner/dashboard.html';
     }
 });
@@ -36,14 +34,15 @@ function getDeviceName() {
 // Variables globales para el cierre de sesión
 let pendingLoginEmail = '';
 let pendingLoginPassword = '';
+let originalLoginButtonContent = '';
 
 // ==========================================
-// 3. ACTUALIZAR FUNCIÓN DE LOGIN
+// 3. FUNCIÓN UNIFICADA DE LOGIN
 // ==========================================
 document.getElementById('form-login-action').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-login');
-    const originalText = btn.innerHTML;
+    originalLoginButtonContent = btn.innerHTML; // Guardamos el texto original
     
     pendingLoginEmail = document.getElementById('login-email').value;
     pendingLoginPassword = document.getElementById('login-password').value;
@@ -52,34 +51,35 @@ document.getElementById('form-login-action').addEventListener('submit', async (e
     btn.disabled = true;
 
     try {
-        const response = await fetch('https://sijj2003.pythonanywhere.com/api/partner/login', {
+        const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 email: pendingLoginEmail, 
                 password: pendingLoginPassword,
-                device_name: getDeviceName() // 🛡️ Enviamos el dispositivo
+                device_name: getDeviceName() 
             })
         });
 
         const data = await response.json();
 
         if (response.status === 409 && data.requires_session_kill) {
-            // 🛡️ LÍMITE ALCANZADO: MUESTRA EL MODAL
+            // 🛡️ LÍMITE ALCANZADO: MUESTRA EL MODAL (No reseteamos el botón aquí porque el proceso sigue)
             openSessionModal(data.active_sessions);
         } else if (response.ok && data.success) {
             localStorage.setItem('gymenez_partner_token', data.token);
-            showFrontendToast("✅", "Terminal autenticada. Entrando...");
-            setTimeout(() => { window.location.href = '/store/partner/dashboard.html'; }, 1000);
+            showToast(`Bienvenido de vuelta, ${data.store_name}`, 'success');
+            setTimeout(() => { window.location.href = '/store/partner/dashboard.html'; }, 1500);
         } else {
-            showFrontendToast("❌", data.error || "Fallo de autenticación.");
+            showToast(data.error || "Credenciales inválidas.", "error");
+            btn.innerHTML = originalLoginButtonContent;
+            btn.disabled = false;
         }
     } catch (error) {
-        showFrontendToast("⚠️", "No hay conexión con el servidor central.");
-    } finally {
-        btn.innerHTML = originalText;
+        showToast("Error de red. Verifica tu conexión.", "error");
+        btn.innerHTML = originalLoginButtonContent;
         btn.disabled = false;
-    }
+    } 
 });
 
 // ==========================================
@@ -111,37 +111,51 @@ function closeSessionModal() {
     modal.classList.add('opacity-0');
     modal.querySelector('div').classList.add('scale-95');
     setTimeout(() => { modal.classList.add('hidden'); }, 300);
+
+    // 🚀 NUEVO: Si el usuario se arrepiente y cierra el modal, destrabamos el botón principal
+    const btn = document.getElementById('btn-login');
+    if (btn && originalLoginButtonContent) {
+        btn.innerHTML = originalLoginButtonContent;
+        btn.disabled = false;
+    }
 }
 
 async function killSessionAndLogin(sessionIdToKill) {
     closeSessionModal();
     const btn = document.getElementById('btn-login');
     btn.innerHTML = '<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
+    btn.disabled = true; // Aseguramos que siga bloqueado mientras mata la sesión
     
     try {
-        const response = await fetch('https://sijj2003.pythonanywhere.com/api/partner/login', {
+        const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 email: pendingLoginEmail, 
                 password: pendingLoginPassword,
                 device_name: getDeviceName(),
-                session_to_kill: sessionIdToKill // 🛡️ Enviamos el ID a matar
+                session_to_kill: sessionIdToKill
             })
         });
 
         const data = await response.json();
-        if (response.ok && data.success) {
+        
+        if (response.status === 409 && data.requires_session_kill) {
+            openSessionModal(data.active_sessions);
+        } 
+        else if (response.ok && data.success) {
             localStorage.setItem('gymenez_partner_token', data.token);
-            showFrontendToast("✅", "Sesión remota finalizada. Entrando...");
+            showToast("Sesión remota finalizada. Entrando...", "success");
             setTimeout(() => { window.location.href = '/store/partner/dashboard.html'; }, 1000);
         } else {
-            showFrontendToast("❌", data.error || "No se pudo cerrar la sesión remota.");
+            showToast(data.error || "No se pudo cerrar la sesión remota.", "error");
+            btn.innerHTML = originalLoginButtonContent;
+            btn.disabled = false;
         }
     } catch (error) {
-        showFrontendToast("⚠️", "Fallo de conexión.");
-    } finally {
-        btn.innerHTML = 'Autenticar Terminal';
+        showToast("Fallo de conexión.", "error");
+        btn.innerHTML = originalLoginButtonContent;
+        btn.disabled = false;
     }
 }
 
@@ -153,23 +167,18 @@ function toggleForms(target) {
     const registerForm = document.getElementById('register-form');
 
     if (target === 'register') {
-        // Ocultar Login
         loginForm.classList.add('opacity-0', 'scale-95');
         setTimeout(() => {
             loginForm.classList.add('hidden');
-            // Mostrar Register
             registerForm.classList.remove('hidden');
-            // Pequeño delay para que aplique el display:block antes de la opacidad
             setTimeout(() => {
                 registerForm.classList.remove('opacity-0');
             }, 50);
         }, 300);
     } else {
-        // Ocultar Register
         registerForm.classList.add('opacity-0');
         setTimeout(() => {
             registerForm.classList.add('hidden');
-            // Mostrar Login
             loginForm.classList.remove('hidden');
             setTimeout(() => {
                 loginForm.classList.remove('opacity-0', 'scale-95');
@@ -178,12 +187,10 @@ function toggleForms(target) {
     }
 }
 
-// Función para actualizar los labels visuales de los archivos subidos (Cédula, RIF, Logo)
 function updateFileLabel(input, labelId) {
     const label = document.getElementById(labelId);
     if (input.files && input.files[0]) {
         label.innerText = input.files[0].name;
-        // Cambiamos el color para indicar éxito
         if(labelId === 'label-logo') {
             label.classList.remove('text-gray-500');
             label.classList.add('text-[#FFC300]');
@@ -193,7 +200,7 @@ function updateFileLabel(input, labelId) {
         }
     } else {
         label.innerText = 'Tocar para subir...';
-        label.className = 'text-xs text-gray-500 transition truncate w-40'; // Reset clases
+        label.className = 'text-xs text-gray-500 transition truncate w-40';
     }
 }
 
@@ -202,7 +209,6 @@ function showToast(message, type = 'success') {
     const msgObj = document.getElementById('toast-msg');
     const iconObj = document.getElementById('toast-icon');
 
-    // Reseteamos estilos
     toast.className = 'transform opacity-0 -translate-y-10 transition-all duration-500 ease-out bg-white/95 backdrop-blur-xl text-black px-6 py-3.5 rounded-full font-bold text-sm shadow-[0_20px_40px_rgba(0,0,0,0.4)] flex items-center gap-3 border border-black/5';
     
     if (type === 'success') {
@@ -213,56 +219,16 @@ function showToast(message, type = 'success') {
 
     msgObj.innerText = message;
 
-    // Mostrar (Baja y se hace visible)
     setTimeout(() => {
         toast.classList.remove('opacity-0', '-translate-y-10');
         toast.classList.add('opacity-100', 'translate-y-0');
     }, 10);
 
-    // Ocultar después de 4 segundos
     setTimeout(() => {
         toast.classList.remove('opacity-100', 'translate-y-0');
         toast.classList.add('opacity-0', '-translate-y-10');
     }, 4000);
 }
-
-// =====================================
-// API CALLS: LOGIN (Manejo de JSON)
-// =====================================
-document.getElementById('form-login-action').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('btn-login');
-    const originalContent = btn.innerHTML;
-    btn.innerHTML = '<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>';
-    btn.disabled = true;
-
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-
-    try {
-        const response = await fetch(`${API_URL}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-            showToast(`Bienvenido de vuelta, ${data.store_name}`, 'success');
-            localStorage.setItem('gymenez_partner_token', data.token);
-            setTimeout(() => { window.location.href = '/store/partner/dashboard.html'; }, 1500);
-        } else {
-            showToast(data.error || 'Credenciales inválidas', 'error');
-            btn.innerHTML = originalContent;
-            btn.disabled = false;
-        }
-    } catch (error) {
-        showToast('Error de red. Verifica tu conexión.', 'error');
-        btn.innerHTML = originalContent;
-        btn.disabled = false;
-    }
-});
 
 // =====================================
 // API CALLS: REGISTRO KYC (FormData)
@@ -282,7 +248,6 @@ document.getElementById('form-register-action').addEventListener('submit', async
     formData.append('phone', document.getElementById('reg-phone').value);
     formData.append('password', document.getElementById('reg-password').value);
 
-    // Adjuntar los archivos físicos
     const cedula = document.getElementById('reg-cedula').files[0];
     const rif = document.getElementById('reg-rif').files[0];
     const logo = document.getElementById('reg-logo').files[0];
@@ -294,7 +259,7 @@ document.getElementById('form-register-action').addEventListener('submit', async
     try {
         const response = await fetch(`${API_URL}/register`, {
             method: 'POST',
-            body: formData // El navegador asigna el Content-Type multipart/form-data automáticamente
+            body: formData 
         });
 
         const data = await response.json();
@@ -302,7 +267,6 @@ document.getElementById('form-register-action').addEventListener('submit', async
         if (response.ok && data.success) {
             showToast('¡Documentos enviados a auditoría exitosamente!', 'success');
             e.target.reset();
-            // Resetear labels de archivos
             document.getElementById('label-cedula').innerText = 'Tocar para subir...';
             document.getElementById('label-rif').innerText = 'Tocar para subir...';
             document.getElementById('label-logo').innerText = 'Tocar para subir...';
@@ -314,7 +278,7 @@ document.getElementById('form-register-action').addEventListener('submit', async
     } catch (error) {
         showToast('Error de red al subir los documentos.', 'error');
     } finally {
-        if(btn.disabled) { // Solo resetea si no fue exitoso (si fue exitoso se cambió de vista)
+        if(btn.disabled) { 
             btn.innerHTML = originalContent;
             btn.disabled = false;
         }
