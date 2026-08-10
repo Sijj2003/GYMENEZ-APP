@@ -68,8 +68,28 @@ function parseJwt(token) {
     } catch (e) { return null; }
 }
 
-function logout() {
+async function logout() {
+    const token = localStorage.getItem('gymenez_partner_token');
+    
+    // 1. Si hay un token, le avisamos al servidor que mate la sesión en la Base de Datos
+    if (token) {
+        try {
+            await fetch('https://sijj2003.pythonanywhere.com/api/partner/logout', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                }
+            });
+        } catch (error) {
+            console.warn("⚠️ No se pudo contactar al servidor. Cerrando sesión localmente.");
+        }
+    }
+    
+    // 2. Destruimos el token del navegador
     localStorage.removeItem('gymenez_partner_token');
+    
+    // 3. Redirigimos al lobby
     window.location.href = '/store/partner/login.html';
 }
 
