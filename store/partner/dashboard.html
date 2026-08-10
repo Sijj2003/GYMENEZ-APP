@@ -348,7 +348,21 @@
         </div>
     </div>
 
-    <!-- Script se mantiene separado -->
-    <script src="/static/js/store/partner_dashboard.js?v=8.1"></script>
+    <!-- ======================================================= -->
+    <!-- MOTOR JAVASCRIPT MODULAR B2B -->
+    <!-- ======================================================= -->
+    <!-- 1. Seguridad y Autenticación -->
+    <script src="/static/js/store/dashboard/partner_session.js"></script>
+    
+    <!-- 2. Interfaz y Navegación (Modales y Tabs) -->
+    <script src="/static/js/store/dashboard/partner_ui.js"></script>
+    <script src="/static/js/store/dashboard/partner_profile.js"></script>
+    
+    <!-- 3. Lógica de Negocios (Catálogo y Órdenes) -->
+    <script src="/static/js/store/dashboard/partner_catalog.js"></script>
+    <script src="/static/js/store/dashboard/partner_orders.js"></script>
+    
+    <!-- 4. Inicializador Principal (Arrancador) -->
+    <script src="/static/js/store/dashboard/partner_main.js"></script>
 </body>
 </html>
