@@ -3,24 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gymenez Partner | Workspace</title>
+    <title>Gymenez Partner | Vista General</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/store/home.css"> <!-- Reutilizamos el glassmorphism del home -->
+    <link rel="stylesheet" href="/static/css/store/home.css">
     
     <script>
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
     </script>
     <style>
-        .tab-content { display: none; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
-        .tab-content.active { display: block; opacity: 1; transform: translateY(0); }
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 🍎 Skeleton Loaders estilo Apple */
+        .skeleton-text { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; border-radius: 4px; color: transparent !important; pointer-events: none; }
+        @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     </style>
 </head>
 <body class="bg-[#030305] text-white selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col md:flex-row relative pb-16 md:pb-0 overflow-hidden">
 
+    <!-- Escudo Inicial -->
     <script>
         const token = localStorage.getItem('gymenez_partner_token');
         if (!token) window.location.href = '/store/partner/login.html';
@@ -31,37 +34,38 @@
     <!-- ======================================================= -->
     <aside class="w-72 border-r border-white/5 bg-[#0a0a0f] hidden md:flex flex-col z-20 h-screen shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
         <div class="p-8 border-b border-white/5">
-            <a href="#" class="flex items-center leading-none">
+            <a href="dashboard.html" class="flex items-center leading-none">
                 <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
                 <span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
             </a>
             <p class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mt-2">Partner Workspace</p>
         </div>
 
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <button onclick="switchTab('tab-overview', this)" class="nav-btn w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-left text-sm font-bold bg-white/5 text-white transition border border-white/5">
+        <nav class="flex-1 p-6 space-y-3 overflow-y-auto">
+            <!-- Botón Activo -->
+            <a href="dashboard.html" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left text-sm font-bold bg-white/5 text-white border border-white/5 shadow-sm transition">
                 <svg class="w-5 h-5 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                 Vista General
-            </button>
-            <button onclick="switchTab('tab-products', this)" class="nav-btn w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white transition border border-transparent">
+            </a>
+            <!-- Enlaces Inactivos -->
+            <a href="inventory.html" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white border border-transparent transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                 Inventario
-            </button>
-            <button onclick="switchTab('tab-orders', this)" class="nav-btn w-full flex items-center justify-between px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white transition border border-transparent group">
-                <div class="flex items-center gap-3">
+            </a>
+            <a href="orders.html" class="w-full flex items-center justify-between px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white border border-transparent transition group">
+                <div class="flex items-center gap-4">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                     Órdenes
                 </div>
-                <span class="bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full hidden">NUEVO</span>
-            </button>
-            <button onclick="switchTab('tab-finance', this)" class="nav-btn w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white transition border border-transparent">
+            </a>
+            <a href="finance.html" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white border border-transparent transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                 Liquidaciones
-            </button>
+            </a>
         </nav>
 
-        <div class="p-6 border-t border-white/5">
-            <button onclick="logout()" class="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition">
+        <div class="p-8 border-t border-white/5">
+            <button onclick="if(typeof logout === 'function') logout()" class="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                 Cerrar Sesión
             </button>
@@ -73,20 +77,20 @@
     <!-- ======================================================= -->
     <div class="md:hidden fixed bottom-0 left-0 w-full z-50 glass-nav border-t border-white/10 pb-safe">
         <div class="flex items-center justify-around h-16 px-2">
-            <button onclick="switchTabMobile('tab-overview', this)" class="mobile-nav-btn flex flex-col items-center justify-center w-full h-full text-[#FFC300] transition">
+            <!-- Activo -->
+            <a href="dashboard.html" class="flex flex-col items-center justify-center w-full h-full text-[#FFC300] transition">
                 <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2zm-10 10a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-            </button>
-            <button onclick="switchTabMobile('tab-products', this)" class="mobile-nav-btn flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white transition">
+            </a>
+            <!-- Inactivos -->
+            <a href="inventory.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white transition">
                 <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-            </button>
-            <button onclick="switchTabMobile('tab-orders', this)" class="mobile-nav-btn flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white transition relative">
+            </a>
+            <a href="orders.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white transition relative">
                 <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-            </button>
-            <button onclick="openProfileModal()" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white transition">
-                <div class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center mb-1 border border-white/20">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                </div>
-            </button>
+            </a>
+            <a href="finance.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white transition">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            </a>
         </div>
     </div>
 
@@ -95,113 +99,75 @@
     <!-- ======================================================= -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
         
-        <!-- HEADER SUPERIOR -->
-        <header class="w-full h-20 border-b border-white/5 bg-[#0a0a0f] flex items-center justify-between px-6 z-10 shrink-0">
+        <!-- HEADER SUPERIOR (Misma estructura para todas las páginas) -->
+        <header class="w-full h-24 border-b border-white/5 bg-transparent backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0">
             <div class="md:hidden flex items-center gap-2">
                 <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
                 <span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
             </div>
+            
             <div class="hidden md:block">
-                <span class="text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
+                <span class="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-500 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">
                     Sincronización Activa
                 </span>
             </div>
             
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-5">
                 <div class="text-right hidden sm:block">
-                    <p id="store-name-display" class="text-sm font-black text-white">Cargando...</p>
-                    <p class="text-[9px] text-gray-500 uppercase tracking-widest font-bold">Partner Oficial</p>
+                    <!-- Efecto Skeleton mientras el JS lee el Token -->
+                    <p id="store-name-display" class="text-sm font-bold text-white skeleton-text min-w-[120px]">Cargando Tienda</p>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-widest font-bold mt-0.5">Partner Oficial</p>
                 </div>
-                <button onclick="openProfileModal()" class="hidden md:flex w-12 h-12 rounded-full bg-gradient-to-tr from-[#FFC300] to-yellow-600 p-[2px] hover:scale-105 transition transform shadow-[0_0_15px_rgba(255,195,0,0.3)]">
-                    <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-[#FFC300] font-black text-lg overflow-hidden">
-                        P
+                <!-- Eliminamos la llamada al modal de perfil desde aquí, lo pondremos en una vista dedicada más adelante -->
+                <div class="hidden md:flex w-12 h-12 rounded-full bg-white/5 border border-white/10 p-[2px]">
+                    <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-gray-500 font-black text-lg overflow-hidden skeleton-text">
+                        ...
                     </div>
-                </button>
+                </div>
             </div>
         </header>
 
-        <!-- CONTENIDO SCROLLABLE -->
-        <div class="flex-1 overflow-y-auto hide-scroll p-4 md:p-8">
-            <div class="max-w-7xl mx-auto pb-20 md:pb-0">
+        <!-- ======================================================= -->
+        <!-- CONTENIDO ESPECÍFICO DE ESTA PÁGINA (DASHBOARD) -->
+        <!-- ======================================================= -->
+        <div class="flex-1 overflow-y-auto hide-scroll p-6 md:p-12">
+            <div class="max-w-7xl mx-auto pb-24 md:pb-10">
                 
-                <!-- VISTA: DASHBOARD GENERAL -->
-                <div id="tab-overview" class="tab-content active">
-                    <h1 class="text-3xl font-[900] tracking-tighter uppercase italic mb-8">Métricas en <span class="text-[#FFC300]">Vivo</span></h1>
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-gradient-to-br from-[#12121a] to-[#0a0a0f] border border-white/5 p-8 rounded-[2rem] relative overflow-hidden shadow-xl">
-                            <div class="absolute top-0 right-0 w-32 h-32 bg-[#FFC300]/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none"></div>
-                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Ventas Brutas Totales</h3>
-                            <p class="text-4xl md:text-5xl font-[900] text-white italic drop-shadow-md">$0.00</p>
-                            <p class="text-xs text-gray-500 font-bold mt-4">Actualizado hace 1 min</p>
-                        </div>
-                        <div class="bg-gradient-to-br from-[#12121a] to-[#0a0a0f] border border-white/5 p-8 rounded-[2rem] shadow-xl relative overflow-hidden">
-                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Ganancia Neta (Por Liquidar)</h3>
-                            <p class="text-4xl md:text-5xl font-[900] text-emerald-400 italic drop-shadow-md">$0.00</p>
-                            <p class="text-xs text-gray-500 font-bold mt-4 flex items-center gap-2">
-                                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                                Retenido seguro en Escrow
-                            </p>
-                        </div>
-                        <div class="bg-gradient-to-br from-[#12121a] to-[#0a0a0f] border border-white/5 p-8 rounded-[2rem] shadow-xl sm:col-span-2 lg:col-span-1">
-                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Órdenes Pendientes</h3>
-                            <p class="text-4xl md:text-5xl font-[900] text-[#FFC300] italic drop-shadow-md">0</p>
-                            <p class="text-xs text-gray-500 font-bold mt-4">Listas para ser despachadas hoy</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- VISTA: INVENTARIO Y CATÁLOGO -->
-                <div id="tab-products" class="tab-content">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 border-b border-white/5 pb-6">
-                        <h1 class="text-3xl font-[900] tracking-tighter uppercase italic">Control de <span class="text-[#FFC300]">Catálogo</span></h1>
-                        <button onclick="openModal()" class="w-full md:w-auto bg-gradient-to-r from-[#FFD000] to-[#FFC300] text-black px-8 py-4 rounded-full text-xs font-[900] uppercase tracking-widest hover:scale-105 transition-all shadow-[0_10px_30px_rgba(255,195,0,0.3)] flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                            Nuevo Producto
-                        </button>
-                    </div>
-
-                    <div id="empty-state" class="bg-[#0a0a0f] border border-white/5 p-12 md:p-20 rounded-[3rem] flex flex-col items-center justify-center text-center shadow-2xl">
-                        <div class="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 text-gray-600 border border-white/10">
-                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                        </div>
-                        <h3 class="text-2xl font-[900] uppercase italic text-white mb-2">Tu almacén está vacío</h3>
-                        <p class="text-sm text-gray-400 max-w-md mb-8 font-medium leading-relaxed">Publica tu primer artículo. Configura tallas, sabores, precios y Gymenez se encargará de venderlo.</p>
-                    </div>
-
-                    <!-- El grid de productos inyectado por JS -->
-                    <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
-                </div>
-
-                <!-- VISTA: ÓRDENES Y LOGÍSTICA -->
-                <div id="tab-orders" class="tab-content">
-                    <h1 class="text-3xl font-[900] tracking-tighter uppercase italic mb-2">Central de <span class="text-[#FFC300]">Órdenes</span></h1>
-                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-8 border-b border-white/5 pb-6">Comunícate solo con Gymenez. Nosotros hablamos con el cliente.</p>
-                    
-                    <div class="bg-[#0a0a0f] border border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl">
-                        <div class="p-12 text-center">
-                            <div class="text-5xl opacity-30 mb-4">📦</div>
-                            <h3 class="text-lg font-bold text-white mb-1">Cero órdenes pendientes</h3>
-                            <p class="text-xs text-gray-500 font-medium">Cuando un cliente apruebe un pago, los detalles de envío de MRW/Zoom aparecerán aquí.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- VISTA: FINANZAS Y LIQUIDACIONES -->
-                <div id="tab-finance" class="tab-content">
-                    <h1 class="text-3xl font-[900] tracking-tighter uppercase italic mb-8">Auditoría <span class="text-emerald-500">Financiera</span></h1>
-                    
-                    <div class="bg-[#0a0a0f] border border-white/5 p-8 md:p-12 rounded-[3rem] border-l-4 border-l-emerald-500 shadow-2xl relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none"></div>
-                        <h3 class="text-2xl font-[900] uppercase italic text-white mb-4">Fondo de Seguridad (Escrow)</h3>
-                        <p class="text-sm text-gray-400 mb-8 max-w-2xl leading-relaxed font-medium">
-                            Por políticas de protección al consumidor, Gymenez Store custodia el dinero de la venta hasta que el cliente recibe la mercancía por parte de la agencia de envíos. <br><br>
-                            Los cortes y liquidaciones a tu cuenta Binance o Cuenta Bancaria se realizan automáticamente los <strong>Viernes a las 18:00 hrs</strong>, deduciendo la comisión de la plataforma.
+                <header class="mb-12">
+                    <h1 class="text-4xl md:text-5xl font-[900] tracking-tighter uppercase italic">Métricas en <span class="text-[#FFC300]">Vivo</span></h1>
+                    <p class="text-sm text-gray-400 mt-3 font-medium">Resumen financiero y operativo de tu operación en la plataforma.</p>
+                </header>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Widget 1: Ventas Brutas -->
+                    <div class="bg-[#12121a] border border-white/5 p-10 rounded-[2.5rem] relative overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 duration-300">
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-[#FFC300]/10 rounded-full blur-[60px] -mr-10 -mt-10 pointer-events-none"></div>
+                        <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4">Ventas Brutas Históricas</h3>
+                        <!-- Clase skeleton aplicada por defecto -->
+                        <p id="metric-sales" class="text-5xl font-[900] text-white italic tracking-tighter drop-shadow-md skeleton-text w-3/4">0.00</p>
+                        <p class="text-[10px] text-gray-500 font-bold mt-6 uppercase tracking-widest flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Actualizado en tiempo real
                         </p>
-                        <button class="bg-[#12121a] text-gray-500 px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/5 cursor-not-allowed flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            Solicitar Adelanto (Inactivo)
-                        </button>
+                    </div>
+
+                    <!-- Widget 2: Ganancia Neta -->
+                    <div class="bg-[#12121a] border border-white/5 p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-transform hover:-translate-y-1 duration-300">
+                        <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4">Ganancia Neta (Por Liquidar)</h3>
+                        <p id="metric-escrow" class="text-5xl font-[900] text-emerald-400 italic tracking-tighter drop-shadow-md skeleton-text w-3/4">0.00</p>
+                        <p class="text-[10px] text-gray-500 font-bold mt-6 uppercase tracking-widest flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            Retenido seguro en Escrow
+                        </p>
+                    </div>
+
+                    <!-- Widget 3: Órdenes Pendientes -->
+                    <div class="bg-[#12121a] border border-white/5 p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-transform hover:-translate-y-1 duration-300 md:col-span-2 lg:col-span-1">
+                        <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4">Órdenes Pendientes</h3>
+                        <p id="metric-orders" class="text-5xl font-[900] text-[#FFC300] italic tracking-tighter drop-shadow-md skeleton-text w-1/2">0</p>
+                        <p class="text-[10px] text-gray-500 font-bold mt-6 uppercase tracking-widest flex items-center gap-2">
+                            <svg class="w-4 h-4 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                            Listas para ser despachadas
+                        </p>
                     </div>
                 </div>
 
@@ -210,159 +176,31 @@
     </main>
 
     <!-- ======================================================= -->
-    <!-- MODAL: CONSTRUCTOR DE PRODUCTOS Y VARIANTES AVANZADO -->
-    <!-- ======================================================= -->
-    <div id="product-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm hidden flex items-end md:items-center justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-4xl rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500 flex flex-col max-h-[95vh] md:max-h-[90vh]">
-            
-            <div class="flex justify-between items-center p-6 md:p-8 border-b border-white/5 shrink-0">
-                <h3 class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white">Gestor de <span class="text-[#FFC300]">Inventario</span></h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-white transition p-2 rounded-full hover:bg-white/10 bg-white/5">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-
-            <div class="p-6 md:p-8 overflow-y-auto hide-scroll">
-                <form id="add-product-form" class="space-y-8">
-                    <input type="hidden" id="prod-id" value="">
-
-                    <!-- Bloque 1: Datos Base -->
-                    <div class="space-y-6 bg-[#12121a] p-6 rounded-[2rem] border border-white/5">
-                        <div class="flex items-center gap-2 mb-4 border-b border-white/5 pb-2">
-                            <span class="w-6 h-6 rounded-full bg-[#FFC300] text-black font-black text-xs flex items-center justify-center">1</span>
-                            <h4 class="text-sm font-bold uppercase tracking-widest text-white">Información Principal</h4>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="md:col-span-2">
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Título Oficial del Producto</label>
-                                <input type="text" id="prod-name" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner" placeholder="Ej: Whey Protein Isolate Dymatize 5Lbs" required>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Categoría General</label>
-                                <div class="relative">
-                                    <select id="prod-category" onchange="toggleVariantFields()" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-blue-500 transition appearance-none cursor-pointer shadow-inner">
-                                        <option value="general">Equipamiento Genérico</option>
-                                        <option value="suplementos">Suplementación</option>
-                                        <option value="ropa">Indumentaria y Calzado</option>
-                                    </select>
-                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Precio Base (USD)</label>
-                                <div class="relative">
-                                    <span class="absolute left-5 top-4 text-gray-400 font-bold">$</span>
-                                    <input type="number" id="prod-price" step="0.01" class="w-full bg-[#030305] border border-white/10 rounded-2xl pl-10 pr-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner" placeholder="0.00" required>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-[#FFC300] mb-2 pl-1">Descuento (%)</label>
-                                <div class="relative">
-                                    <span class="absolute right-5 top-4 text-[#FFC300] font-bold">%</span>
-                                    <input type="number" id="prod-discount" min="0" max="100" value="0" class="w-full bg-[#030305] border border-[#FFC300]/30 rounded-2xl pl-5 pr-10 py-4 text-sm font-bold text-[#FFC300] focus:outline-none focus:border-[#FFC300] transition shadow-inner" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Descripción de Ventas</label>
-                            <textarea id="prod-desc" rows="3" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition resize-none shadow-inner custom-scroll" placeholder="Beneficios, uso recomendado, advertencias..." required></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Bloque 2: Logística y Multimedia -->
-                    <div class="space-y-6 bg-[#12121a] p-6 rounded-[2rem] border border-white/5">
-                        <div class="flex items-center gap-2 mb-4 border-b border-white/5 pb-2">
-                            <span class="w-6 h-6 rounded-full bg-emerald-500 text-black font-black text-xs flex items-center justify-center">2</span>
-                            <h4 class="text-sm font-bold uppercase tracking-widest text-white">Logística & Multimedia</h4>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1 flex justify-between">
-                                    <span>Peso P/Envío (Kg)</span>
-                                    <span class="text-emerald-500">Min 0.5 - Max 50</span>
-                                </label>
-                                <input type="number" id="prod-weight" step="0.1" min="0.5" max="50" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-emerald-500 transition shadow-inner" placeholder="Ej: 2.5" required>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Inventario Global (Unidades)</label>
-                                <input type="number" id="prod-stock" min="1" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-emerald-500 transition shadow-inner disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Ej: 50" required>
-                                <p id="stock-helper" class="text-[9px] text-gray-500 mt-2 hidden">Se calcula automáticamente basado en las variantes.</p>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Fotografía HD Oficial</label>
-                            <div class="relative w-full border-2 border-dashed border-white/10 hover:border-emerald-500/50 rounded-[2rem] p-6 text-center bg-[#030305] transition group cursor-pointer" onclick="document.getElementById('prod-image').click()">
-                                <svg class="w-8 h-8 text-gray-600 mx-auto mb-2 group-hover:text-emerald-500 transition transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                <span id="file-name-display" class="block text-xs font-bold text-gray-400 group-hover:text-white transition">Tocar para subir JPG o PNG...</span>
-                                <input type="file" id="prod-image" accept="image/*" class="hidden" onchange="updateFileName(this)">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Bloque 3: Constructor de Variantes Inteligente (El Cerebro) -->
-                    <div id="variants-master-container" class="space-y-6 bg-[#12121a] p-6 rounded-[2rem] border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.1)] hidden">
-                        <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
-                            <div class="flex items-center gap-2">
-                                <span class="w-6 h-6 rounded-full bg-blue-500 text-white font-black text-xs flex items-center justify-center">3</span>
-                                <h4 class="text-sm font-bold uppercase tracking-widest text-white">Constructor de Stock & Variantes</h4>
-                            </div>
-                            <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest">Matriz Activa</span>
-                        </div>
-                        
-                        <!-- Controles Dinámicos Inyectados por JS -->
-                        <div id="variant-builder-controls" class="bg-[#030305] p-5 rounded-2xl border border-white/5">
-                            <!-- Se llena por JS dependiendo si es Ropa o Suplemento -->
-                        </div>
-
-                        <!-- Lista Visual de Variantes Agregadas -->
-                        <div>
-                            <h5 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3 pl-1">Variantes en Catálogo</h5>
-                            <div id="variants-list" class="space-y-2">
-                                <div class="text-center py-6 border border-dashed border-white/10 rounded-xl">
-                                    <p class="text-xs font-bold text-gray-500">Agrega variantes arriba para armar tu stock.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </form>
-            </div>
-
-            <div class="p-6 md:p-8 border-t border-white/5 shrink-0 flex flex-col md:flex-row justify-end gap-4 bg-[#0a0a0f] rounded-b-[2.5rem]">
-                <button onclick="closeModal()" class="w-full md:w-auto px-8 py-4 rounded-full text-xs font-black uppercase tracking-widest text-gray-400 border border-white/10 hover:text-white hover:bg-white/5 transition">Cancelar Publicación</button>
-                <button onclick="submitProduct(event)" id="btn-save-prod" class="w-full md:w-auto bg-[#FFC300] text-black px-10 py-4 rounded-full text-xs font-[900] uppercase tracking-widest hover:bg-yellow-400 transition shadow-[0_10px_20px_rgba(255,195,0,0.3)] flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                    Publicar Producto
-                </button>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- ======================================================= -->
     <!-- MOTOR JAVASCRIPT MODULAR B2B -->
     <!-- ======================================================= -->
-    <!-- 1. Seguridad y Autenticación -->
-    <script src="/static/js/store/partner_session.js"></script>
+    <script src="/static/js/store/dashboard/partner_session.js"></script>
+    <script src="/static/js/store/dashboard/partner_main.js"></script>
     
-    <!-- 2. Interfaz y Navegación (Modales y Tabs) -->
-    <script src="/static/js/store/partner_ui.js"></script>
-    <script src="/static/js/store/partner_profile.js"></script>
-    
-    <!-- 3. Lógica de Negocios (Catálogo y Órdenes) -->
-    <script src="/static/js/store/partner_catalog.js"></script>
-    <script src="/static/js/store/partner_orders.js"></script>
-    
-    <!-- 4. Inicializador Principal (Arrancador) -->
-    <script src="/static/js/store/partner_main.js"></script>
+    <!-- Script temporal para apagar los skeletons y demostrar el efecto -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Simulamos que los datos llegan de la base de datos después de 1.5 segundos
+            setTimeout(() => {
+                const els = ['store-name-display', 'header-logo', 'metric-sales', 'metric-escrow', 'metric-orders'];
+                els.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.classList.remove('skeleton-text');
+                        if (id === 'metric-sales' || id === 'metric-escrow') el.innerText = '$' + (Math.random() * 1000).toFixed(2);
+                        if (id === 'metric-orders') el.innerText = Math.floor(Math.random() * 10);
+                        if (id === 'header-logo') {
+                            el.innerHTML = 'P'; // Inicial de la tienda
+                            el.classList.add('text-[#FFC300]');
+                        }
+                    }
+                });
+            }, 1500);
+        });
+    </script>
 </body>
 </html>
