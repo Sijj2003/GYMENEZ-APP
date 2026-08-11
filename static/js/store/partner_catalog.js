@@ -245,7 +245,10 @@ async function submitProduct(e) {
     }
 
     const category = document.getElementById('prod-category').value;
-    if (category !== 'general' && activeVariants.length === 0) {
+    
+    // 🍎 CAMBIO 1: Validación inteligente de categorías planas vs matriz
+    const flatCategories = ['general', 'accesorios', 'tecnologia', 'recuperacion'];
+    if (!flatCategories.includes(category) && activeVariants.length === 0) {
         alert("⚠️ MATRIZ VACÍA:\nElegiste un producto con Variantes, pero no has añadido ninguna a la lista. Añade al menos una talla o sabor.");
         return;
     }
@@ -297,8 +300,12 @@ async function submitProduct(e) {
         const data = await response.json();
 
         if (response.ok && data.success) {
+            
+            // 🍎 CAMBIO 2: Forzar actualización limpiando la caché
+            sessionStorage.removeItem('partner_catalog_cache');
+            
             closeModal();
-            loadMyProducts(); 
+            loadMyProducts(true); // El 'true' fuerza la lectura limpia desde la Base de Datos
         } else {
             alert(data.error || "Auditoría rechazó el producto. Verifica los datos.");
         }
