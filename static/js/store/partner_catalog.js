@@ -405,3 +405,53 @@ function renderProducts(products) {
         `;
     }).join('');
 }
+
+// ==========================================
+// FUNCIÓN DE EDICIÓN DE PRODUCTOS
+// ==========================================
+function editProduct(productId) {
+    // 1. Buscamos el producto en la memoria caché
+    const product = window.myProducts.find(p => p.id === productId);
+    if (!product) return;
+
+    // 2. Abrimos el modal de forma estándar
+    if(typeof openModal === 'function') openModal();
+
+    // 3. Inyectamos los datos básicos en el formulario
+    document.getElementById('prod-id').value = product.id;
+    document.getElementById('prod-name').value = product.name;
+    document.getElementById('prod-category').value = product.category || 'general';
+    document.getElementById('prod-price').value = product.price_usd;
+    document.getElementById('prod-discount').value = product.discount_percentage || 0;
+    document.getElementById('prod-desc').value = product.description || '';
+    document.getElementById('prod-weight').value = product.weight_kg || 1;
+    document.getElementById('prod-stock').value = product.stock;
+
+    // 4. Modificamos el estado visual de la imagen
+    const display = document.getElementById('file-name-display');
+    display.innerText = "Imagen ya guardada. Sube otra solo si deseas cambiarla.";
+    display.classList.remove('text-gray-400');
+    display.classList.add('text-blue-400');
+    document.getElementById('prod-image').required = false; 
+
+    // 5. Cambiamos el texto y color del botón principal
+    const btn = document.getElementById('btn-save-prod');
+    btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Actualizar Producto';
+    btn.classList.replace('bg-[#FFC300]', 'bg-blue-500');
+    btn.classList.replace('hover:bg-yellow-400', 'hover:bg-blue-400');
+    btn.classList.replace('text-black', 'text-white');
+
+    // 6. Restaurar el Constructor Inteligente de Variantes
+    if(typeof toggleVariantFields === 'function') toggleVariantFields(); 
+    
+    if (product.variants_matrix && product.category !== 'general') {
+        try {
+            activeVariants = typeof product.variants_matrix === 'string' 
+                ? JSON.parse(product.variants_matrix) 
+                : product.variants_matrix;
+            renderVariantsList();
+        } catch (e) {
+            console.error("Error parseando la matriz de variantes:", e);
+        }
+    }
+}
