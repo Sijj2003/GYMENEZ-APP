@@ -19,19 +19,25 @@ function toggleVariantFields() {
     activeVariants = []; 
     renderVariantsList();
 
-    if (category === 'general') {
+    // 🍎 1. AGRUPAMOS LAS CATEGORÍAS DE STOCK GLOBAL (Sin Variantes)
+    const flatCategories = ['general', 'accesorios', 'tecnologia', 'recuperacion'];
+
+    if (flatCategories.includes(category)) {
         masterContainer.classList.add('hidden');
         document.getElementById('prod-stock').readOnly = false;
         document.getElementById('stock-helper').classList.add('hidden');
         return;
     }
 
+    // 🍎 2. CATEGORÍAS CON MATRIZ INTELIGENTE
     masterContainer.classList.remove('hidden');
     document.getElementById('prod-stock').readOnly = true; 
     document.getElementById('stock-helper').classList.remove('hidden');
 
     let html = '';
-    if (category === 'suplementos') {
+    
+    // Suplementos y Snacks usan la misma matriz de sabores y presentaciones
+    if (category === 'suplementos' || category === 'snacks') {
         html = `
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div class="md:col-span-1">
@@ -47,8 +53,8 @@ function toggleVariantFields() {
                     <input type="text" id="builder-flavor-custom" class="hidden mt-2 w-full bg-[#12121a] border border-blue-500/50 rounded-xl px-4 py-2 text-sm font-bold text-white" placeholder="Ej: Ponche de Frutas">
                 </div>
                 <div class="md:col-span-1">
-                    <label class="block text-[9px] font-black uppercase tracking-widest text-blue-400 mb-2">Tamaño / Serv.</label>
-                    <input type="text" id="builder-size" class="w-full bg-[#12121a] border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-blue-500" placeholder="Ej: 5 Lbs ó 30 Serv">
+                    <label class="block text-[9px] font-black uppercase tracking-widest text-blue-400 mb-2">Tamaño / Empaque</label>
+                    <input type="text" id="builder-size" class="w-full bg-[#12121a] border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-blue-500" placeholder="Ej: Caja 12 Unds ó 5 Lbs">
                 </div>
                 <div class="md:col-span-1">
                     <label class="block text-[9px] font-black uppercase tracking-widest text-emerald-400 mb-2">Stock Unidades</label>
