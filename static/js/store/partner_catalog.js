@@ -458,3 +458,37 @@ function editProduct(productId) {
     btn.classList.replace('hover:bg-yellow-400', 'hover:bg-blue-400');
     btn.classList.replace('text-black', 'text-white');
 }
+
+// ==========================================
+// FUNCIÓN: PAUSAR O REACTIVAR PRODUCTO
+// ==========================================
+async function toggleProductStatus(productId, currentStatus) {
+    const newStatus = currentStatus === 'paused' ? 'active' : 'paused';
+    const actionLabel = newStatus === 'paused' ? 'pausar' : 'reactivar';
+
+    if (!confirm(`¿Estás seguro de que deseas ${actionLabel} este producto?`)) return;
+
+    try {
+        const token = localStorage.getItem('gymenez_partner_token');
+        const response = await fetch(`https://sijj2003.pythonanywhere.com/api/partner/catalog/${productId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            // Limpiamos la caché y recargamos la lista al instante
+            sessionStorage.removeItem('partner_catalog_cache');
+            loadMyProducts(true);
+        } else {
+            alert(data.error || "No se pudo actualizar el estado del producto.");
+        }
+    } catch (error) {
+        alert("Fallo de red al intentar actualizar el estado.");
+    }
+}
