@@ -354,58 +354,74 @@ function renderProducts(products) {
         const discount = p.discount_percentage || 0;
         const hasDiscount = discount > 0;
         const finalPrice = hasDiscount ? (p.price_usd * (1 - discount/100)).toFixed(2) : p.price_usd.toFixed(2);
+        const isPaused = p.status === 'paused';
         
-        let tagsHtml = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[8px] font-black uppercase px-2 py-0.5 rounded mr-1">${p.weight_kg || 1} Kg</span>`;
+        let tagsHtml = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[8px] font-black uppercase px-2 py-0.5 rounded">${p.weight_kg || 1} Kg</span>`;
         if (p.variants_matrix) {
             tagsHtml += `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-black uppercase px-2 py-0.5 rounded">Matriz Activa</span>`;
         }
 
         return `
-        <div class="bg-[#12121a] p-5 rounded-[2rem] border border-white/5 group hover:border-[#FFC300]/50 transition-all duration-300 relative flex flex-col shadow-xl">
-            ${hasDiscount ? `<span class="absolute top-8 left-8 bg-red-600 text-white text-[9px] font-black uppercase px-3 py-1.5 rounded-full shadow-lg z-10">-${discount}% OFF</span>` : ''}
+        <div class="bg-[#12121a] rounded-[2rem] border border-white/5 group hover:border-[#FFC300]/50 transition-all duration-300 relative flex flex-col shadow-xl overflow-hidden">
             
-            <div class="aspect-square bg-[#0a0a0f] rounded-2xl mb-4 overflow-hidden border border-white/5 shrink-0 relative flex items-center justify-center p-4">
-                <img src="${p.image_url}" alt="${p.name}" class="max-h-full object-contain filter drop-shadow-xl transition-transform duration-700 group-hover:scale-110 group-hover:-translate-y-2">
+            <!-- 🖼️ ZONA SUPERIOR: IMAGEN Y BADGES FLOTANTES -->
+            <div class="relative aspect-square bg-[#0a0a0f] p-6 flex items-center justify-center border-b border-white/5">
+                
+                <!-- Badge de Descuento -->
+                ${hasDiscount ? `<span class="absolute top-4 left-4 bg-red-600 text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-lg z-10">-${discount}% OFF</span>` : ''}
+                
+                <!-- Badge de Stock / Estado Pausado -->
+                <span class="absolute top-4 right-4 ${isPaused ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' : (p.stock > 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20')} border text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-sm z-10 backdrop-blur-md">
+                    ${isPaused ? 'Pausado' : `Stock: ${p.stock}`}
+                </span>
+
+                <!-- Imagen del Producto -->
+                <img src="${p.image_url}" alt="${p.name}" class="max-h-full object-contain filter drop-shadow-xl transition-transform duration-700 group-hover:scale-110">
             </div>
             
-            <div class="flex-1 flex flex-col justify-between">
-                <div class="mb-4">
-                    <div class="flex justify-between items-start mb-2 gap-2">
-                        <h3 class="font-[900] text-sm md:text-base text-white leading-tight mb-1 truncate max-w-[180px]">${p.name}</h3>
-                        <span class="${p.stock > 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'} border font-black text-[9px] uppercase px-2 py-1 rounded shrink-0 shadow-sm">Stock: ${p.stock}</span>
+            <!-- 📄 ZONA INFERIOR: INFORMACIÓN Y ACCIONES -->
+            <div class="p-5 flex-1 flex flex-col justify-between">
+                
+                <!-- Título y Categoría -->
+                <div class="mb-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-[9px] text-gray-500 uppercase tracking-widest font-black">${p.category}</span>
+                        <div class="flex items-center gap-1 ml-auto">
+                            ${tagsHtml}
+                        </div>
                     </div>
-                    <div class="flex items-center mt-1">
-                        <p class="text-[9px] text-gray-500 uppercase tracking-widest font-black mr-2">${p.category}</p>
-                        ${tagsHtml}
-                    </div>
+                    <h3 class="font-[900] text-sm md:text-base text-white leading-tight truncate" title="${p.name}">${p.name}</h3>
                 </div>
                 
-                <div class="pt-4 border-t border-white/5 flex items-center justify-between">
+                <!-- Precios y Botones de Acción -->
+                <div class="pt-4 border-t border-white/5 flex items-center justify-between gap-2">
                     <div>
-                        <p class="text-white font-[900] text-2xl italic leading-none">$${finalPrice}</p>
+                        <p class="text-white font-[900] text-xl italic leading-none">$${finalPrice}</p>
                         ${hasDiscount ? `<p class="text-[10px] text-gray-500 font-bold line-through mt-1">$${p.price_usd.toFixed(2)}</p>` : ''}
                     </div>
                     
-                    <!-- 🍎 AQUÍ ESTÁ EL CAMBIO: LOS DOS BOTONES -->
-                    <div class="flex gap-2">
-                        <button onclick="toggleProductStatus('${p.id}', '${p.status || 'active'}')" class="text-gray-400 hover:text-yellow-400 transition bg-white/5 p-3 rounded-xl border border-white/5 hover:border-yellow-500/50 hover:bg-yellow-500/10" title="${p.status === 'paused' ? 'Reactivar Producto' : 'Pausar Producto'}">
-        ${p.status === 'paused' 
-            ? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
-            : '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
-        }
-    </button>
+                    <!-- 🎛️ Bloque de Botones Compacto y Ordenado -->
+                    <div class="flex items-center gap-1.5 bg-white/[0.03] p-1.5 rounded-2xl border border-white/5">
+                        
+                        <!-- Botón Pausar / Activar -->
+                        <button onclick="toggleProductStatus('${p.id}', '${p.status || 'active'}')" class="text-gray-400 hover:text-yellow-400 transition p-2 rounded-xl hover:bg-yellow-500/10" title="${isPaused ? 'Reactivar Producto' : 'Pausar Producto'}">
+                            ${isPaused 
+                                ? '<svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                                : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                            }
+                        </button>
 
-    <!-- Botón Editar -->
-    <button onclick="editProduct('${p.id}')" class="text-gray-400 hover:text-blue-400 transition bg-white/5 p-3 rounded-xl border border-white/5 hover:border-blue-500/50 hover:bg-blue-500/10" title="Editar Producto">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-    </button>
-    
-    <!-- Botón Eliminar -->
-    <button onclick="deleteProduct('${p.id}')" class="text-gray-400 hover:text-red-500 transition bg-white/5 p-3 rounded-xl border border-white/5 hover:border-red-500/50 hover:bg-red-500/10" title="Retirar de Plataforma">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-    </button>
-</div>
-                    
+                        <!-- Botón Editar -->
+                        <button onclick="editProduct('${p.id}')" class="text-gray-400 hover:text-blue-400 transition p-2 rounded-xl hover:bg-blue-500/10" title="Editar Producto">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </button>
+                        
+                        <!-- Botón Eliminar -->
+                        <button onclick="deleteProduct('${p.id}')" class="text-gray-400 hover:text-red-500 transition p-2 rounded-xl hover:bg-red-500/10" title="Retirar de Plataforma">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+
                 </div>
             </div>
         </div>
