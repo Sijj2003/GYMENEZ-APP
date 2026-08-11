@@ -201,6 +201,16 @@ function addVariant(type) {
         name = `Talla ${size.toUpperCase()} - ${color}`;
     }
 
+    else if (type === 'jugo') {
+        const flavor = document.getElementById('builder-flavor').value.trim();
+        const size = document.getElementById('builder-size').value.trim();
+        if (!flavor || !size) { 
+            alert("Completa el nombre de la Bebida y el Volumen (Ej: 500 ml)."); 
+            return; 
+        }
+        name = `${flavor} - ${size}`;
+    }
+
     const exists = activeVariants.find(v => v.name.toLowerCase() === name.toLowerCase());
     if (exists) {
         exists.stock += stock; 
