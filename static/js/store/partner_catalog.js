@@ -83,6 +83,28 @@ function toggleVariantFields() {
     if (category === 'ropa') setApparelType('superior'); 
 }
 
+} else if (category === 'jugos') {
+        html = `
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div class="md:col-span-1">
+                    <label class="block text-[9px] font-black uppercase tracking-widest text-blue-400 mb-2">Bebida / Sabor</label>
+                    <input type="text" id="builder-flavor" class="w-full bg-[#12121a] border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-blue-500" placeholder="Ej: Jugo Verde, Batido Whey">
+                </div>
+                <div class="md:col-span-1">
+                    <label class="block text-[9px] font-black uppercase tracking-widest text-blue-400 mb-2">Volumen (ml / L)</label>
+                    <input type="text" id="builder-size" class="w-full bg-[#12121a] border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-blue-500" placeholder="Ej: 350 ml, 500 ml, 1 Litro">
+                </div>
+                <div class="md:col-span-1">
+                    <label class="block text-[9px] font-black uppercase tracking-widest text-emerald-400 mb-2">Stock Unidades</label>
+                    <input type="number" id="builder-stock" min="1" value="1" class="w-full bg-[#12121a] border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="md:col-span-1">
+                    <button type="button" onclick="addVariant('jugo')" class="w-full bg-blue-600 text-white font-black uppercase tracking-widest text-[10px] py-3 rounded-xl hover:bg-blue-500 transition shadow-lg">Añadir Bebida</button>
+                </div>
+            </div>
+        `;
+    }
+
 function checkCustomFlavor() {
     const select = document.getElementById('builder-flavor');
     const customInput = document.getElementById('builder-flavor-custom');
