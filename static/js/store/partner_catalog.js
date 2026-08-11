@@ -36,7 +36,7 @@ function toggleVariantFields() {
 
     let html = '';
     
-    // Suplementos y Snacks usan la misma matriz de sabores y presentaciones
+    // Suplementos y Snacks
     if (category === 'suplementos' || category === 'snacks') {
         html = `
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -65,7 +65,9 @@ function toggleVariantFields() {
                 </div>
             </div>
         `;
-    } else if (category === 'ropa') {
+    } 
+    // Ropa y Calzado
+    else if (category === 'ropa') {
         html = `
             <div class="mb-4">
                 <label class="block text-[9px] font-black uppercase tracking-widest text-blue-400 mb-2">Sub-Tipo de Indumentaria</label>
@@ -78,12 +80,9 @@ function toggleVariantFields() {
             </div>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end" id="apparel-inputs-container"></div>
         `;
-    }
-    controlsContainer.innerHTML = html;
-    if (category === 'ropa') setApparelType('superior'); 
-}
-
-} else if (category === 'jugos') {
+    } 
+    // 🍎 Jugos y Batidos (AHORA SÍ DENTRO DE LA ESTRUCTURA CORRECTA)
+    else if (category === 'jugos') {
         html = `
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div class="md:col-span-1">
@@ -104,6 +103,10 @@ function toggleVariantFields() {
             </div>
         `;
     }
+
+    controlsContainer.innerHTML = html;
+    if (category === 'ropa') setApparelType('superior'); 
+}
 
 function checkCustomFlavor() {
     const select = document.getElementById('builder-flavor');
