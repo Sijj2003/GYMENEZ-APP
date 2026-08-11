@@ -489,8 +489,10 @@ function editProduct(productId) {
     document.getElementById('prod-category').value = product.category || 'general';
     if(typeof toggleVariantFields === 'function') toggleVariantFields(); 
 
-    // 4. Restaurar la matriz de variantes (Si es ropa o suplemento, esto auto-calcula el stock)
-    if (product.variants_matrix && product.category !== 'general') {
+    // 🍎 4. Restaurar la matriz de variantes o el stock plano
+    const flatCategories = ['general', 'accesorios', 'tecnologia', 'recuperacion'];
+    
+    if (product.variants_matrix && !flatCategories.includes(product.category)) {
         try {
             activeVariants = typeof product.variants_matrix === 'string' 
                 ? JSON.parse(product.variants_matrix) 
@@ -500,7 +502,7 @@ function editProduct(productId) {
             console.error("Error parseando la matriz de variantes:", e);
         }
     } else {
-        // 5. Si es equipamiento genérico, inyectamos el stock manualmente AQUÍ
+        // 5. Si es de categoría plana, inyectamos el stock manualmente AQUÍ
         document.getElementById('prod-stock').value = product.stock;
     }
 
