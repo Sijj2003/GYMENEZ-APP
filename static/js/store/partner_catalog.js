@@ -280,7 +280,7 @@ async function submitProduct(e) {
         const token = localStorage.getItem('gymenez_partner_token');
         const method = prodId ? 'PUT' : 'POST';
         const urlEnd = prodId ? `/${prodId}` : '';
-        const STORE_API_URL = `https://sijj2003.pythonanywhere.com/api/store/product${urlEnd}`;
+        const STORE_API_URL = `https://sijj2003.pythonanywhere.com/api/partner/catalog${urlEnd}`;
 
         const response = await fetch(STORE_API_URL, {
             method: method,
@@ -309,7 +309,7 @@ async function deleteProduct(productId) {
 
     try {
         const token = localStorage.getItem('gymenez_partner_token');
-        const response = await fetch(`https://sijj2003.pythonanywhere.com/api/store/product/${productId}`, {
+        const response = await fetch(`https://sijj2003.pythonanywhere.com/api/partner/catalog/${productId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -327,7 +327,7 @@ async function deleteProduct(productId) {
 
 async function loadMyProducts() {
     const token = localStorage.getItem('gymenez_partner_token');
-    const URL = 'https://sijj2003.pythonanywhere.com/api/store/partner/products';
+    const URL = 'https://sijj2003.pythonanywhere.com/api/partner/catalog';
     try {
         const response = await fetch(URL, { method: 'GET', headers: { 'Authorization': `Bearer ${token}` } });
         const data = await response.json();
