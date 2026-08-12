@@ -156,10 +156,13 @@
                 
                 <!-- TÍTULO Y PRECIO -->
                 <div class="mb-8 mt-2 lg:mt-0">
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#FFC300] animate-pulse shadow-[0_0_10px_rgba(255,195,0,0.8)]"></span>
                         <span id="prod-store" class="text-[10px] font-bold text-[#FFC300] uppercase tracking-widest">Tienda Oficial</span>
                     </div>
+
+                    <!-- 🍎 NUEVO: Contenedor para las etiquetas dinámicas -->
+                    <div id="prod-badges-container" class="flex flex-wrap gap-2 mb-4"></div>
 
                     <!-- Tipografía ajustada: Sin itálicas, más compacta y premium -->
                     <h1 id="prod-title" class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight text-white mb-4">Cargando Título...</h1>
