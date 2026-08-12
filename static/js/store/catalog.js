@@ -294,7 +294,7 @@ function renderProductsGrid(productsToRender) {
         if (hasFreeShipping) {
             const threshold = parseFloat(p.free_shipping_threshold);
             const extraText = threshold > 0 ? ` > $${threshold}` : '';
-            etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis${extraText}</span> `;
+            etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis</span> `;
         }
         
         if (isOnDemand) {
