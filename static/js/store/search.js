@@ -206,18 +206,28 @@ async function fetchAndFilterProducts(query) {
     const grid = document.getElementById('results-grid');
     const countDisplay = document.getElementById('search-count');
     
-    // 🍎 NUEVO: Diseño de estado de espera si borran el texto
+    // 🍎 NUEVO: Diseño de estado de espera PREMIUM con animación
     if (!query || !query.trim()) {
-        if(countDisplay) countDisplay.innerText = "Ingresa un término de búsqueda válido.";
-        if(grid) grid.innerHTML = `
-            <div class="col-span-full py-20 flex flex-col items-center justify-center text-center opacity-60">
-                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]">
-                    <span class="text-3xl">⌨️</span>
+        if(countDisplay) countDisplay.innerText = "Esperando tu instrucción...";
+        if(grid) {
+            grid.innerHTML = `
+                <div id="search-wait-state" class="col-span-full py-20 flex flex-col items-center justify-center text-center opacity-0 translate-y-8 transition-all duration-700 ease-out">
+                    <div class="w-20 h-20 bg-[#0a0a0f] rounded-full flex items-center justify-center mb-6 border border-white/10 shadow-[0_0_30px_rgba(255,195,0,0.05)]">
+                        <span class="text-3xl animate-bounce">⌨️</span>
+                    </div>
+                    <h3 class="text-xl md:text-3xl font-[900] tracking-tighter uppercase italic text-white mb-2">Descubre tu <span class="text-[#FFC300]">potencial</span></h3>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold max-w-sm">Escribe el nombre del producto, marca o categoría en la barra superior.</p>
                 </div>
-                <h3 class="text-xl font-[900] tracking-tighter uppercase italic text-white mb-2">Búsqueda Activa</h3>
-                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Escribe para encontrar tu producto ideal.</p>
-            </div>
-        `;
+            `;
+            // Disparador de la animación suave
+            setTimeout(() => {
+                const waitState = document.getElementById('search-wait-state');
+                if (waitState) {
+                    waitState.classList.remove('opacity-0', 'translate-y-8');
+                    waitState.classList.add('opacity-100', 'translate-y-0');
+                }
+            }, 50);
+        }
         return;
     }
 
@@ -225,7 +235,6 @@ async function fetchAndFilterProducts(query) {
     let products = (window.allProducts && window.allProducts.length > 0) ? window.allProducts : [];
     let needsFetch = products.length === 0;
 
-    // 🕒 VALIDACIÓN INTELIGENTE DE CACHÉ
     if (needsFetch) {
         const rawCache = sessionStorage.getItem('gymenez_catalog');
         if (rawCache) {
@@ -235,24 +244,20 @@ async function fetchAndFilterProducts(query) {
                     const now = new Date().getTime();
                     if (now - cachedData.timestamp < 5 * 60 * 1000) {
                         products = cachedData.products;
-                        window.allProducts = products; // Rescatamos a la memoria
+                        window.allProducts = products; 
                         needsFetch = false;
                     }
                 }
-            } catch (e) {
-                console.warn("Caché corrupto, recargando de la base de datos...");
-            }
+            } catch (e) { console.warn("Caché corrupto, recargando..."); }
         }
     }
 
-    // SI NO HAY CACHÉ, PEDIMOS A FIREBASE
     try {
         if (needsFetch) {
-            // Mostramos el spinner mientras carga
             if(grid) grid.innerHTML = `
-                <div class="col-span-full py-24 flex flex-col items-center justify-center glass-panel rounded-[2.5rem] border border-white/5 shadow-2xl">
-                    <div class="w-12 h-12 border-4 border-[#FFC300] border-t-transparent rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(255,195,0,0.5)]"></div>
-                    <span class="text-[#FFC300] text-[10px] uppercase tracking-widest font-black">Analizando bóveda...</span>
+                <div class="col-span-full py-24 flex flex-col items-center justify-center">
+                    <div class="w-12 h-12 border-4 border-[#FFC300] border-t-transparent rounded-full animate-spin mb-4 shadow-[0_0_20px_rgba(255,195,0,0.5)]"></div>
+                    <span class="text-[#FFC300] text-[10px] uppercase tracking-widest font-black animate-pulse">Accediendo al catálogo global...</span>
                 </div>
             `;
 
@@ -261,53 +266,53 @@ async function fetchAndFilterProducts(query) {
 
             if (response.ok && data.success) {
                 products = data.products;
-                window.allProducts = products; // Guardamos en memoria
-                sessionStorage.setItem('gymenez_catalog', JSON.stringify({
-                    products: products,
-                    timestamp: new Date().getTime()
-                }));
-            } else {
-                throw new Error('No se pudo cargar el catálogo');
-            }
+                window.allProducts = products;
+                sessionStorage.setItem('gymenez_catalog', JSON.stringify({ products, timestamp: new Date().getTime() }));
+            } else throw new Error('Error al cargar');
         }
         
-        // 🍎 FILTRAMOS (Con caché o recién descargado)
         const filteredProducts = products.filter(p => {
             const searchString = normalizeText(`${p.name} ${p.store_name || ''} ${p.category || ''} ${p.description || ''}`);
             return searchString.includes(normalizedQuery);
         });
 
-        if(countDisplay) countDisplay.innerText = `${filteredProducts.length} coincidencias encontradas`;
+        if(countDisplay) countDisplay.innerText = `${filteredProducts.length} resultados elite`;
         if(grid) renderDeepResults(filteredProducts, grid);
         
     } catch (error) {
         if(countDisplay) countDisplay.innerText = "Error de conexión.";
-        if(grid) grid.innerHTML = '<div class="col-span-full text-center py-10"><p class="text-red-500 font-bold uppercase text-[10px] tracking-widest">Ocurrió un problema de red al buscar. Intenta de nuevo.</p></div>';
+        if(grid) grid.innerHTML = '<div class="col-span-full text-center py-10"><p class="text-red-500 font-bold uppercase text-[10px] tracking-widest">Ocurrió un problema de red al buscar.</p></div>';
     }
 }
 
 function renderDeepResults(productsToRender, grid) {
     if (productsToRender.length === 0) {
         grid.innerHTML = `
-            <div class="col-span-full py-20 flex flex-col items-center justify-center text-center">
-                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10">
-                    <span class="text-3xl">📭</span>
+            <div id="search-empty-state" class="col-span-full py-20 flex flex-col items-center justify-center text-center opacity-0 translate-y-8 transition-all duration-700 ease-out">
+                <div class="w-20 h-20 bg-[#0a0a0f] rounded-full flex items-center justify-center mb-6 border border-white/10 shadow-[0_0_30px_rgba(255,0,0,0.1)]">
+                    <span class="text-3xl opacity-50">📭</span>
                 </div>
-                <h3 class="text-xl font-[900] tracking-tighter uppercase italic text-white mb-2">No se encontró nada</h3>
-                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Verifica la ortografía o intenta con palabras más cortas.</p>
+                <h3 class="text-xl font-[900] tracking-tighter uppercase italic text-white mb-2">Radar en Blanco</h3>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">No encontramos coincidencias. Intenta con un sinónimo.</p>
             </div>
         `;
+        setTimeout(() => {
+            const emptyState = document.getElementById('search-empty-state');
+            if (emptyState) {
+                emptyState.classList.remove('opacity-0', 'translate-y-8');
+                emptyState.classList.add('opacity-100', 'translate-y-0');
+            }
+        }, 50);
         return;
     }
 
-    grid.innerHTML = productsToRender.map(p => {
-        // Cálculo Robusto de Descuentos
+    // Dibujamos las tarjetas, pero OJO: las creamos "invisibles" (opacity-0 y movidas hacia abajo)
+    grid.innerHTML = productsToRender.map((p, index) => {
         const price = parseFloat(p.price_usd || p.price || 0);
         const discount = parseInt(p.discount_percentage || p.discount || 0);
         const hasDiscount = discount > 0;
         const finalPrice = hasDiscount ? (price * (1 - discount / 100)) : price;
 
-        // 🍎 DETECCIÓN DE REGLAS DE NEGOCIO (Bajo Pedido y Envío Gratis)
         const isOnDemand = (p.is_on_demand === true || p.is_on_demand === 'true' || p.is_on_demand === 'True');
         const hasFreeShipping = (p.free_shipping === true || p.free_shipping === 'true' || p.free_shipping === 'True');
 
@@ -321,19 +326,16 @@ function renderDeepResults(productsToRender, grid) {
             etiquetasHtml += `<span class="bg-purple-500/90 text-white border border-purple-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(168,85,247,0.3)]">⚡ Bajo Pedido</span>`;
         }
 
+        // 🍎 NOTA: Añadida clase 'result-card opacity-0 translate-y-12' para la magia
         return `
-        <a href="/store/product.html?id=${p.id}" class="group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all cursor-pointer relative">
+        <a href="/store/product.html?id=${p.id}" class="result-card opacity-0 translate-y-12 group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all duration-[600ms] ease-out cursor-pointer relative shadow-lg hover:shadow-[0_10px_30px_rgba(255,195,0,0.1)]">
             
-            <!-- IMAGEN Y DESCUENTO -->
             <div class="relative w-full aspect-square overflow-hidden bg-[#030305] border-b border-white/5 flex items-center justify-center">
                 <img src="${p.image_url || p.imageUrl}" alt="${p.name}" class="w-full h-full object-contain filter drop-shadow-xl group-hover:scale-110 transition-transform duration-700">
                 ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${discount}%</span>` : ''}
             </div>
             
-            <!-- INFORMACIÓN -->
             <div class="p-4 flex flex-col flex-grow relative">
-                
-                <!-- 🍎 ETIQUETAS FLOTANTES -->
                 ${etiquetasHtml ? `<div class="absolute -top-3 left-3 flex gap-1 z-20">${etiquetasHtml}</div>` : ''}
 
                 <h3 class="text-sm md:text-base font-bold text-white mb-1 uppercase tracking-tight truncate ${etiquetasHtml ? 'mt-2' : ''}">${p.name}</h3>
@@ -344,7 +346,6 @@ function renderDeepResults(productsToRender, grid) {
                 
                 <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${p.store_name || 'Gymenez Store'}</span>
                 
-                <!-- PRECIO Y BOTÓN -->
                 <div class="flex items-center justify-between mt-4 border-t border-white/5 pt-3">
                     ${hasDiscount 
                         ? `<div class="flex flex-col"><span class="text-xs text-gray-500 line-through leading-none">$${price.toFixed(2)}</span><span class="text-white font-black text-sm md:text-base leading-none mt-1">$${finalPrice.toFixed(2)}</span></div>` 
@@ -358,6 +359,19 @@ function renderDeepResults(productsToRender, grid) {
         </a>
         `;
     }).join('');
+
+    // 🍎 LA MAGIA SUCEDE AQUÍ: Disparamos la animación en cascada
+    // Damos unos milisegundos para que el DOM pinte las tarjetas "invisibles", 
+    // y luego las mostramos una a una con un pequeño retraso de 40ms entre ellas.
+    setTimeout(() => {
+        const cards = grid.querySelectorAll('.result-card');
+        cards.forEach((card, i) => {
+            setTimeout(() => {
+                card.classList.remove('opacity-0', 'translate-y-12');
+                card.classList.add('opacity-100', 'translate-y-0');
+            }, i * 40); // El retraso aumenta 40ms por cada tarjeta (efecto dominó)
+        });
+    }, 20);
 }
 
 function setupInnerSearch() {
