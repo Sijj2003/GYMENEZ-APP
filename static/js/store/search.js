@@ -322,7 +322,7 @@ function renderDeepResults(productsToRender, grid) {
         if (hasFreeShipping) {
             const threshold = parseFloat(p.free_shipping_threshold);
             const extraText = threshold > 0 ? ` > $${threshold}` : '';
-            etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis${extraText}</span> `;
+            etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis</span> `;
         }
         if (isOnDemand) {
             etiquetasHtml += `<span class="bg-purple-500/90 text-white border border-purple-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(168,85,247,0.3)]">⚡ Bajo Pedido</span>`;
@@ -343,7 +343,7 @@ function renderDeepResults(productsToRender, grid) {
                 <h3 class="text-sm md:text-base font-bold text-white mb-1 uppercase tracking-tight truncate ${etiquetasHtml ? 'mt-2' : ''}">${p.name}</h3>
                 
                 <p class="text-[10px] md:text-xs text-gray-400 mb-2 font-medium capitalize">
-                    ${p.category} • ${isOnDemand ? '<span class="text-purple-400 font-bold">Fabricación Exclusiva</span>' : (p.stock > 0 ? p.stock + ' unidades' : '<span class="text-red-500 font-bold">Agotado</span>')}
+                    ${p.category} • ${isOnDemand ? '<span class="text-purple-400 font-bold">Bajo Pedido</span>' : (p.stock > 0 ? p.stock + ' unidades' : '<span class="text-red-500 font-bold">Agotado</span>')}
                 </p>
                 
                 <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${p.store_name || 'Gymenez Store'}</span>
