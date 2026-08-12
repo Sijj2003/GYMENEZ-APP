@@ -246,10 +246,14 @@ function removeVariant(index) {
 function renderVariantsList() {
     const listEl = document.getElementById('variants-list');
     const globalStockEl = document.getElementById('prod-stock');
+    
+    // Verificamos si el switch existe en el DOM y si está encendido
+    const switchEl = document.getElementById('prod-on-demand');
+    const isOnDemand = switchEl ? switchEl.checked : false;
 
     if (activeVariants.length === 0) {
         listEl.innerHTML = `<div class="text-center py-6 border border-dashed border-white/10 rounded-xl"><p class="text-xs font-bold text-gray-500">Agrega variantes arriba para armar tu stock.</p></div>`;
-        globalStockEl.value = '';
+        if (!isOnDemand) globalStockEl.value = '1';
         return;
     }
 
@@ -258,6 +262,12 @@ function renderVariantsList() {
     
     activeVariants.forEach((v, index) => {
         totalStock += v.stock;
+        
+        // 🍎 MEJORA VISUAL: Si es 999, mostrará "Bajo Pedido" en color morado
+        const stockVisual = v.stock === 999 
+            ? '<span class="text-purple-400 bg-purple-500/10 px-2 py-1 rounded">Bajo Pedido</span>' 
+            : `<span class="text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">Stock: ${v.stock}</span>`;
+
         html += `
             <div class="flex items-center justify-between bg-[#0a0a0f] border border-white/5 p-3 rounded-xl mb-2">
                 <div class="flex items-center gap-3">
@@ -265,7 +275,7 @@ function renderVariantsList() {
                     <span class="text-sm font-bold text-white">${v.name}</span>
                 </div>
                 <div class="flex items-center gap-4">
-                    <span class="text-xs font-black text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">Stock: ${v.stock}</span>
+                    <span class="text-xs font-black">${stockVisual}</span>
                     <button type="button" onclick="removeVariant(${index})" class="text-gray-500 hover:text-red-500 transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
@@ -275,7 +285,15 @@ function renderVariantsList() {
     });
 
     listEl.innerHTML = html;
-    globalStockEl.value = totalStock; 
+    
+    // 🍎 MANTENEMOS EL TEXTO "ILIMITADO" SIN QUE SE ROMPA
+    if (isOnDemand) {
+        globalStockEl.type = 'text';
+        globalStockEl.value = 'Ilimitado';
+    } else {
+        globalStockEl.type = 'number';
+        globalStockEl.value = totalStock; 
+    }
 }
 
 async function submitProduct(e) {
@@ -639,19 +657,35 @@ function toggleOnDemandUI() {
     const stockInput = document.getElementById('prod-stock');
     
     if (isOnDemand) {
-        // Truco: Lo convertimos a texto para que acepte letras sin dar error
         stockInput.type = 'text';
         stockInput.value = 'Ilimitado';
         stockInput.readOnly = true;
-        stockInput.classList.add('text-purple-400'); // Le damos un toque morado
+        stockInput.classList.add('text-purple-400'); 
+        
+        // 🍎 Convertimos el stock de las variantes a 999 automático
+        activeVariants.forEach(v => v.stock = 999);
     } else {
-        // Lo devolvemos a formato de números estricto
         stockInput.type = 'number';
-        stockInput.value = '1';
-        stockInput.readOnly = false;
         stockInput.classList.remove('text-purple-400');
         
-        if(typeof toggleVariantFields === 'function') toggleVariantFields();
+        // 🍎 Convertimos los 999 a 1 para que puedas escribir el stock real
+        activeVariants.forEach(v => {
+            if (v.stock === 999) v.stock = 1;
+        });
+        
+        if (activeVariants.length > 0) {
+            stockInput.readOnly = true;
+        } else {
+            stockInput.readOnly = false;
+            stockInput.value = '1';
+        }
+    }
+    
+    // 🛑 ELIMINADA LA LÍNEA DESTRUCTORA QUE BORRABA LAS TALLAS AQUÍ
+    
+    // Actualizamos la lista visualmente
+    if (activeVariants.length > 0) {
+        renderVariantsList();
     }
 }
 
