@@ -80,7 +80,6 @@ function handleInstantSearch(query, platform) {
         return;
     }
 
-    // Prioridad a la memoria global, luego al caché
     let products = (window.allProducts && window.allProducts.length > 0) ? window.allProducts : [];
 
     if (products.length === 0) {
@@ -96,9 +95,13 @@ function handleInstantSearch(query, platform) {
         }
     }
 
+    // 🍎 MAGIA DE TOKENIZACIÓN (Busca sin importar el orden de las palabras)
+    const queryWords = q.split(/\s+/); // Separamos la búsqueda por espacios
+    
     const filtered = products.filter(p => {
         const searchString = normalizeText(`${p.name} ${p.store_name || ''} ${p.category || ''}`);
-        return searchString.includes(q);
+        // Verificamos que TODAS las palabras buscadas estén dentro del string del producto
+        return queryWords.every(word => searchString.includes(word));
     });
 
     renderInstantResults(filtered, resultsContainer, platform, query);
@@ -203,9 +206,8 @@ async function fetchAndFilterProducts(query) {
     const grid = document.getElementById('results-grid');
     const countDisplay = document.getElementById('search-count');
     
-    // 🍎 NUEVO: Diseño de estado de espera PREMIUM con animación
     if (!query || !query.trim()) {
-        if(countDisplay) countDisplay.innerText = "Esperando tu instrucción...";
+        if(countDisplay) countDisplay.innerText = "Ingresa un término de búsqueda válido.";
         if(grid) {
             grid.innerHTML = `
                 <div id="search-wait-state" class="col-span-full py-20 flex flex-col items-center justify-center text-center opacity-0 translate-y-8 transition-all duration-700 ease-out">
@@ -216,7 +218,6 @@ async function fetchAndFilterProducts(query) {
                     <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold max-w-sm">Escribe el nombre del producto, marca o categoría en la barra superior.</p>
                 </div>
             `;
-            // Disparador de la animación suave
             setTimeout(() => {
                 const waitState = document.getElementById('search-wait-state');
                 if (waitState) {
@@ -268,9 +269,13 @@ async function fetchAndFilterProducts(query) {
             } else throw new Error('Error al cargar');
         }
         
+        // 🍎 MAGIA DE TOKENIZACIÓN (Grilla profunda)
+        const queryWords = normalizedQuery.split(/\s+/); // Separamos por palabras
+        
         const filteredProducts = products.filter(p => {
             const searchString = normalizeText(`${p.name} ${p.store_name || ''} ${p.category || ''} ${p.description || ''}`);
-            return searchString.includes(normalizedQuery);
+            // El producto debe contener TODAS las palabras ingresadas para pasar el filtro
+            return queryWords.every(word => searchString.includes(word));
         });
 
         if(countDisplay) countDisplay.innerText = `${filteredProducts.length} resultados elite`;
