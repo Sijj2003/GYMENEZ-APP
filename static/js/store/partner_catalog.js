@@ -180,9 +180,18 @@ function setApparelType(type) {
 
 function addVariant(type) {
     let name = '';
-    const stock = parseInt(document.getElementById('builder-stock').value) || 0;
+    
+    // 🍎 NUEVO: Verificamos si está encendido el switch de "Bajo Pedido"
+    const isOnDemand = document.getElementById('prod-on-demand').checked;
+    
+    // Si es bajo pedido, le asignamos 999 automático. Si no, leemos lo que escribió el usuario.
+    const stock = isOnDemand ? 999 : (parseInt(document.getElementById('builder-stock').value) || 0);
 
-    if (stock < 1) { alert("El stock de la variante debe ser mínimo 1."); return; }
+    // 🍎 NUEVO: Solo exigimos stock mayor a 1 si NO es bajo pedido
+    if (!isOnDemand && stock < 1) { 
+        alert("El stock de la variante debe ser mínimo 1."); 
+        return; 
+    }
 
     if (type === 'suplemento') {
         const selectFlavor = document.getElementById('builder-flavor').value;
@@ -203,7 +212,6 @@ function addVariant(type) {
         if (!size || !color) { alert("Completa la Talla y el Color."); return; }
         name = `Talla ${size.toUpperCase()} - ${color}`;
     }
-
     else if (type === 'jugo') {
         const flavor = document.getElementById('builder-flavor').value.trim();
         const size = document.getElementById('builder-size').value.trim();
@@ -216,7 +224,8 @@ function addVariant(type) {
 
     const exists = activeVariants.find(v => v.name.toLowerCase() === name.toLowerCase());
     if (exists) {
-        exists.stock += stock; 
+        // 🍎 NUEVO: Si la variante ya existía, solo le sumamos stock si NO es bajo pedido
+        if (!isOnDemand) exists.stock += stock; 
     } else {
         activeVariants.push({ name: name, stock: stock, type: type });
     }
@@ -224,7 +233,9 @@ function addVariant(type) {
     renderVariantsList();
     
     if(document.getElementById('builder-size')) document.getElementById('builder-size').value = '';
-    if(document.getElementById('builder-stock')) document.getElementById('builder-stock').value = '1';
+    
+    // 🍎 NUEVO: Solo reseteamos la casilla de stock a "1" si NO es bajo pedido
+    if(document.getElementById('builder-stock') && !isOnDemand) document.getElementById('builder-stock').value = '1';
 }
 
 function removeVariant(index) {
@@ -288,9 +299,13 @@ async function submitProduct(e) {
         return;
     }
 
-    const stockFinal = parseInt(document.getElementById('prod-stock').value);
-    if (isNaN(stockFinal) || stockFinal < 1) {
-        alert("⚠️ INVENTARIO CERO:\nNo puedes publicar un producto sin stock disponible.");
+    // 🍎 NUEVA LÓGICA DE STOCK Y BAJO PEDIDO
+    const isOnDemand = document.getElementById('prod-on-demand').checked;
+    const stockFinal = isOnDemand ? 999 : parseInt(document.getElementById('prod-stock').value);
+    
+    // Si NO es bajo pedido, exigimos que tenga inventario real
+    if (!isOnDemand && (isNaN(stockFinal) || stockFinal < 1)) {
+        alert("⚠️ INVENTARIO CERO:\nNo puedes publicar un producto sin stock disponible (A menos que actives 'Bajo Pedido').");
         return;
     }
 
@@ -313,6 +328,11 @@ async function submitProduct(e) {
     formData.append('stock', stockFinal);
     formData.append('weight_kg', weight); 
     formData.append('description', document.getElementById('prod-desc').value);
+    
+    // 🍎 ENVIAMOS LAS CONFIGURACIONES AVANZADAS AL SERVIDOR
+    formData.append('is_on_demand', isOnDemand);
+    formData.append('free_shipping', document.getElementById('prod-free-shipping').checked);
+    formData.append('free_shipping_threshold', document.getElementById('prod-fs-threshold').value || 0);
     
     if (activeVariants.length > 0) {
         formData.append('variants_matrix', JSON.stringify(activeVariants));
@@ -404,9 +424,28 @@ function renderProducts(products) {
         const finalPrice = hasDiscount ? (p.price_usd * (1 - discount/100)).toFixed(2) : p.price_usd.toFixed(2);
         const isPaused = p.status === 'paused';
         
+        // 🍎 NUEVO: Leemos las configuraciones del producto
+        const isOnDemand = (p.is_on_demand === true || p.is_on_demand === 'true' || p.is_on_demand === 'True');
+        const hasFreeShipping = (p.free_shipping === true || p.free_shipping === 'true' || p.free_shipping === 'True');
+        
+        // 🍎 NUEVO: Construimos los tags (Peso, Matriz, y ahora Envío Gratis)
         let tagsHtml = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[8px] font-black uppercase px-2 py-0.5 rounded">${p.weight_kg || 1} Kg</span>`;
-        if (p.variants_matrix) {
+        if (p.variants_matrix && p.variants_matrix.length > 0) {
             tagsHtml += `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-black uppercase px-2 py-0.5 rounded">Matriz Activa</span>`;
+        }
+        if (hasFreeShipping) {
+            const threshold = parseFloat(p.free_shipping_threshold) > 0 ? ` > $${p.free_shipping_threshold}` : '';
+            tagsHtml += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.2)]">🚚 Envío Gratis${threshold}</span>`;
+        }
+
+        // 🍎 NUEVO: Lógica inteligente para el Badge Principal (Pausado vs Pedido vs Stock)
+        let stockBadgeHtml = '';
+        if (isPaused) {
+            stockBadgeHtml = '<span class="absolute top-4 right-4 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-sm z-10 backdrop-blur-md">Pausado</span>';
+        } else if (isOnDemand) {
+            stockBadgeHtml = '<span class="absolute top-4 right-4 bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-sm z-10 backdrop-blur-md">⚡ Bajo Pedido</span>';
+        } else {
+            stockBadgeHtml = `<span class="absolute top-4 right-4 ${p.stock > 0 ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'} border text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-sm z-10 backdrop-blur-md">Stock: ${p.stock}</span>`;
         }
 
         return `
@@ -418,10 +457,8 @@ function renderProducts(products) {
                 <!-- Badge de Descuento -->
                 ${hasDiscount ? `<span class="absolute top-4 left-4 bg-red-600 text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-lg z-10">-${discount}% OFF</span>` : ''}
                 
-                <!-- Badge de Stock / Estado Pausado -->
-                <span class="absolute top-4 right-4 ${isPaused ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' : (p.stock > 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20')} border text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-sm z-10 backdrop-blur-md">
-                    ${isPaused ? 'Pausado' : `Stock: ${p.stock}`}
-                </span>
+                <!-- 🍎 NUEVO: Imprimimos el Badge de Stock Inteligente -->
+                ${stockBadgeHtml}
 
                 <!-- Imagen del Producto -->
                 <img src="${p.image_url}" alt="${p.name}" class="max-h-full object-contain filter drop-shadow-xl transition-transform duration-700 group-hover:scale-110">
@@ -432,9 +469,10 @@ function renderProducts(products) {
                 
                 <!-- Título y Categoría -->
                 <div class="mb-5">
-                    <div class="flex items-center gap-2 mb-2">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
                         <span class="text-[9px] text-gray-500 uppercase tracking-widest font-black">${p.category}</span>
                         <div class="flex items-center gap-1 ml-auto">
+                            <!-- 🍎 NUEVO: Imprimimos las etiquetas (incluyendo envío gratis) -->
                             ${tagsHtml}
                         </div>
                     </div>
@@ -516,6 +554,19 @@ function editProduct(productId) {
     document.getElementById('prod-discount').value = product.discount_percentage || 0;
     document.getElementById('prod-desc').value = product.description || '';
     document.getElementById('prod-weight').value = product.weight_kg || 1;
+
+    // 🍎 NUEVO: ENCENDER SWITCHES SI EL PRODUCTO LOS TIENE CONFIGURADOS
+    // Evaluamos si viene como boolean nativo o como string desde el JSON
+    const isOnDemand = (product.is_on_demand === true || product.is_on_demand === 'true' || product.is_on_demand === 'True');
+    const isFreeShipping = (product.free_shipping === true || product.free_shipping === 'true' || product.free_shipping === 'True');
+    
+    document.getElementById('prod-on-demand').checked = isOnDemand;
+    document.getElementById('prod-free-shipping').checked = isFreeShipping;
+    document.getElementById('prod-fs-threshold').value = product.free_shipping_threshold || '';
+    
+    // Disparamos las funciones visuales para que se oculte o muestre lo necesario
+    toggleOnDemandUI();
+    toggleFreeShippingUI();
 
     // 7. Modificamos el estado visual de la imagen
     const display = document.getElementById('file-name-display');
