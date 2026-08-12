@@ -285,25 +285,48 @@ function renderProductsGrid(productsToRender) {
         
         const storeName = p.store_name || 'Gymenez Partner';
 
+        // 🍎 LÓGICA DE ETIQUETAS CLIENTE
+        const isOnDemand = (p.is_on_demand === true || p.is_on_demand === 'true' || p.is_on_demand === 'True');
+        const hasFreeShipping = (p.free_shipping === true || p.free_shipping === 'true' || p.free_shipping === 'True');
+
+        let etiquetasHtml = '';
+        
+        if (hasFreeShipping) {
+            const threshold = parseFloat(p.free_shipping_threshold);
+            const extraText = threshold > 0 ? ` > $${threshold}` : '';
+            etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis${extraText}</span> `;
+        }
+        
+        if (isOnDemand) {
+            etiquetasHtml += `<span class="bg-purple-500/90 text-white border border-purple-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(168,85,247,0.3)]">⚡ Bajo Pedido</span>`;
+        }
+
         // AQUÍ EMPIEZA LA NUEVA TARJETA REDISEÑADA
         return `
-        <a href="/store/product.html?id=${p.id}" class="group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all cursor-pointer">
+        <a href="/store/product.html?id=${p.id}" class="group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all cursor-pointer relative">
             
             <!-- IMAGEN LIMPIA Y SIN TEXTO -->
-            <div class="relative w-full aspect-square overflow-hidden bg-black/50 border-b border-white/5">
-                <img src="${p.image_url}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="${p.name}">
-                ${hasDiscount ? `<span class="absolute top-2 right-2 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-1 rounded shadow-lg">-${discount}%</span>` : ''}
+            <div class="relative w-full aspect-square overflow-hidden bg-[#030305] border-b border-white/5 flex items-center justify-center">
+                <img src="${p.image_url}" class="w-full h-full object-contain filter drop-shadow-xl group-hover:scale-110 transition-transform duration-700" alt="${p.name}">
+                
+                ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${discount}%</span>` : ''}
             </div>
             
             <!-- INFORMACIÓN DEBAJO -->
-            <div class="p-4 flex flex-col flex-grow">
-                <!-- Título -->
-                <h3 class="text-sm md:text-base font-bold text-white mb-1 uppercase tracking-tight truncate">${p.name}</h3>
+            <div class="p-4 flex flex-col flex-grow relative">
+                
+                <!-- 🍎 ETIQUETAS FLOTANTES SOBRE EL TÍTULO -->
+                ${etiquetasHtml ? `<div class="absolute -top-3 left-3 flex gap-1 z-20">${etiquetasHtml}</div>` : ''}
+
+                <!-- Título (Con margen superior si hay etiquetas) -->
+                <h3 class="text-sm md:text-base font-bold text-white mb-1 uppercase tracking-tight truncate ${etiquetasHtml ? 'mt-2' : ''}">${p.name}</h3>
                 
                 <!-- Categoría y Unidades -->
-                <p class="text-[10px] md:text-xs text-gray-400 mb-2 font-medium capitalize">${p.category} • ${p.stock > 0 ? p.stock + ' unidades' : 'Agotado'}</p>
+                <p class="text-[10px] md:text-xs text-gray-400 mb-2 font-medium capitalize">
+                    ${p.category} • ${isOnDemand ? '<span class="text-purple-400 font-bold">Fabricación Exclusiva</span>' : (p.stock > 0 ? p.stock + ' unidades' : '<span class="text-red-500 font-bold">Agotado</span>')}
+                </p>
                 
-                <!-- Nombre de la Tienda (Estilo Premium y Limpio) -->
+                <!-- Nombre de la Tienda -->
                 <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${storeName}</span>
                 
                 <!-- Precio y Botón -->
