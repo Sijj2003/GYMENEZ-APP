@@ -516,7 +516,7 @@ function renderProducts(products) {
 }
 
 // ==========================================
-// FUNCIÓN DE EDICIÓN DE PRODUCTOS
+// FUNCIÓN DE EDICIÓN DE PRODUCTOS (BLINDADA)
 // ==========================================
 function editProduct(productId) {
     // 1. Buscamos el producto en la memoria caché
@@ -526,28 +526,47 @@ function editProduct(productId) {
     // 2. Abrimos el modal
     if(typeof openModal === 'function') openModal();
 
-    // 3. 🍎 EL TRUCO: Cambiamos la categoría y activamos los menús PRIMERO
+    // 3. Cambiamos la categoría y activamos los menús PRIMERO
     document.getElementById('prod-category').value = product.category || 'general';
     if(typeof toggleVariantFields === 'function') toggleVariantFields(); 
 
-    // 🍎 4. Restaurar la matriz de variantes o el stock plano
+    // 4. Evaluamos si es de categoría plana o lleva matriz
     const flatCategories = ['general', 'accesorios', 'tecnologia', 'recuperacion'];
+    const isMatrixCategory = !flatCategories.includes(product.category);
     
-    if (product.variants_matrix && !flatCategories.includes(product.category)) {
-        try {
-            activeVariants = typeof product.variants_matrix === 'string' 
-                ? JSON.parse(product.variants_matrix) 
-                : product.variants_matrix;
-            renderVariantsList(); 
-        } catch (e) {
-            console.error("Error parseando la matriz de variantes:", e);
+    if (isMatrixCategory) {
+        // Aseguramos que el contenedor visual de variantes se muestre
+        document.getElementById('variants-master-container').classList.remove('hidden');
+        document.getElementById('prod-stock').readOnly = true;
+
+        // 🍎 EXTRACCIÓN A PRUEBA DE BALAS (El antídoto para Firebase)
+        let rawVariants = product.variants_matrix;
+        let finalVariants = [];
+
+        if (rawVariants) {
+            if (typeof rawVariants === 'string') {
+                try { finalVariants = JSON.parse(rawVariants); } catch(e){}
+            } else if (Array.isArray(rawVariants)) {
+                // Si ya es un array, hacemos una copia limpia
+                finalVariants = JSON.parse(JSON.stringify(rawVariants)); 
+            } else if (typeof rawVariants === 'object') {
+                // Si Firebase lo disfrazó de diccionario {0: {...}, 1: {...}}
+                finalVariants = Object.values(rawVariants);
+            }
         }
+
+        // Asignamos las variantes extraídas y las pintamos en pantalla
+        activeVariants = finalVariants;
+        renderVariantsList(); 
+
     } else {
-        // 5. Si es de categoría plana, inyectamos el stock manualmente AQUÍ
-        document.getElementById('prod-stock').value = product.stock;
+        // 5. Si es de categoría plana, inyectamos el stock manualmente
+        document.getElementById('variants-master-container').classList.add('hidden');
+        document.getElementById('prod-stock').readOnly = false;
+        document.getElementById('prod-stock').value = product.stock || 1;
     }
 
-    // 6. Ahora sí, llenamos el resto de los campos de texto
+    // 6. Llenamos el resto de los campos de texto
     document.getElementById('prod-id').value = product.id;
     document.getElementById('prod-name').value = product.name;
     document.getElementById('prod-price').value = product.price_usd;
@@ -555,8 +574,7 @@ function editProduct(productId) {
     document.getElementById('prod-desc').value = product.description || '';
     document.getElementById('prod-weight').value = product.weight_kg || 1;
 
-    // 🍎 NUEVO: ENCENDER SWITCHES SI EL PRODUCTO LOS TIENE CONFIGURADOS
-    // Evaluamos si viene como boolean nativo o como string desde el JSON
+    // 7. ENCENDER SWITCHES SI EL PRODUCTO LOS TIENE CONFIGURADOS
     const isOnDemand = (product.is_on_demand === true || product.is_on_demand === 'true' || product.is_on_demand === 'True');
     const isFreeShipping = (product.free_shipping === true || product.free_shipping === 'true' || product.free_shipping === 'True');
     
@@ -568,21 +586,20 @@ function editProduct(productId) {
     toggleOnDemandUI();
     toggleFreeShippingUI();
 
-    // 7. Modificamos el estado visual de la imagen
+    // 8. Modificamos el estado visual de la imagen
     const display = document.getElementById('file-name-display');
     display.innerText = "Imagen ya guardada. Sube otra solo si deseas cambiarla.";
     display.classList.remove('text-gray-400');
     display.classList.add('text-blue-400');
     document.getElementById('prod-image').required = false; 
 
-    // 8. Cambiamos el texto y color del botón principal
+    // 9. Cambiamos el texto y color del botón principal
     const btn = document.getElementById('btn-save-prod');
     btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Actualizar Producto';
     btn.classList.replace('bg-[#FFC300]', 'bg-blue-500');
     btn.classList.replace('hover:bg-yellow-400', 'hover:bg-blue-400');
     btn.classList.replace('text-black', 'text-white');
 }
-
 // ==========================================
 // FUNCIÓN: PAUSAR O REACTIVAR PRODUCTO
 // ==========================================
