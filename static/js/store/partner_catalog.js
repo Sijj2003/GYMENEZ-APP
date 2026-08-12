@@ -565,3 +565,27 @@ async function toggleProductStatus(productId, currentStatus) {
         alert("Fallo de red al intentar actualizar el estado.");
     }
 }
+
+function toggleOnDemandUI() {
+    const isOnDemand = document.getElementById('prod-on-demand').checked;
+    const stockInput = document.getElementById('prod-stock');
+    if (isOnDemand) {
+        stockInput.value = '∞';
+        stockInput.readOnly = true;
+    } else {
+        stockInput.value = '1';
+        stockInput.readOnly = false;
+        if(typeof toggleVariantFields === 'function') toggleVariantFields();
+    }
+}
+
+function toggleFreeShippingUI() {
+    const isFree = document.getElementById('prod-free-shipping').checked;
+    const container = document.getElementById('fs-threshold-container');
+    if (isFree) {
+        container.classList.remove('hidden');
+    } else {
+        container.classList.add('hidden');
+        document.getElementById('prod-fs-threshold').value = '';
+    }
+}
