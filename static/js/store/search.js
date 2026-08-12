@@ -131,6 +131,10 @@ function renderInstantResults(results, container, platform, originalQuery) {
         const hasDiscount = discount > 0;
         const finalPrice = hasDiscount ? (price * (1 - discount / 100)) : price;
 
+        // 🍎 DETECCIÓN DE REGLAS DE NEGOCIO
+        const isOnDemand = (item.is_on_demand === true || item.is_on_demand === 'true' || item.is_on_demand === 'True');
+        const hasFreeShipping = (item.free_shipping === true || item.free_shipping === 'true' || item.free_shipping === 'True');
+
         return `
         <a href="/store/product.html?id=${item.id}" class="flex items-center gap-4 p-3 bg-[#0a0a0f] md:bg-transparent rounded-xl hover:bg-white/5 transition border-b border-white/5 md:border-b md:rounded-none md:last:border-0 group">
             <div class="w-14 h-14 rounded-lg bg-white/5 p-1 flex-shrink-0 border border-white/10 relative">
@@ -139,7 +143,11 @@ function renderInstantResults(results, container, platform, originalQuery) {
             </div>
             <div class="flex-grow min-w-0 pr-2">
                 <h4 class="text-sm font-bold text-white truncate">${item.name}</h4>
-                <p class="text-[9px] text-[#FFC300] uppercase tracking-widest truncate">${item.store_name || 'Gymenez Store'}</p>
+                <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                    <span class="text-[9px] text-[#FFC300] uppercase tracking-widest truncate font-black">${item.store_name || 'Gymenez Store'}</span>
+                    ${hasFreeShipping ? `<span class="text-[7px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded font-black uppercase">🚚 Envío Gratis</span>` : ''}
+                    ${isOnDemand ? `<span class="text-[7px] bg-purple-500/20 text-purple-400 px-1.5 py-0.2 rounded font-black uppercase">⚡ Bajo Pedido</span>` : ''}
+                </div>
             </div>
             <div class="text-right flex-shrink-0 flex flex-col items-end justify-center">
                 ${hasDiscount ? `<span class="text-[9px] text-gray-500 line-through leading-none mb-0.5">$${price.toFixed(2)}</span>` : ''}
@@ -283,25 +291,53 @@ function renderDeepResults(productsToRender, grid) {
         const hasDiscount = discount > 0;
         const finalPrice = hasDiscount ? (price * (1 - discount / 100)) : price;
 
+        // 🍎 DETECCIÓN DE REGLAS DE NEGOCIO (Bajo Pedido y Envío Gratis)
+        const isOnDemand = (p.is_on_demand === true || p.is_on_demand === 'true' || p.is_on_demand === 'True');
+        const hasFreeShipping = (p.free_shipping === true || p.free_shipping === 'true' || p.free_shipping === 'True');
+
+        let etiquetasHtml = '';
+        if (hasFreeShipping) {
+            const threshold = parseFloat(p.free_shipping_threshold);
+            const extraText = threshold > 0 ? ` > $${threshold}` : '';
+            etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis${extraText}</span> `;
+        }
+        if (isOnDemand) {
+            etiquetasHtml += `<span class="bg-purple-500/90 text-white border border-purple-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(168,85,247,0.3)]">⚡ Bajo Pedido</span>`;
+        }
+
         return `
-        <a href="/store/product.html?id=${p.id}" class="glass-panel p-4 rounded-2xl group cursor-pointer relative flex flex-col hover:border-[#FFC300]/50 transition-all">
+        <a href="/store/product.html?id=${p.id}" class="group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all cursor-pointer relative">
             
-            <div class="aspect-square bg-[#050508] rounded-xl mb-4 overflow-hidden relative border border-white/5">
-                <img src="${p.image_url || p.imageUrl}" alt="${p.name}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                ${hasDiscount ? `<span class="absolute top-2 right-2 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-1 rounded shadow-lg">-${discount}%</span>` : ''}
+            <!-- IMAGEN Y DESCUENTO -->
+            <div class="relative w-full aspect-square overflow-hidden bg-[#030305] border-b border-white/5 flex items-center justify-center">
+                <img src="${p.image_url || p.imageUrl}" alt="${p.name}" class="w-full h-full object-contain filter drop-shadow-xl group-hover:scale-110 transition-transform duration-700">
+                ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${discount}%</span>` : ''}
             </div>
             
-            <div class="flex-grow">
-                <h3 class="font-bold text-sm text-gray-100 leading-tight mb-1 truncate">${p.name}</h3>
-                <p class="text-[10px] text-[#FFC300] uppercase tracking-widest font-black truncate mb-3">${p.store_name || 'Gymenez Store'}</p>
-            </div>
-            
-            <div class="flex items-center justify-between mt-auto">
-                <div class="flex flex-col">
-                    ${hasDiscount ? `<span class="text-[9px] text-gray-500 line-through leading-none">$${price.toFixed(2)}</span>` : ''}
-                    <p class="text-white font-black text-lg leading-none ${hasDiscount ? 'mt-1' : ''}">$${finalPrice.toFixed(2)}</p>
+            <!-- INFORMACIÓN -->
+            <div class="p-4 flex flex-col flex-grow relative">
+                
+                <!-- 🍎 ETIQUETAS FLOTANTES -->
+                ${etiquetasHtml ? `<div class="absolute -top-3 left-3 flex gap-1 z-20">${etiquetasHtml}</div>` : ''}
+
+                <h3 class="text-sm md:text-base font-bold text-white mb-1 uppercase tracking-tight truncate ${etiquetasHtml ? 'mt-2' : ''}">${p.name}</h3>
+                
+                <p class="text-[10px] md:text-xs text-gray-400 mb-2 font-medium capitalize">
+                    ${p.category} • ${isOnDemand ? '<span class="text-purple-400 font-bold">Fabricación Exclusiva</span>' : (p.stock > 0 ? p.stock + ' unidades' : '<span class="text-red-500 font-bold">Agotado</span>')}
+                </p>
+                
+                <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${p.store_name || 'Gymenez Store'}</span>
+                
+                <!-- PRECIO Y BOTÓN -->
+                <div class="flex items-center justify-between mt-4 border-t border-white/5 pt-3">
+                    ${hasDiscount 
+                        ? `<div class="flex flex-col"><span class="text-xs text-gray-500 line-through leading-none">$${price.toFixed(2)}</span><span class="text-white font-black text-sm md:text-base leading-none mt-1">$${finalPrice.toFixed(2)}</span></div>` 
+                        : `<span class="text-sm md:text-base font-black text-white">$${finalPrice.toFixed(2)}</span>`
+                    }
+                    <div class="bg-white/10 p-2 rounded-full text-white group-hover:bg-[#FFC300] group-hover:text-black transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    </div>
                 </div>
-                <span class="text-[9px] text-gray-500 uppercase tracking-widest">${p.category}</span>
             </div>
         </a>
         `;
