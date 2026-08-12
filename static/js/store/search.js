@@ -59,14 +59,16 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 function handleInstantSearch(query, platform) {
     const q = normalizeText(query).trim();
-    const resultsContainer = platform === 'desktop' 
-        ? document.getElementById('search-dropdown') 
-        : document.getElementById('mobile-search-results');
+    let resultsContainer = null;
+    
+    if (platform === 'desktop') resultsContainer = document.getElementById('search-dropdown');
+    else if (platform === 'desktop-inner') resultsContainer = document.getElementById('search-dropdown-inner');
+    else resultsContainer = document.getElementById('mobile-search-results');
 
     if (!resultsContainer) return;
 
     if (q.length < 2) {
-        if (platform === 'desktop') {
+        if (platform === 'desktop' || platform === 'desktop-inner') {
             resultsContainer.classList.add('hidden');
         } else {
             resultsContainer.innerHTML = `
@@ -78,7 +80,7 @@ function handleInstantSearch(query, platform) {
         return;
     }
 
-    // 🍎 CORRECCIÓN: Prioridad a la memoria global, luego al caché
+    // Prioridad a la memoria global, luego al caché
     let products = (window.allProducts && window.allProducts.length > 0) ? window.allProducts : [];
 
     if (products.length === 0) {
@@ -88,11 +90,9 @@ function handleInstantSearch(query, platform) {
                 const cachedData = JSON.parse(rawCache);
                 if (cachedData && cachedData.products) {
                     products = cachedData.products;
-                    window.allProducts = products; // Rescatamos la memoria
+                    window.allProducts = products; 
                 }
-            } catch (e) {
-                console.warn("Caché ignorado");
-            }
+            } catch (e) { console.warn("Caché ignorado"); }
         }
     }
 
@@ -105,7 +105,7 @@ function handleInstantSearch(query, platform) {
 }
 
 function renderInstantResults(results, container, platform, originalQuery) {
-    if (platform === 'desktop') {
+    if (platform === 'desktop' || platform === 'desktop-inner') {
         container.classList.remove('hidden');
         container.classList.add('flex');
     }
@@ -120,13 +120,11 @@ function renderInstantResults(results, container, platform, originalQuery) {
     }
 
     let html = results.slice(0, 6).map(item => {
-        // Cálculo Robusto de Descuentos
         const price = parseFloat(item.price_usd || item.price || 0);
         const discount = parseInt(item.discount_percentage || item.discount || 0);
         const hasDiscount = discount > 0;
         const finalPrice = hasDiscount ? (price * (1 - discount / 100)) : price;
 
-        // 🍎 DETECCIÓN DE REGLAS DE NEGOCIO
         const isOnDemand = (item.is_on_demand === true || item.is_on_demand === 'true' || item.is_on_demand === 'True');
         const hasFreeShipping = (item.free_shipping === true || item.free_shipping === 'true' || item.free_shipping === 'True');
 
@@ -152,7 +150,6 @@ function renderInstantResults(results, container, platform, originalQuery) {
         `;
     }).join('');
 
-    // Botón para ir a la página profunda si hay más resultados
     if (results.length > 6) {
         html += `
         <a href="/store/search.html?q=${encodeURIComponent(originalQuery)}" class="block w-full p-3 text-center bg-white/5 hover:bg-[#FFC300] text-[#FFC300] hover:text-black transition text-[10px] font-black uppercase tracking-widest">
@@ -379,32 +376,49 @@ function setupInnerSearch() {
     const displayEl = document.getElementById('search-query-display');
     const btn = document.getElementById('search-btn-inner');
     
+    // 🍎 MAGIA: Creamos el menú desplegable en search.html dinámicamente si no existe
+    let innerDropdown = document.getElementById('search-dropdown-inner');
+    if (input && !innerDropdown) {
+        innerDropdown = document.createElement('div');
+        innerDropdown.id = 'search-dropdown-inner';
+        innerDropdown.className = 'absolute top-full left-0 right-0 mt-2 bg-[#0a0a0f] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[100] hidden flex-col max-h-[400px] overflow-y-auto hide-scroll';
+        input.parentElement.appendChild(innerDropdown);
+    }
+    
     const goSearch = () => {
         const term = input.value.trim();
+        if (innerDropdown) innerDropdown.classList.add('hidden'); // Ocultar el menú rápido
+        
         if (term.length > 0) {
             window.history.replaceState({}, '', `/store/search.html?q=${encodeURIComponent(term)}`);
             if(displayEl) displayEl.innerText = `"${term}"`;
-            fetchAndFilterProducts(term);
+            fetchAndFilterProducts(term); // 👈 AQUÍ SÍ HACE LA BÚSQUEDA PROFUNDA Y ANIMADA
+        } else {
+            if(displayEl) displayEl.innerText = '"Todo"';
+            fetchAndFilterProducts('');
         }
     };
 
     if(input) {
-        // 🍎 BÚSQUEDA INSTANTÁNEA LETRA POR LETRA
+        // MIENTRAS ESCRIBE: Solo abre el menú desplegable (Búsqueda Instantánea)
         input.addEventListener('input', (e) => {
             const term = e.target.value;
-            if(displayEl) displayEl.innerText = term.trim() ? `"${term}"` : '"Todo"';
-            
-            fetchAndFilterProducts(term); // Actualiza la grilla sola
-            
-            // Actualiza la URL para que se pueda compartir el link
-            window.history.replaceState({}, '', `/store/search.html?q=${encodeURIComponent(term)}`);
+            handleInstantSearch(term, 'desktop-inner');
         });
 
-        // Solo quita el teclado en móviles si presionan Enter (no recarga la página)
+        // SI PRESIONAN ENTER: Oculta el menú y hace la búsqueda profunda en la grilla
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { 
                 e.preventDefault(); 
                 input.blur(); 
+                goSearch();
+            }
+        });
+
+        // Ocultar menú si dan clic afuera
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && innerDropdown && !innerDropdown.contains(e.target)) {
+                innerDropdown.classList.add('hidden');
             }
         });
     }
