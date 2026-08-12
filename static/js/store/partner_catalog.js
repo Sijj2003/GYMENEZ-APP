@@ -620,12 +620,20 @@ async function toggleProductStatus(productId, currentStatus) {
 function toggleOnDemandUI() {
     const isOnDemand = document.getElementById('prod-on-demand').checked;
     const stockInput = document.getElementById('prod-stock');
+    
     if (isOnDemand) {
-        stockInput.value = '∞';
+        // Truco: Lo convertimos a texto para que acepte letras sin dar error
+        stockInput.type = 'text';
+        stockInput.value = 'Ilimitado';
         stockInput.readOnly = true;
+        stockInput.classList.add('text-purple-400'); // Le damos un toque morado
     } else {
+        // Lo devolvemos a formato de números estricto
+        stockInput.type = 'number';
         stockInput.value = '1';
         stockInput.readOnly = false;
+        stockInput.classList.remove('text-purple-400');
+        
         if(typeof toggleVariantFields === 'function') toggleVariantFields();
     }
 }
