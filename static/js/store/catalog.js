@@ -323,7 +323,7 @@ function renderProductsGrid(productsToRender) {
                 
                 <!-- Categoría y Unidades -->
                 <p class="text-[10px] md:text-xs text-gray-400 mb-2 font-medium capitalize">
-                    ${p.category} • ${isOnDemand ? '<span class="text-purple-400 font-bold">Fabricación Exclusiva</span>' : (p.stock > 0 ? p.stock + ' unidades' : '<span class="text-red-500 font-bold">Agotado</span>')}
+                    ${p.category} • ${isOnDemand ? '<span class="text-purple-400 font-bold">Producto Bajo Pedido</span>' : (p.stock > 0 ? p.stock + ' unidades' : '<span class="text-red-500 font-bold">Agotado</span>')}
                 </p>
                 
                 <!-- Nombre de la Tienda -->
