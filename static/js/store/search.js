@@ -78,26 +78,21 @@ function handleInstantSearch(query, platform) {
         return;
     }
 
-    // 🕒 VALIDACIÓN INTELIGENTE DE CACHÉ (5 Minutos)
-    const rawCache = sessionStorage.getItem('gymenez_catalog');
-    let products = [];
+    // 🍎 CORRECCIÓN: Prioridad a la memoria global, luego al caché
+    let products = (window.allProducts && window.allProducts.length > 0) ? window.allProducts : [];
 
-    if (rawCache) {
-        try {
-            const cachedData = JSON.parse(rawCache);
-            if (!Array.isArray(cachedData) && cachedData.products && cachedData.timestamp) {
-                const now = new Date().getTime();
-                const CACHE_LIMIT = 5 * 60 * 1000; // 5 minutos
-                
-                if (now - cachedData.timestamp < CACHE_LIMIT) {
-                    products = cachedData.products; // Usar caché válido
-                } else {
-                    sessionStorage.removeItem('gymenez_catalog'); // Expiró, limpiar
+    if (products.length === 0) {
+        const rawCache = sessionStorage.getItem('gymenez_catalog');
+        if (rawCache) {
+            try {
+                const cachedData = JSON.parse(rawCache);
+                if (cachedData && cachedData.products) {
+                    products = cachedData.products;
+                    window.allProducts = products; // Rescatamos la memoria
                 }
+            } catch (e) {
+                console.warn("Caché ignorado");
             }
-        } catch (e) {
-            console.warn("Caché corrupto, limpiando...");
-            sessionStorage.removeItem('gymenez_catalog');
         }
     }
 
@@ -211,41 +206,62 @@ async function fetchAndFilterProducts(query) {
     const grid = document.getElementById('results-grid');
     const countDisplay = document.getElementById('search-count');
     
-    if (!query.trim()) {
+    // 🍎 NUEVO: Diseño de estado de espera si borran el texto
+    if (!query || !query.trim()) {
         if(countDisplay) countDisplay.innerText = "Ingresa un término de búsqueda válido.";
-        if(grid) grid.innerHTML = '';
+        if(grid) grid.innerHTML = `
+            <div class="col-span-full py-20 flex flex-col items-center justify-center text-center opacity-60">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]">
+                    <span class="text-3xl">⌨️</span>
+                </div>
+                <h3 class="text-xl font-[900] tracking-tighter uppercase italic text-white mb-2">Búsqueda Activa</h3>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Escribe para encontrar tu producto ideal.</p>
+            </div>
+        `;
         return;
     }
 
     const normalizedQuery = normalizeText(query);
-    let products = [];
-    let needsFetch = true;
+    let products = (window.allProducts && window.allProducts.length > 0) ? window.allProducts : [];
+    let needsFetch = products.length === 0;
 
-    // 🕒 VALIDACIÓN INTELIGENTE DE CACHÉ (También en búsqueda profunda)
-    const rawCache = sessionStorage.getItem('gymenez_catalog');
-    if (rawCache) {
-        try {
-            const cachedData = JSON.parse(rawCache);
-            if (!Array.isArray(cachedData) && cachedData.products && cachedData.timestamp) {
-                const now = new Date().getTime();
-                if (now - cachedData.timestamp < 5 * 60 * 1000) {
-                    products = cachedData.products;
-                    needsFetch = false; // El caché es válido, nos ahorramos la petición al backend
+    // 🕒 VALIDACIÓN INTELIGENTE DE CACHÉ
+    if (needsFetch) {
+        const rawCache = sessionStorage.getItem('gymenez_catalog');
+        if (rawCache) {
+            try {
+                const cachedData = JSON.parse(rawCache);
+                if (cachedData && cachedData.products && cachedData.timestamp) {
+                    const now = new Date().getTime();
+                    if (now - cachedData.timestamp < 5 * 60 * 1000) {
+                        products = cachedData.products;
+                        window.allProducts = products; // Rescatamos a la memoria
+                        needsFetch = false;
+                    }
                 }
+            } catch (e) {
+                console.warn("Caché corrupto, recargando de la base de datos...");
             }
-        } catch (e) {
-            console.warn("Caché corrupto, ignorando...");
         }
     }
 
+    // SI NO HAY CACHÉ, PEDIMOS A FIREBASE
     try {
         if (needsFetch) {
+            // Mostramos el spinner mientras carga
+            if(grid) grid.innerHTML = `
+                <div class="col-span-full py-24 flex flex-col items-center justify-center glass-panel rounded-[2.5rem] border border-white/5 shadow-2xl">
+                    <div class="w-12 h-12 border-4 border-[#FFC300] border-t-transparent rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(255,195,0,0.5)]"></div>
+                    <span class="text-[#FFC300] text-[10px] uppercase tracking-widest font-black">Analizando bóveda...</span>
+                </div>
+            `;
+
             const response = await fetch('https://sijj2003.pythonanywhere.com/api/store/catalog');
             const data = await response.json();
 
             if (response.ok && data.success) {
                 products = data.products;
-                // Guardamos el nuevo caché
+                window.allProducts = products; // Guardamos en memoria
                 sessionStorage.setItem('gymenez_catalog', JSON.stringify({
                     products: products,
                     timestamp: new Date().getTime()
@@ -255,7 +271,7 @@ async function fetchAndFilterProducts(query) {
             }
         }
         
-        // Filtramos sobre la data final (ya sea de caché o recién descargada)
+        // 🍎 FILTRAMOS (Con caché o recién descargado)
         const filteredProducts = products.filter(p => {
             const searchString = normalizeText(`${p.name} ${p.store_name || ''} ${p.category || ''} ${p.description || ''}`);
             return searchString.includes(normalizedQuery);
@@ -265,8 +281,8 @@ async function fetchAndFilterProducts(query) {
         if(grid) renderDeepResults(filteredProducts, grid);
         
     } catch (error) {
-        if(countDisplay) countDisplay.innerText = "Error en el servidor.";
-        if(grid) grid.innerHTML = '<p class="text-red-500">Ocurrió un problema al buscar. Intenta de nuevo.</p>';
+        if(countDisplay) countDisplay.innerText = "Error de conexión.";
+        if(grid) grid.innerHTML = '<div class="col-span-full text-center py-10"><p class="text-red-500 font-bold uppercase text-[10px] tracking-widest">Ocurrió un problema de red al buscar. Intenta de nuevo.</p></div>';
     }
 }
 
@@ -346,17 +362,38 @@ function renderDeepResults(productsToRender, grid) {
 
 function setupInnerSearch() {
     const input = document.getElementById('search-input-inner');
+    const displayEl = document.getElementById('search-query-display');
     const btn = document.getElementById('search-btn-inner');
     
     const goSearch = () => {
         const term = input.value.trim();
-        if (term.length > 0) window.location.href = `/store/search.html?q=${encodeURIComponent(term)}`;
+        if (term.length > 0) {
+            window.history.replaceState({}, '', `/store/search.html?q=${encodeURIComponent(term)}`);
+            if(displayEl) displayEl.innerText = `"${term}"`;
+            fetchAndFilterProducts(term);
+        }
     };
 
     if(input) {
+        // 🍎 BÚSQUEDA INSTANTÁNEA LETRA POR LETRA
+        input.addEventListener('input', (e) => {
+            const term = e.target.value;
+            if(displayEl) displayEl.innerText = term.trim() ? `"${term}"` : '"Todo"';
+            
+            fetchAndFilterProducts(term); // Actualiza la grilla sola
+            
+            // Actualiza la URL para que se pueda compartir el link
+            window.history.replaceState({}, '', `/store/search.html?q=${encodeURIComponent(term)}`);
+        });
+
+        // Solo quita el teclado en móviles si presionan Enter (no recarga la página)
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); goSearch(); }
+            if (e.key === 'Enter') { 
+                e.preventDefault(); 
+                input.blur(); 
+            }
         });
     }
+    
     if(btn) btn.addEventListener('click', goSearch);
 }
