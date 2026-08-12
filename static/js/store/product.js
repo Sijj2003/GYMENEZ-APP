@@ -60,15 +60,33 @@ async function loadProductData(id) {
 }
 
 function renderProduct() {
-    // Esconder Spinner y Mostrar Contenedor
     document.getElementById('loading-spinner').classList.add('hidden');
     document.getElementById('product-container').classList.remove('hidden');
 
-    // Llenar Datos Visuales
+    // Llenar Datos Visuales Base
     document.getElementById('prod-img').src = currentProduct.image_url || currentProduct.imageUrl;
     document.getElementById('prod-title').innerText = currentProduct.name;
     document.getElementById('prod-store').innerText = currentProduct.store_name || "Gymenez Partner";
     document.getElementById('prod-desc').innerText = currentProduct.description || "Sin descripción disponible.";
+    
+    // 🍎 DETECCIÓN DE REGLAS DE NEGOCIO
+    const isOnDemand = (currentProduct.is_on_demand === true || currentProduct.is_on_demand === 'true' || currentProduct.is_on_demand === 'True');
+    const hasFreeShipping = (currentProduct.free_shipping === true || currentProduct.free_shipping === 'true' || currentProduct.free_shipping === 'True');
+
+    // 🍎 INYECTAR ESCUDOS (BADGES)
+    const badgesContainer = document.getElementById('prod-badges-container');
+    if (badgesContainer) {
+        let badgesHtml = '';
+        if (hasFreeShipping) {
+            const threshold = parseFloat(currentProduct.free_shipping_threshold);
+            const extraText = threshold > 0 ? ` compras mayores a $${threshold}` : '';
+            badgesHtml += `<span class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-black uppercase px-2 py-1 rounded shadow-inner flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg> Envío Gratis${extraText}</span>`;
+        }
+        if (isOnDemand) {
+            badgesHtml += `<span class="bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[9px] font-black uppercase px-2 py-1 rounded shadow-inner flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Fabricación Bajo Pedido</span>`;
+        }
+        badgesContainer.innerHTML = badgesHtml;
+    }
     
     // Calcular Precio y Descuento
     const basePrice = parseFloat(currentProduct.price_usd || currentProduct.price);
@@ -94,6 +112,9 @@ function renderProduct() {
     const variantsContainer = document.getElementById('variants-container');
     const variantsList = document.getElementById('variants-list');
     
+    // 🍎 VERIFICAMOS AQUÍ SI ES BAJO PEDIDO PARA EVITAR QUE SE TACHEN LAS TALLAS
+    const isOnDemand = (currentProduct.is_on_demand === true || currentProduct.is_on_demand === 'true' || currentProduct.is_on_demand === 'True');
+
     parsedVariants = [];
     if (currentProduct.variants_matrix) {
         try {
@@ -108,7 +129,9 @@ function renderProduct() {
         variantsContainer.classList.remove('hidden');
         
         variantsList.innerHTML = parsedVariants.map((v, index) => {
-            const isOutOfStock = v.stock <= 0;
+            // 🍎 Si es Bajo Pedido, ignoramos el stock y NUNCA lo marcamos agotado
+            const isOutOfStock = !isOnDemand && (v.stock <= 0);
+            
             return `
                 <button 
                     type="button"
@@ -150,26 +173,43 @@ function selectVariant(index) {
     
     // 2. Iluminar la selección activa (Efecto Apple)
     const activeBtn = document.getElementById(`var-btn-${index}`);
-    activeBtn.className = 'px-5 py-3 rounded-full border border-[#FFC300] text-black bg-[#FFC300] transition-all text-xs font-black shadow-[0_0_20px_rgba(255,195,0,0.5)] transform scale-105';
+    activeBtn.className = 'px-5 py-3 rounded-full border-[#FFC300] text-black bg-[#FFC300] transition-all text-xs font-black shadow-[0_0_20px_rgba(255,195,0,0.5)] transform scale-105';
     
     // 3. Actualizar Stock y Botón de Compra basados en esta variante
     updateStockDisplay(selectedVariant.stock);
     currentQuantity = 1;
     document.getElementById('prod-qty').value = currentQuantity;
     updateTotalDisplay();
-    document.getElementById('btn-add-cart').disabled = false;
 }
 
 function updateStockDisplay(stock) {
     const stockEl = document.getElementById('prod-stock');
-    if (stock > 0) {
+    const btnAddCart = document.getElementById('btn-add-cart');
+    const qtyInput = document.getElementById('prod-qty');
+    
+    // 🍎 REEVALUAMOS SI ES BAJO PEDIDO PARA ESTA FUNCIÓN
+    const isOnDemand = (currentProduct.is_on_demand === true || currentProduct.is_on_demand === 'true' || currentProduct.is_on_demand === 'True');
+
+    if (isOnDemand) {
+        // 🔮 Lógica Premium para Bajo Pedido
+        stockEl.innerText = "Fabricación Exclusiva";
+        stockEl.className = "text-[9px] font-black uppercase tracking-widest text-purple-400 bg-purple-500/10 border border-purple-500/30 px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(168,85,247,0.2)]";
+        btnAddCart.disabled = false;
+        if(qtyInput) qtyInput.max = 999; // Le permitimos comprar todo lo que quiera
+        
+    } else if (stock > 0) {
+        // 🟢 Lógica Normal con Stock
         stockEl.innerText = `${stock} disponibles`;
         stockEl.className = "text-[9px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-md shadow-inner";
-        document.getElementById('btn-add-cart').disabled = false;
+        btnAddCart.disabled = false;
+        if(qtyInput) qtyInput.max = stock; // Topamos el máximo a lo que hay en inventario
+        
     } else {
+        // 🔴 Lógica Agotado
         stockEl.innerText = "Agotado temporalmente";
         stockEl.className = "text-[9px] font-black uppercase tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded-md shadow-inner";
-        document.getElementById('btn-add-cart').disabled = true;
+        btnAddCart.disabled = true;
+        if(qtyInput) qtyInput.max = 1;
     }
 }
 
