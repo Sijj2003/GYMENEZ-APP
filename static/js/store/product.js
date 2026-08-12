@@ -111,9 +111,6 @@ function renderProduct() {
     // ===============================================
     const variantsContainer = document.getElementById('variants-container');
     const variantsList = document.getElementById('variants-list');
-    
-    // 🍎 VERIFICAMOS AQUÍ SI ES BAJO PEDIDO PARA EVITAR QUE SE TACHEN LAS TALLAS
-    const isOnDemand = (currentProduct.is_on_demand === true || currentProduct.is_on_demand === 'true' || currentProduct.is_on_demand === 'True');
 
     parsedVariants = [];
     if (currentProduct.variants_matrix) {
@@ -173,7 +170,7 @@ function selectVariant(index) {
     
     // 2. Iluminar la selección activa (Efecto Apple)
     const activeBtn = document.getElementById(`var-btn-${index}`);
-    activeBtn.className = 'px-5 py-3 rounded-full border-[#FFC300] text-black bg-[#FFC300] transition-all text-xs font-black shadow-[0_0_20px_rgba(255,195,0,0.5)] transform scale-105';
+    activeBtn.className = 'px-5 py-3 rounded-full border border-[#FFC300] text-black bg-[#FFC300] transition-all text-xs font-black shadow-[0_0_20px_rgba(255,195,0,0.5)] transform scale-105';
     
     // 3. Actualizar Stock y Botón de Compra basados en esta variante
     updateStockDisplay(selectedVariant.stock);
@@ -217,8 +214,13 @@ function updateStockDisplay(stock) {
 // LÓGICA DEL SELECTOR DE CANTIDAD (+ / -)
 // ==========================================
 function updateQty(delta) {
+    const isOnDemand = (currentProduct.is_on_demand === true || currentProduct.is_on_demand === 'true' || currentProduct.is_on_demand === 'True');
+    
     // Definimos el tope basados en si eligió variante o es producto global
     let maxStock = selectedVariant ? selectedVariant.stock : (currentProduct ? currentProduct.stock : 0);
+    
+    // 🍎 TRAMPA MATEMÁTICA CORREGIDA: Si es Bajo Pedido, asumimos que tenemos 999 de stock lógico
+    if (isOnDemand) maxStock = 999;
     
     if (maxStock <= 0) return;
 
@@ -242,30 +244,38 @@ function updateTotalDisplay() {
 function addToCart() {
     if (!currentProduct) return;
     
+    const isOnDemand = (currentProduct.is_on_demand === true || currentProduct.is_on_demand === 'true' || currentProduct.is_on_demand === 'True');
+    const hasFreeShipping = (currentProduct.free_shipping === true || currentProduct.free_shipping === 'true' || currentProduct.free_shipping === 'True');
+    
     let maxStock = selectedVariant ? selectedVariant.stock : currentProduct.stock;
+    
+    // 🍎 TRAMPA MATEMÁTICA CORREGIDA PARA EL CARRITO
+    if (isOnDemand) maxStock = 999;
+    
     if (maxStock <= 0) return;
 
     // Generamos un ID Dinámico para el carrito.
-    // Si compran "Talla S" y luego "Talla L", deben ser 2 items distintos en la bolsa.
     let cartItemId = currentProduct.id;
     let cartItemName = currentProduct.name;
     
     if (selectedVariant) {
-        // Ejemplo: "ID1234_Talla-M-Rojo"
         cartItemId = `${currentProduct.id}_${selectedVariant.name.replace(/[^a-zA-Z0-9]/g, '-')}`;
         cartItemName = `${currentProduct.name} (${selectedVariant.name})`;
     }
 
     const payload = {
-        id: cartItemId,              // ID único de línea de carrito
-        real_id: currentProduct.id,  // ID real para descontar de BD
+        id: cartItemId,              
+        real_id: currentProduct.id,  
         name: cartItemName,
         storeName: currentProduct.store_name, 
         price: finalPrice,
         imageUrl: currentProduct.image_url || currentProduct.imageUrl,
         qty: currentQuantity,
         maxStock: maxStock,
-        weight_kg: currentProduct.weight_kg || 1 // Crucial para calcular MRW/ZOOM
+        weight_kg: currentProduct.weight_kg || 1, 
+        // 🍎 AÑADIMOS ESTO: Le pasamos la inteligencia al Carrito
+        is_on_demand: isOnDemand,
+        free_shipping: hasFreeShipping
     };
 
     // 🛡️ ENVOLVEMOS LA ACCIÓN EN EL INTERCEPTOR DE AUTENTICACIÓN
@@ -286,8 +296,6 @@ function addToCart() {
         // Ejecutar utilidades visuales
         if(typeof updateCartCount === 'function') updateCartCount();
         
-        // La animación nativa de "Apple" está manejada en un wrapper dentro del HTML.
-        // Solo como respaldo de emergencia, dejamos este llamador:
         showToastFallback(); 
         
     }, { type: 'ADD_CART', payload: payload });
