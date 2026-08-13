@@ -47,9 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// ==========================================
-// 1. DIBUJAR RESUMEN DEL CARRITO (TARJETAS PREMIUM)
-// ==========================================
+
 // ==========================================
 // 1. DIBUJAR RESUMEN DEL CARRITO Y MATEMÁTICAS PROFESIONALES
 // ==========================================
@@ -57,18 +55,46 @@ function renderCartSummary() {
     const container = document.getElementById('cart-items-container');
     container.innerHTML = '';
     
-    let rawTotal = 0;   // Lo que costaría sin descuentos
-    let finalTotal = 0; // Lo que va a pagar
-    
-    // Variables para analizar la logística híbrida
+    let rawTotal = 0;   
+    let finalTotal = 0; 
     let hasOnDemand = false;
-    let hasFreeShipping = false;
     const storeSet = new Set();
+    
+    // 🧠 1. AGRUPAR POR TIENDAS PARA CALCULAR EL UMBRAL DE ENVÍO GRATIS
+    const storeTotals = {};
+    cartItems.forEach(item => {
+        const store = item.storeName || item.store_name || 'Gymenez Store';
+        const qty = item.quantity || item.qty || 1;
+        const fPrice = parseFloat(item.price);
+        
+        if (!storeTotals[store]) {
+            storeTotals[store] = { total: 0, offersFreeShipping: false, threshold: Infinity };
+        }
+        storeTotals[store].total += (fPrice * qty);
+        
+        if (item.free_shipping === true || item.free_shipping === 'true') {
+            storeTotals[store].offersFreeShipping = true;
+            const threshold = parseFloat(item.free_shipping_threshold || 0);
+            if (threshold < storeTotals[store].threshold) storeTotals[store].threshold = threshold;
+        }
+    });
 
+    let storesWithFreeShipping = 0;
+    let storesWithoutFreeShipping = 0;
+
+    for (const store in storeTotals) {
+        if (storeTotals[store].offersFreeShipping && storeTotals[store].total >= storeTotals[store].threshold) {
+            storeTotals[store].earnedFreeShipping = true;
+            storesWithFreeShipping++;
+        } else {
+            storeTotals[store].earnedFreeShipping = false;
+            storesWithoutFreeShipping++;
+        }
+    }
+
+    // 🧠 2. DIBUJAR PRODUCTOS
     cartItems.forEach((item, index) => {
         const qty = item.quantity || item.qty || 1;
-        
-        // Matemáticas de ahorro por ítem
         const bPrice = parseFloat(item.basePrice || item.price);
         const fPrice = parseFloat(item.price);
         
@@ -78,102 +104,75 @@ function renderCartSummary() {
 
         rawTotal += bPriceTotal;
         finalTotal += fPriceTotal;
-
-        // Análisis de reglas de negocio
-        storeSet.add(item.storeName || item.store_name);
-        if (item.is_on_demand === true || item.is_on_demand === 'true') hasOnDemand = true;
-        if (item.free_shipping === true || item.free_shipping === 'true') hasFreeShipping = true;
-
-        // Parseo de Títulos y Variantes
+        
+        const store = item.storeName || item.store_name || 'Gymenez Store';
+        storeSet.add(store);
+        
         let displayName = item.name;
         let variantBadgeHtml = '';
         const variantMatch = item.name.match(/(.*)\s\((.*)\)$/);
         if (variantMatch) {
             displayName = variantMatch[1].trim();
-            variantBadgeHtml = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-inner inline-block">${variantMatch[2]}</span>`;
+            variantBadgeHtml = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-inner mt-1 inline-block">${variantMatch[2]}</span>`;
         }
 
-        // Píldora de Peso
         const weight = item.weight_kg || 1;
-        const weightBadgeHtml = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-inner inline-block">${weight} Kg</span>`;
+        const weightBadgeHtml = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-inner mt-1 inline-block">${weight} Kg</span>`;
 
-        // 🍎 ETIQUETAS VISUALES EN LA TARJETA DEL CARRITO
+        // 🍎 ETIQUETAS VISUALES CONDICIONADAS AL UMBRAL
         let logicBadges = '';
-        if (item.free_shipping === true || item.free_shipping === 'true') logicBadges += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">🚚 Envío Gratis</span>`;
-        if (item.is_on_demand === true || item.is_on_demand === 'true') logicBadges += `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">⚡ Bajo Pedido</span>`;
+        if (storeTotals[store].earnedFreeShipping && (item.free_shipping === true || item.free_shipping === 'true')) {
+            logicBadges += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner mt-1 inline-block mr-1">🚚 Envío Gratis</span>`;
+        } else if (item.free_shipping === true || item.free_shipping === 'true') {
+            logicBadges += `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner mt-1 inline-block mr-1">Falta para Envío Gratis</span>`;
+        }
 
-        // Botón Eliminar
+        if (item.is_on_demand === true || item.is_on_demand === 'true') {
+            hasOnDemand = true;
+            logicBadges += `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner mt-1 inline-block">⚡ Bajo Pedido</span>`;
+        }
+
+        // 🍎 BOTÓN X MOVIDO ARRIBA A LA DERECHA ESTRICTAMENTE
         const deleteBtnHtml = isCartLocked ? '' : `
-        <button onclick="removeCheckoutItem(${index})" class="absolute -top-2 -right-2 md:top-2 md:right-2 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white rounded-full p-1.5 md:p-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all z-10 shadow-xl backdrop-blur-sm" title="Eliminar producto">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <button onclick="removeCheckoutItem(${index})" class="absolute top-2 right-2 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all z-20 shadow-xl" title="Eliminar">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>`;
 
-        // Controles de Cantidad
+        // 🍎 SELECTOR DE CANTIDAD A LA IZQUIERDA
         const controlsHtml = isCartLocked ? `
-        <span class="text-[9px] text-emerald-400 font-black uppercase tracking-widest bg-emerald-500/10 px-2.5 py-1.5 rounded-md border border-emerald-500/20 flex items-center justify-center gap-1.5 shadow-inner w-fit">
-            <svg class="w-3 h-3 text-emerald-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span class="text-[9px] text-emerald-400 font-black uppercase tracking-widest bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20 flex items-center gap-1.5 shadow-inner">
+            <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             Reservado: ${qty}
         </span>` : `
-        <div class="flex items-center bg-[#030305] rounded-full border border-white/10 h-8 shadow-inner w-fit">
-            <button onclick="updateCheckoutItemQty(${index}, -1)" class="px-3 text-gray-400 hover:text-white transition font-black text-sm">-</button>
-            <span class="text-[10px] font-black text-white w-4 text-center">${qty}</span>
-            <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-3 text-gray-400 hover:text-white transition font-black text-sm">+</button>
+        <div class="flex items-center bg-[#030305] rounded-full border border-white/10 h-7 shadow-inner">
+            <button onclick="updateCheckoutItemQty(${index}, -1)" class="px-2.5 text-gray-400 hover:text-white transition font-black text-sm">-</button>
+            <span class="text-[10px] font-black text-white w-3 text-center">${qty}</span>
+            <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-2.5 text-gray-400 hover:text-white transition font-black text-sm">+</button>
         </div>`;
 
-        // 🍎 ARQUITECTURA DE TARJETA CORREGIDA (Desktop a la derecha, Móvil abajo)
+        // ARQUITECTURA VERTICAL COMPACTA ORIGINAL (Reparada)
         container.innerHTML += `
-        <div class="flex flex-row gap-4 items-stretch bg-[#050508]/50 p-4 rounded-[1.5rem] border ${isCartLocked ? 'border-emerald-500/30 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-white/5 hover:border-white/20'} relative group transition-all duration-300">
+        <div class="flex flex-row gap-3 items-start bg-[#050508]/50 p-3 md:p-4 rounded-[1.5rem] border ${isCartLocked ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 hover:border-white/20'} relative group transition-all duration-300">
             ${deleteBtnHtml}
-            
-            <!-- Imagen (Izquierda) -->
-            <div class="w-20 h-20 md:w-28 md:h-28 bg-white/5 rounded-xl border border-white/5 overflow-hidden flex-shrink-0 flex items-center justify-center p-2 shadow-inner self-start">
+            <div class="w-20 h-20 bg-white/5 rounded-xl border border-white/5 overflow-hidden flex-shrink-0 flex items-center justify-center p-2 shadow-inner">
                 <img src="${item.imageUrl || item.image_url}" alt="${displayName}" class="max-h-full object-contain filter drop-shadow-md transition-transform group-hover:scale-105">
             </div>
-            
-            <!-- Contenedor Principal (Flex Row en PC, Flex Col en Móvil) -->
-            <div class="flex flex-col md:flex-row flex-grow justify-between gap-4">
-                
-                <!-- Datos del Producto (Centro) -->
-                <div class="flex flex-col justify-start">
-                    <h4 class="text-sm md:text-base font-bold text-white leading-tight mb-1 pr-4 md:pr-0">${displayName}</h4>
-                    <span class="text-[9px] md:text-[10px] text-[#FFC300] uppercase font-bold tracking-widest block mb-2">${item.storeName || item.store_name || 'Gymenez Store'}</span>
-                    
-                    <div class="flex flex-wrap gap-1.5 mb-3 md:mb-0">
+            <div class="flex-grow min-w-0 flex flex-col justify-between h-full min-h-[5rem]">
+                <div class="pr-6"> <!-- 👈 ESPACIO PARA QUE LA X NO ESTORBE -->
+                    <h4 class="text-sm font-bold text-white leading-tight mb-0.5 truncate">${displayName}</h4>
+                    <span class="text-[9px] text-[#FFC300] uppercase font-bold tracking-widest mb-1 truncate block">${store}</span>
+                    <div class="flex flex-wrap gap-1 mb-1">
                         ${variantBadgeHtml}
-                        ${weightBadgeHtml}
-                        <div class="w-full h-0 md:hidden"></div>
                         ${logicBadges}
                     </div>
-
-                    <!-- Controles Móvil (Se ocultan en PC) -->
-                    <div class="block md:hidden mt-auto pt-2">
-                        ${controlsHtml}
+                </div>
+                <div class="flex items-end justify-between w-full mt-2">
+                    ${controlsHtml}
+                    <div class="flex flex-col items-end text-right">
+                        ${discountTotal > 0 ? `<span class="text-[9px] text-gray-500 line-through leading-none mb-1">Ref: $${formatMoney(bPriceTotal)}</span>` : ''}
+                        <span class="font-black text-white text-base tracking-tight leading-none">$${formatMoney(fPriceTotal)}</span>
                     </div>
                 </div>
-
-                <!-- Columna de Precios y Controles (Derecha en PC) -->
-                <div class="flex flex-col items-start md:items-end justify-between min-w-[140px] border-t md:border-t-0 border-white/5 pt-3 md:pt-0 mt-2 md:mt-0">
-                    
-                    <!-- Controles Desktop (Ocultos en Móvil) -->
-                    <div class="hidden md:block mb-3">
-                        ${controlsHtml}
-                    </div>
-
-                    <!-- Desglose de Precios -->
-                    <div class="flex flex-col items-start md:items-end text-left md:text-right w-full mt-auto">
-                        ${discountTotal > 0 ? `
-                            <span class="text-[10px] text-gray-500 line-through leading-none mb-1.5 uppercase font-bold tracking-widest">Ref: $${formatMoney(bPriceTotal)}</span>
-                            <span class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-1.5 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">Ahorro: -$${formatMoney(discountTotal)}</span>
-                        ` : ''}
-                        
-                        <span class="font-black text-white text-lg md:text-xl tracking-tight leading-none mt-1">$${formatMoney(fPriceTotal)}</span>
-                        
-                        ${isBcvValid && currentBcvRate > 0 ? `
-                            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1.5">Bs. ${formatMoney(fPriceTotal * currentBcvRate)}</span>
-                        ` : ''}
-                    </div>
-                </div>
-
             </div>
         </div>`;
     });
@@ -181,7 +180,7 @@ function renderCartSummary() {
     cartTotal = finalTotal;
     const totalSavings = rawTotal - finalTotal;
 
-    // Actualizar Panel Lateral (Subtotales Generales)
+    // Actualizar Totales Laterales
     document.getElementById('summary-raw-total').innerText = `$${formatMoney(rawTotal)}`;
     document.getElementById('summary-total').innerText = `$${formatMoney(cartTotal)}`;
     
@@ -195,26 +194,38 @@ function renderCartSummary() {
         }
     }
 
-    // 🍎 ACTIVAR ALERTAS DE LOGÍSTICA HÍBRIDA
+    // 🧠 3. MENSAJES DINÁMICOS DE LOGÍSTICA
     const alertMulti = document.getElementById('alert-multi-store');
     const alertOnDemand = document.getElementById('alert-on-demand');
     const alertFreeShipping = document.getElementById('alert-free-shipping');
     const shippingLabel = document.getElementById('summary-shipping-label');
+    const titleFS = document.getElementById('free-shipping-title');
+    const descFS = document.getElementById('free-shipping-desc');
 
     if (alertMulti) storeSet.size > 1 ? alertMulti.classList.remove('hidden') : alertMulti.classList.add('hidden');
     if (alertOnDemand) hasOnDemand ? alertOnDemand.classList.remove('hidden') : alertOnDemand.classList.add('hidden');
     
     if (alertFreeShipping) {
-        if (hasFreeShipping) {
+        if (storesWithFreeShipping > 0 && storesWithoutFreeShipping === 0) {
+            // TODAS LAS TIENDAS CALIFICAN
             alertFreeShipping.classList.remove('hidden');
+            if(titleFS) titleFS.innerText = "¡Envío Gratis Desbloqueado!";
+            if(descFS) descFS.innerText = "¡Felicidades! Toda tu orden superó el mínimo requerido. Disfruta de envío 100% gratis.";
             if(shippingLabel) shippingLabel.innerText = "A Calcular / Gratis";
+        } else if (storesWithFreeShipping > 0 && storesWithoutFreeShipping > 0) {
+            // LOGÍSTICA HÍBRIDA (Unas sí, otras no)
+            alertFreeShipping.classList.remove('hidden');
+            if(titleFS) titleFS.innerText = "Envío Híbrido Disponible";
+            if(descFS) descFS.innerText = "Algunos productos en tu bolsa alcanzaron el mínimo para Envío Gratis. Los demás viajarán cobro a destino.";
+            if(shippingLabel) shippingLabel.innerText = "A Calcular / Híbrido";
         } else {
+            // NINGUNA LLEGÓ AL UMBRAL O NINGUNA TIENE ENVÍO GRATIS
             alertFreeShipping.classList.add('hidden');
             if(shippingLabel) shippingLabel.innerText = "Cobro a Destino";
         }
     }
 
-    // 💱 LÓGICA DE DIBUJADO BCV Y PROTECCIÓN
+    // Dibujado BCV
     const vesContainer = document.getElementById('summary-ves-container');
     const warningMsg = document.getElementById('bcv-warning-msg');
     const btnProcess = document.getElementById('btn-process-order');
@@ -223,20 +234,13 @@ function renderCartSummary() {
         const totalBs = formatMoney(cartTotal * currentBcvRate);
         if(document.getElementById('summary-total-ves')) document.getElementById('summary-total-ves').innerText = `Bs. ${totalBs}`;
         if(document.getElementById('bcv-rate-display')) document.getElementById('bcv-rate-display').innerText = `Tasa Oficial BCV: Bs. ${formatMoney(currentBcvRate)}`;
-        
         if(vesContainer) vesContainer.classList.remove('hidden');
         if(warningMsg) warningMsg.classList.add('hidden');
-
-        if(currentPaymentMethod === 'pago_movil' && btnProcess) {
-             btnProcess.querySelector('span').innerText = `Pagar Bs. ${totalBs}`;
-        }
+        if(currentPaymentMethod === 'pago_movil' && btnProcess) btnProcess.querySelector('span').innerText = `Pagar Bs. ${totalBs}`;
     } else {
         if(vesContainer) vesContainer.classList.add('hidden');
         if(warningMsg) warningMsg.classList.remove('hidden');
-        
-        if(currentPaymentMethod === 'pago_movil' && btnProcess) {
-             btnProcess.querySelector('span').innerText = `Completar Compra (Calcular BCV)`;
-        }
+        if(currentPaymentMethod === 'pago_movil' && btnProcess) btnProcess.querySelector('span').innerText = `Completar Compra (Calcular BCV)`;
     }
 
     if (cartItems.length === 0) {
