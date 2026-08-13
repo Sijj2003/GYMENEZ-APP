@@ -83,7 +83,7 @@ function renderProduct() {
             badgesHtml += `<span class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-black uppercase px-2 py-1 rounded shadow-inner flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg> Envío Gratis${extraText}</span>`;
         }
         if (isOnDemand) {
-            badgesHtml += `<span class="bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[9px] font-black uppercase px-2 py-1 rounded shadow-inner flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Compra Bajo Pedido</span>`;
+            badgesHtml += `<span class="bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[9px] font-black uppercase px-2 py-1 rounded shadow-inner flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>Producto Bajo Pedido</span>`;
         }
         badgesContainer.innerHTML = badgesHtml;
     }
