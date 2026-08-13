@@ -53,18 +53,33 @@ document.addEventListener('DOMContentLoaded', () => {
 function renderCartSummary() {
     const container = document.getElementById('cart-items-container');
     container.innerHTML = '';
-    cartTotal = 0;
+    
+    let rawTotal = 0;   // Lo que costaría sin descuentos
+    let finalTotal = 0; // Lo que va a pagar
+    
+    // Variables para analizar la logística híbrida
+    let hasOnDemand = false;
+    let hasFreeShipping = false;
+    const storeSet = new Set();
 
     cartItems.forEach((item, index) => {
         const qty = item.quantity || item.qty || 1;
-        const itemTotal = item.price * qty;
-        cartTotal += itemTotal;
+        
+        // Matemáticas de ahorro
+        const bPrice = parseFloat(item.basePrice || item.price);
+        const fPrice = parseFloat(item.price);
+        
+        rawTotal += (bPrice * qty);
+        finalTotal += (fPrice * qty);
 
-        // 🧠 Parseo Inteligente de Variante y Título
+        // Análisis de reglas de negocio
+        storeSet.add(item.storeName || item.store_name);
+        if (item.is_on_demand === true || item.is_on_demand === 'true') hasOnDemand = true;
+        if (item.free_shipping === true || item.free_shipping === 'true') hasFreeShipping = true;
+
+        // Parseo de Títulos y Variantes
         let displayName = item.name;
         let variantBadgeHtml = '';
-        
-        // Buscamos si el nombre trae variante entre paréntesis, ej: "Producto X (Talla M - Rojo)"
         const variantMatch = item.name.match(/(.*)\s\((.*)\)$/);
         if (variantMatch) {
             displayName = variantMatch[1].trim();
@@ -75,64 +90,95 @@ function renderCartSummary() {
         const weight = item.weight_kg || 1;
         const weightBadgeHtml = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-inner mt-1 inline-block">${weight} Kg</span>`;
 
+        // 🍎 ETIQUETAS VISUALES EN LA TARJETA DEL CARRITO
+        let logicBadges = '';
+        if (item.free_shipping === true || item.free_shipping === 'true') logicBadges += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner mt-1 inline-block mr-1">🚚 Envío Gratis</span>`;
+        if (item.is_on_demand === true || item.is_on_demand === 'true') logicBadges += `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner mt-1 inline-block">⚡ Bajo Pedido</span>`;
+
         // Bloqueo y Botones Visuales
         const deleteBtnHtml = isCartLocked ? '' : `
         <button onclick="removeCheckoutItem(${index})" class="absolute -top-2 -right-2 md:top-2 md:right-2 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white rounded-full p-1.5 md:p-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all z-10 shadow-xl backdrop-blur-sm" title="Eliminar producto">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-    `;
+        </button>`;
 
-    const controlsHtml = isCartLocked ? `
+        const controlsHtml = isCartLocked ? `
         <div class="flex items-center mt-1 md:mt-2">
             <span class="text-[8px] md:text-[9px] text-emerald-400 font-black uppercase tracking-widest bg-emerald-500/10 px-2 md:px-2.5 py-1 rounded-md border border-emerald-500/20 flex items-center gap-1.5 shadow-inner">
                 <svg class="w-3 h-3 text-emerald-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 Reservado: ${qty}
             </span>
-        </div>
-    ` : `
+        </div>` : `
         <div class="flex items-center gap-2 mt-1 md:mt-2">
             <div class="flex items-center bg-[#030305] rounded-full border border-white/10 h-7 md:h-8 shadow-inner">
                 <button onclick="updateCheckoutItemQty(${index}, -1)" class="px-2 md:px-3 text-gray-400 hover:text-white transition font-black text-xs md:text-sm">-</button>
                 <span class="text-[10px] font-black text-white w-3 md:w-4 text-center">${qty}</span>
                 <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-2 md:px-3 text-gray-400 hover:text-white transition font-black text-xs md:text-sm">+</button>
             </div>
-            <span class="text-[8px] md:text-[9px] text-gray-500 font-bold uppercase tracking-widest hidden sm:block">x $${formatMoney(item.price)}</span>
-        </div>
-    `;
+            <span class="text-[8px] md:text-[9px] text-gray-500 font-bold uppercase tracking-widest hidden sm:block">x $${formatMoney(fPrice)}</span>
+        </div>`;
 
-    container.innerHTML += `
+        container.innerHTML += `
         <div class="flex flex-row gap-3 md:gap-5 items-start bg-[#050508]/50 p-3 md:p-4 rounded-[1.5rem] border ${isCartLocked ? 'border-emerald-500/30 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-white/5 hover:border-white/20'} relative group transition-all duration-300">
-            
             ${deleteBtnHtml}
-            
             <div class="w-20 h-20 md:w-24 md:h-24 bg-white/5 rounded-xl border border-white/5 overflow-hidden flex-shrink-0 flex items-center justify-center p-2 shadow-inner">
                 <img src="${item.imageUrl || item.image_url}" alt="${displayName}" class="max-h-full object-contain filter drop-shadow-md transition-transform group-hover:scale-105">
             </div>
-            
             <div class="flex-grow min-w-0 flex flex-col justify-between h-full min-h-[5rem] md:min-h-[6rem]">
                 <div>
                     <h4 class="text-xs md:text-base font-bold text-white truncate leading-tight mb-0.5 pr-4 md:pr-0">${displayName}</h4>
                     <span class="text-[8px] md:text-[10px] text-[#FFC300] uppercase font-bold tracking-widest mb-1 truncate block">${item.storeName || item.store_name || 'Gymenez Store'}</span>
-                    
                     <div class="flex flex-wrap gap-1 mb-1">
                         ${variantBadgeHtml}
                         ${weightBadgeHtml}
+                        ${logicBadges}
                     </div>
                 </div>
-                
                 <div class="flex items-end justify-between w-full mt-2 md:mt-auto">
                     ${controlsHtml}
-                    <div class="font-black text-white text-right text-sm md:text-lg tracking-tight">
-                        $${formatMoney(itemTotal)}
+                    <div class="flex flex-col items-end">
+                        ${bPrice > fPrice ? `<span class="text-[9px] text-gray-500 line-through leading-none">$${formatMoney(bPrice * qty)}</span>` : ''}
+                        <span class="font-black text-white text-right text-sm md:text-lg tracking-tight">$${formatMoney(fPrice * qty)}</span>
                     </div>
                 </div>
             </div>
-        </div>
-     `;
+        </div>`;
     });
 
-    document.getElementById('summary-subtotal').innerText = `$${formatMoney(cartTotal)}`;
+    cartTotal = finalTotal;
+    const totalSavings = rawTotal - finalTotal;
+
+    // Actualizar Panel de Ahorros
+    document.getElementById('summary-raw-total').innerText = `$${formatMoney(rawTotal)}`;
     document.getElementById('summary-total').innerText = `$${formatMoney(cartTotal)}`;
+    
+    const savingsRow = document.getElementById('summary-savings-row');
+    if (savingsRow) {
+        if (totalSavings > 0) {
+            savingsRow.classList.remove('hidden');
+            document.getElementById('summary-savings').innerText = `-$${formatMoney(totalSavings)}`;
+        } else {
+            savingsRow.classList.add('hidden');
+        }
+    }
+
+    // 🍎 ACTIVAR ALERTAS DE LOGÍSTICA HÍBRIDA (Se muestran automáticamente según el contenido de la bolsa)
+    const alertMulti = document.getElementById('alert-multi-store');
+    const alertOnDemand = document.getElementById('alert-on-demand');
+    const alertFreeShipping = document.getElementById('alert-free-shipping');
+    const shippingLabel = document.getElementById('summary-shipping-label');
+
+    if (alertMulti) storeSet.size > 1 ? alertMulti.classList.remove('hidden') : alertMulti.classList.add('hidden');
+    if (alertOnDemand) hasOnDemand ? alertOnDemand.classList.remove('hidden') : alertOnDemand.classList.add('hidden');
+    
+    if (alertFreeShipping) {
+        if (hasFreeShipping) {
+            alertFreeShipping.classList.remove('hidden');
+            if(shippingLabel) shippingLabel.innerText = "A Calcular / Gratis";
+        } else {
+            alertFreeShipping.classList.add('hidden');
+            if(shippingLabel) shippingLabel.innerText = "Cobro a Destino";
+        }
+    }
 
     // 💱 LÓGICA DE DIBUJADO BCV Y PROTECCIÓN
     const vesContainer = document.getElementById('summary-ves-container');
@@ -160,14 +206,10 @@ function renderCartSummary() {
     }
 
     if (cartItems.length === 0) {
-        // Mantener visible el contenedor principal
         document.getElementById('checkout-content').classList.remove('hidden'); 
-        // Ocultar toda la interfaz de cobro (el Wizard)
         document.getElementById('checkout-container').classList.add('hidden'); 
-        // Mostrar el mensaje de carrito vacío
         document.getElementById('empty-cart-msg').classList.remove('hidden'); 
     } else {
-        // Si hay productos, asegurar que el wizard se vea y el mensaje vacío desaparezca
         document.getElementById('checkout-container').classList.remove('hidden');
         document.getElementById('empty-cart-msg').classList.add('hidden');
     }
@@ -676,14 +718,22 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
         price: item.price,
         qty: item.quantity || item.qty || 1,
         storeName: item.storeName || item.store_name || 'Gymenez Store',
-        weight_kg: item.weight_kg || 1
+        weight_kg: item.weight_kg || 1,
+        // 🍎 PASAMOS ESTAS BANDERAS PARA QUE PYTHON SEPA QUÉ HACER
+        free_shipping: item.free_shipping === true || item.free_shipping === 'true',
+        is_on_demand: item.is_on_demand === true || item.is_on_demand === 'true'
     }));
+
+    // 🍎 CAPTURAMOS LA DECISIÓN DEL CLIENTE (El Switch de Envío)
+    const toggleFreeShipping = document.getElementById('toggle-free-shipping');
+    const wantsFreeShipping = toggleFreeShipping ? toggleFreeShipping.checked : false;
 
     const payload = {
         items: cleanItems,
         totalAmount: cartTotal,
         paymentMethod: currentPaymentMethod,
-        reference: reference
+        reference: reference,
+        wants_free_shipping: wantsFreeShipping // 🍎 Mandamos la decisión al backend
     };
 
     try {
