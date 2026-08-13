@@ -50,6 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 // 1. DIBUJAR RESUMEN DEL CARRITO (TARJETAS PREMIUM)
 // ==========================================
+// ==========================================
+// 1. DIBUJAR RESUMEN DEL CARRITO Y MATEMÁTICAS PROFESIONALES
+// ==========================================
 function renderCartSummary() {
     const container = document.getElementById('cart-items-container');
     container.innerHTML = '';
@@ -65,12 +68,16 @@ function renderCartSummary() {
     cartItems.forEach((item, index) => {
         const qty = item.quantity || item.qty || 1;
         
-        // Matemáticas de ahorro
+        // Matemáticas de ahorro por ítem
         const bPrice = parseFloat(item.basePrice || item.price);
         const fPrice = parseFloat(item.price);
         
-        rawTotal += (bPrice * qty);
-        finalTotal += (fPrice * qty);
+        const bPriceTotal = bPrice * qty;
+        const fPriceTotal = fPrice * qty;
+        const discountTotal = bPriceTotal - fPriceTotal;
+
+        rawTotal += bPriceTotal;
+        finalTotal += fPriceTotal;
 
         // Análisis de reglas de negocio
         storeSet.add(item.storeName || item.store_name);
@@ -83,63 +90,90 @@ function renderCartSummary() {
         const variantMatch = item.name.match(/(.*)\s\((.*)\)$/);
         if (variantMatch) {
             displayName = variantMatch[1].trim();
-            variantBadgeHtml = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-inner mt-1 inline-block">${variantMatch[2]}</span>`;
+            variantBadgeHtml = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-inner inline-block">${variantMatch[2]}</span>`;
         }
 
         // Píldora de Peso
         const weight = item.weight_kg || 1;
-        const weightBadgeHtml = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-inner mt-1 inline-block">${weight} Kg</span>`;
+        const weightBadgeHtml = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-inner inline-block">${weight} Kg</span>`;
 
         // 🍎 ETIQUETAS VISUALES EN LA TARJETA DEL CARRITO
         let logicBadges = '';
-        if (item.free_shipping === true || item.free_shipping === 'true') logicBadges += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner mt-1 inline-block mr-1">🚚 Envío Gratis</span>`;
-        if (item.is_on_demand === true || item.is_on_demand === 'true') logicBadges += `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner mt-1 inline-block">⚡ Bajo Pedido</span>`;
+        if (item.free_shipping === true || item.free_shipping === 'true') logicBadges += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">🚚 Envío Gratis</span>`;
+        if (item.is_on_demand === true || item.is_on_demand === 'true') logicBadges += `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">⚡ Bajo Pedido</span>`;
 
-        // Bloqueo y Botones Visuales
+        // Botón Eliminar
         const deleteBtnHtml = isCartLocked ? '' : `
         <button onclick="removeCheckoutItem(${index})" class="absolute -top-2 -right-2 md:top-2 md:right-2 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white rounded-full p-1.5 md:p-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all z-10 shadow-xl backdrop-blur-sm" title="Eliminar producto">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>`;
 
+        // Controles de Cantidad
         const controlsHtml = isCartLocked ? `
-        <div class="flex items-center mt-1 md:mt-2">
-            <span class="text-[8px] md:text-[9px] text-emerald-400 font-black uppercase tracking-widest bg-emerald-500/10 px-2 md:px-2.5 py-1 rounded-md border border-emerald-500/20 flex items-center gap-1.5 shadow-inner">
-                <svg class="w-3 h-3 text-emerald-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                Reservado: ${qty}
-            </span>
-        </div>` : `
-        <div class="flex items-center gap-2 mt-1 md:mt-2">
-            <div class="flex items-center bg-[#030305] rounded-full border border-white/10 h-7 md:h-8 shadow-inner">
-                <button onclick="updateCheckoutItemQty(${index}, -1)" class="px-2 md:px-3 text-gray-400 hover:text-white transition font-black text-xs md:text-sm">-</button>
-                <span class="text-[10px] font-black text-white w-3 md:w-4 text-center">${qty}</span>
-                <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-2 md:px-3 text-gray-400 hover:text-white transition font-black text-xs md:text-sm">+</button>
-            </div>
-            <span class="text-[8px] md:text-[9px] text-gray-500 font-bold uppercase tracking-widest hidden sm:block">x $${formatMoney(fPrice)}</span>
+        <span class="text-[9px] text-emerald-400 font-black uppercase tracking-widest bg-emerald-500/10 px-2.5 py-1.5 rounded-md border border-emerald-500/20 flex items-center justify-center gap-1.5 shadow-inner w-fit">
+            <svg class="w-3 h-3 text-emerald-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Reservado: ${qty}
+        </span>` : `
+        <div class="flex items-center bg-[#030305] rounded-full border border-white/10 h-8 shadow-inner w-fit">
+            <button onclick="updateCheckoutItemQty(${index}, -1)" class="px-3 text-gray-400 hover:text-white transition font-black text-sm">-</button>
+            <span class="text-[10px] font-black text-white w-4 text-center">${qty}</span>
+            <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-3 text-gray-400 hover:text-white transition font-black text-sm">+</button>
         </div>`;
 
+        // 🍎 ARQUITECTURA DE TARJETA CORREGIDA (Desktop a la derecha, Móvil abajo)
         container.innerHTML += `
-        <div class="flex flex-row gap-3 md:gap-5 items-start bg-[#050508]/50 p-3 md:p-4 rounded-[1.5rem] border ${isCartLocked ? 'border-emerald-500/30 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-white/5 hover:border-white/20'} relative group transition-all duration-300">
+        <div class="flex flex-row gap-4 items-stretch bg-[#050508]/50 p-4 rounded-[1.5rem] border ${isCartLocked ? 'border-emerald-500/30 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-white/5 hover:border-white/20'} relative group transition-all duration-300">
             ${deleteBtnHtml}
-            <div class="w-20 h-20 md:w-24 md:h-24 bg-white/5 rounded-xl border border-white/5 overflow-hidden flex-shrink-0 flex items-center justify-center p-2 shadow-inner">
+            
+            <!-- Imagen (Izquierda) -->
+            <div class="w-20 h-20 md:w-28 md:h-28 bg-white/5 rounded-xl border border-white/5 overflow-hidden flex-shrink-0 flex items-center justify-center p-2 shadow-inner self-start">
                 <img src="${item.imageUrl || item.image_url}" alt="${displayName}" class="max-h-full object-contain filter drop-shadow-md transition-transform group-hover:scale-105">
             </div>
-            <div class="flex-grow min-w-0 flex flex-col justify-between h-full min-h-[5rem] md:min-h-[6rem]">
-                <div>
-                    <h4 class="text-xs md:text-base font-bold text-white truncate leading-tight mb-0.5 pr-4 md:pr-0">${displayName}</h4>
-                    <span class="text-[8px] md:text-[10px] text-[#FFC300] uppercase font-bold tracking-widest mb-1 truncate block">${item.storeName || item.store_name || 'Gymenez Store'}</span>
-                    <div class="flex flex-wrap gap-1 mb-1">
+            
+            <!-- Contenedor Principal (Flex Row en PC, Flex Col en Móvil) -->
+            <div class="flex flex-col md:flex-row flex-grow justify-between gap-4">
+                
+                <!-- Datos del Producto (Centro) -->
+                <div class="flex flex-col justify-start">
+                    <h4 class="text-sm md:text-base font-bold text-white leading-tight mb-1 pr-4 md:pr-0">${displayName}</h4>
+                    <span class="text-[9px] md:text-[10px] text-[#FFC300] uppercase font-bold tracking-widest block mb-2">${item.storeName || item.store_name || 'Gymenez Store'}</span>
+                    
+                    <div class="flex flex-wrap gap-1.5 mb-3 md:mb-0">
                         ${variantBadgeHtml}
                         ${weightBadgeHtml}
+                        <div class="w-full h-0 md:hidden"></div>
                         ${logicBadges}
                     </div>
-                </div>
-                <div class="flex items-end justify-between w-full mt-2 md:mt-auto">
-                    ${controlsHtml}
-                    <div class="flex flex-col items-end">
-                        ${bPrice > fPrice ? `<span class="text-[9px] text-gray-500 line-through leading-none">$${formatMoney(bPrice * qty)}</span>` : ''}
-                        <span class="font-black text-white text-right text-sm md:text-lg tracking-tight">$${formatMoney(fPrice * qty)}</span>
+
+                    <!-- Controles Móvil (Se ocultan en PC) -->
+                    <div class="block md:hidden mt-auto pt-2">
+                        ${controlsHtml}
                     </div>
                 </div>
+
+                <!-- Columna de Precios y Controles (Derecha en PC) -->
+                <div class="flex flex-col items-start md:items-end justify-between min-w-[140px] border-t md:border-t-0 border-white/5 pt-3 md:pt-0 mt-2 md:mt-0">
+                    
+                    <!-- Controles Desktop (Ocultos en Móvil) -->
+                    <div class="hidden md:block mb-3">
+                        ${controlsHtml}
+                    </div>
+
+                    <!-- Desglose de Precios -->
+                    <div class="flex flex-col items-start md:items-end text-left md:text-right w-full mt-auto">
+                        ${discountTotal > 0 ? `
+                            <span class="text-[10px] text-gray-500 line-through leading-none mb-1.5 uppercase font-bold tracking-widest">Ref: $${formatMoney(bPriceTotal)}</span>
+                            <span class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-1.5 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">Ahorro: -$${formatMoney(discountTotal)}</span>
+                        ` : ''}
+                        
+                        <span class="font-black text-white text-lg md:text-xl tracking-tight leading-none mt-1">$${formatMoney(fPriceTotal)}</span>
+                        
+                        ${isBcvValid && currentBcvRate > 0 ? `
+                            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1.5">Bs. ${formatMoney(fPriceTotal * currentBcvRate)}</span>
+                        ` : ''}
+                    </div>
+                </div>
+
             </div>
         </div>`;
     });
@@ -147,7 +181,7 @@ function renderCartSummary() {
     cartTotal = finalTotal;
     const totalSavings = rawTotal - finalTotal;
 
-    // Actualizar Panel de Ahorros
+    // Actualizar Panel Lateral (Subtotales Generales)
     document.getElementById('summary-raw-total').innerText = `$${formatMoney(rawTotal)}`;
     document.getElementById('summary-total').innerText = `$${formatMoney(cartTotal)}`;
     
@@ -161,7 +195,7 @@ function renderCartSummary() {
         }
     }
 
-    // 🍎 ACTIVAR ALERTAS DE LOGÍSTICA HÍBRIDA (Se muestran automáticamente según el contenido de la bolsa)
+    // 🍎 ACTIVAR ALERTAS DE LOGÍSTICA HÍBRIDA
     const alertMulti = document.getElementById('alert-multi-store');
     const alertOnDemand = document.getElementById('alert-on-demand');
     const alertFreeShipping = document.getElementById('alert-free-shipping');
