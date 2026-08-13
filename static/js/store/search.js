@@ -142,7 +142,6 @@ function renderInstantResults(results, container, platform, originalQuery) {
                 <div class="flex items-center gap-1.5 mt-1 flex-wrap">
                     <span class="text-[9px] text-[#FFC300] uppercase tracking-widest truncate font-black">${item.store_name || 'Gymenez Store'}</span>
                     ${hasFreeShipping ? `<span class="text-[7px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded font-black uppercase">🚚 Envío Gratis</span>` : ''}
-                    ${isOnDemand ? `<span class="text-[7px] bg-purple-500/20 text-purple-400 px-1.5 py-0.2 rounded font-black uppercase">⚡ Bajo Pedido</span>` : ''}
                 </div>
             </div>
             <div class="text-right flex-shrink-0 flex flex-col items-end justify-center">
