@@ -263,19 +263,22 @@ function addToCart() {
         cartItemName = `${currentProduct.name} (${selectedVariant.name})`;
     }
 
+    // 🍎 CORRECCIÓN: Volvemos a leer el precio base y el descuento aquí para que no de error
+    const basePrice = parseFloat(currentProduct.price_usd || currentProduct.price);
+    const discount = parseInt(currentProduct.discount_percentage || currentProduct.discount) || 0;
+
     const payload = {
         id: cartItemId,              
         real_id: currentProduct.id,  
         name: cartItemName,
         storeName: currentProduct.store_name, 
-        price: finalPrice,                 // Precio final (con descuento)
-        basePrice: basePrice,              // 🍎 NUEVO: Precio original
-        discount: discount,                // 🍎 NUEVO: % de descuento
+        price: finalPrice,
+        basePrice: basePrice,              // Ya no dará error
+        discount: discount,                // Ya no dará error
         imageUrl: currentProduct.image_url || currentProduct.imageUrl,
         qty: currentQuantity,
         maxStock: maxStock,
         weight_kg: currentProduct.weight_kg || 1, 
-        // 🍎 AÑADIMOS ESTO: Le pasamos la inteligencia al Carrito
         is_on_demand: isOnDemand,
         free_shipping: hasFreeShipping
     };
