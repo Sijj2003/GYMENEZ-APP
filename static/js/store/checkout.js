@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ==========================================
-// 1. DIBUJAR RESUMEN DEL CARRITO (ARQUITECTURA COMPACTA)
+// 1. DIBUJAR RESUMEN DEL CARRITO (ARQUITECTURA COMPACTA Y ESTRICTA)
 // ==========================================
 function renderCartSummary() {
     const container = document.getElementById('cart-items-container');
@@ -60,7 +60,7 @@ function renderCartSummary() {
     let hasOnDemand = false;
     const storeSet = new Set();
     
-    // 🧠 1. AGRUPAR POR TIENDAS PARA CALCULAR EL UMBRAL DE ENVÍO GRATIS
+    // 🧠 1. AGRUPAR POR TIENDAS Y EXIGIR EL UMBRAL MÁS ALTO
     const storeTotals = {};
     cartItems.forEach(item => {
         const store = item.storeName || item.store_name || 'Gymenez Store';
@@ -90,17 +90,18 @@ function renderCartSummary() {
             } else {
                 storeTotals[store].earnedFreeShipping = false;
                 const diff = storeTotals[store].threshold - storeTotals[store].total;
+                // Upsell para que agreguen más productos
                 pendingShippingHtml += `
-                    <div class="bg-gray-500/10 border border-gray-500/20 px-3 py-2 rounded-lg flex flex-col mt-2">
-                        <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">${store}</span>
-                        <span class="text-[10px] text-[#FFC300] font-black uppercase">Agrega $${formatMoney(diff)} más para Envío Gratis</span>
+                    <div class="mt-2 border-l-2 border-red-500 pl-3">
+                        <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest block">${store}</span>
+                        <span class="text-[10px] text-red-400 font-black uppercase">Agrega $${formatMoney(diff)} más para ganar Envío Gratis</span>
                     </div>
                 `;
             }
         }
     }
 
-    // 🧠 2. DIBUJAR PRODUCTOS (TARJETAS COMPACTAS Y SEGURAS)
+    // 🧠 2. DIBUJAR PRODUCTOS
     cartItems.forEach((item, index) => {
         const qty = item.quantity || item.qty || 1;
         const bPrice = parseFloat(item.basePrice || item.price);
@@ -125,21 +126,21 @@ function renderCartSummary() {
         }
 
         let logicBadges = '';
+        // Solo mostramos "Envío Gratis" en el producto si LA TIENDA alcanzó la meta
         if (storeTotals[store].earnedFreeShipping && (item.free_shipping === true || item.free_shipping === 'true')) {
-            logicBadges += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">🚚 Envío Gratis</span>`;
+            logicBadges += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">🚚 Envío Gratis Aplicado</span>`;
         }
         if (item.is_on_demand === true || item.is_on_demand === 'true') {
             hasOnDemand = true;
             logicBadges += `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">⚡ Bajo Pedido</span>`;
         }
 
-        // 🍎 LA "X" AHORA ES UN BOTÓN INTEGRADO ARRIBA A LA DERECHA (No absoluto)
+        // 🍎 BOTONES SEPARADOS PARA EVITAR CLICS FALSOS
         const deleteBtnHtml = isCartLocked ? '' : `
         <button onclick="removeCheckoutItem(${index})" class="text-gray-500 hover:text-red-500 transition-colors p-1" title="Eliminar">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>`;
 
-        // 🍎 SELECTOR DE CANTIDADES SEGURO
         const controlsHtml = isCartLocked ? `
         <span class="text-[9px] text-emerald-400 font-black uppercase tracking-widest bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20 flex items-center gap-1.5 shadow-inner">
             <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -151,7 +152,6 @@ function renderCartSummary() {
             <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-2.5 text-gray-400 hover:text-white transition font-black text-sm">+</button>
         </div>`;
 
-        // 🍎 DISEÑO COMPACTO QUE NO ROMPE EL GRID EN PC
         container.innerHTML += `
         <div class="bg-[#050508]/50 p-3 rounded-[1.5rem] border ${isCartLocked ? 'border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-white/5 hover:border-white/20'} mb-3 transition-all duration-300">
             <div class="flex gap-3">
@@ -204,7 +204,7 @@ function renderCartSummary() {
         }
     }
 
-    // 🧠 3. ALERTAS DE LOGÍSTICA (UPSell Inteligente)
+    // 🧠 3. ALERTAS DE LOGÍSTICA (ESTRICTAS Y SIN TRAMPAS)
     const alertMulti = document.getElementById('alert-multi-store');
     const alertOnDemand = document.getElementById('alert-on-demand');
     const alertFreeShipping = document.getElementById('alert-free-shipping');
@@ -215,14 +215,15 @@ function renderCartSummary() {
     
     if (alertFreeShipping) {
         if (storesWithFreeShippingEarned > 0) {
-            // Se ganó el envío en al menos una tienda: Mostrar el SWITCH
+            // SÍ LLEGARON A LA META: Mostrar el SWITCH
             alertFreeShipping.classList.remove('hidden');
+            alertFreeShipping.className = "bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex flex-col gap-3 mt-4";
             alertFreeShipping.innerHTML = `
                 <div class="flex items-start gap-3">
                     <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
                     <div class="pr-2">
                         <span class="block text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">¡Envío Gratis Desbloqueado!</span>
-                        <p class="text-[10px] text-gray-400 leading-relaxed">Las marcas participantes en tu bolsa alcanzaron el mínimo requerido.</p>
+                        <p class="text-[10px] text-gray-400 leading-relaxed">Tu orden superó el mínimo requerido.</p>
                     </div>
                 </div>
                 <div class="flex items-center justify-between border-t border-emerald-500/20 pt-3 mt-1">
@@ -235,16 +236,21 @@ function renderCartSummary() {
                 ${pendingShippingHtml}
             `;
             if(shippingLabel) shippingLabel.innerText = pendingShippingHtml ? "A Calcular / Híbrido" : "A Calcular / Gratis";
+
         } else if (pendingShippingHtml !== '') {
-            // Ninguna tienda llegó al umbral: Ocultar switch, mostrar UPSell
+            // NINGUNA LLEGÓ A LA META: SE DESTRUYE EL SWITCH Y QUEDA EN COBRO A DESTINO.
             alertFreeShipping.classList.remove('hidden');
+            alertFreeShipping.className = "bg-red-500/5 border border-red-500/20 p-4 rounded-xl flex flex-col gap-3 mt-4";
             alertFreeShipping.innerHTML = `
                 <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 text-gray-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <svg class="w-5 h-5 text-[#FFC300] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                     <div class="pr-2 w-full">
-                        <span class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-1">Meta de Envío Gratis</span>
-                        <p class="text-[10px] text-gray-400 leading-relaxed mb-2">Estás muy cerca de desbloquear el envío gratuito. Mira lo que te falta:</p>
+                        <span class="block text-xs font-bold text-[#FFC300] uppercase tracking-widest mb-1">Envío Gratis No Alcanzado</span>
+                        <p class="text-[10px] text-gray-400 leading-relaxed mb-3">Estás por debajo del mínimo requerido por el proveedor.</p>
                         ${pendingShippingHtml}
+                        <p class="text-[10px] text-white font-bold leading-relaxed mt-4 pt-3 border-t border-red-500/20">
+                            Si deseas continuar, tu pedido será enviado con Cobro a Destino.
+                        </p>
                     </div>
                 </div>
             `;
