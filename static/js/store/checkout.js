@@ -68,14 +68,16 @@ function renderCartSummary() {
         const fPrice = parseFloat(item.price);
         
         if (!storeTotals[store]) {
-            storeTotals[store] = { total: 0, offersFreeShipping: false, threshold: Infinity };
+            // Inicializamos el umbral en 0 para buscar siempre el más alto
+            storeTotals[store] = { total: 0, offersFreeShipping: false, threshold: 0 }; 
         }
         storeTotals[store].total += (fPrice * qty);
         
         if (item.free_shipping === true || item.free_shipping === 'true') {
             storeTotals[store].offersFreeShipping = true;
             const threshold = parseFloat(item.free_shipping_threshold || 0);
-            if (threshold < storeTotals[store].threshold) storeTotals[store].threshold = threshold;
+            // 🛡️ REGLA DE ORO: Siempre exigimos el umbral más alto (Protege al vendedor)
+            if (threshold > storeTotals[store].threshold) storeTotals[store].threshold = threshold; 
         }
     });
 
