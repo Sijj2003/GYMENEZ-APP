@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ==========================================
-// 1. DIBUJAR RESUMEN DEL CARRITO Y MATEMÁTICAS PROFESIONALES
+// 1. DIBUJAR RESUMEN DEL CARRITO (ARQUITECTURA COMPACTA)
 // ==========================================
 function renderCartSummary() {
     const container = document.getElementById('cart-items-container');
@@ -68,7 +68,6 @@ function renderCartSummary() {
         const fPrice = parseFloat(item.price);
         
         if (!storeTotals[store]) {
-            // Inicializamos el umbral en 0 para buscar siempre el más alto
             storeTotals[store] = { total: 0, offersFreeShipping: false, threshold: 0 }; 
         }
         storeTotals[store].total += (fPrice * qty);
@@ -76,25 +75,32 @@ function renderCartSummary() {
         if (item.free_shipping === true || item.free_shipping === 'true') {
             storeTotals[store].offersFreeShipping = true;
             const threshold = parseFloat(item.free_shipping_threshold || 0);
-            // 🛡️ REGLA DE ORO: Siempre exigimos el umbral más alto (Protege al vendedor)
             if (threshold > storeTotals[store].threshold) storeTotals[store].threshold = threshold; 
         }
     });
 
-    let storesWithFreeShipping = 0;
-    let storesWithoutFreeShipping = 0;
+    let storesWithFreeShippingEarned = 0;
+    let pendingShippingHtml = '';
 
     for (const store in storeTotals) {
-        if (storeTotals[store].offersFreeShipping && storeTotals[store].total >= storeTotals[store].threshold) {
-            storeTotals[store].earnedFreeShipping = true;
-            storesWithFreeShipping++;
-        } else {
-            storeTotals[store].earnedFreeShipping = false;
-            storesWithoutFreeShipping++;
+        if (storeTotals[store].offersFreeShipping) {
+            if (storeTotals[store].total >= storeTotals[store].threshold) {
+                storeTotals[store].earnedFreeShipping = true;
+                storesWithFreeShippingEarned++;
+            } else {
+                storeTotals[store].earnedFreeShipping = false;
+                const diff = storeTotals[store].threshold - storeTotals[store].total;
+                pendingShippingHtml += `
+                    <div class="bg-gray-500/10 border border-gray-500/20 px-3 py-2 rounded-lg flex flex-col mt-2">
+                        <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">${store}</span>
+                        <span class="text-[10px] text-[#FFC300] font-black uppercase">Agrega $${formatMoney(diff)} más para Envío Gratis</span>
+                    </div>
+                `;
+            }
         }
     }
 
-    // 🧠 2. DIBUJAR PRODUCTOS
+    // 🧠 2. DIBUJAR PRODUCTOS (TARJETAS COMPACTAS Y SEGURAS)
     cartItems.forEach((item, index) => {
         const qty = item.quantity || item.qty || 1;
         const bPrice = parseFloat(item.basePrice || item.price);
@@ -115,32 +121,25 @@ function renderCartSummary() {
         const variantMatch = item.name.match(/(.*)\s\((.*)\)$/);
         if (variantMatch) {
             displayName = variantMatch[1].trim();
-            variantBadgeHtml = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-inner mt-1 inline-block">${variantMatch[2]}</span>`;
+            variantBadgeHtml = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">${variantMatch[2]}</span>`;
         }
 
-        const weight = item.weight_kg || 1;
-        const weightBadgeHtml = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-inner mt-1 inline-block">${weight} Kg</span>`;
-
-        // 🍎 ETIQUETAS VISUALES CONDICIONADAS AL UMBRAL
         let logicBadges = '';
         if (storeTotals[store].earnedFreeShipping && (item.free_shipping === true || item.free_shipping === 'true')) {
-            logicBadges += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner mt-1 inline-block mr-1">🚚 Envío Gratis</span>`;
-        } else if (item.free_shipping === true || item.free_shipping === 'true') {
-            logicBadges += `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner mt-1 inline-block mr-1">Falta para Envío Gratis</span>`;
+            logicBadges += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">🚚 Envío Gratis</span>`;
         }
-
         if (item.is_on_demand === true || item.is_on_demand === 'true') {
             hasOnDemand = true;
-            logicBadges += `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner mt-1 inline-block">⚡ Bajo Pedido</span>`;
+            logicBadges += `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">⚡ Bajo Pedido</span>`;
         }
 
-        // 🍎 BOTÓN X MOVIDO ARRIBA A LA DERECHA ESTRICTAMENTE
+        // 🍎 LA "X" AHORA ES UN BOTÓN INTEGRADO ARRIBA A LA DERECHA (No absoluto)
         const deleteBtnHtml = isCartLocked ? '' : `
-        <button onclick="removeCheckoutItem(${index})" class="absolute top-2 right-2 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all z-20 shadow-xl" title="Eliminar">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <button onclick="removeCheckoutItem(${index})" class="text-gray-500 hover:text-red-500 transition-colors p-1" title="Eliminar">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>`;
 
-        // 🍎 SELECTOR DE CANTIDAD A LA IZQUIERDA
+        // 🍎 SELECTOR DE CANTIDADES SEGURO
         const controlsHtml = isCartLocked ? `
         <span class="text-[9px] text-emerald-400 font-black uppercase tracking-widest bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20 flex items-center gap-1.5 shadow-inner">
             <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -152,28 +151,37 @@ function renderCartSummary() {
             <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-2.5 text-gray-400 hover:text-white transition font-black text-sm">+</button>
         </div>`;
 
-        // ARQUITECTURA VERTICAL COMPACTA ORIGINAL (Reparada)
+        // 🍎 DISEÑO COMPACTO QUE NO ROMPE EL GRID EN PC
         container.innerHTML += `
-        <div class="flex flex-row gap-3 items-start bg-[#050508]/50 p-3 md:p-4 rounded-[1.5rem] border ${isCartLocked ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 hover:border-white/20'} relative group transition-all duration-300">
-            ${deleteBtnHtml}
-            <div class="w-20 h-20 bg-white/5 rounded-xl border border-white/5 overflow-hidden flex-shrink-0 flex items-center justify-center p-2 shadow-inner">
-                <img src="${item.imageUrl || item.image_url}" alt="${displayName}" class="max-h-full object-contain filter drop-shadow-md transition-transform group-hover:scale-105">
-            </div>
-            <div class="flex-grow min-w-0 flex flex-col justify-between h-full min-h-[5rem]">
-                <div class="pr-6"> <!-- 👈 ESPACIO PARA QUE LA X NO ESTORBE -->
-                    <h4 class="text-sm font-bold text-white leading-tight mb-0.5 truncate">${displayName}</h4>
-                    <span class="text-[9px] text-[#FFC300] uppercase font-bold tracking-widest mb-1 truncate block">${store}</span>
-                    <div class="flex flex-wrap gap-1 mb-1">
+        <div class="bg-[#050508]/50 p-3 rounded-[1.5rem] border ${isCartLocked ? 'border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-white/5 hover:border-white/20'} mb-3 transition-all duration-300">
+            <div class="flex gap-3">
+                <div class="w-16 h-16 bg-white/5 rounded-xl border border-white/5 p-1 shrink-0 flex items-center justify-center">
+                    <img src="${item.imageUrl || item.image_url}" class="max-h-full object-contain filter drop-shadow-md" alt="${displayName}">
+                </div>
+                
+                <div class="flex-grow flex flex-col justify-between min-w-0">
+                    <div class="flex justify-between items-start">
+                        <div class="pr-2 min-w-0">
+                            <h4 class="text-xs font-bold text-white leading-tight truncate w-full">${displayName}</h4>
+                            <span class="text-[8px] text-[#FFC300] uppercase font-bold tracking-widest block truncate w-full">${store}</span>
+                        </div>
+                        <div class="shrink-0">
+                            ${deleteBtnHtml}
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-1 mt-1">
                         ${variantBadgeHtml}
                         ${logicBadges}
                     </div>
                 </div>
-                <div class="flex items-end justify-between w-full mt-2">
-                    ${controlsHtml}
-                    <div class="flex flex-col items-end text-right">
-                        ${discountTotal > 0 ? `<span class="text-[9px] text-gray-500 line-through leading-none mb-1">Ref: $${formatMoney(bPriceTotal)}</span>` : ''}
-                        <span class="font-black text-white text-base tracking-tight leading-none">$${formatMoney(fPriceTotal)}</span>
-                    </div>
+            </div>
+            
+            <div class="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+                ${controlsHtml}
+                <div class="flex flex-col items-end">
+                    ${discountTotal > 0 ? `<span class="text-[9px] text-gray-500 line-through leading-none mb-0.5 font-bold uppercase tracking-widest">Ref: $${formatMoney(bPriceTotal)}</span>` : ''}
+                    <span class="font-black text-white text-sm tracking-tight leading-none">$${formatMoney(fPriceTotal)}</span>
                 </div>
             </div>
         </div>`;
@@ -182,7 +190,7 @@ function renderCartSummary() {
     cartTotal = finalTotal;
     const totalSavings = rawTotal - finalTotal;
 
-    // Actualizar Totales Laterales
+    // Actualizar Totales
     document.getElementById('summary-raw-total').innerText = `$${formatMoney(rawTotal)}`;
     document.getElementById('summary-total').innerText = `$${formatMoney(cartTotal)}`;
     
@@ -196,32 +204,52 @@ function renderCartSummary() {
         }
     }
 
-    // 🧠 3. MENSAJES DINÁMICOS DE LOGÍSTICA
+    // 🧠 3. ALERTAS DE LOGÍSTICA (UPSell Inteligente)
     const alertMulti = document.getElementById('alert-multi-store');
     const alertOnDemand = document.getElementById('alert-on-demand');
     const alertFreeShipping = document.getElementById('alert-free-shipping');
     const shippingLabel = document.getElementById('summary-shipping-label');
-    const titleFS = document.getElementById('free-shipping-title');
-    const descFS = document.getElementById('free-shipping-desc');
 
     if (alertMulti) storeSet.size > 1 ? alertMulti.classList.remove('hidden') : alertMulti.classList.add('hidden');
     if (alertOnDemand) hasOnDemand ? alertOnDemand.classList.remove('hidden') : alertOnDemand.classList.add('hidden');
     
     if (alertFreeShipping) {
-        if (storesWithFreeShipping > 0 && storesWithoutFreeShipping === 0) {
-            // TODAS LAS TIENDAS CALIFICAN
+        if (storesWithFreeShippingEarned > 0) {
+            // Se ganó el envío en al menos una tienda: Mostrar el SWITCH
             alertFreeShipping.classList.remove('hidden');
-            if(titleFS) titleFS.innerText = "¡Envío Gratis Desbloqueado!";
-            if(descFS) descFS.innerText = "¡Felicidades! Toda tu orden superó el mínimo requerido. Disfruta de envío 100% gratis.";
-            if(shippingLabel) shippingLabel.innerText = "A Calcular / Gratis";
-        } else if (storesWithFreeShipping > 0 && storesWithoutFreeShipping > 0) {
-            // LOGÍSTICA HÍBRIDA (Unas sí, otras no)
+            alertFreeShipping.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                    <div class="pr-2">
+                        <span class="block text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">¡Envío Gratis Desbloqueado!</span>
+                        <p class="text-[10px] text-gray-400 leading-relaxed">Las marcas participantes en tu bolsa alcanzaron el mínimo requerido.</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between border-t border-emerald-500/20 pt-3 mt-1">
+                    <span class="text-[10px] font-bold text-white uppercase tracking-widest">¿Activar Envío Gratis?</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggle-free-shipping" class="sr-only peer" checked>
+                        <div class="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                </div>
+                ${pendingShippingHtml}
+            `;
+            if(shippingLabel) shippingLabel.innerText = pendingShippingHtml ? "A Calcular / Híbrido" : "A Calcular / Gratis";
+        } else if (pendingShippingHtml !== '') {
+            // Ninguna tienda llegó al umbral: Ocultar switch, mostrar UPSell
             alertFreeShipping.classList.remove('hidden');
-            if(titleFS) titleFS.innerText = "Envío Híbrido Disponible";
-            if(descFS) descFS.innerText = "Algunos productos en tu bolsa alcanzaron el mínimo para Envío Gratis. Los demás viajarán cobro a destino.";
-            if(shippingLabel) shippingLabel.innerText = "A Calcular / Híbrido";
+            alertFreeShipping.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-gray-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div class="pr-2 w-full">
+                        <span class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-1">Meta de Envío Gratis</span>
+                        <p class="text-[10px] text-gray-400 leading-relaxed mb-2">Estás muy cerca de desbloquear el envío gratuito. Mira lo que te falta:</p>
+                        ${pendingShippingHtml}
+                    </div>
+                </div>
+            `;
+            if(shippingLabel) shippingLabel.innerText = "Cobro a Destino";
         } else {
-            // NINGUNA LLEGÓ AL UMBRAL O NINGUNA TIENE ENVÍO GRATIS
             alertFreeShipping.classList.add('hidden');
             if(shippingLabel) shippingLabel.innerText = "Cobro a Destino";
         }
