@@ -268,7 +268,9 @@ function addToCart() {
         real_id: currentProduct.id,  
         name: cartItemName,
         storeName: currentProduct.store_name, 
-        price: finalPrice,
+        price: finalPrice,                 // Precio final (con descuento)
+        basePrice: basePrice,              // 🍎 NUEVO: Precio original
+        discount: discount,                // 🍎 NUEVO: % de descuento
         imageUrl: currentProduct.image_url || currentProduct.imageUrl,
         qty: currentQuantity,
         maxStock: maxStock,
