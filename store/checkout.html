@@ -269,8 +269,48 @@
                             </div>
                             
                             <button id="btn-submit-shipping" disabled class="w-full bg-[#050508] text-white h-14 rounded-full font-bold uppercase tracking-widest text-xs border border-white/10 hover:bg-white hover:text-black transition-all disabled:opacity-30 disabled:pointer-events-none">
-                                Confirmar Datos de Envío
+                                <div
                             </button>
+                        </div>
+
+                        <!-- 🍎 NUEVO: CONTENEDOR DE ALERTAS DE LOGÍSTICA HÍBRIDA -->
+                        <div id="hybrid-logistics-alerts" class="space-y-4 mt-6">
+                            
+                            <!-- Alerta Multi-Tienda -->
+                            <div id="alert-multi-store" class="hidden bg-white/5 border border-white/10 p-4 rounded-xl flex items-start gap-3">
+                                <svg class="w-5 h-5 text-gray-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                <div>
+                                    <span class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-1">Envíos Separados</span>
+                                    <p class="text-[10px] text-gray-400 leading-relaxed">Tu orden tiene productos de varias tiendas. Te llegarán en paquetes separados desde cada marca.</p>
+                                </div>
+                            </div>
+
+                            <!-- Alerta Bajo Pedido -->
+                            <div id="alert-on-demand" class="hidden bg-purple-500/10 border border-purple-500/20 p-4 rounded-xl flex items-start gap-3">
+                                <svg class="w-5 h-5 text-purple-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                <div>
+                                    <span class="block text-xs font-bold text-purple-400 uppercase tracking-widest mb-1">Fabricación Exclusiva</span>
+                                    <p class="text-[10px] text-gray-400 leading-relaxed">Incluyes artículos de producción bajo demanda. Tu inventario está asegurado, pero el tiempo de confección y envío dependerá de la marca fabricante.</p>
+                                </div>
+                            </div>
+
+                            <!-- Alerta Envío Gratis & Toggle -->
+                            <div id="alert-free-shipping" class="hidden bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex flex-col gap-3">
+                                <div class="flex items-start gap-3">
+                                    <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                                    <div>
+                                        <span class="block text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">Envío Gratis Disponible</span>
+                                        <p class="text-[10px] text-gray-400 leading-relaxed">Algunos productos de tu bolsa aplican para envío gratis por parte del proveedor. Los demás serán enviados cobro a destino.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between border-t border-emerald-500/20 pt-3 mt-1">
+                                    <span class="text-[10px] font-bold text-white uppercase tracking-widest">¿Activar Envío Gratis?</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="toggle-free-shipping" class="sr-only peer" checked>
+                                        <div class="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Botón de Transición a la Bóveda -->
@@ -411,15 +451,25 @@
 
                     <div class="w-full h-px bg-white/10 mb-8"></div>
 
-                    <!-- Panel de Totales -->
+                    <!-- Panel de Totales Dinámico -->
                     <div class="space-y-4">
+                        
+                        <!-- 1. Precio Original (Tachado) -->
                         <div class="flex justify-between items-center text-gray-400">
-                            <span class="text-[10px] uppercase font-bold tracking-widest">Subtotal Calculado</span>
-                            <span id="summary-subtotal" class="font-medium text-white text-sm">$0.00</span>
+                            <span class="text-[10px] uppercase font-bold tracking-widest">Subtotal Original</span>
+                            <span id="summary-raw-total" class="font-medium text-gray-500 text-sm line-through">$0.00</span>
                         </div>
+                        
+                        <!-- 2. Fila de Ahorro (Verde, oculta si no hay descuento) -->
+                        <div id="summary-savings-row" class="hidden flex justify-between items-center text-emerald-400 bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
+                            <span class="text-[10px] uppercase font-bold tracking-widest">Ahorro por Descuentos</span>
+                            <span id="summary-savings" class="font-bold text-sm">-$0.00</span>
+                        </div>
+                        
+                        <!-- 3. Etiqueta Dinámica de Logística (Ya no es estática) -->
                         <div class="flex justify-between items-center text-gray-400">
                             <span class="text-[10px] uppercase font-bold tracking-widest">Logística Nacional</span>
-                            <span class="text-emerald-400 uppercase text-[9px] tracking-widest font-bold bg-emerald-500/10 px-2 py-1 rounded">Cobro a Destino</span>
+                            <span id="summary-shipping-label" class="text-[#FFC300] uppercase text-[9px] tracking-widest font-bold bg-[#FFC300]/10 border border-[#FFC300]/20 px-2 py-1 rounded">Calculando...</span>
                         </div>
                         
                         <!-- Total Final Dual -->
@@ -428,12 +478,14 @@
                             <div class="text-right">
                                 <span id="summary-total" class="text-4xl font-black text-white tracking-tight leading-none block">$0.00</span>
                                 
+                                <!-- Contenedor Bolívares BCV -->
                                 <div id="summary-ves-container" class="hidden mt-2">
                                     <span id="summary-total-ves" class="text-base font-medium text-gray-400 block">Bs. 0.00</span>
                                     <span id="bcv-rate-display" class="text-[9px] text-[#FFC300] uppercase tracking-widest font-bold">Tasa BCV: ---</span>
                                 </div>
                             </div>
                         </div>
+                    </div>
                         
                         <!-- ALERTA BCV CAÍDO -->
                         <div id="bcv-warning-msg" class="hidden mt-6 bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
