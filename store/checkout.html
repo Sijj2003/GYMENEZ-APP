@@ -143,13 +143,13 @@
             <a href="/store/home.html" class="inline-block bg-[#FFC300] text-black px-10 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:scale-[1.02] hover:bg-yellow-400 transition-all shadow-[0_10px_30px_rgba(255,195,0,0.2)]">Volver a la Tienda</a>
         </div>
 
-        <!-- CONTENEDOR DE COMPRA (Oculto si está vacío) -->
-        <div id="checkout-container" class="grid grid-cols-1 lg:grid-cols-12 gap-10 hidden">
+        <!-- 🍎 CONTENEDOR MAESTRO DEL GRID (items-start asegura que la columna derecha haga sticky) -->
+        <div id="checkout-container" class="grid grid-cols-1 lg:grid-cols-12 gap-10 hidden w-full items-start">
             
             <!-- ========================================== -->
             <!-- COLUMNA IZQUIERDA (WIZARD & PAGOS) -->
             <!-- ========================================== -->
-            <div class="lg:col-span-7">
+            <div class="lg:col-span-7 w-full flex flex-col gap-6">
                 
                 <!-- VISTA A: WIZARD DE PREPARACIÓN -->
                 <div id="wizard-view" class="space-y-6 block">
@@ -273,7 +273,7 @@
                             </button>
                         </div>
 
-                        <!-- 🍎 NUEVO: CONTENEDOR DE ALERTAS DE LOGÍSTICA HÍBRIDA -->
+                        <!-- 🍎 ALERTAS DE LOGÍSTICA HÍBRIDA -->
                         <div id="hybrid-logistics-alerts" class="space-y-4 mt-6">
                             
                             <!-- Alerta Multi-Tienda -->
@@ -294,23 +294,9 @@
                                 </div>
                             </div>
 
-                            <!-- Alerta Envío Gratis & Toggle -->
-                            <div id="alert-free-shipping" class="hidden bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex flex-col gap-3">
-                                <div class="flex items-start gap-3">
-                                    <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
-                                    <div class="pr-2">
-                                        <span id="free-shipping-title" class="block text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">Envío Gratis Disponible</span>
-                                        <p id="free-shipping-desc" class="text-[10px] text-gray-400 leading-relaxed">...</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center justify-between border-t border-emerald-500/20 pt-3 mt-1">
-                                    <span class="text-[10px] font-bold text-white uppercase tracking-widest">¿Activar Envío Gratis?</span>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="toggle-free-shipping" class="sr-only peer" checked>
-                                        <div class="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
-                                    </label>
-                                </div>
-                            </div>
+                            <!-- 🍎 Alerta Envío Gratis & Toggle (CONTROLADO 100% POR JS AHORA, SIN TRAMPAS) -->
+                            <div id="alert-free-shipping" class="hidden"></div>
+                        </div>
 
                         <!-- Botón de Transición a la Bóveda -->
                         <div id="vault-entry-container" class="hidden mt-8 pt-8 border-t border-white/5">
@@ -323,7 +309,9 @@
                             </button>
                         </div>
                     </section>
-                    
+                </div> 
+                <!-- 🍎 AQUÍ ESTABA EL MALDITO ERROR: FALTABA ESTE CIERRE DE WIZARD-VIEW QUE ROMPIÓ TODO EL GRID -->
+
                 <!-- VISTA B: PASARELA DE PAGO (LA BÓVEDA) -->
                 <div id="vault-view" class="space-y-6 hidden">
                     
@@ -411,31 +399,12 @@
                         </form>
                     </section>
                 </div>
-
-                <!-- VISTA C: ÉXITO ABSOLUTO -->
-                <div id="success-view" class="col-span-12 text-center py-24 md:py-32 bg-white/5 rounded-[3rem] border border-emerald-500/20 shadow-2xl hidden relative overflow-hidden backdrop-blur-xl">
-                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div class="w-1/2 h-1/2 bg-emerald-500/10 blur-[80px] rounded-full"></div>
-                    </div>
-                    
-                    <div class="w-20 h-20 mx-auto bg-emerald-500/10 border-2 border-emerald-500 text-emerald-400 rounded-full flex items-center justify-center mb-6 relative z-10">
-                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    </div>
-                    <h2 class="text-3xl md:text-4xl font-[900] uppercase tracking-tight text-white mb-4 relative z-10">Orden Recibida</h2>
-                    <p class="text-gray-400 text-sm max-w-md mx-auto mb-10 leading-relaxed font-medium relative z-10">
-                        Su transacción con referencia <strong id="success-ref" class="text-white bg-white/10 px-2 py-1 rounded"></strong> ha sido enviada al departamento de auditoría financiera.
-                    </p>
-                    <a href="/store/account.html" class="inline-block relative z-10 bg-white text-black px-10 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:scale-[1.02] transition-all shadow-xl">
-                        Rastrear Envío
-                    </a>
-                </div>
-
-            </div>
+            </div> <!-- CIERRE DE COLUMNA IZQUIERDA -->
 
             <!-- ========================================== -->
             <!-- COLUMNA DERECHA (RESUMEN FLOTANTE) -->
             <!-- ========================================== -->
-            <div class="lg:col-span-5">
+            <div class="lg:col-span-5 w-full">
                 <div class="bg-white/5 p-6 md:p-10 rounded-[2rem] border border-white/10 sticky top-28 transition-all duration-500 shadow-2xl backdrop-blur-xl" id="summary-panel">
                     
                     <div class="flex items-center gap-3 mb-6 border-b border-white/5 pb-6">
@@ -444,7 +413,7 @@
                     
                     <!-- Tarjetas de Producto -->
                     <div id="cart-items-container" class="space-y-4 mb-8 max-h-[50vh] overflow-y-auto pr-2 hide-scroll">
-                        <!-- Llenado por checkout.js (Usa el código al final de la respuesta) -->
+                        <!-- Llenado por checkout.js (Ya tiene el código estricto) -->
                     </div>
 
                     <div class="w-full h-px bg-white/10 mb-8"></div>
@@ -458,13 +427,13 @@
                             <span id="summary-raw-total" class="font-medium text-gray-500 text-sm line-through">$0.00</span>
                         </div>
                         
-                        <!-- 2. Fila de Ahorro (Verde, oculta si no hay descuento) -->
+                        <!-- 2. Fila de Ahorro -->
                         <div id="summary-savings-row" class="hidden flex justify-between items-center text-emerald-400 bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
                             <span class="text-[10px] uppercase font-bold tracking-widest">Ahorro por Descuentos</span>
                             <span id="summary-savings" class="font-bold text-sm">-$0.00</span>
                         </div>
                         
-                        <!-- 3. Etiqueta Dinámica de Logística (Ya no es estática) -->
+                        <!-- 3. Etiqueta Dinámica de Logística -->
                         <div class="flex justify-between items-center text-gray-400">
                             <span class="text-[10px] uppercase font-bold tracking-widest">Logística Nacional</span>
                             <span id="summary-shipping-label" class="text-[#FFC300] uppercase text-[9px] tracking-widest font-bold bg-[#FFC300]/10 border border-[#FFC300]/20 px-2 py-1 rounded">Calculando...</span>
@@ -485,20 +454,37 @@
                         </div>
                     </div>
                         
-                        <!-- ALERTA BCV CAÍDO -->
-                        <div id="bcv-warning-msg" class="hidden mt-6 bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
-                            <div class="flex items-center gap-2 mb-2">
-                                <svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                <p class="text-[10px] text-red-500 font-bold uppercase tracking-widest">Conversión BCV No Disponible</p>
-                            </div>
-                            <p class="text-[10px] text-gray-400 leading-relaxed">Imposible conectar con servidores. Calcule manualmente usando la tasa oficial del día.</p>
+                    <!-- ALERTA BCV CAÍDO -->
+                    <div id="bcv-warning-msg" class="hidden mt-6 bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            <p class="text-[10px] text-red-500 font-bold uppercase tracking-widest">Conversión BCV No Disponible</p>
                         </div>
-                        
+                        <p class="text-[10px] text-gray-400 leading-relaxed">Imposible conectar con servidores. Calcule manualmente usando la tasa oficial del día.</p>
                     </div>
+                        
                 </div>
-            </div>
-
+            </div> <!-- CIERRE DE COLUMNA DERECHA -->
         </div> 
+
+        <!-- 🍎 VISTA C: ÉXITO ABSOLUTO (Sacado de la columna izquierda para que ocupe todo el ancho) -->
+        <div id="success-view" class="col-span-1 lg:col-span-12 text-center py-24 md:py-32 bg-white/5 rounded-[3rem] border border-emerald-500/20 shadow-2xl hidden relative overflow-hidden backdrop-blur-xl mt-4 w-full">
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="w-1/2 h-1/2 bg-emerald-500/10 blur-[80px] rounded-full"></div>
+            </div>
+            
+            <div class="w-20 h-20 mx-auto bg-emerald-500/10 border-2 border-emerald-500 text-emerald-400 rounded-full flex items-center justify-center mb-6 relative z-10">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h2 class="text-3xl md:text-4xl font-[900] uppercase tracking-tight text-white mb-4 relative z-10">Orden Recibida</h2>
+            <p class="text-gray-400 text-sm max-w-md mx-auto mb-10 leading-relaxed font-medium relative z-10">
+                Su transacción con referencia <strong id="success-ref" class="text-white bg-white/10 px-2 py-1 rounded"></strong> ha sido enviada al departamento de auditoría financiera.
+            </p>
+            <a href="/store/account.html" class="inline-block relative z-10 bg-white text-black px-10 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:scale-[1.02] transition-all shadow-xl">
+                Rastrear Envío
+            </a>
+        </div>
+
     </main>
 
     <!-- ======================================================= -->
@@ -591,7 +577,7 @@
         </div>
     </footer>
     
-    <script src="/static/js/store/checkout.js?v=6.1"></script>
+    <script src="/static/js/store/checkout.js?v=7.0"></script>
     <script src="/static/js/store/search.js?v=1.0"></script>
     <script src="/static/js/auth/auth_middleware.js"></script>
 
