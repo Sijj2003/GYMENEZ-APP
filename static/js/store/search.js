@@ -142,6 +142,7 @@ function renderInstantResults(results, container, platform, originalQuery) {
                 <div class="flex items-center gap-1.5 mt-1 flex-wrap">
                     <span class="text-[9px] text-[#FFC300] uppercase tracking-widest truncate font-black">${item.store_name || 'Gymenez Store'}</span>
                     ${hasFreeShipping ? `<span class="text-[7px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded font-black uppercase">🚚 Envío Gratis</span>` : ''}
+                    ${isOnDemand ? `<span class="text-[7px] bg-purple-500/20 text-purple-400 px-1.5 py-0.2 rounded font-black uppercase">⚡ Bajo Pedido</span>` : ''}
                 </div>
             </div>
             <div class="text-right flex-shrink-0 flex flex-col items-end justify-center">
@@ -322,9 +323,6 @@ function renderDeepResults(productsToRender, grid) {
             const threshold = parseFloat(p.free_shipping_threshold);
             const extraText = threshold > 0 ? ` > $${threshold}` : '';
             etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis</span> `;
-        }
-        if (isOnDemand) {
-            etiquetasHtml += `<span class="bg-purple-500/90 text-white border border-purple-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(168,85,247,0.3)]">⚡ Bajo Pedido</span>`;
         }
 
         // 🍎 NOTA: Añadida clase 'result-card opacity-0 translate-y-12' para la magia
