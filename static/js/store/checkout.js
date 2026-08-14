@@ -830,7 +830,9 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
         weight_kg: item.weight_kg || 1,
         // 🍎 PASAMOS ESTAS BANDERAS PARA QUE PYTHON SEPA QUÉ HACER
         free_shipping: item.free_shipping === true || item.free_shipping === 'true',
-        is_on_demand: item.is_on_demand === true || item.is_on_demand === 'true'
+        is_on_demand: item.is_on_demand === true || item.is_on_demand === 'true',
+        // 🍎 LA PIEZA MAESTRA QUE FALTABA: Dejar pasar el umbral al Backend
+        free_shipping_threshold: parseFloat(item.free_shipping_threshold || 0)
     }));
 
     // 🍎 CAPTURAMOS LA DECISIÓN DEL CLIENTE (El Switch de Envío)
