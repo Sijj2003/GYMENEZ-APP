@@ -49,8 +49,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ==========================================
-// 1. DIBUJAR RESUMEN DEL CARRITO (ARQUITECTURA COMPACTA Y ESTRICTA)
+// 1. DIBUJAR RESUMEN DEL CARRITO (ARQUITECTURA COMPACTA, ESTRICTA Y REACTIVA)
 // ==========================================
+
+// 🍎 MEMORIA DEL SWITCH: Para que el carrito recuerde si el cliente lo apagó
+if (typeof window.userWantsFreeShipping === 'undefined') {
+    window.userWantsFreeShipping = true;
+}
+
 function renderCartSummary() {
     const container = document.getElementById('cart-items-container');
     container.innerHTML = '';
@@ -81,6 +87,7 @@ function renderCartSummary() {
 
     let storesWithFreeShippingEarned = 0;
     let pendingShippingHtml = '';
+    const totalStores = Object.keys(storeTotals).length;
 
     for (const store in storeTotals) {
         if (storeTotals[store].offersFreeShipping) {
@@ -100,6 +107,9 @@ function renderCartSummary() {
             }
         }
     }
+
+    // Identificamos si es un carrito híbrido (unas tiendas sí tienen gratis, otras no)
+    const isHybrid = storesWithFreeShippingEarned > 0 && storesWithFreeShippingEarned < totalStores;
 
     // 🧠 2. DIBUJAR PRODUCTOS
     cartItems.forEach((item, index) => {
@@ -204,7 +214,7 @@ function renderCartSummary() {
         }
     }
 
-    // 🧠 3. ALERTAS DE LOGÍSTICA (ESTRICTAS Y SIN TRAMPAS)
+    // 🧠 3. ALERTAS DE LOGÍSTICA (ESTRICTAS Y REACTIVAS)
     const alertMulti = document.getElementById('alert-multi-store');
     const alertOnDemand = document.getElementById('alert-on-demand');
     const alertFreeShipping = document.getElementById('alert-free-shipping');
@@ -218,6 +228,9 @@ function renderCartSummary() {
             // SÍ LLEGARON A LA META: Mostrar el SWITCH
             alertFreeShipping.classList.remove('hidden');
             alertFreeShipping.className = "bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex flex-col gap-3 mt-4";
+            
+            const checkedAttr = window.userWantsFreeShipping ? 'checked' : '';
+
             alertFreeShipping.innerHTML = `
                 <div class="flex items-start gap-3">
                     <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
@@ -229,13 +242,21 @@ function renderCartSummary() {
                 <div class="flex items-center justify-between border-t border-emerald-500/20 pt-3 mt-1">
                     <span class="text-[10px] font-bold text-white uppercase tracking-widest">¿Activar Envío Gratis?</span>
                     <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="toggle-free-shipping" class="sr-only peer" checked>
+                        <input type="checkbox" id="toggle-free-shipping" class="sr-only peer" ${checkedAttr} onchange="updateShippingLabelUI(this.checked, ${isHybrid})">
                         <div class="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
                     </label>
                 </div>
                 ${pendingShippingHtml}
             `;
-            if(shippingLabel) shippingLabel.innerText = pendingShippingHtml ? "A Calcular / Híbrido" : "Gratis";
+
+            // Establecemos el texto según la memoria del usuario
+            if (shippingLabel) {
+                if (window.userWantsFreeShipping) {
+                    shippingLabel.innerText = isHybrid ? "Híbrido" : "Gratis";
+                } else {
+                    shippingLabel.innerText = "Cobro a Destino";
+                }
+            }
 
         } else if (pendingShippingHtml !== '') {
             // NINGUNA LLEGÓ A LA META: SE DESTRUYE EL SWITCH Y QUEDA EN COBRO A DESTINO.
@@ -288,6 +309,20 @@ function renderCartSummary() {
         document.getElementById('empty-cart-msg').classList.add('hidden');
     }
 }
+
+// 🍎 NUEVA FUNCIÓN: Actualiza el texto en vivo cuando tocas el Switch
+window.updateShippingLabelUI = function(isChecked, isHybrid) {
+    window.userWantsFreeShipping = isChecked; 
+    const shippingLabel = document.getElementById('summary-shipping-label');
+    
+    if (shippingLabel) {
+        if (isChecked) {
+            shippingLabel.innerText = isHybrid ? "Híbrido" : "Gratis";
+        } else {
+            shippingLabel.innerText = "Cobro a Destino";
+        }
+    }
+};
 
 window.updateCheckoutItemQty = function(index, delta) {
     if (isCartLocked) return;
