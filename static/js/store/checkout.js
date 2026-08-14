@@ -235,7 +235,7 @@ function renderCartSummary() {
                 </div>
                 ${pendingShippingHtml}
             `;
-            if(shippingLabel) shippingLabel.innerText = pendingShippingHtml ? "A Calcular / Híbrido" : "A Calcular / Gratis";
+            if(shippingLabel) shippingLabel.innerText = pendingShippingHtml ? "A Calcular / Híbrido" : "Gratis";
 
         } else if (pendingShippingHtml !== '') {
             // NINGUNA LLEGÓ A LA META: SE DESTRUYE EL SWITCH Y QUEDA EN COBRO A DESTINO.
