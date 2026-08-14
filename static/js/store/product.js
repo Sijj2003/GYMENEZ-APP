@@ -280,7 +280,9 @@ function addToCart() {
         maxStock: maxStock,
         weight_kg: currentProduct.weight_kg || 1, 
         is_on_demand: isOnDemand,
-        free_shipping: hasFreeShipping
+        free_shipping: hasFreeShipping,
+        // 🍎 LA PIEZA FALTANTE: MANDAR LA META FINANCIERA AL CARRITO
+        free_shipping_threshold: parseFloat(currentProduct.free_shipping_threshold || 0)
     };
 
     // 🛡️ ENVOLVEMOS LA ACCIÓN EN EL INTERCEPTOR DE AUTENTICACIÓN
