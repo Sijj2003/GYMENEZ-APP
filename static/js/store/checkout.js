@@ -412,7 +412,7 @@ async function initWizardData() {
 
     } catch (error) {
         console.error("Error en pre-carga del Checkout:", error);
-        alert("Fallo al sincronizar con la Bóveda Segura. Recargue la página.");
+        showGymenezAlert("Fallo al sincronizar con la Bóveda Segura. Recargue la página.");
     }
 }
 
@@ -470,7 +470,7 @@ document.getElementById('form-kyc').addEventListener('submit', (e) => {
     const imageFile = document.getElementById('kyc-image').files[0];
 
     if (imageFile && imageFile.size > 2 * 1024 * 1024) {
-        alert("La fotografía excede el límite de 2MB. Por favor comprima la imagen.");
+        showGymenezAlert("La fotografía excede el límite de 2MB. Por favor comprima la imagen.");
         return;
     }
 
@@ -577,12 +577,12 @@ document.getElementById('btn-submit-shipping').addEventListener('click', async (
             document.getElementById('shipping-form-container').classList.add('hidden');
             document.getElementById('vault-entry-container').classList.remove('hidden');
         } else {
-            alert(data.error || "Fallo al registrar datos logísticos. Revise la información.");
+            showGymenezAlert(data.error || "Fallo al registrar datos logísticos. Revise la información.");
             btn.disabled = false;
             btn.textContent = 'Reintentar Registro';
         }
     } catch (error) {
-        alert("Fallo de comunicación con servidores de logística.");
+        showGymenezAlert("Fallo de comunicación con servidores de logística.");
         btn.disabled = false;
         btn.textContent = 'Confirmar Datos de Envío';
     }
@@ -686,12 +686,12 @@ async function executeVaultEntry() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
             // 👇 Si Python bloquea por precio o envíos cambiados, saldrá esta alerta roja
-            alert(data.error || "Imposible reservar el inventario. Es probable que algún producto ya no tenga stock suficiente.");
+            showGymenezAlert(data.error || "Imposible reservar el inventario. Es probable que algún producto ya no tenga stock suficiente.");
             btn.disabled = false;
             btn.innerHTML = '<span>Proceder al Pago</span>';
         }
     } catch (error) {
-        alert("Fallo de red al conectar con el inventario maestro.");
+        showGymenezAlert("Fallo de red al conectar con el inventario.");;
         btn.disabled = false;
         btn.innerHTML = '<span>Proceder al Pago</span>';
     }
@@ -735,7 +735,7 @@ function startVaultTimer(expiresAt) {
 
 async function handleVaultExpiration() {
     localStorage.removeItem('gymen_vault_expires_at');
-    alert("⏳ ¡Sesión expirada! Los productos han sido devueltos a la tienda pública.");
+    showGymenezAler("⏳ ¡Sesión expirada! Los productos han sido devueltos a la tienda pública.");
     window.location.reload(); 
 }
 
@@ -884,13 +884,13 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-            alert(data.error || "Transacción rechazada por el servidor.");
+            showGymenezAlert(data.error || "Transacción rechazada por el servidor.");
             resetBtn(btn);
             startVaultTimer(new Date().getTime() + 60000); 
             document.getElementById('btn-cancel-vault').disabled = false;
         }
     } catch (error) {
-        alert("Pérdida de conexión segura. Intente nuevamente.");
+        showGymenezAler("Pérdida de conexión segura. Intente nuevamente.");
         resetBtn(btn);
         startVaultTimer(new Date().getTime() + 60000); 
         document.getElementById('btn-cancel-vault').disabled = false;
@@ -904,3 +904,33 @@ function resetBtn(btn) {
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
     `;
 }
+
+// ==========================================
+// 🎨 CONTROLADOR DEL MODAL DE ALERTAS GYMENEZ
+// ==========================================
+window.showGymenezAlert = function(message) {
+    const modal = document.getElementById('gymenez-alert-modal');
+    const content = document.getElementById('gymenez-alert-content');
+    const msgEl = document.getElementById('gymenez-alert-msg');
+
+    msgEl.innerText = message; // Inyecta el error de Python
+
+    modal.classList.remove('hidden');
+    // Pequeño delay para que la animación CSS se ejecute suavemente
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+    }, 10);
+};
+
+window.closeGymenezAlert = function() {
+    const modal = document.getElementById('gymenez-alert-modal');
+    const content = document.getElementById('gymenez-alert-content');
+
+    modal.classList.add('opacity-0');
+    content.classList.add('scale-95');
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300); // Esperar que termine la transición de opacidad
+};
