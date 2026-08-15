@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gymenez Partner | Órdenes y Envíos</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/store/home.css">
+    
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+    </script>
+    <style>
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+        .skeleton-text { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; border-radius: 4px; color: transparent !important; pointer-events: none; }
+        @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
+</head>
+<body class="bg-[#030305] text-white selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col md:flex-row relative pb-16 md:pb-0 overflow-hidden">
+
+    <script>
+        const token = localStorage.getItem('gymenez_partner_token');
+        if (!token) window.location.href = '/store/partner/login.html';
+    </script>
+
+    <!-- ======================================================= -->
+    <!-- SIDEBAR (PC) -->
+    <!-- ======================================================= -->
+    <aside class="w-72 border-r border-white/5 bg-[#0a0a0f] hidden md:flex flex-col z-20 h-screen shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
+        <div class="p-8 border-b border-white/5">
+            <a href="dashboard.html" class="flex items-center leading-none">
+                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
+                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+            </a>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mt-2">Partner Workspace</p>
+        </div>
+
+        <nav class="flex-1 p-6 space-y-3 overflow-y-auto">
+            <a href="dashboard.html" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white border border-transparent transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Vista General
+            </a>
+            <a href="inventory.html" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white border border-transparent transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                Inventario
+            </a>
+            <!-- Activo 🍎 -->
+            <a href="orders.html" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left text-sm font-bold bg-white/5 text-white border border-white/5 shadow-sm transition">
+                <svg class="w-5 h-5 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                Órdenes
+            </a>
+            <a href="finance.html" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white border border-transparent transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                Liquidaciones
+            </a>
+        </nav>
+
+        <div class="p-8 border-t border-white/5">
+            <button onclick="if(typeof logout === 'function') logout()" class="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Cerrar Sesión
+            </button>
+        </div>
+    </aside>
+
+    <!-- ======================================================= -->
+    <!-- BOTTOM NAV (Móvil) -->
+    <!-- ======================================================= -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full z-50 glass-nav border-t border-white/10 pb-safe">
+        <div class="flex items-center justify-around h-16 px-2">
+            <a href="dashboard.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white transition">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2zm-10 10a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+            </a>
+            <a href="inventory.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white transition">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+            </a>
+            <!-- Activo 🍎 -->
+            <a href="orders.html" class="flex flex-col items-center justify-center w-full h-full text-[#FFC300] transition relative">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+            </a>
+            <button onclick="if(typeof openProfileModal === 'function') openProfileModal()" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white transition">
+                <div class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center mb-1 border border-white/20">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- ÁREA PRINCIPAL -->
+    <!-- ======================================================= -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        
+        <!-- HEADER SUPERIOR -->
+        <header class="w-full h-24 border-b border-white/5 bg-transparent backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0">
+            <div class="md:hidden flex items-center gap-2">
+                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
+                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+            </div>
+            
+            <div class="hidden md:block">
+                <span class="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-500 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">
+                    Sincronización Activa
+                </span>
+            </div>
+            
+            <div class="flex items-center gap-5">
+                <div class="text-right hidden sm:block">
+                    <p id="store-name-display" class="text-sm font-bold text-white skeleton-text min-w-[120px]">Cargando...</p>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-widest font-bold mt-0.5">Partner Oficial</p>
+                </div>
+                <button onclick="if(typeof openProfileModal === 'function') openProfileModal()" class="hidden md:flex w-12 h-12 rounded-full bg-white/5 border border-white/10 p-[2px] hover:scale-105 transition transform shadow-[0_0_15px_rgba(255,195,0,0.15)] cursor-pointer">
+                    <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-gray-500 font-black text-lg overflow-hidden skeleton-text">
+                        P
+                    </div>
+                </button>
+            </div>
+        </header>
+
+        <!-- CONTENIDO ESPECÍFICO DE ESTA PÁGINA (ÓRDENES) -->
+        <div class="flex-1 overflow-y-auto hide-scroll p-6 md:p-12">
+            <div class="max-w-7xl mx-auto pb-24 md:pb-10">
+                
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 border-b border-white/5 pb-8">
+                    <div>
+                        <h1 class="text-4xl md:text-5xl font-[900] tracking-tighter uppercase italic">Control de <span class="text-[#FFC300]">Envíos</span></h1>
+                        <p class="text-sm text-gray-400 mt-3 font-medium">Gestiona la logística y carga números de guía de tus ventas.</p>
+                    </div>
+                    
+                    <!-- BARRAS DE BÚSQUEDA Y FILTROS -->
+                    <div class="w-full md:w-auto flex flex-col sm:flex-row gap-3">
+                        <div class="relative w-full sm:w-64">
+                            <svg class="w-4 h-4 absolute left-4 top-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <input type="text" id="search-orders" oninput="if(typeof filterOrders === 'function') filterOrders()" placeholder="Buscar cliente o ID..." class="w-full bg-[#12121a] border border-white/10 rounded-full pl-11 pr-5 py-3 text-xs font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner">
+                        </div>
+                        <select id="filter-status" onchange="if(typeof filterOrders === 'function') filterOrders()" class="w-full sm:w-auto bg-[#12121a] border border-white/10 rounded-full px-5 py-3 text-xs font-bold text-gray-400 focus:outline-none focus:border-[#FFC300] transition appearance-none cursor-pointer">
+                            <option value="all">Todas las Órdenes</option>
+                            <option value="pending_verification">🟡 Pendientes de Pago</option>
+                            <option value="processing">🟢 Por Enviar (Luz Verde)</option>
+                            <option value="shipped">🔵 Enviadas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ESTADO VACÍO -->
+                <div id="empty-state" class="hidden bg-[#12121a] border border-white/5 p-12 md:p-20 rounded-[3rem] flex flex-col items-center justify-center text-center shadow-2xl transition-all duration-300">
+                    <div class="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 text-gray-600 border border-white/10">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-[900] uppercase italic text-white mb-2">Sin actividad reciente</h3>
+                    <p class="text-sm text-gray-400 max-w-md mb-8 font-medium leading-relaxed">No hay órdenes que coincidan con tu búsqueda. Cuando un cliente compre tus productos, aparecerán aquí automáticamente.</p>
+                </div>
+
+                <!-- LISTA DE ÓRDENES (GRILLA) -->
+                <div id="orders-grid" class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <!-- Javascript inyectará las tarjetas aquí -->
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- ======================================================= -->
+    <!-- MODAL PREMIUM: DETALLE Y GUÍAS DE ENVÍO -->
+    <!-- ======================================================= -->
+    <div id="order-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-6 opacity-0 transition-opacity duration-300">
+        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-4xl rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500 flex flex-col max-h-[95vh] md:max-h-[90vh]">
+            
+            <!-- Cabecera -->
+            <div class="flex justify-between items-center p-8 border-b border-white/5 shrink-0 bg-[#0a0a0f] md:rounded-t-[2.5rem]">
+                <div>
+                    <h3 class="text-2xl font-[900] tracking-tighter uppercase italic text-white">Detalle de <span class="text-[#FFC300]">Orden</span></h3>
+                    <p id="modal-order-id" class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mt-1">ID: #00000</p>
+                </div>
+                <button onclick="if(typeof closeOrderModal === 'function') closeOrderModal()" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Cuerpo Scrolleable -->
+            <div class="p-8 overflow-y-auto custom-scroll flex-1 space-y-8">
+                
+                <!-- Semáforo Principal de la Orden -->
+                <div id="modal-semaforo" class="bg-[#12121a] border border-white/5 p-6 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4 shadow-inner">
+                    <!-- Se inyecta por JS (Ej: 🟢 Luz Verde - Enviar) -->
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Columna Izquierda: Cliente y Logística -->
+                    <div class="space-y-6">
+                        <div class="bg-[#12121a] p-6 rounded-[2rem] border border-white/5 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-24 h-24 bg-[#FFC300]/10 rounded-full blur-[30px] -mr-10 -mt-10 pointer-events-none"></div>
+                            <h4 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 border-b border-white/5 pb-2">Datos del Cliente</h4>
+                            <p id="modal-buyer-name" class="text-sm font-bold text-white mb-1">Nombre Apellido</p>
+                            <p id="modal-buyer-doc" class="text-xs text-gray-400 font-bold mb-4">CI: V-00000000</p>
+                            
+                            <h4 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 border-b border-white/5 pb-2">Destino (Entregar a MRW/Zoom)</h4>
+                            <p id="modal-shipping-type" class="text-[10px] font-black uppercase text-emerald-400 bg-emerald-400/10 inline-block px-2 py-1 rounded mb-2">Cobro a Destino</p>
+                            <p id="modal-shipping-agency" class="text-sm font-bold text-white mb-1 leading-relaxed">MRW - Sucursal Centro</p>
+                            <p id="modal-shipping-state" class="text-xs text-gray-400 font-bold">Estado, Ciudad</p>
+                        </div>
+
+                        <!-- Creador de Guías (Solo aparece si el estado es processing o superior) -->
+                        <div id="modal-guide-section" class="bg-[#12121a] p-6 rounded-[2rem] border border-blue-500/20 relative overflow-hidden hidden shadow-[0_0_20px_rgba(59,130,246,0.05)]">
+                            <h4 class="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-4">Cargar Guía de Rastreo</h4>
+                            <div class="flex gap-2">
+                                <select id="guide-courier" class="w-1/3 bg-[#030305] border border-white/10 rounded-xl px-3 py-3 text-xs font-bold text-white focus:outline-none focus:border-blue-500">
+                                    <option value="MRW">MRW</option>
+                                    <option value="ZOOM">ZOOM</option>
+                                    <option value="DOMESA">DOMESA</option>
+                                    <option value="TEALCA">TEALCA</option>
+                                </select>
+                                <input type="text" id="guide-number" placeholder="Ej: 00012345678" class="w-2/3 bg-[#030305] border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white focus:outline-none focus:border-blue-500">
+                            </div>
+                            <button onclick="if(typeof addTrackingGuide === 'function') addTrackingGuide()" class="w-full mt-3 bg-blue-600 text-white px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-500 transition shadow-lg flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                Anexar Guía
+                            </button>
+                            
+                            <!-- Lista de guías cargadas -->
+                            <div id="modal-guides-list" class="mt-4 space-y-2">
+                                <!-- JS inyecta guías aquí -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Productos -->
+                    <div class="bg-[#12121a] p-6 rounded-[2rem] border border-white/5 flex flex-col">
+                        <h4 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 border-b border-white/5 pb-2 flex justify-between">
+                            <span>Artículos Vendidos</span>
+                            <span id="modal-total-usd" class="text-[#FFC300]">$0.00</span>
+                        </h4>
+                        
+                        <div id="modal-items-list" class="space-y-3 flex-1 overflow-y-auto custom-scroll pr-2">
+                            <!-- JS Inyecta artículos aquí -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- MODAL DE PERFIL B2B (Global - Copiado exacto de inventory) -->
+    <!-- ======================================================= -->
+    <div id="profile-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-lg rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500">
+            <div class="p-8 pb-0 text-right">
+                <button onclick="if(typeof closeProfileModal === 'function') closeProfileModal()" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-8 pt-0 flex flex-col items-center">
+                <div class="relative group cursor-pointer mb-6" onclick="document.getElementById('upload-logo-input').click()">
+                    <div id="modal-profile-logo" class="w-28 h-28 rounded-full bg-[#12121a] border-2 border-dashed border-white/20 flex items-center justify-center text-4xl font-black text-gray-600 overflow-hidden group-hover:border-[#FFC300] transition-colors shadow-xl">P</div>
+                    <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </div>
+                    <input type="file" id="upload-logo-input" class="hidden" accept="image/*" onchange="if(typeof uploadNewLogo === 'function') uploadNewLogo(this)">
+                </div>
+                <h2 class="text-2xl font-[900] tracking-tighter uppercase italic text-white mb-8">Datos <span class="text-[#FFC300]">Corporativos</span></h2>
+                <div class="w-full space-y-4">
+                    <div>
+                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Razón Social / Tienda</label>
+                        <input type="text" id="prof-name" class="w-full bg-[#030305] border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none" readonly>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Documento (RIF/CI)</label>
+                            <input type="text" id="prof-doc" class="w-full bg-[#030305] border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Teléfono</label>
+                            <input type="text" id="prof-phone" class="w-full bg-[#030305] border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none" readonly>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Correo de Acceso Master</label>
+                        <input type="text" id="prof-email" class="w-full bg-[#030305] border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-emerald-400 focus:outline-none" readonly>
+                    </div>
+                </div>
+                <p class="text-[9px] text-gray-600 font-bold mt-8 mb-4 text-center">Para modificar datos fiscales o el correo máster de acceso, debes emitir un ticket al departamento de Soporte de Gymenez.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- MOTOR JAVASCRIPT MODULAR B2B -->
+    <!-- ======================================================= -->
+    <script src="/static/js/store/partner_session.js"></script>
+    <script src="/static/js/store/partner_ui.js"></script>
+    <script src="/static/js/store/partner_profile.js"></script>
+    <!-- NUESTRO NUEVO MOTOR JS PARA LAS ÓRDENES -->
+    <script src="/static/js/store/partner_orders.js?v=1.0"></script>
+
+</body>
+</html>
