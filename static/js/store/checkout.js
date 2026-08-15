@@ -634,22 +634,33 @@ async function executeVaultEntry() {
     btn.disabled = true;
     btn.innerHTML = '<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Reservando Inventario...</span>';
 
-    // 🧠 PAYLOAD PERFECTO PARA EL BACKEND (Maneja el Real ID y el Peso)
+    // 🧠 PAYLOAD PERFECTO PARA EL BACKEND (Ahora incluye las banderas de logística)
     const cleanItems = cartItems.map(item => ({
-        id: item.id, // ID Único del carrito (Ej: prod123_Talla-M-Rojo)
-        real_id: item.real_id || item.id, // ID Real en Firestore
+        id: item.id, 
+        real_id: item.real_id || item.id, 
         name: item.name,
         price: item.price,
         qty: item.quantity || item.qty || 1,
         storeName: item.storeName || item.store_name || 'Gymenez Store',
-        weight_kg: item.weight_kg || 1 
+        weight_kg: item.weight_kg || 1,
+        // 👇 ESCUDO 4 y 5: Le decimos a Python lo que el cliente tiene en su caché
+        free_shipping: item.free_shipping === true || item.free_shipping === 'true',
+        free_shipping_threshold: parseFloat(item.free_shipping_threshold || 0)
     }));
+
+    // 👇 ESCUDO 5: Capturamos si el cliente activó el switch ANTES de entrar a la bóveda
+    const toggleFreeShipping = document.getElementById('toggle-free-shipping');
+    const wantsFreeShipping = toggleFreeShipping ? toggleFreeShipping.checked : (window.userWantsFreeShipping || false);
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/store/checkout/reserve`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ items: cleanItems })
+            // 👇 Enviamos la variable wants_free_shipping al backend
+            body: JSON.stringify({ 
+                items: cleanItems,
+                wants_free_shipping: wantsFreeShipping
+            })
         });
         const data = await res.json();
 
@@ -674,6 +685,7 @@ async function executeVaultEntry() {
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
+            // 👇 Si Python bloquea por precio o envíos cambiados, saldrá esta alerta roja
             alert(data.error || "Imposible reservar el inventario. Es probable que algún producto ya no tenga stock suficiente.");
             btn.disabled = false;
             btn.innerHTML = '<span>Proceder al Pago</span>';
