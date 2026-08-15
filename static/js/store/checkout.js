@@ -735,8 +735,14 @@ function startVaultTimer(expiresAt) {
 
 async function handleVaultExpiration() {
     localStorage.removeItem('gymen_vault_expires_at');
-    showGymenezAler("⏳ ¡Sesión expirada! Los productos han sido devueltos a la tienda pública.");
-    window.location.reload(); 
+    
+    // 1. Corregimos el nombre de la función (con la "t" al final)
+    showGymenezAlert("⏳ ¡Sesión expirada! Los productos han sido devueltos a la tienda pública. La página se actualizará en breve.");
+    
+    // 2. Metemos la recarga dentro de un temporizador de 4 segundos para que le dé tiempo de leer
+    setTimeout(() => {
+        window.location.reload(); 
+    }, 4000); 
 }
 
 document.getElementById('btn-cancel-vault').addEventListener('click', async () => {
@@ -754,6 +760,8 @@ document.getElementById('btn-cancel-vault').addEventListener('click', async () =
             headers: { 'Authorization': `Bearer ${token}` }
         });
     } catch (e) { console.warn("Fallo en release manual."); }
+    
+    // 3. Aquí el reload inmediato SÍ está bien, porque el cliente presionó cancelar a propósito
     window.location.reload(); 
 });
 
@@ -890,7 +898,7 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
             document.getElementById('btn-cancel-vault').disabled = false;
         }
     } catch (error) {
-        showGymenezAler("Pérdida de conexión segura. Intente nuevamente.");
+        showGymenezAlert("Pérdida de conexión segura. Intente nuevamente.");
         resetBtn(btn);
         startVaultTimer(new Date().getTime() + 60000); 
         document.getElementById('btn-cancel-vault').disabled = false;
