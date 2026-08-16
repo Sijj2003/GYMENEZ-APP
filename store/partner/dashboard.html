@@ -102,12 +102,12 @@
             
             <div class="flex items-center gap-5">
                 <div class="text-right hidden sm:block">
-                    <p id="store-name-display" class="text-sm font-bold text-white">Cargando...</p>
+                    <p id="store-name-display" class="text-sm font-bold text-white skeleton-text min-w-[120px]">Cargando...</p>
                     <p class="text-[9px] text-gray-500 uppercase tracking-widest font-bold mt-0.5">Partner Oficial</p>
                 </div>
                 <!-- Vuelve la función onclick para abrir el perfil -->
                 <button onclick="if(typeof openProfileModal === 'function') openProfileModal()" class="hidden md:flex w-12 h-12 rounded-full bg-white/5 border border-white/10 p-[2px] hover:scale-105 transition transform shadow-[0_0_15px_rgba(255,195,0,0.15)] cursor-pointer">
-                    <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-gray-500 font-black text-lg overflow-hidden">
+                    <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-gray-500 font-black text-lg overflow-hidden skeleton-text">
                         P
                     </div>
                 </button>
@@ -119,38 +119,69 @@
             <div class="max-w-7xl mx-auto pb-24 md:pb-10">
                 
                 <header class="mb-12">
-                    <h1 class="text-4xl md:text-5xl font-[900] tracking-tighter uppercase italic">Métricas en <span class="text-[#FFC300]">Vivo</span></h1>
-                    <p class="text-sm text-gray-400 mt-3 font-medium">Resumen financiero y operativo de tu tienda B2B.</p>
+                    <h1 class="text-4xl md:text-5xl font-[900] tracking-tighter uppercase italic">Métricas de <span class="text-[#FFC300]" id="current-month-title">Este Mes</span></h1>
+                    <p class="text-sm text-gray-400 mt-3 font-medium">Resumen financiero y operativo en tiempo real.</p>
                 </header>
                 
-                <!-- MÉTRICAS: Por ahora muestran $0.00 hasta que conectemos el Backend -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <div class="bg-[#12121a] border border-white/5 p-10 rounded-[2.5rem] relative overflow-hidden shadow-2xl transition-transform hover:-translate-y-1 duration-300">
-                        <div class="absolute top-0 right-0 w-40 h-40 bg-[#FFC300]/10 rounded-full blur-[60px] -mr-10 -mt-10 pointer-events-none"></div>
-                        <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4">Ventas Brutas Históricas</h3>
-                        <p id="metric-sales" class="text-5xl font-[900] text-white italic tracking-tighter drop-shadow-md">$0.00</p>
-                        <p class="text-[10px] text-gray-500 font-bold mt-6 uppercase tracking-widest flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Actualizado en tiempo real
-                        </p>
+                <!-- GRILLA DE 4 MÉTRICAS ACCIONABLES -->
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                    
+                    <!-- Tarjeta 1: Ventas del Mes -->
+                    <div onclick="window.location.href='finance.html'" class="bg-[#12121a] border border-white/5 p-8 rounded-[2.5rem] relative overflow-hidden shadow-2xl transition-all hover:-translate-y-2 hover:border-[#FFC300]/30 hover:shadow-[0_20px_40px_rgba(255,195,0,0.1)] duration-300 group cursor-pointer flex flex-col justify-between min-h-[220px]">
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-[#FFC300]/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-150 duration-700"></div>
+                        <div>
+                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 relative z-10">Facturado en el Mes</h3>
+                            <p id="metric-sales" class="text-4xl lg:text-5xl font-[900] text-white italic tracking-tighter drop-shadow-md relative z-10">$0.00</p>
+                        </div>
+                        <div class="mt-6 flex items-center justify-between border-t border-white/5 pt-4 relative z-10">
+                            <span class="text-[9px] text-[#FFC300] font-bold uppercase tracking-widest flex items-center gap-1 group-hover:gap-2 transition-all">
+                                Ver historial <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+                            </span>
+                        </div>
                     </div>
 
-                    <div class="bg-[#12121a] border border-white/5 p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-transform hover:-translate-y-1 duration-300">
-                        <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4">Ganancia Neta (Por Liquidar)</h3>
-                        <p id="metric-escrow" class="text-5xl font-[900] text-emerald-400 italic tracking-tighter drop-shadow-md">$0.00</p>
-                        <p class="text-[10px] text-gray-500 font-bold mt-6 uppercase tracking-widest flex items-center gap-2">
+                    <!-- Tarjeta 2: Escrow / Ganancia -->
+                    <div onclick="window.location.href='finance.html'" class="bg-[#12121a] border border-white/5 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-all hover:-translate-y-2 hover:border-emerald-500/30 hover:shadow-[0_20px_40px_rgba(16,185,129,0.1)] duration-300 group cursor-pointer flex flex-col justify-between min-h-[220px]">
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-150 duration-700"></div>
+                        <div>
+                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 relative z-10">Retenido (Escrow)</h3>
+                            <p id="metric-escrow" class="text-4xl lg:text-5xl font-[900] text-emerald-400 italic tracking-tighter drop-shadow-md relative z-10">$0.00</p>
+                        </div>
+                        <div class="mt-6 flex items-center justify-between border-t border-white/5 pt-4 relative z-10">
+                            <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Próxima liquidación</span>
                             <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            Retenido seguro en Escrow
-                        </p>
+                        </div>
                     </div>
 
-                    <div class="bg-[#12121a] border border-white/5 p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-transform hover:-translate-y-1 duration-300 md:col-span-2 lg:col-span-1">
-                        <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4">Órdenes Pendientes</h3>
-                        <p id="metric-orders" class="text-5xl font-[900] text-[#FFC300] italic tracking-tighter drop-shadow-md">0</p>
-                        <p class="text-[10px] text-gray-500 font-bold mt-6 uppercase tracking-widest flex items-center gap-2">
-                            <svg class="w-4 h-4 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
-                            Listas para despachar hoy
-                        </p>
+                    <!-- Tarjeta 3: Órdenes Pendientes -->
+                    <div onclick="window.location.href='orders.html'" class="bg-[#12121a] border border-white/5 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-all hover:-translate-y-2 hover:border-blue-500/30 hover:shadow-[0_20px_40px_rgba(59,130,246,0.1)] duration-300 group cursor-pointer flex flex-col justify-between min-h-[220px]">
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-150 duration-700"></div>
+                        <div>
+                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 relative z-10">Guías por Cargar</h3>
+                            <p id="metric-orders" class="text-4xl lg:text-5xl font-[900] text-blue-400 italic tracking-tighter drop-shadow-md relative z-10">0</p>
+                        </div>
+                        <div class="mt-6 flex items-center justify-between border-t border-white/5 pt-4 relative z-10">
+                            <span class="text-[9px] text-blue-400 font-bold uppercase tracking-widest flex items-center gap-1 group-hover:gap-2 transition-all">
+                                Ir a despachar <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+                            </span>
+                        </div>
                     </div>
+
+                    <!-- Tarjeta 4: Alerta de Inventario (NUEVA) -->
+                    <div onclick="window.location.href='inventory.html'" class="bg-[#12121a] border border-red-500/20 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-all hover:-translate-y-2 hover:border-red-500/50 hover:shadow-[0_20px_40px_rgba(239,68,68,0.15)] duration-300 group cursor-pointer flex flex-col justify-between min-h-[220px]">
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-red-500/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-150 duration-700"></div>
+                        <div>
+                            <h3 class="text-[10px] font-black uppercase tracking-widest text-red-400 mb-4 relative z-10 flex items-center gap-2">
+                                <svg class="w-3 h-3 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                Riesgo de Quiebre
+                            </h3>
+                            <p id="metric-stock" class="text-4xl lg:text-5xl font-[900] text-white italic tracking-tighter drop-shadow-md relative z-10">0</p>
+                        </div>
+                        <div class="mt-6 flex items-center justify-between border-t border-red-500/20 pt-4 relative z-10">
+                            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Piezas con ≤ 3 Unidades</span>
+                        </div>
+                    </div>
+
                 </div>
 
             </div>
@@ -214,7 +245,9 @@
     <!-- ======================================================= -->
     <script src="/static/js/store/partner_session.js"></script>
     <script src="/static/js/store/partner_profile.js"></script>
-    <script src="/static/js/store/partner_main.js?v=1"></script>
+    <!-- NUESTRO NUEVO MOTOR DE MÉTRICAS -->
+    <script src="/static/js/store/partner_dashboard.js?v=1.0"></script>
+    <script src="/static/js/store/partner_main.js?v=1.0"></script>
     
 </body>
 </html>
