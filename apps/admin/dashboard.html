@@ -12,7 +12,6 @@
         :root {
             --bg-base: #000000;
             --bg-surface: #0A0A0A;
-            --bg-elevated: #121212;
             --border-subtle: rgba(255, 255, 255, 0.06);
             --gold-gymenez: #FFC300;
         }
@@ -35,37 +34,31 @@
             border: 1px solid var(--border-subtle);
         }
 
-        /* Omnibar Input */
         .omnibar-input::placeholder { color: #52525B; font-weight: 500; }
-        
-        /* Animaciones Fluidas */
-        .fade-enter { animation: fadeEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes fadeEnter {
-            from { opacity: 0; transform: scale(0.98) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
 
-        /* Sidebar Nav Links */
-        .nav-item {
+        /* Estilos compatibles con tu dashboard.js original */
+        .os-nav-link {
             color: #A1A1AA;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
         }
-        .nav-item:hover {
+        .os-nav-link:hover {
             color: #FFFFFF;
             background: rgba(255, 255, 255, 0.05);
         }
-        .nav-item.active {
-            color: #000000;
-            background: var(--gold-gymenez);
-            box-shadow: 0 0 20px rgba(255, 195, 0, 0.15);
+        /* Cuando tu JS le asigne la clase active, tomará este estilo dorado */
+        .os-nav-link.active {
+            color: #000000 !important;
+            background-color: var(--gold-gymenez) !important;
+            box-shadow: 0 0 20px rgba(255, 195, 0, 0.15) !important;
+            border-color: transparent !important;
         }
-        .nav-item.active svg { color: #000000; }
+        .os-nav-link.active svg { color: #000000 !important; }
     </style>
 </head>
 <body class="h-screen w-screen flex selection:bg-[#FFC300] selection:text-black">
 
     <!-- SIDEBAR FLOTANTE (Estilo iPadOS / macOS) -->
-    <aside class="w-[72px] hover:w-64 group flex flex-col justify-between h-[96vh] my-auto ml-4 rounded-[28px] apple-glass transition-all duration-400 ease-in-out z-50 overflow-hidden shrink-0">
+    <aside class="w-[72px] hover:w-64 group flex flex-col justify-between h-[96vh] my-auto ml-4 rounded-[28px] apple-glass transition-all duration-300 ease-in-out z-50 overflow-hidden shrink-0">
         
         <div class="flex flex-col w-64">
             <!-- Logo -->
@@ -79,13 +72,14 @@
                 </div>
             </div>
 
-            <!-- Navegación -->
+            <!-- Navegación: Usando tus data-url y clases originales -->
             <nav class="px-3 space-y-2 mt-4">
+                
                 <div class="px-3 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <span class="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Base de Datos</span>
                 </div>
                 
-                <button onclick="loadApp('users')" class="nav-item active w-full flex items-center px-3 py-3 rounded-2xl group/btn relative">
+                <button data-url="/apps/admin/users.html" class="os-nav-link active w-full flex items-center px-3 py-3 rounded-2xl relative">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     <span class="ml-4 text-xs font-bold uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Directorio 360</span>
                 </button>
@@ -94,31 +88,36 @@
                     <span class="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Operaciones</span>
                 </div>
 
-                <button onclick="loadApp('pulse')" class="nav-item w-full flex items-center px-3 py-3 rounded-2xl group/btn relative">
+                <button data-url="/apps/admin/pulse.html" class="os-nav-link w-full flex items-center px-3 py-3 rounded-2xl relative">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z"></path></svg>
                     <span class="ml-4 text-xs font-bold uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Pulse Center</span>
                 </button>
                 
-                <button onclick="loadApp('store')" class="nav-item w-full flex items-center px-3 py-3 rounded-2xl group/btn relative">
+                <button data-url="/apps/admin/billing.html" class="os-nav-link w-full flex items-center px-3 py-3 rounded-2xl relative">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="ml-4 text-xs font-bold uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Tesorería</span>
+                </button>
+
+                <button data-url="/apps/admin/store_orders.html" class="os-nav-link w-full flex items-center px-3 py-3 rounded-2xl relative">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                    <span class="ml-4 text-xs font-bold uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Logística Tienda</span>
+                    <span class="ml-4 text-xs font-bold uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Auditoría Tienda</span>
                 </button>
 
                 <div class="px-3 mt-6 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <span class="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Contenido (Bóvedas)</span>
                 </div>
 
-                <button onclick="loadApp('routines')" class="nav-item w-full flex items-center px-3 py-3 rounded-2xl group/btn relative">
+                <button data-url="/apps/admin/routines.html" class="os-nav-link w-full flex items-center px-3 py-3 rounded-2xl relative">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                     <span class="ml-4 text-xs font-bold uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Laboratorio (Físico)</span>
                 </button>
 
-                <button onclick="loadApp('eats')" class="nav-item w-full flex items-center px-3 py-3 rounded-2xl group/btn relative">
+                <button data-url="/apps/admin/eats.html" class="os-nav-link w-full flex items-center px-3 py-3 rounded-2xl relative">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                     <span class="ml-4 text-xs font-bold uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Bóveda Eats</span>
                 </button>
 
-                <button onclick="loadApp('on')" class="nav-item w-full flex items-center px-3 py-3 rounded-2xl group/btn relative">
+                <button data-url="/apps/admin/on.html" class="os-nav-link w-full flex items-center px-3 py-3 rounded-2xl relative">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                     <span class="ml-4 text-xs font-bold uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Gymenez ON</span>
                 </button>
@@ -126,7 +125,8 @@
         </div>
 
         <div class="p-3 w-64">
-            <button class="nav-item w-full flex items-center px-3 py-3 rounded-2xl hover:bg-red-500/10 hover:text-red-500 group/logout">
+            <!-- Restablecido tu id="btn-logout" original -->
+            <button id="btn-logout" class="w-full flex items-center px-3 py-3 rounded-2xl hover:bg-red-500/10 hover:text-red-500 text-gray-500 transition-all">
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                 <span class="ml-4 text-xs font-bold uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Cerrar Sesión</span>
             </button>
@@ -136,14 +136,12 @@
     <!-- ÁREA CENTRAL DE TRABAJO -->
     <main class="flex-1 h-screen flex flex-col relative px-6 py-6 pb-0 overflow-hidden">
         
-        <!-- SPOTLIGHT / OMNIBAR (Centro absoluto superior) -->
+        <!-- SPOTLIGHT / OMNIBAR (Visual) -->
         <header class="w-full flex items-center justify-between z-40 shrink-0 h-16 mb-4">
-            
             <div class="flex-1 flex justify-center pointer-events-none">
-                <!-- La barra de búsqueda se ve y se siente como Spotlight de macOS -->
                 <div class="pointer-events-auto flex items-center w-full max-w-2xl apple-glass rounded-[20px] px-4 py-3 focus-within:ring-2 focus-within:ring-[#FFC300]/50 focus-within:bg-[#121212] transition-all shadow-2xl">
                     <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    <input type="text" id="omnibar-search" placeholder="Busca atletas, pagos, rutinas..." class="w-full bg-transparent border-none outline-none text-[15px] ml-3 text-white placeholder-gray-500 font-medium omnibar-input">
+                    <input type="text" placeholder="Busca atletas, pagos, rutinas..." class="w-full bg-transparent border-none outline-none text-[15px] ml-3 text-white placeholder-gray-500 font-medium omnibar-input">
                     <div class="hidden md:flex items-center gap-1 shrink-0 ml-2">
                         <kbd class="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-mono text-gray-400 font-bold">⌘</kbd>
                         <kbd class="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-mono text-gray-400 font-bold">K</kbd>
@@ -163,27 +161,23 @@
             </div>
         </header>
 
-        <!-- CONTENEDOR SPA: Aquí se inyectan las vistas -->
-        <div id="os-workspace" class="flex-1 w-full bg-[#0A0A0A] border border-white/5 rounded-t-[32px] relative overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+        <!-- CONTENEDOR ORIGINAL DE TU IFRAME -->
+        <div class="flex-1 w-full bg-[#0A0A0A] border border-white/5 rounded-t-[32px] relative overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
             
-            <!-- Loader nativo elegante -->
-            <div id="os-loader" class="absolute inset-0 z-40 bg-[#0A0A0A]/80 backdrop-blur-md flex flex-col items-center justify-center transition-opacity duration-300">
-                <div class="w-8 h-8 border-[3px] border-white/10 border-t-[#FFC300] rounded-full animate-spin"></div>
+            <!-- Tu Loader Original Restaurado -->
+            <div id="os-loader" class="absolute inset-0 z-40 bg-[#0A0A0A]/90 backdrop-blur-md flex flex-col items-center justify-center transition-opacity duration-500">
+                <div class="w-12 h-12 border-4 border-white/10 border-t-[#FFC300] rounded-full animate-spin shadow-[0_0_15px_rgba(255,195,0,0.5)]"></div>
+                <p class="mt-4 text-[10px] font-black tracking-[0.3em] uppercase text-gray-500 animate-pulse">Sincronizando</p>
             </div>
             
-            <!-- Contenedor del Módulo Inyectado -->
-            <div id="module-container" class="w-full h-full relative z-10 overflow-hidden fade-enter">
-                <!-- Se inyecta la app aquí -->
-            </div>
+            <!-- Tu Iframe Original Restaurado -->
+            <iframe id="os-frame" src="" class="w-full h-full border-0 opacity-0 transition-opacity duration-700 ease-in-out relative z-10"></iframe>
         </div>
     </main>
 
-    <!-- TOAST GLOBAL (Diseño Isla Dinámica) -->
-    <div id="global-toast" class="fixed top-8 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-[11px] font-bold tracking-wide shadow-2xl z-[100000] opacity-0 transition-all duration-400 pointer-events-none text-center apple-glass flex items-center gap-3 translate-y-[-20px]">
-        <span id="toast-icon"></span>
-        <span id="toast-msg">Mensaje del sistema</span>
-    </div>
-
+    <!-- TUS SCRIPTS ORIGINALES INTACTOS (NO BORRAR) -->
+    <script src="/static/js/admin/admin_middleware.js"></script>
     <script src="/static/js/admin/dashboard.js"></script>
+    <script type="module" src="/static/js/admin/radar_admin.js"></script>
 </body>
 </html>
