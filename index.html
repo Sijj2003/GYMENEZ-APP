@@ -68,6 +68,18 @@
         .reveal { opacity: 0; transform: translateY(30px); transition: all 1s cubic-bezier(0.16, 1, 0.3, 1); }
         .reveal.active { opacity: 1; transform: translateY(0); }
     </style>
+
+    <!-- Datos Estructurados para SEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Gymenez",
+  "alternateName": "Gymenez Performance",
+  "url": "https://www.gymenez.com"
+}
+</script>
+    
 </head>
 <body class="selection:bg-[#FFC300] selection:text-black">
 
@@ -75,15 +87,17 @@
     <nav class="fixed w-full z-[100] glass-nav py-4 md:py-5 px-4 md:px-12 flex justify-between items-center transition-all duration-300">
         
         <!-- LOGO GYMENEZ PERFORMANCE -->
-        <div class="flex flex-col items-center justify-center cursor-pointer group z-20" onclick="window.location.href='index.html'">
-            <div class="flex items-center leading-none">
-                <span class="text-[#FFC300] font-[900] text-2xl md:text-3xl italic tracking-tighter transition-transform group-hover:scale-105">GYM</span>
-                <span class="text-white font-[900] text-2xl md:text-3xl italic tracking-tighter">ENEZ</span>
-            </div>
-            <span class="text-white text-[8px] md:text-[9px] font-black uppercase tracking-[0.4em] underline decoration-1 underline-offset-[3px] decoration-white/50 -mt-1 ml-2 transition-all duration-300 group-hover:decoration-[#FFC300]">
-                PERFORMANCE
-            </span>
-        </div>
+<div class="flex flex-col items-center justify-center cursor-pointer group z-20" onclick="window.location.href='index.html'">
+    <!-- El aria-label le dicta a Google la palabra completa -->
+    <div class="flex items-center leading-none" aria-label="Gymenez">
+        <!-- aria-hidden="true" oculta esta separación a los motores de búsqueda -->
+        <span aria-hidden="true" class="text-[#FFC300] font-[900] text-2xl md:text-3xl italic tracking-tighter transition-transform group-hover:scale-105">GYM</span>
+        <span aria-hidden="true" class="text-white font-[900] text-2xl md:text-3xl italic tracking-tighter">ENEZ</span>
+    </div>
+    <span class="text-white text-[8px] md:text-[9px] font-black uppercase tracking-[0.4em] underline decoration-1 underline-offset-[3px] decoration-white/50 -mt-1 ml-2 transition-all duration-300 group-hover:decoration-[#FFC300]">
+        PERFORMANCE
+    </span>
+</div>
 
         <!-- MENÚ CENTRAL (Solo Escritorio) -->
         <div class="hidden md:flex gap-10 items-center">
