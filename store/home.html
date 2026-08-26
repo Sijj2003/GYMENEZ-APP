@@ -11,6 +11,17 @@
     <script>
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { gymenez: { dark: '#030305', accent: '#FFC300' } } } } }
     </script>
+
+    <!-- Datos Estructurados para SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Gymenez",
+      "alternateName": "Gymenez Store",
+      "url": "https://www.gymenez.com/store/home.html"
+    }
+    </script>
 </head>
 <body class="selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col relative pb-20 md:pb-0">
 
@@ -27,12 +38,11 @@
                     <a href="javascript:history.back()" class="p-2 -ml-2 text-gray-400 hover:text-white transition hidden md:block">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     </a>
-                    <a href="/store/home.html" class="flex items-center leading-none group">
-                        <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300] transition-transform group-hover:scale-105">Gym</span>
-                        <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white transition-transform group-hover:scale-105">enez</span>
-                        <span class="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-2 mt-1">Store</span>
-                    </a>
-                </div>
+                    <a href="/store/home.html" class="flex items-center leading-none group" aria-label="Gymenez Store">
+    <span aria-hidden="true" class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300] transition-transform group-hover:scale-105">Gym</span>
+    <span aria-hidden="true" class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white transition-transform group-hover:scale-105">enez</span>
+    <span aria-hidden="true" class="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-2 mt-1">Store</span>
+</a>
 
                 <!-- CENTRO: Buscador (Solo visible en Desktop) -->
                 <div class="hidden md:block flex-1 max-w-2xl mx-12 relative"> 
