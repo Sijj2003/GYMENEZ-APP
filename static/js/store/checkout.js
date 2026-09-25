@@ -819,7 +819,7 @@ function validateFinalButton() {
     }
 }
 
-// 🛡️ SUBMIT FINAL DE LA ORDEN AL BACKEND PYTHON
+// 🛡️ SUBMIT FINAL DE LA ORDEN AL BACKEND PYTHON Y FIREBASE
 document.getElementById('form-checkout-final').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -840,23 +840,35 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
         qty: item.quantity || item.qty || 1,
         storeName: item.storeName || item.store_name || 'Gymenez Store',
         weight_kg: item.weight_kg || 1,
-        // 🍎 PASAMOS ESTAS BANDERAS PARA QUE PYTHON SEPA QUÉ HACER
         free_shipping: item.free_shipping === true || item.free_shipping === 'true',
         is_on_demand: item.is_on_demand === true || item.is_on_demand === 'true',
-        // 🍎 LA PIEZA MAESTRA QUE FALTABA: Dejar pasar el umbral al Backend
         free_shipping_threshold: parseFloat(item.free_shipping_threshold || 0)
     }));
 
-    // 🍎 CAPTURAMOS LA DECISIÓN DEL CLIENTE (El Switch de Envío)
     const toggleFreeShipping = document.getElementById('toggle-free-shipping');
     const wantsFreeShipping = toggleFreeShipping ? toggleFreeShipping.checked : false;
+    
+    // Capturamos los nuevos campos del banco
+    const telefonoOrigen = document.getElementById('pay-telefono-origen') ? document.getElementById('pay-telefono-origen').value.trim() : '';
+    const bancoOrigen = document.getElementById('pay-banco-origen') ? document.getElementById('pay-banco-origen').value : '';
+
+    if (currentPaymentMethod === 'pago_movil' && (!telefonoOrigen || !bancoOrigen)) {
+        alert("Por favor indique el Banco y Teléfono desde el cual realizó el pago.");
+        resetBtn(btn);
+        startVaultTimer(new Date().getTime() + 60000); 
+        document.getElementById('btn-cancel-vault').disabled = false;
+        return;
+    }
 
     const payload = {
         items: cleanItems,
         totalAmount: cartTotal,
         paymentMethod: currentPaymentMethod,
         reference: reference,
-        wants_free_shipping: wantsFreeShipping // 🍎 Mandamos la decisión al backend
+        wants_free_shipping: wantsFreeShipping,
+        // Mandamos los datos al backend
+        telefono_origen: telefonoOrigen,
+        banco_origen: bancoOrigen
     };
 
     try {
@@ -873,16 +885,86 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
         const data = await response.json();
 
         if (response.ok && data.success) {
-            // COMPRA EXITOSA 
-            localStorage.removeItem('gymenez_cart');
-            localStorage.removeItem('gymen_vault_expires_at');
+            const orderId = data.order_id;
             
-            document.getElementById('vault-view').classList.add('hidden');
-            document.getElementById('summary-panel').classList.add('opacity-0'); 
-            document.getElementById('success-view').classList.remove('hidden');
-            document.getElementById('success-ref').innerText = reference;
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Verificando Banco...</span>`;
+
+            // IMPORTANTE: Aquí inicializamos la conexión a Firestore para escuchar el documento
+            // (Si usas una configuración distinta de Firebase, ajusta esta importación)
+            const { getFirestore, doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+            const db = getFirestore();
+            const orderRef = doc(db, 'store_orders', orderId);
+
+            let timeoutId;
+
+            // 🎯 ESCUCHAMOS A FIREBASE EN TIEMPO REAL
+            const unsubscribe = onSnapshot(orderRef, (docSnapshot) => {
+                if (docSnapshot.exists()) {
+                    const orderData = docSnapshot.data();
+                    
+                    if (orderData.status === 'approved') {
+                        // 🎉 BOT APROBÓ
+                        clearTimeout(timeoutId);
+                        unsubscribe();
+                        
+                        localStorage.removeItem('gymenez_cart');
+                        localStorage.removeItem('gymen_vault_expires_at');
+                        
+                        document.getElementById('vault-view').classList.add('hidden');
+                        document.getElementById('summary-panel').classList.add('opacity-0'); 
+                        document.getElementById('success-view').classList.remove('hidden');
+                        document.getElementById('success-ref').innerText = reference;
+                        
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } 
+                    else if (orderData.status === 'rejected') {
+                        // ❌ BOT RECHAZÓ
+                        clearTimeout(timeoutId);
+                        unsubscribe();
+                        
+                        alert(orderData.bot_verification_msg || "El banco rechazó la transacción. Verifica los datos e intenta de nuevo.");
+                        
+                        resetBtn(btn);
+                        startVaultTimer(new Date().getTime() + 60000); 
+                        document.getElementById('btn-cancel-vault').disabled = false;
+                    }
+                }
+            });
+
+            // ⏳ FALLBACK DE 30 SEGUNDOS (SI EL BANCO NO RESPONDE)
+            timeoutId = setTimeout(() => {
+                unsubscribe(); // Apagamos Firebase
+                
+                localStorage.removeItem('gymenez_cart');
+                localStorage.removeItem('gymen_vault_expires_at');
+                
+                document.getElementById('vault-view').classList.add('hidden');
+                document.getElementById('summary-panel').classList.add('opacity-0'); 
+                
+                const successView = document.getElementById('success-view');
+                successView.classList.remove('hidden');
+                
+                // Pantalla de advertencia amigable (Amarilla)
+                successView.className = "col-span-1 lg:col-span-12 text-center py-24 md:py-32 bg-white/5 rounded-[3rem] border border-[#FFC300]/30 shadow-2xl relative overflow-hidden backdrop-blur-xl mt-4 w-full";
+                successView.innerHTML = `
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div class="w-1/2 h-1/2 bg-[#FFC300]/10 blur-[80px] rounded-full"></div>
+                    </div>
+                    <div class="w-20 h-20 mx-auto bg-[#FFC300]/10 border-2 border-[#FFC300] text-[#FFC300] rounded-full flex items-center justify-center mb-6 relative z-10">
+                        <svg class="w-10 h-10 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-[900] uppercase tracking-tight text-white mb-4 relative z-10">Verificación Demorada</h2>
+                    <p class="text-gray-400 text-sm max-w-md mx-auto mb-10 leading-relaxed font-medium relative z-10">
+                        Tu inventario está reservado bajo la ref: <strong class="text-white bg-white/10 px-2 py-1 rounded">${reference}</strong>. Los servidores bancarios tienen alta latencia.<br><br>
+                        El pago será validado manualmente en breve y te notificaremos.
+                    </p>
+                    <a href="/store/account.html" class="inline-block relative z-10 bg-[#FFC300] text-black px-10 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:scale-[1.02] transition-all shadow-[0_10px_30px_rgba(255,195,0,0.2)]">
+                        Ver Mis Órdenes
+                    </a>
+                `;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 30000);
+
         } else {
             alert(data.error || "Transacción rechazada por el servidor.");
             resetBtn(btn);
@@ -890,6 +972,7 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
             document.getElementById('btn-cancel-vault').disabled = false;
         }
     } catch (error) {
+        console.error(error);
         alert("Pérdida de conexión segura. Intente nuevamente.");
         resetBtn(btn);
         startVaultTimer(new Date().getTime() + 60000); 
