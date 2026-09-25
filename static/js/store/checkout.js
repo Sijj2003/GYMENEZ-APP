@@ -889,9 +889,9 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
             
             btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Verificando Banco...</span>`;
 
-            // 🎯 LÓGICA DE LONG POLLING (Sustituto 100% seguro de Firebase en el cliente)
+            // 🎯 LÓGICA DE POLLING CUIDADOSO (Para proteger el worker de PythonAnywhere)
             let intentos = 0;
-            const maxIntentos = 15; // 15 intentos x 2 segundos = 30 segundos de espera máxima
+            const maxIntentos = 3; // 3 intentos x 9 segundos = 27 segundos máximo (+9 iniciales = 36s)
 
             const verificarEstadoOrden = async () => {
                 try {
@@ -916,7 +916,7 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
                             document.getElementById('success-ref').innerText = reference;
                             
                             window.scrollTo({ top: 0, behavior: 'smooth' });
-                            return; // Terminamos el polling exitosamente
+                            return; // Terminamos la verificación
                         } 
                         else if (statusData.status === 'rejected') {
                             // ❌ BOT RECHAZÓ
@@ -925,16 +925,18 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
                             resetBtn(btn);
                             startVaultTimer(new Date().getTime() + 60000); 
                             document.getElementById('btn-cancel-vault').disabled = false;
-                            return; // Terminamos el polling por rechazo
+                            return; // Terminamos la verificación
                         }
                     }
 
-                    // Sigue en 'pending_verification'
+                    // Si el estado sigue siendo 'pending_verification', sumamos un intento
                     intentos++;
+                    
                     if (intentos < maxIntentos) {
-                        setTimeout(verificarEstadoOrden, 2000); // Volver a preguntar en 2 segundos
+                        // Esperamos 9 segundos antes de volver a preguntar
+                        setTimeout(verificarEstadoOrden, 9000); 
                     } else {
-                        // ⏳ FALLBACK DE TIEMPO AGOTADO (SI EL BANCO/BOT NO RESPONDE A TIEMPO)
+                        // ⏳ LÍMITE DE INTENTOS ALCANZADO: SE ACTIVA EL FALLBACK AMARILLO
                         localStorage.removeItem('gymenez_cart');
                         localStorage.removeItem('gymen_vault_expires_at');
                         
@@ -944,7 +946,6 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
                         const successView = document.getElementById('success-view');
                         successView.classList.remove('hidden');
                         
-                        // Pantalla de advertencia amigable (Amarilla)
                         successView.className = "col-span-1 lg:col-span-12 text-center py-24 md:py-32 bg-white/5 rounded-[3rem] border border-[#FFC300]/30 shadow-2xl relative overflow-hidden backdrop-blur-xl mt-4 w-full";
                         successView.innerHTML = `
                             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -967,14 +968,13 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
 
                 } catch (error) {
                     console.error("Error consultando estado:", error);
-                    // Si se cae la red por un segundo, no lo asustamos, lo mandamos a su cuenta para que revise.
                     alert("Se interrumpió la conexión al validar. Tu orden está a salvo, verifica su estado en tu cuenta.");
                     window.location.href = '/store/account.html';
                 }
             };
 
-            // Iniciar el ciclo de consultas
-            setTimeout(verificarEstadoOrden, 2000);
+            // Iniciar la primera consulta después de 9 segundos
+            setTimeout(verificarEstadoOrden, 9000);
 
         } else {
             alert(data.error || "Transacción rechazada por el servidor.");
