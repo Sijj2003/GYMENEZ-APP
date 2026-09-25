@@ -889,11 +889,16 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
             
             btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Verificando Banco...</span>`;
 
-            // IMPORTANTE: Aquí inicializamos la conexión a Firestore para escuchar el documento
-            // (Si usas una configuración distinta de Firebase, ajusta esta importación)
-            const { getFirestore, doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
-            const db = getFirestore();
-            const orderRef = doc(db, 'store_orders', orderId);
+            // Usamos la instancia global de Firebase que ya opera en Gymenez Store
+            // (Asumiendo que window.db o window.firebaseStore ya está disponible globalmente)
+            const db = window.db || firebase.firestore(); 
+            
+            // Si usas la versión modular moderna (v9+ global), la sintaxis estándar es:
+            const { doc, onSnapshot } = window.firebaseFirestore || {}; 
+            // O directamente con los métodos globales si tu app ya los tiene mapeados:
+            
+            // Forma segura universal para tu ecosistema actual:
+            const orderRef = window.firebase.firestore().collection('store_orders').doc(orderId);
 
             let timeoutId;
 
