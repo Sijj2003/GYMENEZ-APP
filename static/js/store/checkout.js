@@ -889,86 +889,97 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
             
             btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Verificando Banco...</span>`;
 
-            // Usamos la instancia global de Firebase que ya opera en Gymenez Store
-            // (Asumiendo que window.db o window.firebaseStore ya está disponible globalmente)
-            const db = window.db || firebase.firestore(); 
+            if (response.ok && data.success) {
+            const orderId = data.order_id;
             
-            // Si usas la versión modular moderna (v9+ global), la sintaxis estándar es:
-            const { doc, onSnapshot } = window.firebaseFirestore || {}; 
-            // O directamente con los métodos globales si tu app ya los tiene mapeados:
-            
-            // Forma segura universal para tu ecosistema actual:
-            const orderRef = window.firebase.firestore().collection('store_orders').doc(orderId);
+            btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Verificando Banco...</span>`;
 
-            let timeoutId;
+            // 🎯 LÓGICA DE LONG POLLING (Sustituto 100% seguro de Firebase en el cliente)
+            let intentos = 0;
+            const maxIntentos = 15; // 15 intentos x 2 segundos = 30 segundos de espera máxima
 
-            // 🎯 ESCUCHAMOS A FIREBASE EN TIEMPO REAL
-            const unsubscribe = onSnapshot(orderRef, (docSnapshot) => {
-                if (docSnapshot.exists()) {
-                    const orderData = docSnapshot.data();
-                    
-                    if (orderData.status === 'approved') {
-                        // 🎉 BOT APROBÓ
-                        clearTimeout(timeoutId);
-                        unsubscribe();
-                        
+            const verificarEstadoOrden = async () => {
+                try {
+                    const statusRes = await fetch(`${API_BASE_URL}/api/store/checkout/status/${orderId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (statusRes.ok) {
+                        const statusData = await statusRes.json();
+
+                        if (statusData.status === 'approved') {
+                            // 🎉 BOT APROBÓ
+                            localStorage.removeItem('gymenez_cart');
+                            localStorage.removeItem('gymen_vault_expires_at');
+                            
+                            document.getElementById('vault-view').classList.add('hidden');
+                            document.getElementById('summary-panel').classList.add('opacity-0'); 
+                            document.getElementById('success-view').classList.remove('hidden');
+                            document.getElementById('success-ref').innerText = reference;
+                            
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            return; // Terminamos el polling exitosamente
+                        } 
+                        else if (statusData.status === 'rejected') {
+                            // ❌ BOT RECHAZÓ
+                            alert(statusData.bot_verification_msg || "El banco rechazó la transacción. Verifica los datos e intenta de nuevo.");
+                            
+                            resetBtn(btn);
+                            startVaultTimer(new Date().getTime() + 60000); 
+                            document.getElementById('btn-cancel-vault').disabled = false;
+                            return; // Terminamos el polling por rechazo
+                        }
+                    }
+
+                    // Sigue en 'pending_verification'
+                    intentos++;
+                    if (intentos < maxIntentos) {
+                        setTimeout(verificarEstadoOrden, 2000); // Volver a preguntar en 2 segundos
+                    } else {
+                        // ⏳ FALLBACK DE TIEMPO AGOTADO (SI EL BANCO/BOT NO RESPONDE A TIEMPO)
                         localStorage.removeItem('gymenez_cart');
                         localStorage.removeItem('gymen_vault_expires_at');
                         
                         document.getElementById('vault-view').classList.add('hidden');
                         document.getElementById('summary-panel').classList.add('opacity-0'); 
-                        document.getElementById('success-view').classList.remove('hidden');
-                        document.getElementById('success-ref').innerText = reference;
                         
+                        const successView = document.getElementById('success-view');
+                        successView.classList.remove('hidden');
+                        
+                        // Pantalla de advertencia amigable (Amarilla)
+                        successView.className = "col-span-1 lg:col-span-12 text-center py-24 md:py-32 bg-white/5 rounded-[3rem] border border-[#FFC300]/30 shadow-2xl relative overflow-hidden backdrop-blur-xl mt-4 w-full";
+                        successView.innerHTML = `
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div class="w-1/2 h-1/2 bg-[#FFC300]/10 blur-[80px] rounded-full"></div>
+                            </div>
+                            <div class="w-20 h-20 mx-auto bg-[#FFC300]/10 border-2 border-[#FFC300] text-[#FFC300] rounded-full flex items-center justify-center mb-6 relative z-10">
+                                <svg class="w-10 h-10 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <h2 class="text-3xl md:text-4xl font-[900] uppercase tracking-tight text-white mb-4 relative z-10">Verificación Demorada</h2>
+                            <p class="text-gray-400 text-sm max-w-md mx-auto mb-10 leading-relaxed font-medium relative z-10">
+                                Tu inventario está reservado bajo la ref: <strong class="text-white bg-white/10 px-2 py-1 rounded">${reference}</strong>. Los servidores bancarios tienen alta latencia.<br><br>
+                                El pago será validado manualmente en breve y te notificaremos.
+                            </p>
+                            <a href="/store/account.html" class="inline-block relative z-10 bg-[#FFC300] text-black px-10 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:scale-[1.02] transition-all shadow-[0_10px_30px_rgba(255,195,0,0.2)]">
+                                Ver Mis Órdenes
+                            </a>
+                        `;
                         window.scrollTo({ top: 0, behavior: 'smooth' });
-                    } 
-                    else if (orderData.status === 'rejected') {
-                        // ❌ BOT RECHAZÓ
-                        clearTimeout(timeoutId);
-                        unsubscribe();
-                        
-                        alert(orderData.bot_verification_msg || "El banco rechazó la transacción. Verifica los datos e intenta de nuevo.");
-                        
-                        resetBtn(btn);
-                        startVaultTimer(new Date().getTime() + 60000); 
-                        document.getElementById('btn-cancel-vault').disabled = false;
                     }
-                }
-            });
 
-            // ⏳ FALLBACK DE 30 SEGUNDOS (SI EL BANCO NO RESPONDE)
-            timeoutId = setTimeout(() => {
-                unsubscribe(); // Apagamos Firebase
-                
-                localStorage.removeItem('gymenez_cart');
-                localStorage.removeItem('gymen_vault_expires_at');
-                
-                document.getElementById('vault-view').classList.add('hidden');
-                document.getElementById('summary-panel').classList.add('opacity-0'); 
-                
-                const successView = document.getElementById('success-view');
-                successView.classList.remove('hidden');
-                
-                // Pantalla de advertencia amigable (Amarilla)
-                successView.className = "col-span-1 lg:col-span-12 text-center py-24 md:py-32 bg-white/5 rounded-[3rem] border border-[#FFC300]/30 shadow-2xl relative overflow-hidden backdrop-blur-xl mt-4 w-full";
-                successView.innerHTML = `
-                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div class="w-1/2 h-1/2 bg-[#FFC300]/10 blur-[80px] rounded-full"></div>
-                    </div>
-                    <div class="w-20 h-20 mx-auto bg-[#FFC300]/10 border-2 border-[#FFC300] text-[#FFC300] rounded-full flex items-center justify-center mb-6 relative z-10">
-                        <svg class="w-10 h-10 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <h2 class="text-3xl md:text-4xl font-[900] uppercase tracking-tight text-white mb-4 relative z-10">Verificación Demorada</h2>
-                    <p class="text-gray-400 text-sm max-w-md mx-auto mb-10 leading-relaxed font-medium relative z-10">
-                        Tu inventario está reservado bajo la ref: <strong class="text-white bg-white/10 px-2 py-1 rounded">${reference}</strong>. Los servidores bancarios tienen alta latencia.<br><br>
-                        El pago será validado manualmente en breve y te notificaremos.
-                    </p>
-                    <a href="/store/account.html" class="inline-block relative z-10 bg-[#FFC300] text-black px-10 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:scale-[1.02] transition-all shadow-[0_10px_30px_rgba(255,195,0,0.2)]">
-                        Ver Mis Órdenes
-                    </a>
-                `;
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }, 30000);
+                } catch (error) {
+                    console.error("Error consultando estado:", error);
+                    // Si se cae la red por un segundo, no lo asustamos, lo mandamos a su cuenta para que revise.
+                    alert("Se interrumpió la conexión al validar. Tu orden está a salvo, verifica su estado en tu cuenta.");
+                    window.location.href = '/store/account.html';
+                }
+            };
+
+            // Iniciar el ciclo de consultas
+            setTimeout(verificarEstadoOrden, 2000);
 
         } else {
             alert(data.error || "Transacción rechazada por el servidor.");
