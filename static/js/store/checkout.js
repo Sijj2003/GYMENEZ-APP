@@ -889,11 +889,6 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
             
             btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Verificando Banco...</span>`;
 
-            if (response.ok && data.success) {
-            const orderId = data.order_id;
-            
-            btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Verificando Banco...</span>`;
-
             // 🎯 LÓGICA DE LONG POLLING (Sustituto 100% seguro de Firebase en el cliente)
             let intentos = 0;
             const maxIntentos = 15; // 15 intentos x 2 segundos = 30 segundos de espera máxima
@@ -988,7 +983,7 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
             document.getElementById('btn-cancel-vault').disabled = false;
         }
     } catch (error) {
-        console.error(error);
+        console.error("Error de red:", error);
         alert("Pérdida de conexión segura. Intente nuevamente.");
         resetBtn(btn);
         startVaultTimer(new Date().getTime() + 60000); 
