@@ -382,6 +382,36 @@
 
                         <!-- Input Final de Verificación -->
                         <form id="form-checkout-final">
+                            
+                            <!-- NUEVO: Datos de Origen del Pago -->
+                            <div id="payment-origin-data" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                                <div>
+                                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Banco Emisor</label>
+                                    <select id="pay-banco-origen" class="w-full bg-[#050508] border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-[#FFC300] transition appearance-none cursor-pointer">
+                                        <option value="">Seleccione...</option>
+                                        <option value="0102">0102 - Banco de Venezuela</option>
+                                        <option value="0134">0134 - Banesco</option>
+                                        <option value="0105">0105 - Mercantil</option>
+                                        <option value="0108">0108 - Provincial</option>
+                                        <option value="0156">0156 - 100% Banco</option>
+                                        <option value="0114">0114 - Bancaribe</option>
+                                        <option value="0115">0115 - Exterior</option>
+                                        <option value="0128">0128 - Caroní</option>
+                                        <option value="0138">0138 - Plaza</option>
+                                        <option value="0137">0137 - Sofitasa</option>
+                                        <option value="0163">0163 - Tesoro</option>
+                                        <option value="0172">0172 - Bancamiga</option>
+                                        <option value="0171">0171 - Activo</option>
+                                        <option value="0175">0175 - Bicentenario</option>
+                                        <option value="0191">0191 - BNC</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Teléfono Emisor</label>
+                                    <input type="text" id="pay-telefono-origen" maxlength="11" placeholder="Ej: 04141234567" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-[#050508] border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-[#FFC300] transition">
+                                </div>
+                            </div>
+
                             <div class="mb-8">
                                 <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 ml-1 text-center md:text-left">N° de Referencia Bancaria</label>
                                 <input type="text" id="pay-reference" required class="w-full bg-[#050508] border border-white/10 hover:border-[#FFC300]/50 rounded-xl px-6 py-4 text-lg text-white focus:outline-none focus:border-[#FFC300] transition placeholder-gray-700 text-center tracking-[0.2em] font-bold shadow-inner" placeholder="Escriba los últimos dígitos...">
