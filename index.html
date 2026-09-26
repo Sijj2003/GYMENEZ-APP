@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gymenez Performance | Ecosistema de Rendimiento</title>
+    <meta name="description" content="Gymenez Performance es tu ecosistema de rendimiento. Entrenamiento, nutrición y educación sincronizados con tu biología.">
     
     <link rel="icon" type="image/svg+xml" href="static/img/logos/mini_logo.svg">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -88,12 +89,16 @@
         
         <!-- LOGO GYMENEZ PERFORMANCE -->
 <div class="flex flex-col items-center justify-center cursor-pointer group z-20" onclick="window.location.href='index.html'">
-    <!-- El aria-label le dicta a Google la palabra completa -->
-    <div class="flex items-center leading-none" aria-label="Gymenez">
-        <!-- aria-hidden="true" oculta esta separación a los motores de búsqueda -->
-        <span aria-hidden="true" class="text-[#FFC300] font-[900] text-2xl md:text-3xl italic tracking-tighter transition-transform group-hover:scale-105">GYM</span>
-        <span aria-hidden="true" class="text-white font-[900] text-2xl md:text-3xl italic tracking-tighter">ENEZ</span>
+    
+    <!-- Texto único y unido para Google (prioridad máxima SEO) -->
+    <span class="sr-only">Gymenez</span>
+
+    <!-- Estructura visual para el usuario (oculta semánticamente) -->
+    <div class="flex items-center leading-none" aria-hidden="true">
+        <span class="text-[#FFC300] font-[900] text-2xl md:text-3xl italic tracking-tighter transition-transform group-hover:scale-105">GYM</span>
+        <span class="text-white font-[900] text-2xl md:text-3xl italic tracking-tighter">ENEZ</span>
     </div>
+    
     <span class="text-white text-[8px] md:text-[9px] font-black uppercase tracking-[0.4em] underline decoration-1 underline-offset-[3px] decoration-white/50 -mt-1 ml-2 transition-all duration-300 group-hover:decoration-[#FFC300]">
         PERFORMANCE
     </span>
@@ -155,9 +160,10 @@
             <span class="inline-block px-5 py-2 rounded-full border border-white/10 bg-white/5 text-gray-300 font-black tracking-[0.4em] text-[9px] md:text-[10px] uppercase mb-6 backdrop-blur-md">
                 Ecosistema de Rendimiento
             </span>
-            <h1 class="title-clamp font-[900] italic tracking-tighter mb-6 uppercase text-white drop-shadow-2xl">
-                DOMINA TU <br> <span class="text-[#FFC300] text-glow-gold">POTENCIAL.</span>
-            </h1>
+           <h1 class="text-5xl md:text-7xl font-black text-white leading-tight">
+            Gymenez Performance: <br> 
+             <span class="text-[#FFC300] text-glow-gold">DOMINA TU POTENCIAL.</span>
+              </h1>
             <p class="text-base md:text-xl text-gray-300 max-w-2xl mx-auto font-medium leading-relaxed mb-10 drop-shadow-lg">
                 No más rutinas al azar. Entrenamiento, nutrición y educación sincronizados con tu biología. Diseñado para quienes exigen resultados absolutos.
             </p>
