@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!storeSlug) {
         console.warn('No se especificó la tienda asociada. Redirigiendo al catálogo general.');
-        window.location.href = '/store/home.html';
+        window.location.href = '/store/catalog.html';
         return;
     }
 
@@ -40,7 +40,7 @@ async function loadPartnerStoreData(slug) {
     try {
         console.log(`[Gymenez Network] Solicitando tienda '${slug}' al backend...`);
         
-        // Petición real al backend de Flask por slug
+        // Petición real al backend de Flask por slug/id
         const response = await fetch(`https://sijj2003.pythonanywhere.com/api/store/vendor/${slug}`);
         const data = await response.json();
 
@@ -64,6 +64,8 @@ async function loadPartnerStoreData(slug) {
  * Renderiza el encabezado y datos generales de la tienda
  */
 function renderVendorProfile(vendor) {
+    if (!vendor) return;
+
     const titleEl = document.getElementById('vendor-title');
     const descEl = document.getElementById('vendor-description');
     const logoFallback = document.getElementById('vendor-logo-fallback');
@@ -75,15 +77,19 @@ function renderVendorProfile(vendor) {
     if (descEl) descEl.innerText = vendor.description || 'Socio comercial verificado dentro del ecosistema Gymenez Store.';
 
     if (vendor.logo_url) {
-        logoImg.src = vendor.logo_url;
-        logoImg.alt = storeName;
-        logoImg.classList.remove('hidden');
-        logoFallback.classList.add('hidden');
+        if (logoImg) {
+            logoImg.src = vendor.logo_url;
+            logoImg.alt = storeName;
+            logoImg.classList.remove('hidden');
+        }
+        if (logoFallback) logoFallback.classList.add('hidden');
     } else {
-        const initial = storeName.charAt(0).toUpperCase();
-        logoFallback.innerText = initial;
-        logoFallback.classList.remove('hidden');
-        logoImg.classList.add('hidden');
+        if (logoFallback) {
+            const initial = storeName.charAt(0).toUpperCase();
+            logoFallback.innerText = initial;
+            logoFallback.classList.remove('hidden');
+        }
+        if (logoImg) logoImg.classList.add('hidden');
     }
 
     // Retirar estilo skeleton
@@ -91,16 +97,14 @@ function renderVendorProfile(vendor) {
 }
 
 /**
- * Renderiza la grilla de productos de la tienda
+ * Renderiza la grilla de productos idéntica a catalog.js (Precios, Descuentos y Envíos Gratis)
  */
 function renderVendorProducts(products) {
-    const grid = document.getElementById('vendor-products-grid');
+    const grid = document.getElementById('vendor-products-grid') || document.getElementById('catalog-grid');
     const counter = document.getElementById('results-counter');
     const badge = document.getElementById('vendor-products-badge');
 
     if (!grid) return;
-
-    grid.innerHTML = '';
 
     if (!products || products.length === 0) {
         showEmptyState(true);
@@ -113,37 +117,67 @@ function renderVendorProducts(products) {
     if (badge) badge.innerText = `${products.length} Productos`;
     if (counter) counter.innerText = `${products.length} artículos disponibles`;
 
-    products.forEach(product => {
-        const priceFormatted = parseFloat(product.price || 0).toFixed(2);
-        const cardHTML = `
-            <div class="bg-[#12121a] border border-white/5 rounded-[2rem] p-4 flex flex-col justify-between hover:border-[#FFC300]/30 transition-all duration-300 group hover:-translate-y-1 shadow-lg relative overflow-hidden">
-                <div>
-                    <!-- Imagen del Producto -->
-                    <div class="w-full aspect-square rounded-[1.5rem] bg-[#030305] mb-4 overflow-hidden relative border border-white/5">
-                        <img src="${product.image_url || '/static/img/placeholder.png'}" alt="${product.name || 'Producto'}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                        <span class="absolute top-3 left-3 bg-[#030305]/80 backdrop-blur-md border border-white/10 text-[#FFC300] text-[9px] font-black uppercase px-2.5 py-1 rounded-full">
-                            ${product.category || 'General'}
-                        </span>
-                    </div>
+    // Renderizado eficiente con mapeo idéntico a catalog.js
+    grid.innerHTML = products.map(p => {
+        // Parseo seguro de Firestore (soporta price_usd o price)
+        const priceNum = parseFloat(p.price_usd || p.price) || 0;
+        const discount = parseInt(p.discount_percentage) || 0;
+        const hasDiscount = discount > 0;
+        const finalPrice = hasDiscount ? (priceNum * (1 - discount / 100)).toFixed(2) : priceNum.toFixed(2);
 
-                    <!-- Info -->
-                    <h3 class="text-sm font-bold text-white line-clamp-2 mb-1 group-hover:text-[#FFC300] transition-colors">${product.name}</h3>
-                    <p class="text-[10px] text-gray-500 font-medium mb-3 line-clamp-1">${product.short_description || product.description || ''}</p>
-                </div>
+        const storeName = p.store_name || 'Gymenez Partner';
+        const category = p.category || 'General';
 
-                <div class="pt-3 border-t border-white/5 flex items-center justify-between mt-2">
-                    <div>
-                        <span class="text-[9px] text-gray-500 block uppercase font-bold">Precio</span>
-                        <span class="text-lg font-[900] text-white italic tracking-tighter">$${priceFormatted}</span>
+        // Banderas booleanas (soporta String o Boolean)
+        const isOnDemand = (p.is_on_demand === true || p.is_on_demand === 'true' || p.is_on_demand === 'True');
+        const hasFreeShipping = (p.free_shipping === true || p.free_shipping === 'true' || p.free_shipping === 'True');
+
+        let etiquetasHtml = '';
+        if (hasFreeShipping) {
+            etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis</span>`;
+        }
+
+        return `
+        <a href="/store/product.html?id=${p.id}" class="group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all cursor-pointer relative">
+            
+            <!-- IMAGEN LIMPIA Y BADGE DE DESCUENTO -->
+            <div class="relative w-full aspect-square overflow-hidden bg-[#030305] border-b border-white/5 flex items-center justify-center">
+                <img src="${p.image_url || '/static/img/placeholder.png'}" class="w-full h-full object-contain filter drop-shadow-xl group-hover:scale-110 transition-transform duration-700" alt="${p.name}">
+                
+                ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${discount}%</span>` : ''}
+            </div>
+            
+            <!-- INFORMACIÓN Y PRECIOS -->
+            <div class="p-4 flex flex-col flex-grow relative">
+                
+                <!-- ETIQUETAS FLOTANTES SOBRE EL TÍTULO -->
+                ${etiquetasHtml ? `<div class="absolute -top-3 left-3 flex gap-1 z-20">${etiquetasHtml}</div>` : ''}
+
+                <!-- Título -->
+                <h3 class="text-sm md:text-base font-bold text-white mb-1 uppercase tracking-tight truncate ${etiquetasHtml ? 'mt-2' : ''}">${p.name}</h3>
+                
+                <!-- Categoría y Unidades -->
+                <p class="text-[10px] md:text-xs text-gray-400 mb-2 font-medium capitalize">
+                    ${category} • ${isOnDemand ? '<span class="text-purple-400 font-bold">Bajo Pedido</span>' : (p.stock > 0 ? p.stock + ' unidades' : '<span class="text-red-500 font-bold">Agotado</span>')}
+                </p>
+                
+                <!-- Nombre de la Tienda -->
+                <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${storeName}</span>
+                
+                <!-- Precio y Botón -->
+                <div class="flex items-center justify-between mt-4 border-t border-white/5 pt-3">
+                    ${hasDiscount 
+                        ? `<div class="flex flex-col"><span class="text-xs text-gray-500 line-through leading-none">$${priceNum.toFixed(2)}</span><span class="text-white font-black text-sm md:text-base leading-none mt-1">$${finalPrice}</span></div>` 
+                        : `<span class="text-sm md:text-base font-black text-white">$${finalPrice}</span>`
+                    }
+                    <div class="bg-white/10 p-2 rounded-full text-white group-hover:bg-[#FFC300] group-hover:text-black transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                     </div>
-                    <button onclick="addToCart('${product.id}')" class="w-10 h-10 rounded-full bg-[#FFC300] text-black flex items-center justify-center hover:bg-yellow-400 transition shadow-[0_0_15px_rgba(255,195,0,0.2)]">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    </button>
                 </div>
             </div>
+        </a>
         `;
-        grid.innerHTML += cardHTML;
-    });
+    }).join('');
 }
 
 /**
@@ -177,7 +211,7 @@ function setupStoreSearch(slug) {
  */
 function showEmptyState(show) {
     const emptyState = document.getElementById('vendor-empty-state');
-    const grid = document.getElementById('vendor-products-grid');
+    const grid = document.getElementById('vendor-products-grid') || document.getElementById('catalog-grid');
 
     if (emptyState) emptyState.classList.toggle('hidden', !show);
     if (grid && show) grid.innerHTML = '';
