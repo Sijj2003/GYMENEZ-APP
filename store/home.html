@@ -113,59 +113,56 @@
 <!-- ======================================================= -->
 <main class="pt-20 md:pt-28 flex-grow w-full">
     
-    <!-- HERO BANNER PROMOCIONAL VENDORS (Responsivo) -->
-    <div class="w-full px-4 md:px-8 mb-12 md:mb-20">
-        <!-- Contenedor principal con padding adaptativo -->
-        <div class="relative rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-gradient-to-br from-[#0a0a0f] to-[#030305] border border-white/5 py-16 px-4 sm:px-8 md:p-20 shadow-2xl min-h-[400px] md:min-h-[450px] flex items-center justify-center">
+    <!-- HERO BANNER PROMOCIONAL VENDORS (6 Slides Responsivos) -->
+<div class="w-full px-4 md:px-8 mb-12 md:mb-20">
+    <div class="relative rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-gradient-to-br from-[#0a0a0f] to-[#030305] border border-white/5 py-16 px-4 sm:px-8 md:p-20 shadow-2xl min-h-[420px] md:min-h-[460px] flex items-center justify-center">
+        
+        <!-- Ambient Glow -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-[#FFC300]/5 rounded-full blur-[80px] md:blur-[150px] pointer-events-none"></div>
+
+        <!-- Contenedor Grid Apilado -->
+        <div class="grid grid-cols-1 grid-rows-1 items-center justify-items-center relative z-10 w-full max-w-full" id="vendor-carousel">
             
-            <!-- Ambient Glow -->
-            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-[#FFC300]/5 rounded-full blur-[80px] md:blur-[150px] pointer-events-none"></div>
-
-            <!-- Contenedor Grid Apilado (Restringido al 100% del ancho) -->
-            <div class="grid grid-cols-1 grid-rows-1 items-center justify-items-center relative z-10 w-full max-w-full" id="vendor-carousel">
-                
-                <!-- SLIDE 1: Rentabilidad y Alianza -->
-                <div class="carousel-slide col-start-1 row-start-1 flex flex-col items-center justify-center text-center transition-all duration-1000 ease-in-out opacity-100 z-10 w-full">
-                    <div class="w-full max-w-2xl px-2">
-                        <span class="inline-block px-3 py-1 md:px-4 md:py-1.5 rounded-full border border-[#FFC300]/30 bg-[#FFC300]/10 text-[#FFC300] font-black tracking-widest text-[8px] md:text-[9px] uppercase mb-4 md:mb-8">Únete a la Plataforma</span>
-                        <h1 class="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-[900] tracking-tighter mb-4 md:mb-6 uppercase italic leading-tight md:leading-none">Vende más, <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">Gasta menos.</span></h1>
-                        <p class="text-gray-400 text-xs sm:text-sm md:text-lg mb-8 md:mb-10 font-medium leading-relaxed">
-                            Exhibe y distribuye tus productos de forma rentable. Olvídate de los altos costos operativos de un local físico e impulsa tus ventas al siguiente nivel.
-                        </p>
-                        <a href="https://wa.me/584227070888?text=Hola%20Sebasti%C3%A1n,%20me%20interesa%20agendar%20una%20reuni%C3%B3n%20para%20ser%20tienda%20aliada%20en%20Gymenez%20Store." target="_blank" class="inline-block bg-[#FFC300] text-black px-6 py-3 md:px-10 md:py-5 rounded-full font-[900] uppercase tracking-widest text-[10px] md:text-xs hover:bg-yellow-400 hover:scale-105 transition-all duration-300 shadow-[0_0_30px_rgba(255,195,0,0.3)] whitespace-nowrap">
-                            Agendar Reunión
-                        </a>
-                    </div>
+            <!-- SLIDE 1: Rentabilidad y Alianza -->
+            <div class="carousel-slide col-start-1 row-start-1 flex flex-col items-center justify-center text-center transition-all duration-1000 ease-in-out opacity-100 z-10 w-full">
+                <div class="w-full max-w-2xl px-2">
+                    <span class="inline-block px-3 py-1 md:px-4 md:py-1.5 rounded-full border border-[#FFC300]/30 bg-[#FFC300]/10 text-[#FFC300] font-black tracking-widest text-[8px] md:text-[9px] uppercase mb-4 md:mb-8">Únete a la Plataforma</span>
+                    <h1 class="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-[900] tracking-tighter mb-4 md:mb-6 uppercase italic leading-tight md:leading-none">Vende más, <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">Gasta menos.</span></h1>
+                    <p class="text-gray-400 text-xs sm:text-sm md:text-lg mb-8 md:mb-10 font-medium leading-relaxed">
+                        Exhibe y distribuye tus productos de forma rentable. Olvídate de los altos costos operativos de un local físico e impulsa tus ventas al siguiente nivel.
+                    </p>
+                    <a href="https://wa.me/584227070888?text=Hola%20Sebasti%C3%A1n,%20me%20interesa%20agendar%20una%20reuni%C3%B3n%20para%20ser%20tienda%20aliada%20en%20Gymenez%20Store." target="_blank" class="inline-block bg-[#FFC300] text-black px-6 py-3 md:px-10 md:py-5 rounded-full font-[900] uppercase tracking-widest text-[10px] md:text-xs hover:bg-yellow-400 hover:scale-105 transition-all duration-300 shadow-[0_0_30px_rgba(255,195,0,0.3)] whitespace-nowrap">
+                        Agendar Reunión
+                    </a>
                 </div>
+            </div>
 
-                <!-- SLIDE 2: Automatización y Pagos -->
-                <div class="carousel-slide col-start-1 row-start-1 flex flex-col items-center justify-center text-center transition-all duration-1000 ease-in-out opacity-0 pointer-events-none z-0 scale-95 w-full">
-                    <div class="w-full max-w-2xl px-2">
-                        <span class="inline-block px-3 py-1 md:px-4 md:py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-black tracking-widest text-[8px] md:text-[9px] uppercase mb-4 md:mb-8">Ventas 100% Automatizadas</span>
-                        <h1 class="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-[900] tracking-tighter mb-4 md:mb-6 uppercase italic leading-tight md:leading-none">Cero demoras, <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-700">Pagos Seguros.</span></h1>
-                        <p class="text-gray-400 text-xs sm:text-sm md:text-lg mb-8 md:mb-10 font-medium leading-relaxed">
-                            El cliente elige y paga; tú solo despachas. Aseguramos el dinero antes de que muevas un dedo. Se acabó el perder tiempo y clientes respondiendo mensajes.
-                        </p>
-                        <a href="https://www.gymenez.com/store/partner/login" class="inline-block bg-white text-black px-6 py-3 md:px-10 md:py-5 rounded-full font-[900] uppercase tracking-widest text-[10px] md:text-xs hover:bg-gray-200 hover:scale-105 transition-all duration-300 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap">
-                            Descubre el Ecosistema
-                        </a>
-                    </div>
+            <!-- SLIDE 2: Automatización y Pagos -->
+            <div class="carousel-slide col-start-1 row-start-1 flex flex-col items-center justify-center text-center transition-all duration-1000 ease-in-out opacity-0 pointer-events-none z-0 scale-95 w-full">
+                <div class="w-full max-w-2xl px-2">
+                    <span class="inline-block px-3 py-1 md:px-4 md:py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-black tracking-widest text-[8px] md:text-[9px] uppercase mb-4 md:mb-8">Ventas 100% Automatizadas</span>
+                    <h1 class="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-[900] tracking-tighter mb-4 md:mb-6 uppercase italic leading-tight md:leading-none">Cero demoras, <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-700">Pagos Seguros.</span></h1>
+                    <p class="text-gray-400 text-xs sm:text-sm md:text-lg mb-8 md:mb-10 font-medium leading-relaxed">
+                        El cliente elige y paga; tú solo despachas. Aseguramos el dinero antes de que muevas un dedo. Se acabó el perder tiempo respondiendo mensajes.
+                    </p>
+                    <a href="https://www.gymenez.com/store/partner/login" class="inline-block bg-white text-black px-6 py-3 md:px-10 md:py-5 rounded-full font-[900] uppercase tracking-widest text-[10px] md:text-xs hover:bg-gray-200 hover:scale-105 transition-all duration-300 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap">
+                        Descubre el Ecosistema
+                    </a>
                 </div>
+            </div>
 
-                <!-- SLIDE 3: Independencia y Seguridad -->
-                <div class="carousel-slide col-start-1 row-start-1 flex flex-col items-center justify-center text-center transition-all duration-1000 ease-in-out opacity-0 pointer-events-none z-0 scale-95 w-full">
-                    <div class="w-full max-w-2xl px-2">
-                        <span class="inline-block px-3 py-1 md:px-4 md:py-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-400 font-black tracking-widest text-[8px] md:text-[9px] uppercase mb-4 md:mb-8">Tu Tienda, Tus Reglas</span>
-                        <h1 class="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-[900] tracking-tighter mb-4 md:mb-6 uppercase italic leading-tight md:leading-none">Control <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-700">Absoluto.</span></h1>
-                        <p class="text-gray-400 text-xs sm:text-sm md:text-lg mb-8 md:mb-10 font-medium leading-relaxed">
-                            Gestiona tu tienda 100% independiente. Decide tus precios, stock y promociones en un ecosistema verificado y seguro.
-                        </p>
-                        <a href="https://www.gymenez.com/store/partner/login" class="inline-block bg-purple-500 text-white px-6 py-3 md:px-10 md:py-5 rounded-full font-[900] uppercase tracking-widest text-[10px] md:text-xs hover:bg-purple-400 hover:scale-105 transition-all duration-300 shadow-[0_0_30px_rgba(168,85,247,0.3)] whitespace-nowrap">
-                            Crear Tienda Aliada
-                        </a>
-                    </div>
+            <!-- SLIDE 3: Independencia y Control -->
+            <div class="carousel-slide col-start-1 row-start-1 flex flex-col items-center justify-center text-center transition-all duration-1000 ease-in-out opacity-0 pointer-events-none z-0 scale-95 w-full">
+                <div class="w-full max-w-2xl px-2">
+                    <span class="inline-block px-3 py-1 md:px-4 md:py-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-400 font-black tracking-widest text-[8px] md:text-[9px] uppercase mb-4 md:mb-8">Tu Tienda, Tus Reglas</span>
+                    <h1 class="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-[900] tracking-tighter mb-4 md:mb-6 uppercase italic leading-tight md:leading-none">Control <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-700">Absoluto.</span></h1>
+                    <p class="text-gray-400 text-xs sm:text-sm md:text-lg mb-8 md:mb-10 font-medium leading-relaxed">
+                        Gestiona tu tienda 100% independiente. Decide tus precios, inventario y promociones en un ecosistema verificado y seguro.
+                    </p>
+                    <a href="https://www.gymenez.com/store/partner/login" class="inline-block bg-purple-500 text-white px-6 py-3 md:px-10 md:py-5 rounded-full font-[900] uppercase tracking-widest text-[10px] md:text-xs hover:bg-purple-400 hover:scale-105 transition-all duration-300 shadow-[0_0_30px_rgba(168,85,247,0.3)] whitespace-nowrap">
+                        Crear Tienda Aliada
+                    </a>
                 </div>
-
             </div>
 
             <!-- SLIDE 4: Alcance Nacional y Logística -->
