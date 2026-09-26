@@ -301,11 +301,11 @@
     <script src="/static/js/store/search.js?v=1.0"></script>
 
     <script>
-    // Lógica del Carrusel Promocional (Aumentado a 9 segundos)
     let currentSlide = 0;
     const slides = document.querySelectorAll('.carousel-slide');
     const dots = document.querySelectorAll('.carousel-dot');
     const totalSlides = slides.length;
+    const carouselContainer = document.getElementById('vendor-carousel').parentElement;
     let slideInterval;
 
     function updateCarousel() {
@@ -334,17 +334,20 @@
     function goToSlide(index) {
         currentSlide = index;
         updateCarousel();
-        resetInterval();
+        startInterval();
     }
 
-    function resetInterval() {
+    function startInterval() {
         clearInterval(slideInterval);
-        // Cambiado de 6000 a 9000 milisegundos (9 segundos) para dar más tiempo de lectura
-        slideInterval = setInterval(nextSlide, 9000); 
+        slideInterval = setInterval(nextSlide, 9000);
     }
+
+    // Pausar rotación si el usuario coloca el mouse encima para leer
+    carouselContainer.addEventListener('mouseenter', () => clearInterval(slideInterval));
+    carouselContainer.addEventListener('mouseleave', () => startInterval());
 
     if (slides.length > 0) {
-        slideInterval = setInterval(nextSlide, 9000);
+        startInterval();
     }
 </script>
 </body>
