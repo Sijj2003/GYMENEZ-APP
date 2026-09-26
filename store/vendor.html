@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tienda Asociada | Gymenez Store</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/store/home.css">
+    
+    <script>
+        tailwind.config = { 
+            theme: { 
+                extend: { 
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { gymenez: { dark: '#030305', accent: '#FFC300' } }
+                } 
+            } 
+        }
+    </script>
+    <style>
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .skeleton-pulse {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+        @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
+</head>
+<body class="bg-[#030305] selection:bg-[#FFC300] selection:text-black text-white min-h-screen flex flex-col relative pb-20 md:pb-0 overflow-x-hidden">
+
+    <!-- Iluminación de Fondo (Brillo Ambiental) -->
+    <div class="fixed top-0 left-0 w-full h-full pointer-events-none z-0 flex justify-center items-start opacity-30">
+        <div class="w-[600px] h-[600px] bg-[#FFC300]/5 rounded-full blur-[120px] -translate-y-1/2"></div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- NAVBAR SUPERIOR -->
+    <!-- ======================================================= -->
+    <nav class="fixed top-0 w-full z-50 glass-nav bg-[#030305]/80 backdrop-blur-md border-b border-white/5 transition-all duration-300">
+        <div class="w-full px-4 md:px-8">
+            <div class="flex items-center justify-between h-16 md:h-20 relative w-full">
+                
+                <!-- IZQUIERDA: Volver y Logo General -->
+                <div class="flex items-center gap-3 z-10">
+                    <a href="javascript:history.back()" class="p-2 -ml-2 text-gray-400 hover:text-white transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </a>
+                    <a href="/store/home.html" class="flex items-center leading-none group">
+                        <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
+                        <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+                        <span class="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-2 mt-1 hidden sm:inline">Store</span>
+                    </a>
+                </div>
+
+                <!-- BUSCADOR INTERNO DE LA TIENDA (Desktop) -->
+                <div class="hidden md:block flex-1 max-w-xl mx-8 relative">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
+                        <input type="text" id="store-search-input" autocomplete="off" class="block w-full pl-11 pr-4 py-2.5 border border-white/10 rounded-2xl bg-white/5 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-[#FFC300]/50 text-xs transition" placeholder="Buscar productos en esta tienda...">
+                    </div>
+                </div>
+
+                <!-- DERECHA: Carrito y Perfil -->
+                <div class="flex items-center gap-3 z-10">
+                    <button onclick="window.location.href='/store/checkout.html'" class="relative p-2 text-gray-400 hover:text-[#FFC300] transition group">
+                        <svg class="w-6 h-6 transform group-hover:scale-110 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        <span id="cartCountDesktop" class="absolute top-0 right-0 bg-[#FFC300] text-black text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full shadow-[0_0_10px_rgba(255,195,0,0.5)]">0</span>
+                    </button>
+                    
+                    <a href="/store/account.html" class="hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:border-[#FFC300] text-gray-400 hover:text-[#FFC300] transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ======================================================= -->
+    <!-- HEADER HERO DE LA TIENDA ASOCIADA -->
+    <!-- ======================================================= -->
+    <header class="pt-24 md:pt-32 px-4 md:px-8 max-w-7xl mx-auto w-full relative z-10">
+        <div class="bg-[#12121a] border border-white/10 rounded-[2.5rem] p-6 md:p-10 relative overflow-hidden shadow-2xl backdrop-blur-xl">
+            <!-- Glow temático -->
+            <div class="absolute top-0 right-0 w-80 h-80 bg-[#FFC300]/5 rounded-full blur-[90px] pointer-events-none"></div>
+
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 relative z-10">
+                <!-- LOGO DE LA TIENDA -->
+                <div class="relative group">
+                    <div id="vendor-logo-container" class="w-28 h-28 md:w-36 md:h-36 rounded-full bg-[#030305] border-2 border-white/10 flex items-center justify-center text-3xl md:text-4xl font-black text-[#FFC300] overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.8)] skeleton-pulse">
+                        <span id="vendor-logo-fallback">...</span>
+                        <img id="vendor-logo-img" class="w-full h-full object-cover hidden" alt="Logo Tienda">
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 bg-emerald-500 text-black text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-[#030305] flex items-center gap-1 shadow-lg">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
+                        Oficial
+                    </div>
+                </div>
+
+                <!-- INFORMACIÓN DE LA TIENDA -->
+                <div class="text-center md:text-left flex-1">
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-2">
+                        <span class="text-[9px] font-black uppercase tracking-[0.2em] text-[#FFC300] bg-[#FFC300]/10 border border-[#FFC300]/20 px-3 py-1 rounded-full">Partner Verificado</span>
+                        <span id="vendor-products-badge" class="text-[9px] font-bold uppercase tracking-widest text-gray-400 bg-white/5 border border-white/10 px-3 py-1 rounded-full">0 Productos</span>
+                    </div>
+
+                    <h1 id="vendor-title" class="text-3xl md:text-5xl font-[900] tracking-tighter uppercase italic text-white mb-3">
+                        <span class="skeleton-pulse inline-block w-64 h-10 rounded-xl"></span>
+                    </h1>
+
+                    <p id="vendor-description" class="text-gray-400 text-xs md:text-sm font-medium max-w-2xl leading-relaxed mb-6">
+                        <span class="skeleton-pulse inline-block w-full h-4 rounded mb-2"></span>
+                        <span class="skeleton-pulse inline-block w-3/4 h-4 rounded"></span>
+                    </p>
+
+                    <!-- BUSCADOR MÓVIL (Solo visible en dispositivos pequeños) -->
+                    <div class="md:hidden w-full mt-4">
+                        <input type="text" id="store-search-input-mobile" class="w-full bg-[#030305] border border-white/10 rounded-xl px-4 py-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#FFC300]" placeholder="Buscar en el catálogo de esta tienda...">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ======================================================= -->
+    <!-- GRILLA Y CATÁLOGO DE PRODUCTOS -->
+    <!-- ======================================================= -->
+    <main class="py-10 md:py-16 px-4 md:px-8 max-w-7xl mx-auto flex-grow w-full relative z-10">
+        
+        <!-- Encabezado de Sección -->
+        <div class="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+            <h2 class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white flex items-center gap-3">
+                <span>Catálogo de Exclusivos</span>
+            </h2>
+            <span id="results-counter" class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Mostrando resultados</span>
+        </div>
+
+        <!-- GRILLA DE PRODUCTOS -->
+        <div id="vendor-products-grid" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <!-- Skeletons iniciales mientras se valida la caché / fetch -->
+            <div class="bg-[#12121a] border border-white/5 rounded-[2rem] p-4 flex flex-col justify-between min-h-[320px] skeleton-pulse"></div>
+            <div class="bg-[#12121a] border border-white/5 rounded-[2rem] p-4 flex flex-col justify-between min-h-[320px] skeleton-pulse"></div>
+            <div class="bg-[#12121a] border border-white/5 rounded-[2rem] p-4 flex flex-col justify-between min-h-[320px] skeleton-pulse"></div>
+            <div class="bg-[#12121a] border border-white/5 rounded-[2rem] p-4 flex flex-col justify-between min-h-[320px] skeleton-pulse"></div>
+        </div>
+
+        <!-- ESTADO VACÍO (Si la tienda no tiene productos registrados o no coincide la búsqueda) -->
+        <div id="vendor-empty-state" class="hidden text-center py-20 bg-[#12121a]/50 backdrop-blur-xl rounded-[3rem] border border-white/5 shadow-2xl mt-6">
+            <div class="flex justify-center mb-6 opacity-30">
+                <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+            </div>
+            <h3 class="text-lg md:text-xl font-bold text-white mb-2 tracking-tight">Sin productos disponibles</h3>
+            <p class="text-xs text-gray-400 max-w-sm mx-auto px-4 leading-relaxed">No se encontraron productos asociados a esta tienda o a los filtros aplicados.</p>
+        </div>
+    </main>
+
+    <!-- FOOTER STANDARD -->
+    <footer class="border-t border-white/5 pt-12 pb-24 md:pb-12 px-4 w-full bg-[#030305] mt-auto">
+        <div class="max-w-7xl mx-auto flex flex-col items-center justify-center gap-6">
+            <div class="text-center">
+                <span class="text-xl font-[900] tracking-tighter uppercase text-gray-500 block mb-1">Gymenez<span class="text-gray-600">Store</span></span>
+                <p class="text-[9px] uppercase tracking-widest text-gray-600 font-bold">© 2026 Ecosistema de Rendimiento</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- UTILIDADES CORE Y CONTROLADOR JS -->
+    <script src="/static/js/store/store_core.js"></script>
+    <script src="/static/js/store/partner_store.js?v=1.0"></script>
+</body>
+</html>
