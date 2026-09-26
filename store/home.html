@@ -349,7 +349,6 @@
     const slides = document.querySelectorAll('.carousel-slide');
     const dots = document.querySelectorAll('.carousel-dot');
     const totalSlides = slides.length;
-    const carouselWrapper = document.getElementById('vendor-carousel').parentElement;
     let slideInterval;
 
     function updateCarousel() {
@@ -378,20 +377,16 @@
     function goToSlide(index) {
         currentSlide = index;
         updateCarousel();
-        startInterval();
+        resetInterval();
     }
 
-    function startInterval() {
+    function resetInterval() {
         clearInterval(slideInterval);
-        slideInterval = setInterval(nextSlide, 9000);
+        slideInterval = setInterval(nextSlide, 9000); 
     }
-
-    // Pausar la rotación cuando el usuario pasa el cursor para leer detenidamente
-    carouselWrapper.addEventListener('mouseenter', () => clearInterval(slideInterval));
-    carouselWrapper.addEventListener('mouseleave', () => startInterval());
 
     if (slides.length > 0) {
-        startInterval();
+        slideInterval = setInterval(nextSlide, 9000);
     }
 </script>
 </body>
