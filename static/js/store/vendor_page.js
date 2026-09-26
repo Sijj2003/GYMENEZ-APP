@@ -181,7 +181,7 @@ function renderVendorProducts(products) {
 }
 
 /**
- * Filtro en tiempo real para buscar dentro del catálogo cargado
+ * Filtro flexible inteligente en tiempo real por palabras clave (Tokens)
  */
 function setupStoreSearch(slug) {
     const searchInputs = [
@@ -192,20 +192,38 @@ function setupStoreSearch(slug) {
     searchInputs.forEach(input => {
         if (!input) return;
         input.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase().trim();
+            const rawQuery = e.target.value.toLowerCase().trim();
             const cached = getValidCache(`gymen_vendor_cache_${slug.toLowerCase()}`);
 
-            if (cached && cached.products) {
-                const filtered = cached.products.filter(p => 
-                    (p.name && p.name.toLowerCase().includes(query)) || 
-                    (p.category && p.category.toLowerCase().includes(query))
-                );
-                renderVendorProducts(filtered);
+            if (!cached || !cached.products) return;
+
+            // Si el buscador está vacío, renderiza todo el catálogo
+            if (rawQuery.length === 0) {
+                renderVendorProducts(cached.products);
+                return;
             }
+
+            // Separar la búsqueda en palabras clave individuales (ignorando espacios múltiples)
+            const queryTokens = rawQuery.split(/\s+/).filter(token => token.length > 0);
+
+            const filtered = cached.products.filter(p => {
+                // Creamos un súper texto con todos los atributos del producto
+                const searchableText = `
+                    ${p.name || ''} 
+                    ${p.category || ''} 
+                    ${p.description || ''} 
+                    ${p.short_description || ''} 
+                    ${p.store_name || ''}
+                `.toLowerCase();
+
+                // El producto cumple si CADA palabra buscada existe en alguna parte del texto del producto
+                return queryTokens.every(token => searchableText.includes(token));
+            });
+
+            renderVendorProducts(filtered);
         });
     });
 }
-
 /**
  * Control del estado vacío
  */
