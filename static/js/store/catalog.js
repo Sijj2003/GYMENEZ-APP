@@ -9,34 +9,44 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 1. OBTENER Y RENDERIZAR PARTNERS
+// 1.  OBTENER Y RENDERIZAR PARTNERS (Con Caché de 5 min)
 // ==========================================
 async function loadPartners() {
     const grid = document.getElementById('partners-grid');
     if (!grid) return;
 
+    // 1. Revisar si existen datos guardados en caché local
+    const rawCache = sessionStorage.getItem('gymenez_partners');
+
+    if (rawCache) {
+        try {
+            const cachedData = JSON.parse(rawCache);
+            const now = new Date().getTime();
+            const CACHE_LIMIT = 5 * 60 * 1000; // 5 minutos
+
+            if (cachedData.partners && cachedData.timestamp && (now - cachedData.timestamp < CACHE_LIMIT)) {
+                renderPartnersList(cachedData.partners, grid);
+                return; // Usa la caché y no realiza la petición HTTP
+            }
+        } catch (e) {
+            console.warn("Caché de partners expirado o inválido, reconsultando...");
+        }
+    }
+
+    // 2. Si no hay caché o expiró, realiza la petición a PythonAnywhere
     try {
         const res = await fetch('https://sijj2003.pythonanywhere.com/api/store/partners');
         const data = await res.json();
 
         if (data.success && data.partners.length > 0) {
-            grid.innerHTML = data.partners.map(p => {
-                const initial = p.store_name.charAt(0).toUpperCase();
-                const logoHtml = p.logo_url 
-                    ? `<img src="${p.logo_url}" class="w-full h-full object-cover">`
-                    : `<span class="text-xl font-black text-[#FFC300]">${initial}</span>`;
+            // Guardar respuesta en la memoria del navegador
+            const cachePayload = {
+                partners: data.partners,
+                timestamp: new Date().getTime()
+            };
+            sessionStorage.setItem('gymenez_partners', JSON.stringify(cachePayload));
 
-                return `
-                <a href="/store/partner_page.html?id=${p.id}" class="flex flex-col items-center gap-2 group flex-shrink-0 cursor-pointer w-20">
-                    <div class="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-[#FFC300] to-orange-600 transition-transform duration-300 group-hover:scale-110 shadow-[0_0_15px_rgba(255,195,0,0.2)]">
-                        <div class="w-full h-full bg-[#030305] rounded-full overflow-hidden flex items-center justify-center border-2 border-[#030305]">
-                            ${logoHtml}
-                        </div>
-                    </div>
-                    <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest text-center truncate w-full group-hover:text-white transition">${p.store_name}</span>
-                </a>
-                `;
-            }).join('');
+            renderPartnersList(data.partners, grid);
         } else {
             grid.innerHTML = '<span class="text-gray-500 text-[10px] font-bold uppercase">Aún no hay partners visibles.</span>';
         }
@@ -44,6 +54,27 @@ async function loadPartners() {
         grid.innerHTML = '';
         console.error("Error cargando partners", error);
     }
+}
+
+// Función auxiliar de renderizado conectada a vendor.html
+function renderPartnersList(partners, grid) {
+    grid.innerHTML = partners.map(p => {
+        const initial = p.store_name.charAt(0).toUpperCase();
+        const logoHtml = p.logo_url 
+            ? `<img src="${p.logo_url}" class="w-full h-full object-cover">`
+            : `<span class="text-xl font-black text-[#FFC300]">${initial}</span>`;
+
+        return `
+        <a href="/store/vendor.html?id=${p.id}" class="flex flex-col items-center gap-2 group flex-shrink-0 cursor-pointer w-20">
+            <div class="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-[#FFC300] to-orange-600 transition-transform duration-300 group-hover:scale-110 shadow-[0_0_15px_rgba(255,195,0,0.2)]">
+                <div class="w-full h-full bg-[#030305] rounded-full overflow-hidden flex items-center justify-center border-2 border-[#030305]">
+                    ${logoHtml}
+                </div>
+            </div>
+            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest text-center truncate w-full group-hover:text-white transition">${p.store_name}</span>
+        </a>
+        `;
+    }).join('');
 }
 
 // ==========================================
