@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gymenez Store | Marketplace</title>
+    <meta name="description" content="Descubre Gymenez Store, el marketplace oficial de Gymenez para suplementos, indumentaria y accesorios deportivos.">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/static/css/store/home.css">
@@ -22,17 +23,29 @@
             <!-- Contenedor adaptativo: Centrado absoluto en móvil, Flex normal en PC -->
             <div class="flex items-center justify-between h-16 md:h-20 w-full relative">
                 
-                <!-- IZQUIERDA: Botón Atrás + Logo (Centrado en móvil, a la izquierda en PC) -->
-                <div class="flex items-center gap-4 absolute left-1/2 -translate-x-1/2 md:relative md:left-0 md:translate-x-0 z-10">
-                    <a href="javascript:history.back()" class="p-2 -ml-2 text-gray-400 hover:text-white transition hidden md:block">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    </a>
-                    <a href="/store/home.html" class="flex items-center leading-none group">
-                        <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300] transition-transform group-hover:scale-105">Gym</span>
-                        <span class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white transition-transform group-hover:scale-105">enez</span>
-                        <span class="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-2 mt-1">Store</span>
-                    </a>
-                </div>
+               <!-- IZQUIERDA: Botón Atrás + Logo (Centrado en móvil, a la izquierda en PC) -->
+<div class="flex items-center gap-4 absolute left-1/2 -translate-x-1/2 md:relative md:left-0 md:translate-x-0 z-10">
+    <a href="javascript:history.back()" class="p-2 -ml-2 text-gray-400 hover:text-white transition hidden md:block">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+    </a>
+    
+    <!-- NUEVO LOGO GYMENEZ STORE OPTIMIZADO -->
+    <a href="/store/home.html" class="flex flex-col items-center justify-center group z-20">
+        <!-- Texto para Google (SEO) -->
+        <span class="sr-only">Gymenez Store</span>
+
+        <!-- Estructura visual animada -->
+        <div class="flex items-center leading-none" aria-hidden="true">
+            <span class="text-[#FFC300] font-[900] text-xl md:text-2xl uppercase italic tracking-tighter transition-transform group-hover:scale-105">GYM</span>
+            <span class="text-white font-[900] text-xl md:text-2xl uppercase italic tracking-tighter">ENEZ</span>
+        </div>
+        
+        <!-- Subtítulo STORE -->
+        <span class="text-white text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em] underline decoration-1 underline-offset-[3px] decoration-white/50 -mt-1 ml-2 transition-all duration-300 group-hover:decoration-[#FFC300]">
+            STORE
+        </span>
+    </a>
+</div>
 
                 <!-- CENTRO: Buscador (Solo visible en Desktop) -->
                 <div class="hidden md:block flex-1 max-w-2xl mx-12 relative"> 
