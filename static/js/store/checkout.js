@@ -650,7 +650,7 @@ async function executeVaultEntry() {
 
     // 👇 ESCUDO 5: Capturamos si el cliente activó el switch ANTES de entrar a la bóveda
     const toggleFreeShipping = document.getElementById('toggle-free-shipping');
-    const wantsFreeShipping = toggleFreeShipping ? toggleFreeShipping.checked : (window.userWantsFreeShipping || false);
+    const wantsFreeShipping = toggleFreeShipping ? toggleFreeShipping.checked : false;
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/store/checkout/reserve`, {
