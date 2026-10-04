@@ -904,9 +904,22 @@ if (checkoutForm) {
         
         const btn = document.getElementById('btn-process-order');
         const refInput = document.getElementById('pay-reference');
-        const reference = refInput ? refInput.value.trim() : '';
+        
+        // IMPORTANTE: Se cambia 'const' por 'let' para poder reasignar la referencia si es tarjeta
+        let reference = refInput ? refInput.value.trim() : '';
         const token = localStorage.getItem(typeof TOKEN_KEY !== 'undefined' ? TOKEN_KEY : 'jwt_token') || localStorage.getItem('jwt_token');
         const btnCancelVault = document.getElementById('btn-cancel-vault');
+
+        // 1. Asignar referencia por defecto si el pago es por tarjeta
+        if (currentPaymentMethod === 'card' && !reference) {
+            reference = 'CARD_PAYMENT';
+        }
+
+        // 2. Validación defensiva de la referencia para Pago Móvil / Binance
+        if (currentPaymentMethod !== 'card' && reference.length < 4) {
+            alert("Por favor ingrese un número de referencia o TxID válido (mínimo 4 dígitos).");
+            return;
+        }
 
         if (btn) {
             btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Procesando...</span>`;
@@ -947,6 +960,11 @@ if (checkoutForm) {
             return;
         }
 
+        // 3. Capturar datos de envío (dirección y método)
+        const addressId = typeof selectedAddressId !== 'undefined' ? selectedAddressId : null;
+        const shippingMethod = typeof selectedShippingMethod !== 'undefined' ? selectedShippingMethod : null;
+
+        // 4. Armar el payload completo con los nuevos campos
         const payload = {
             items: cleanItems,
             totalAmount: typeof cartTotal !== 'undefined' ? cartTotal : 0,
@@ -954,7 +972,9 @@ if (checkoutForm) {
             reference: reference,
             wants_free_shipping: wantsFreeShipping,
             telefono_origen: telefonoOrigen,
-            banco_origen: bancoOrigen
+            banco_origen: bancoOrigen,
+            address_id: addressId,
+            shipping_method: shippingMethod
         };
 
         try {
@@ -1085,7 +1105,7 @@ if (checkoutForm) {
             if (btnCancelVault) btnCancelVault.disabled = false;
         }
     });
-} // <--- LLAVE AÑADIDA AQUÍ
+}
 
 // Helper unificado para restaurar estado del botón procesar
 function resetBtn(btn) {
