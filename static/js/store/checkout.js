@@ -896,13 +896,6 @@ if (payRefElem) {
     payRefElem.addEventListener('input', validateFinalButton);
 }
 
-// Helper para restaurar estado del botón procesar
-function resetBtn(btn) {
-    if (!btn) return;
-    btn.disabled = false;
-    updateProcessButtonText(btn, 'Procesar Compra');
-}
-
 // 🛡️ SUBMIT FINAL DE LA ORDEN AL BACKEND PYTHON Y FIREBASE
 const checkoutForm = document.getElementById('form-checkout-final');
 if (checkoutForm) {
@@ -1092,8 +1085,11 @@ if (checkoutForm) {
             if (btnCancelVault) btnCancelVault.disabled = false;
         }
     });
+} // <--- LLAVE AÑADIDA AQUÍ
 
+// Helper unificado para restaurar estado del botón procesar
 function resetBtn(btn) {
+    if (!btn) return;
     btn.disabled = false;
     btn.innerHTML = `
         <span>Procesar Compra</span>
