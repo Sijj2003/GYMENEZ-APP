@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pasarela Segura - Gymenez</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PayPal SDK con tu Client ID -->
+    <script src="https://www.paypal.com/sdk/js?client-id=BAAGwj-yoU7ECl0SSTMekNHkIwng-0EXdRgney_hL-VgcVWV5sCOLHg6G8V-DUFcySZeYrfcwscsEd9CVM&currency=USD&intent=capture"></script>
+</head>
+<body class="bg-black text-white min-h-screen flex items-center justify-center p-4 font-sans">
+
+    <div class="max-w-md w-full bg-neutral-900 border border-yellow-500/20 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6">
+        
+        <!-- Header -->
+        <div class="text-center space-y-2">
+            <div class="inline-flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 px-3 py-1 rounded-full text-yellow-400 text-xs font-bold uppercase tracking-widest">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                Bóveda de Pago Cifrada
+            </div>
+            <h1 class="text-2xl font-black uppercase text-white tracking-tight">Completar Pago</h1>
+            <p class="text-xs text-neutral-400">Orden ID: <span id="display-order-id" class="text-yellow-400 font-mono font-bold">Cargando...</span></p>
+        </div>
+
+        <!-- Resumen del Pedido -->
+        <div class="bg-neutral-800/50 p-4 rounded-2xl border border-white/5 space-y-2">
+            <div class="flex justify-between text-xs text-neutral-400">
+                <span>Concepto:</span>
+                <span class="text-white font-medium">Pedido Gymenez Store</span>
+            </div>
+            <div class="flex justify-between text-sm font-bold border-t border-white/5 pt-2">
+                <span class="text-white">Total a pagar:</span>
+                <span id="display-total" class="text-yellow-400 font-mono">$0.00 USD</span>
+            </div>
+        </div>
+
+        <!-- Mensajes de Estado -->
+        <div id="status-message" class="hidden text-xs p-3 rounded-xl font-semibold text-center"></div>
+
+        <!-- Contenedor Botón PayPal / Tarjeta -->
+        <div id="paypal-button-container" class="min-h-[150px]"></div>
+
+        <!-- Botón Cancelar -->
+        <div class="text-center pt-2">
+            <button onclick="window.location.href='/checkout.html'" class="text-xs text-neutral-500 hover:text-white transition-colors">
+                ← Cancelar y volver al Checkout
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const internalOrderId = urlParams.get('order_id');
+
+        if (!internalOrderId) {
+            alert('Orden no encontrada. Redirigiendo al checkout...');
+            window.location.href = '/checkout.html';
+        }
+
+        document.getElementById('display-order-id').innerText = internalOrderId;
+
+        // Cargar resumen de orden desde el Backend
+        async function loadOrderInfo() {
+            try {
+                const token = localStorage.getItem('gymen_auth_token');
+                const res = await fetch(`/api/checkout/order-summary?order_id=${internalOrderId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('display-total').innerText = `$${parseFloat(data.total_amount).toFixed(2)} USD`;
+                }
+            } catch (err) {
+                console.error("Error al cargar la orden:", err);
+            }
+        }
+        loadOrderInfo();
+
+        // Inicializar PayPal SDK
+        paypal.Buttons({
+            style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay' },
+
+            createOrder: async function() {
+                showMessage('Generando sesión de cobro...', 'info');
+                const token = localStorage.getItem('gymen_auth_token');
+
+                const res = await fetch('/api/checkout/paypal/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ order_id: internalOrderId })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Error al iniciar pago');
+                return data.paypal_order_id;
+            },
+
+            onApprove: async function(data) {
+                showMessage('Verificando y procesando tarjeta...', 'info');
+                const token = localStorage.getItem('gymen_auth_token');
+
+                const res = await fetch('/api/checkout/paypal/capture-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        paypal_order_id: data.orderID,
+                        internal_order_id: internalOrderId
+                    })
+                });
+
+                const result = await res.json();
+                if (res.ok && result.status === 'COMPLETED') {
+                    showMessage('¡Pago exitoso! Redirigiendo...', 'success');
+                    setTimeout(() => {
+                        window.location.href = `/checkout.html?status=success&order_id=${internalOrderId}`;
+                    }, 1500);
+                } else {
+                    showMessage(result.message || 'Error en la verificación del pago', 'error');
+                }
+            },
+
+            onCancel: function() {
+                showMessage('Has cancelado el proceso de pago.', 'warning');
+            },
+
+            onError: function(err) {
+                showMessage('Error al procesar la tarjeta. Revisa los datos ingresados.', 'error');
+            }
+        }).render('#paypal-button-container');
+
+        function showMessage(msg, type) {
+            const el = document.getElementById('status-message');
+            el.className = 'text-xs p-3 rounded-xl font-semibold text-center block ';
+            if (type === 'error') el.classList.add('bg-red-500/10', 'text-red-400', 'border', 'border-red-500/20');
+            else if (type === 'success') el.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border', 'border-emerald-500/20');
+            else if (type === 'warning') el.classList.add('bg-yellow-500/10', 'text-yellow-400', 'border', 'border-yellow-500/20');
+            else el.classList.add('bg-blue-500/10', 'text-blue-400', 'border', 'border-blue-500/20');
+            el.innerText = msg;
+        }
+    </script>
+</body>
+</html>
