@@ -761,8 +761,8 @@ document.getElementById('btn-cancel-vault').addEventListener('click', async () =
 // 6. DATOS DE PAGO Y ORDEN FINAL
 // ==========================================
 
-// Estado global de método de pago
-let currentPaymentMethod = 'pago_movil';
+// Asignamos el valor inicial sin volver a usar 'let' o 'const'
+currentPaymentMethod = currentPaymentMethod || 'pago_movil';
 
 function setupPaymentUI(methods) {
     const loadingElem = document.getElementById('loading-payment');
