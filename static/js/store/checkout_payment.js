@@ -1,67 +1,170 @@
-// ==========================================
-// 6. DATOS DE PAGO Y ORDEN FINAL
-// ==========================================
+// ====================================================================
+// 💳 MÓDULO 6: GESTIÓN DE PAGO Y ORDEN FINAL (checkout_payment_2.js)
+// ====================================================================
+
+// Almacenamiento local de métodos entregados por la API
+let availablePaymentMethods = {};
+let selectedTempMethod = 'pago_movil'; // Método seleccionado temporalmente en el modal
+
+/**
+ * 🛠️ Configura los datos dinámicos recibidos del Servidor (Tasa BCV y Cuentas Bancarias)
+ * @param {Object} methods - Objeto con datos de pago_movil y binance
+ */
 function setupPaymentUI(methods) {
-    document.getElementById('loading-payment').classList.add('hidden');
-    
+    document.getElementById('loading-payment')?.classList.add('hidden');
+    availablePaymentMethods = methods || {};
+
+    // Cargar datos bancarios si existen
     if (methods.pago_movil) {
-        document.getElementById('pm-banco').innerText = methods.pago_movil.banco;
-        document.getElementById('pm-tlf').innerText = methods.pago_movil.telefono;
-        document.getElementById('pm-doc').innerText = methods.pago_movil.documento;
-        document.getElementById('pm-nombre').innerText = methods.pago_movil.nombre;
+        if (document.getElementById('pm-banco')) document.getElementById('pm-banco').innerText = methods.pago_movil.banco;
+        if (document.getElementById('pm-tlf')) document.getElementById('pm-tlf').innerText = methods.pago_movil.telefono;
+        if (document.getElementById('pm-doc')) document.getElementById('pm-doc').innerText = methods.pago_movil.documento;
+        if (document.getElementById('pm-nombre')) document.getElementById('pm-nombre').innerText = methods.pago_movil.nombre;
     }
+    
+    // Cargar datos de Binance si existen
     if (methods.binance) {
-        document.getElementById('bin-id').innerText = methods.binance.pay_id;
-        document.getElementById('bin-email').innerText = methods.binance.email;
+        if (document.getElementById('bin-id')) document.getElementById('bin-id').innerText = methods.binance.pay_id;
+        if (document.getElementById('bin-email')) document.getElementById('bin-email').innerText = methods.binance.email;
     }
-    selectPayment('pago_movil');
+
+    // Inicializar listeners de entrada numéricos
+    setupReferenceInputSanitizer();
 }
 
-window.selectPayment = function(method) {
-    currentPaymentMethod = method;
-    
-    const btnPm = document.getElementById('btn-pm');
-    const btnBinance = document.getElementById('btn-binance');
+/**
+ * 🔢 Sanitizador estricto para la referencia de pago (SOLO NÚMEROS)
+ */
+function setupReferenceInputSanitizer() {
+    const refInput = document.getElementById('pay-reference');
+    if (!refInput) return;
+
+    // Bloquea letras, símbolos y espacios al escribir o pegar
+    refInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, ''); // Remueve cualquier carácter no dígito
+        validateFinalButton();
+    });
+}
+
+/**
+ * 🔲 Abre el Modal Centrado de Selección de Método de Pago
+ */
+window.openPaymentMethodModal = function() {
+    const modal = document.getElementById('payment-method-modal');
+    if (!modal) return;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        document.getElementById('payment-modal-card')?.classList.remove('scale-95', 'opacity-0');
+    }, 10);
+};
+
+/**
+ * ❌ Cierra el Modal de Selección de Método de Pago
+ */
+window.closePaymentMethodModal = function() {
+    const modal = document.getElementById('payment-method-modal');
+    const card = document.getElementById('payment-modal-card');
+    if (!modal || !card) return;
+
+    card.classList.add('scale-95', 'opacity-0');
+    modal.classList.add('opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+};
+
+/**
+ * 🎯 Marca visualmente la opción seleccionada dentro del Modal
+ * @param {string} method - 'pago_movil' | 'binance' | 'card'
+ */
+window.selectModalPaymentOption = function(method) {
+    if (method !== 'pago_movil') {
+        // Opción temporalmente deshabilitada
+        return;
+    }
+
+    selectedTempMethod = method;
+
+    // Actualización de bordes y estados táctiles en el modal
+    const optPm = document.getElementById('opt-pay-pm');
+    const optBinance = document.getElementById('opt-pay-binance');
+    const optCard = document.getElementById('opt-pay-card');
+
+    if (optPm) {
+        optPm.className = "w-full p-4 rounded-2xl border-2 border-[#FFC300] bg-[#FFC300]/10 text-white flex items-center justify-between transition cursor-pointer shadow-[0_0_15px_rgba(255,195,0,0.15)]";
+    }
+    if (optBinance) {
+        optBinance.className = "w-full p-4 rounded-2xl border border-white/10 bg-white/5 text-gray-500 flex items-center justify-between opacity-50 cursor-not-allowed";
+    }
+    if (optCard) {
+        optCard.className = "w-full p-4 rounded-2xl border border-white/10 bg-white/5 text-gray-500 flex items-center justify-between opacity-50 cursor-not-allowed";
+    }
+};
+
+/**
+ * ✅ Confirma la selección hecha en el Modal y despliega la UI de pago correspondiente
+ */
+window.confirmPaymentSelection = function() {
+    currentPaymentMethod = selectedTempMethod;
+    closePaymentMethodModal();
+
     const dataPm = document.getElementById('data-pago-movil');
     const dataBinance = document.getElementById('data-binance');
     const btnProcess = document.getElementById('btn-process-order');
+    const activeBadge = document.getElementById('active-payment-badge');
 
-    btnPm.className = "flex-1 py-4 px-4 rounded-2xl border-2 border-white/5 bg-[#12121a] text-gray-400 hover:text-white hover:border-white/20 font-black text-[10px] uppercase tracking-widest transition";
-    btnBinance.className = "flex-1 py-4 px-4 rounded-2xl border-2 border-white/5 bg-[#12121a] text-gray-400 hover:text-white hover:border-white/20 font-black text-[10px] uppercase tracking-widest transition";
-    dataPm.classList.add('hidden');
-    dataBinance.classList.add('hidden');
+    // Ocultar todos los paneles de datos
+    if (dataPm) dataPm.classList.add('hidden');
+    if (dataBinance) dataBinance.classList.add('hidden');
 
-    if (method === 'pago_movil') {
-        btnPm.className = "flex-1 py-4 px-4 rounded-2xl border-2 border-[#FFC300] bg-[#FFC300]/10 text-[#FFC300] font-black text-[10px] uppercase tracking-widest transition shadow-inner";
-        dataPm.classList.remove('hidden');
+    if (currentPaymentMethod === 'pago_movil') {
+        if (dataPm) dataPm.classList.remove('hidden');
         
-        if (isBcvValid && currentBcvRate > 0) {
-            if(btnProcess) btnProcess.querySelector('span').innerText = `Pagar Bs. ${formatMoney(cartTotal * currentBcvRate)}`;
-        } else {
-            if(btnProcess) btnProcess.querySelector('span').innerText = `Procesar Compra`;
+        if (activeBadge) {
+            activeBadge.innerText = "Método Activo: Pago Móvil (Bs)";
+            activeBadge.className = "text-[10px] font-black uppercase tracking-widest text-[#FFC300] bg-[#FFC300]/10 px-3 py-1.5 rounded-full border border-[#FFC300]/30 inline-block mb-4";
         }
-    } else {
-        btnBinance.className = "flex-1 py-4 px-4 rounded-2xl border-2 border-[#FCD535] bg-[#FCD535]/10 text-[#FCD535] font-black text-[10px] uppercase tracking-widest transition shadow-inner";
-        dataBinance.classList.remove('hidden');
-        if(btnProcess) btnProcess.querySelector('span').innerText = `Procesar Compra`;
+
+        // Actualización dinámica del texto del botón de compra según Tasa BCV
+        if (isBcvValid && currentBcvRate > 0) {
+            if (btnProcess) btnProcess.querySelector('span').innerText = `Pagar Bs. ${formatMoney(cartTotal * currentBcvRate)}`;
+        } else {
+            if (btnProcess) btnProcess.querySelector('span').innerText = `Procesar Compra`;
+        }
+    } else if (currentPaymentMethod === 'binance') {
+        if (dataBinance) dataBinance.classList.remove('hidden');
+        if (btnProcess) btnProcess.querySelector('span').innerText = `Procesar Compra (Binance)`;
     }
+
     validateFinalButton();
 };
 
-document.getElementById('pay-reference').addEventListener('input', validateFinalButton);
-
+/**
+ * 🔒 Valida si la referencia cumple la longitud mínima para habilitar el botón de compra
+ */
 function validateFinalButton() {
-    const ref = document.getElementById('pay-reference').value.trim();
+    const refInput = document.getElementById('pay-reference');
+    const ref = refInput ? refInput.value.trim() : '';
     const btn = document.getElementById('btn-process-order');
-    if (ref.length >= 4 && isShippingComplete) {
+    
+    if (!btn) return;
+
+    // Solo números, mínimo 4 dígitos y dirección registrada
+    if (/^\d{4,}$/.test(ref) && isShippingComplete) {
         btn.disabled = false;
     } else {
         btn.disabled = true;
     }
 }
 
-// 🛡️ SUBMIT FINAL DE LA ORDEN AL BACKEND PYTHON Y FIREBASE
-document.getElementById('form-checkout-final').addEventListener('submit', async (e) => {
+// ====================================================================
+// 🛡️ SUBMIT FINAL DE LA ORDEN Y POLLING DE VERIFICACIÓN (IDÉNTICO)
+// ====================================================================
+document.getElementById('form-checkout-final')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const btn = document.getElementById('btn-process-order');
@@ -89,7 +192,7 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
     const toggleFreeShipping = document.getElementById('toggle-free-shipping');
     const wantsFreeShipping = toggleFreeShipping ? toggleFreeShipping.checked : false;
     
-    // Capturamos los nuevos campos del banco
+    // Captura de datos de la cuenta emisora
     const telefonoOrigen = document.getElementById('pay-telefono-origen') ? document.getElementById('pay-telefono-origen').value.trim() : '';
     const bancoOrigen = document.getElementById('pay-banco-origen') ? document.getElementById('pay-banco-origen').value : '';
 
@@ -107,7 +210,6 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
         paymentMethod: currentPaymentMethod,
         reference: reference,
         wants_free_shipping: wantsFreeShipping,
-        // Mandamos los datos al backend
         telefono_origen: telefonoOrigen,
         banco_origen: bancoOrigen
     };
@@ -130,9 +232,9 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
             
             btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Verificando Banco...</span>`;
 
-            // 🎯 LÓGICA DE POLLING CUIDADOSO (Para proteger el worker de PythonAnywhere)
+            // 🎯 Polling cuidadoso para PythonAnywhere Worker
             let intentos = 0;
-            const maxIntentos = 3; // 3 intentos x 9 segundos = 27 segundos máximo (+9 iniciales = 36s)
+            const maxIntentos = 3; 
 
             const verificarEstadoOrden = async () => {
                 try {
@@ -147,7 +249,6 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
                         const statusData = await statusRes.json();
 
                         if (statusData.status === 'approved') {
-                            // 🎉 BOT APROBÓ
                             localStorage.removeItem('gymenez_cart');
                             localStorage.removeItem('gymen_vault_expires_at');
                             
@@ -157,27 +258,24 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
                             document.getElementById('success-ref').innerText = reference;
                             
                             window.scrollTo({ top: 0, behavior: 'smooth' });
-                            return; // Terminamos la verificación
+                            return; 
                         } 
                         else if (statusData.status === 'rejected') {
-                            // ❌ BOT RECHAZÓ
                             alert(statusData.bot_verification_msg || "El banco rechazó la transacción. Verifica los datos e intenta de nuevo.");
                             
                             resetBtn(btn);
                             startVaultTimer(new Date().getTime() + 60000); 
                             document.getElementById('btn-cancel-vault').disabled = false;
-                            return; // Terminamos la verificación
+                            return; 
                         }
                     }
 
-                    // Si el estado sigue siendo 'pending_verification', sumamos un intento
                     intentos++;
                     
                     if (intentos < maxIntentos) {
-                        // Esperamos 9 segundos antes de volver a preguntar
                         setTimeout(verificarEstadoOrden, 9000); 
                     } else {
-                        // ⏳ LÍMITE DE INTENTOS ALCANZADO: SE ACTIVA EL FALLBACK AMARILLO
+                        // Fallback de alta latencia
                         localStorage.removeItem('gymenez_cart');
                         localStorage.removeItem('gymen_vault_expires_at');
                         
@@ -214,7 +312,6 @@ document.getElementById('form-checkout-final').addEventListener('submit', async 
                 }
             };
 
-            // Iniciar la primera consulta después de 9 segundos
             setTimeout(verificarEstadoOrden, 9000);
 
         } else {
