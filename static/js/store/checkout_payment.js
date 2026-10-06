@@ -5,7 +5,6 @@
 // Almacenamiento local de métodos entregados por la API
 let availablePaymentMethods = {};
 let selectedTempMethod = 'pago_movil'; // Método seleccionado temporalmente en el modal
-let currentPaymentMethod = 'pago_movil'; // Método activo confirmado
 
 /**
  * 🛠️ Configura los datos dinámicos recibidos del Servidor (Tasa BCV y Cuentas Bancarias)
@@ -34,29 +33,17 @@ function setupPaymentUI(methods) {
 }
 
 /**
- * 🔢 Sanitizador estricto para la referencia de pago (SOLO NÚMEROS) y listeners de emisor
+ * 🔢 Sanitizador estricto para la referencia de pago (SOLO NÚMEROS)
  */
 function setupReferenceInputSanitizer() {
     const refInput = document.getElementById('pay-reference');
-    const bancoSelect = document.getElementById('pay-banco-origen');
-    const tlfInput = document.getElementById('pay-telefono-origen');
+    if (!refInput) return;
 
     // Bloquea letras, símbolos y espacios al escribir o pegar
-    if (refInput) {
-        refInput.addEventListener('input', (e) => {
-            e.target.value = e.target.value.replace(/\D/g, ''); // Remueve cualquier carácter no dígito
-            validateFinalButton();
-        });
-    }
-
-    // Escuchar cambios en Banco y Teléfono emisor para revalidar el botón en vivo
-    if (bancoSelect) {
-        bancoSelect.addEventListener('change', validateFinalButton);
-    }
-
-    if (tlfInput) {
-        tlfInput.addEventListener('input', validateFinalButton);
-    }
+    refInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, ''); // Remueve cualquier carácter no dígito
+        validateFinalButton();
+    });
 }
 
 /**
@@ -95,7 +82,7 @@ window.closePaymentMethodModal = function() {
  * @param {string} method - 'pago_movil' | 'binance' | 'card'
  */
 window.selectModalPaymentOption = function(method) {
-    if (method !== 'pago_movil' && method !== 'binance') {
+    if (method !== 'pago_movil') {
         // Opción temporalmente deshabilitada
         return;
     }
@@ -108,14 +95,10 @@ window.selectModalPaymentOption = function(method) {
     const optCard = document.getElementById('opt-pay-card');
 
     if (optPm) {
-        optPm.className = method === 'pago_movil'
-            ? "w-full p-4 rounded-2xl border-2 border-[#FFC300] bg-[#FFC300]/10 text-white flex items-center justify-between transition cursor-pointer shadow-[0_0_15px_rgba(255,195,0,0.15)]"
-            : "w-full p-4 rounded-2xl border border-white/10 bg-white/5 text-gray-300 flex items-center justify-between hover:border-white/20 transition cursor-pointer";
+        optPm.className = "w-full p-4 rounded-2xl border-2 border-[#FFC300] bg-[#FFC300]/10 text-white flex items-center justify-between transition cursor-pointer shadow-[0_0_15px_rgba(255,195,0,0.15)]";
     }
     if (optBinance) {
-        optBinance.className = method === 'binance'
-            ? "w-full p-4 rounded-2xl border-2 border-[#FFC300] bg-[#FFC300]/10 text-white flex items-center justify-between transition cursor-pointer shadow-[0_0_15px_rgba(255,195,0,0.15)]"
-            : "w-full p-4 rounded-2xl border border-white/10 bg-white/5 text-gray-300 flex items-center justify-between hover:border-white/20 transition cursor-pointer";
+        optBinance.className = "w-full p-4 rounded-2xl border border-white/10 bg-white/5 text-gray-500 flex items-center justify-between opacity-50 cursor-not-allowed";
     }
     if (optCard) {
         optCard.className = "w-full p-4 rounded-2xl border border-white/10 bg-white/5 text-gray-500 flex items-center justify-between opacity-50 cursor-not-allowed";
@@ -134,27 +117,12 @@ window.confirmPaymentSelection = function() {
     const btnProcess = document.getElementById('btn-process-order');
     const activeBadge = document.getElementById('active-payment-badge');
 
-    // Elementos de datos de origen (emisor) y etiquetas de referencia
-    const originContainer = document.getElementById('payment-origin-data');
-    const bancoOrigen = document.getElementById('pay-banco-origen');
-    const tlfOrigen = document.getElementById('pay-telefono-origen');
-    const refLabel = document.getElementById('lbl-reference');
-    const refInput = document.getElementById('pay-reference');
-
-    // Ocultar todos los paneles de datos receptor
+    // Ocultar todos los paneles de datos
     if (dataPm) dataPm.classList.add('hidden');
     if (dataBinance) dataBinance.classList.add('hidden');
 
     if (currentPaymentMethod === 'pago_movil') {
         if (dataPm) dataPm.classList.remove('hidden');
-
-        // Desplegar datos emisores para Pago Móvil
-        if (originContainer) originContainer.classList.remove('hidden');
-        if (bancoOrigen) bancoOrigen.required = true;
-        if (tlfOrigen) tlfOrigen.required = true;
-
-        if (refLabel) refLabel.innerText = "N° de Referencia Bancaria";
-        if (refInput) refInput.placeholder = "Escriba los últimos dígitos...";
         
         if (activeBadge) {
             activeBadge.innerText = "Método Activo: Pago Móvil (Bs)";
@@ -162,27 +130,13 @@ window.confirmPaymentSelection = function() {
         }
 
         // Actualización dinámica del texto del botón de compra según Tasa BCV
-        if (typeof isBcvValid !== 'undefined' && isBcvValid && typeof currentBcvRate !== 'undefined' && currentBcvRate > 0) {
+        if (isBcvValid && currentBcvRate > 0) {
             if (btnProcess) btnProcess.querySelector('span').innerText = `Pagar Bs. ${formatMoney(cartTotal * currentBcvRate)}`;
         } else {
             if (btnProcess) btnProcess.querySelector('span').innerText = `Procesar Compra`;
         }
     } else if (currentPaymentMethod === 'binance') {
         if (dataBinance) dataBinance.classList.remove('hidden');
-
-        // Ocultar datos emisores bancarios
-        if (originContainer) originContainer.classList.add('hidden');
-        if (bancoOrigen) bancoOrigen.required = false;
-        if (tlfOrigen) tlfOrigen.required = false;
-
-        if (refLabel) refLabel.innerText = "TxID / Order ID de Binance";
-        if (refInput) refInput.placeholder = "Ej: 2938471029";
-
-        if (activeBadge) {
-            activeBadge.innerText = "Método Activo: Binance Pay";
-            activeBadge.className = "text-[10px] font-black uppercase tracking-widest text-yellow-400 bg-yellow-400/10 px-3 py-1.5 rounded-full border border-yellow-400/30 inline-block mb-4";
-        }
-
         if (btnProcess) btnProcess.querySelector('span').innerText = `Procesar Compra (Binance)`;
     }
 
@@ -190,7 +144,7 @@ window.confirmPaymentSelection = function() {
 };
 
 /**
- * 🔒 Valida si la referencia y campos obligatorios cumplen los requisitos para habilitar el botón
+ * 🔒 Valida si la referencia cumple la longitud mínima para habilitar el botón de compra
  */
 function validateFinalButton() {
     const refInput = document.getElementById('pay-reference');
@@ -199,18 +153,8 @@ function validateFinalButton() {
     
     if (!btn) return;
 
-    // Validación según método activo
-    let isOriginComplete = true;
-    if (currentPaymentMethod === 'pago_movil') {
-        const banco = document.getElementById('pay-banco-origen')?.value;
-        const tlf = document.getElementById('pay-telefono-origen')?.value.trim();
-        isOriginComplete = Boolean(banco) && Boolean(tlf);
-    }
-
-    const isShippingReady = typeof isShippingComplete !== 'undefined' ? isShippingComplete : true;
-
-    // Solo números, mínimo 4 dígitos, dirección lista y origen completo (si aplica)
-    if (/^\d{4,}$/.test(ref) && isShippingReady && isOriginComplete) {
+    // Solo números, mínimo 4 dígitos y dirección registrada
+    if (/^\d{4,}$/.test(ref) && isShippingComplete) {
         btn.disabled = false;
     } else {
         btn.disabled = true;
