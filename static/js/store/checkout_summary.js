@@ -1,14 +1,15 @@
 // ==========================================
-// 1. DIBUJAR RESUMEN DEL CARRITO (ARQUITECTURA COMPACTA, ESTRICTA Y REACTIVA)
+// 1. DIBUJAR RESUMEN DEL CARRITO (OPTIMIZADO Y PROTEGIDO)
 // ==========================================
 
-// 🍎 MEMORIA DEL SWITCH: Para que el carrito recuerde si el cliente lo apagó
 if (typeof window.userWantsFreeShipping === 'undefined') {
     window.userWantsFreeShipping = true;
 }
 
 function renderCartSummary() {
     const container = document.getElementById('cart-items-container');
+    if (!container) return;
+    
     container.innerHTML = '';
     
     let rawTotal = 0;   
@@ -21,7 +22,7 @@ function renderCartSummary() {
     cartItems.forEach(item => {
         const store = item.storeName || item.store_name || 'Gymenez Store';
         const qty = item.quantity || item.qty || 1;
-        const fPrice = parseFloat(item.price);
+        const fPrice = parseFloat(item.price) || 0;
         
         if (!storeTotals[store]) {
             storeTotals[store] = { total: 0, offersFreeShipping: false, threshold: 0 }; 
@@ -47,7 +48,6 @@ function renderCartSummary() {
             } else {
                 storeTotals[store].earnedFreeShipping = false;
                 const diff = storeTotals[store].threshold - storeTotals[store].total;
-                // Upsell para que agreguen más productos
                 pendingShippingHtml += `
                     <div class="mt-2 border-l-2 border-red-500 pl-3">
                         <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest block">${store}</span>
@@ -58,14 +58,15 @@ function renderCartSummary() {
         }
     }
 
-    // Identificamos si es un carrito híbrido (unas tiendas sí tienen gratis, otras no)
     const isHybrid = storesWithFreeShippingEarned > 0 && storesWithFreeShippingEarned < totalStores;
 
-    // 🧠 2. DIBUJAR PRODUCTOS
+    // 🧠 2. CONSTRUIR HTML DE PRODUCTOS (ACUMULADO EN STRING)
+    let itemsHtmlBuffer = '';
+
     cartItems.forEach((item, index) => {
         const qty = item.quantity || item.qty || 1;
-        const bPrice = parseFloat(item.basePrice || item.price);
-        const fPrice = parseFloat(item.price);
+        const bPrice = parseFloat(item.basePrice || item.price) || 0;
+        const fPrice = parseFloat(item.price) || 0;
         
         const bPriceTotal = bPrice * qty;
         const fPriceTotal = fPrice * qty;
@@ -77,17 +78,19 @@ function renderCartSummary() {
         const store = item.storeName || item.store_name || 'Gymenez Store';
         storeSet.add(store);
         
-        let displayName = item.name;
+        // Manejo seguro del nombre y variaciones
+        let rawName = item.name || item.title || 'Producto';
+        let displayName = rawName;
         let variantBadgeHtml = '';
-        const variantMatch = item.name.match(/(.*)\s\((.*)\)$/);
+        const variantMatch = rawName.match(/(.*)\s\((.*)\)$/);
+        
         if (variantMatch) {
             displayName = variantMatch[1].trim();
             variantBadgeHtml = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">${variantMatch[2]}</span>`;
         }
 
         let logicBadges = '';
-        // Solo mostramos "Envío Gratis" en el producto si LA TIENDA alcanzó la meta
-        if (storeTotals[store].earnedFreeShipping && (item.free_shipping === true || item.free_shipping === 'true')) {
+        if (storeTotals[store]?.earnedFreeShipping && (item.free_shipping === true || item.free_shipping === 'true')) {
             logicBadges += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">🚚 Envío Gratis Aplicado</span>`;
         }
         if (item.is_on_demand === true || item.is_on_demand === 'true') {
@@ -95,7 +98,6 @@ function renderCartSummary() {
             logicBadges += `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">⚡ Bajo Pedido</span>`;
         }
 
-        // 🍎 BOTONES SEPARADOS PARA EVITAR CLICS FALSOS
         const deleteBtnHtml = isCartLocked ? '' : `
         <button onclick="removeCheckoutItem(${index})" class="text-gray-500 hover:text-red-500 transition-colors p-1" title="Eliminar">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -112,11 +114,11 @@ function renderCartSummary() {
             <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-2.5 text-gray-400 hover:text-white transition font-black text-sm">+</button>
         </div>`;
 
-        container.innerHTML += `
+        itemsHtmlBuffer += `
         <div class="bg-[#050508]/50 p-3 rounded-[1.5rem] border ${isCartLocked ? 'border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-white/5 hover:border-white/20'} mb-3 transition-all duration-300">
             <div class="flex gap-3">
                 <div class="w-16 h-16 bg-white/5 rounded-xl border border-white/5 p-1 shrink-0 flex items-center justify-center">
-                    <img src="${item.imageUrl || item.image_url}" class="max-h-full object-contain filter drop-shadow-md" alt="${displayName}">
+                    <img src="${item.imageUrl || item.image_url || ''}" class="max-h-full object-contain filter drop-shadow-md" alt="${displayName}">
                 </div>
                 
                 <div class="flex-grow flex flex-col justify-between min-w-0">
@@ -147,24 +149,29 @@ function renderCartSummary() {
         </div>`;
     });
 
+    container.innerHTML = itemsHtmlBuffer;
+
     cartTotal = finalTotal;
     const totalSavings = rawTotal - finalTotal;
 
     // Actualizar Totales
-    document.getElementById('summary-raw-total').innerText = `$${formatMoney(rawTotal)}`;
-    document.getElementById('summary-total').innerText = `$${formatMoney(cartTotal)}`;
+    const rawTotalEl = document.getElementById('summary-raw-total');
+    const totalEl = document.getElementById('summary-total');
+    if (rawTotalEl) rawTotalEl.innerText = `$${formatMoney(rawTotal)}`;
+    if (totalEl) totalEl.innerText = `$${formatMoney(cartTotal)}`;
     
     const savingsRow = document.getElementById('summary-savings-row');
     if (savingsRow) {
         if (totalSavings > 0) {
             savingsRow.classList.remove('hidden');
-            document.getElementById('summary-savings').innerText = `-$${formatMoney(totalSavings)}`;
+            const savingsEl = document.getElementById('summary-savings');
+            if (savingsEl) savingsEl.innerText = `-$${formatMoney(totalSavings)}`;
         } else {
             savingsRow.classList.add('hidden');
         }
     }
 
-    // 🧠 3. ALERTAS DE LOGÍSTICA (ESTRICTAS Y REACTIVAS)
+    // 🧠 3. ALERTAS DE LOGÍSTICA
     const alertMulti = document.getElementById('alert-multi-store');
     const alertOnDemand = document.getElementById('alert-on-demand');
     const alertFreeShipping = document.getElementById('alert-free-shipping');
@@ -175,7 +182,6 @@ function renderCartSummary() {
     
     if (alertFreeShipping) {
         if (storesWithFreeShippingEarned > 0) {
-            // SÍ LLEGARON A LA META: Mostrar el SWITCH
             alertFreeShipping.classList.remove('hidden');
             alertFreeShipping.className = "bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex flex-col gap-3 mt-4";
             
@@ -199,17 +205,11 @@ function renderCartSummary() {
                 ${pendingShippingHtml}
             `;
 
-            // Establecemos el texto según la memoria del usuario
             if (shippingLabel) {
-                if (window.userWantsFreeShipping) {
-                    shippingLabel.innerText = isHybrid ? "Híbrido" : "Gratis";
-                } else {
-                    shippingLabel.innerText = "Cobro a Destino";
-                }
+                shippingLabel.innerText = window.userWantsFreeShipping ? (isHybrid ? "Híbrido" : "Gratis") : "Cobro a Destino";
             }
 
         } else if (pendingShippingHtml !== '') {
-            // NINGUNA LLEGÓ A LA META: SE DESTRUYE EL SWITCH Y QUEDA EN COBRO A DESTINO.
             alertFreeShipping.classList.remove('hidden');
             alertFreeShipping.className = "bg-red-500/5 border border-red-500/20 p-4 rounded-xl flex flex-col gap-3 mt-4";
             alertFreeShipping.innerHTML = `
@@ -225,10 +225,10 @@ function renderCartSummary() {
                     </div>
                 </div>
             `;
-            if(shippingLabel) shippingLabel.innerText = "Cobro a Destino";
+            if (shippingLabel) shippingLabel.innerText = "Cobro a Destino";
         } else {
             alertFreeShipping.classList.add('hidden');
-            if(shippingLabel) shippingLabel.innerText = "Cobro a Destino";
+            if (shippingLabel) shippingLabel.innerText = "Cobro a Destino";
         }
     }
 
@@ -239,43 +239,50 @@ function renderCartSummary() {
 
     if (isBcvValid && currentBcvRate > 0) {
         const totalBs = formatMoney(cartTotal * currentBcvRate);
-        if(document.getElementById('summary-total-ves')) document.getElementById('summary-total-ves').innerText = `Bs. ${totalBs}`;
-        if(document.getElementById('bcv-rate-display')) document.getElementById('bcv-rate-display').innerText = `Tasa Oficial BCV: Bs. ${formatMoney(currentBcvRate)}`;
-        if(vesContainer) vesContainer.classList.remove('hidden');
-        if(warningMsg) warningMsg.classList.add('hidden');
-        if(currentPaymentMethod === 'pago_movil' && btnProcess) btnProcess.querySelector('span').innerText = `Pagar Bs. ${totalBs}`;
+        const vesEl = document.getElementById('summary-total-ves');
+        const bcvRateEl = document.getElementById('bcv-rate-display');
+
+        if (vesEl) vesEl.innerText = `Bs. ${totalBs}`;
+        if (bcvRateEl) bcvRateEl.innerText = `Tasa Oficial BCV: Bs. ${formatMoney(currentBcvRate)}`;
+        if (vesContainer) vesContainer.classList.remove('hidden');
+        if (warningMsg) warningMsg.classList.add('hidden');
+        if (currentPaymentMethod === 'pago_movil' && btnProcess) {
+            const btnSpan = btnProcess.querySelector('span');
+            if (btnSpan) btnSpan.innerText = `Pagar Bs. ${totalBs}`;
+        }
     } else {
-        if(vesContainer) vesContainer.classList.add('hidden');
-        if(warningMsg) warningMsg.classList.remove('hidden');
-        if(currentPaymentMethod === 'pago_movil' && btnProcess) btnProcess.querySelector('span').innerText = `Completar Compra (Calcular BCV)`;
+        if (vesContainer) vesContainer.classList.add('hidden');
+        if (warningMsg) warningMsg.classList.remove('hidden');
+        if (currentPaymentMethod === 'pago_movil' && btnProcess) {
+            const btnSpan = btnProcess.querySelector('span');
+            if (btnSpan) btnSpan.innerText = `Completar Compra (Calcular BCV)`;
+        }
     }
 
+    const checkoutContent = document.getElementById('checkout-content');
+    const checkoutContainer = document.getElementById('checkout-container');
+    const emptyCartMsg = document.getElementById('empty-cart-msg');
+
     if (cartItems.length === 0) {
-        document.getElementById('checkout-content').classList.remove('hidden'); 
-        document.getElementById('checkout-container').classList.add('hidden'); 
-        document.getElementById('empty-cart-msg').classList.remove('hidden'); 
+        if (checkoutContent) checkoutContent.classList.remove('hidden'); 
+        if (checkoutContainer) checkoutContainer.classList.add('hidden'); 
+        if (emptyCartMsg) emptyCartMsg.classList.remove('hidden'); 
     } else {
-        document.getElementById('checkout-container').classList.remove('hidden');
-        document.getElementById('empty-cart-msg').classList.add('hidden');
+        if (checkoutContainer) checkoutContainer.classList.remove('hidden');
+        if (emptyCartMsg) emptyCartMsg.classList.add('hidden');
     }
 }
 
-// 🍎 NUEVA FUNCIÓN: Actualiza el texto en vivo cuando tocas el Switch
 window.updateShippingLabelUI = function(isChecked, isHybrid) {
     window.userWantsFreeShipping = isChecked; 
     const shippingLabel = document.getElementById('summary-shipping-label');
-    
     if (shippingLabel) {
-        if (isChecked) {
-            shippingLabel.innerText = isHybrid ? "Híbrido" : "Gratis";
-        } else {
-            shippingLabel.innerText = "Cobro a Destino";
-        }
+        shippingLabel.innerText = isChecked ? (isHybrid ? "Híbrido" : "Gratis") : "Cobro a Destino";
     }
 };
 
 window.updateCheckoutItemQty = function(index, delta) {
-    if (isCartLocked) return;
+    if (isCartLocked || !cartItems[index]) return;
     let item = cartItems[index];
     let newQty = (item.quantity || item.qty || 1) + delta;
     if (newQty < 1) newQty = 1;
@@ -303,7 +310,6 @@ function saveAndReRenderCart() {
     if (badgeDesktop) badgeDesktop.innerText = totalItems;
     if (badgeMobile) {
         badgeMobile.innerText = totalItems;
-        if(totalItems > 0) badgeMobile.classList.remove('hidden');
-        else badgeMobile.classList.add('hidden');
+        totalItems > 0 ? badgeMobile.classList.remove('hidden') : badgeMobile.classList.add('hidden');
     }
 }
