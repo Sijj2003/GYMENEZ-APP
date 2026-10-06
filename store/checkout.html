@@ -333,6 +333,15 @@
                     <!-- Panel de Medios de Pago -->
                     <section class="bg-white/5 p-6 md:p-8 rounded-[2rem] border border-white/10 backdrop-blur-xl shadow-xl">
                         <h3 class="text-xl font-bold uppercase text-white mb-6 tracking-wide">Medio de Pago</h3>
+
+                        <div class="text-center my-4">
+    <div id="active-payment-badge" class="hidden"></div>
+    
+    <button type="button" onclick="openPaymentMethodModal()" class="w-full py-4 px-6 rounded-2xl border-2 border-dashed border-[#FFC300]/40 bg-[#FFC300]/5 text-[#FFC300] hover:bg-[#FFC300]/10 font-black text-xs uppercase tracking-widest transition flex items-center justify-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+        <span>Seleccionar Método de Pago</span>
+    </button>
+</div>
                         
                         <div class="flex gap-4 mb-8">
                             <button onclick="selectPayment('pago_movil')" id="btn-pm" class="flex-1 py-4 px-4 rounded-xl border border-[#FFC300] bg-[#FFC300]/10 text-[#FFC300] font-bold text-[10px] uppercase tracking-widest transition">Pago Móvil</button>
