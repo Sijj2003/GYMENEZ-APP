@@ -2,8 +2,10 @@
 // 💳 MÓDULO 6: GESTIÓN DE PAGO Y ORDEN FINAL (Premium Inline UI)
 // ====================================================================
 
-let availablePaymentMethods = {};
-let currentPaymentMethod = 'pago_movil'; // Por defecto
+// Cambiamos "let" por "var" para evitar el error "has already been declared"
+// en caso de que múltiples scripts compartan el mismo scope.
+var availablePaymentMethods = {};
+var currentPaymentMethod = 'pago_movil'; // Por defecto
 
 /**
  * 🛠️ Configura los datos iniciales y muestra el formulario
