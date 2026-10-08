@@ -2,15 +2,14 @@
 // 💳 MÓDULO 6: GESTIÓN DE PAGO Y ORDEN FINAL (Premium Inline UI)
 // ====================================================================
 
-// Cambiamos "let" por "var" para evitar el error "has already been declared"
-// en caso de que múltiples scripts compartan el mismo scope.
-var availablePaymentMethods = {};
-var currentPaymentMethod = 'pago_movil'; // Por defecto
+// Usamos el objeto global window para evitar choques de variables declaradas en otros archivos
+window.availablePaymentMethods = window.availablePaymentMethods || {};
+window.currentPaymentMethod = window.currentPaymentMethod || 'pago_movil'; 
 
 /**
  * 🛠️ Configura los datos iniciales y muestra el formulario
  */
-function setupPaymentUI(methods) {
+window.setupPaymentUI = function(methods) {
     document.getElementById('loading-payment')?.classList.add('hidden');
     const formCheckout = document.getElementById('form-checkout-final');
     
@@ -19,7 +18,7 @@ function setupPaymentUI(methods) {
         setTimeout(() => formCheckout.classList.remove('opacity-0'), 50);
     }
 
-    availablePaymentMethods = methods || {};
+    window.availablePaymentMethods = methods || {};
 
     if (methods.pago_movil) {
         if (document.getElementById('pm-banco')) document.getElementById('pm-banco').innerText = methods.pago_movil.banco;
@@ -35,13 +34,13 @@ function setupPaymentUI(methods) {
 
     setupReferenceInputSanitizer();
     selectPaymentMethod('pago_movil');
-}
+};
 
 /**
  * 🎨 Transición fluida entre métodos de pago en línea (UI Premium)
  */
 window.selectPaymentMethod = function(method) {
-    currentPaymentMethod = method;
+    window.currentPaymentMethod = method;
 
     const cards = {
         'pago_movil': { card: 'card-pm', check: 'check-pm', color: '#FFC300' },
@@ -96,7 +95,7 @@ function updatePaymentFormFields() {
 
     [dataPm, dataBinance, dataIntl].forEach(el => el && el.classList.add('hidden'));
 
-    if (currentPaymentMethod === 'pago_movil') {
+    if (window.currentPaymentMethod === 'pago_movil') {
         dataPm?.classList.remove('hidden');
         verificationInputs?.classList.remove('hidden');
         originContainer?.classList.remove('hidden');
@@ -115,7 +114,7 @@ function updatePaymentFormFields() {
             : `Procesar Compra`;
         if (btnText) btnText.innerText = `Pagar ${montoStr}`;
 
-    } else if (currentPaymentMethod === 'binance') {
+    } else if (window.currentPaymentMethod === 'binance') {
         dataBinance?.classList.remove('hidden');
         verificationInputs?.classList.remove('hidden');
         originContainer?.classList.add('hidden'); 
@@ -131,7 +130,7 @@ function updatePaymentFormFields() {
         
         if (btnText) btnText.innerText = `Confirmar Pago USDT`;
 
-    } else if (currentPaymentMethod === 'paypal') {
+    } else if (window.currentPaymentMethod === 'paypal') {
         dataIntl?.classList.remove('hidden');
         verificationInputs?.classList.add('hidden'); 
         
@@ -155,7 +154,7 @@ function setupReferenceInputSanitizer() {
 
     if (refInput) {
         refInput.addEventListener('input', (e) => {
-            if(currentPaymentMethod === 'pago_movil') {
+            if(window.currentPaymentMethod === 'pago_movil') {
                 e.target.value = e.target.value.replace(/\D/g, ''); 
             }
             validateFinalButton();
@@ -173,7 +172,7 @@ function validateFinalButton() {
     const btn = document.getElementById('btn-process-order');
     if (!btn) return;
 
-    if (currentPaymentMethod === 'paypal') {
+    if (window.currentPaymentMethod === 'paypal') {
         btn.disabled = false;
         return;
     }
@@ -182,14 +181,14 @@ function validateFinalButton() {
     const ref = refInput ? refInput.value.trim() : '';
     const isShippingReady = typeof isShippingComplete !== 'undefined' ? isShippingComplete : true;
 
-    if (currentPaymentMethod === 'pago_movil') {
+    if (window.currentPaymentMethod === 'pago_movil') {
         const banco = document.getElementById('pay-banco-origen')?.value;
         const tlf = document.getElementById('pay-telefono-origen')?.value.trim();
         const isOriginComplete = Boolean(banco) && Boolean(tlf);
         
         btn.disabled = !(/^\d{4,}$/.test(ref) && isShippingReady && isOriginComplete);
     } 
-    else if (currentPaymentMethod === 'binance') {
+    else if (window.currentPaymentMethod === 'binance') {
         btn.disabled = !(ref.length >= 6 && isShippingReady);
     }
 }
@@ -201,7 +200,7 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
     e.preventDefault();
     
     // 1. Redirección Internacional simulada
-    if(currentPaymentMethod === 'paypal') {
+    if(window.currentPaymentMethod === 'paypal') {
         const btnText = document.getElementById('btn-process-text');
         if (btnText) btnText.innerText = "Redirigiendo...";
         setTimeout(() => {
@@ -221,7 +220,7 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
     const cancelBtn = document.getElementById('btn-cancel-vault');
     if (cancelBtn) cancelBtn.disabled = true; 
     
-    if (typeof vaultInterval !== 'undefined') clearInterval(vaultInterval); // Pausar reloj
+    if (typeof vaultInterval !== 'undefined') clearInterval(vaultInterval);
 
     const cleanItems = (typeof cartItems !== 'undefined' ? cartItems : []).map(item => ({
         id: item.id,
@@ -242,7 +241,7 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
     const telefonoOrigen = document.getElementById('pay-telefono-origen') ? document.getElementById('pay-telefono-origen').value.trim() : '';
     const bancoOrigen = document.getElementById('pay-banco-origen') ? document.getElementById('pay-banco-origen').value : '';
 
-    if (currentPaymentMethod === 'pago_movil' && (!telefonoOrigen || !bancoOrigen)) {
+    if (window.currentPaymentMethod === 'pago_movil' && (!telefonoOrigen || !bancoOrigen)) {
         alert("Por favor indique el Banco y Teléfono desde el cual realizó el pago.");
         resetBtn(btn);
         if (typeof startVaultTimer === 'function') startVaultTimer(new Date().getTime() + 60000); 
@@ -253,7 +252,7 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
     const payload = {
         items: cleanItems,
         totalAmount: typeof cartTotal !== 'undefined' ? cartTotal : 0,
-        paymentMethod: currentPaymentMethod,
+        paymentMethod: window.currentPaymentMethod,
         reference: reference,
         wants_free_shipping: wantsFreeShipping,
         telefono_origen: telefonoOrigen,
@@ -277,7 +276,6 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
             const orderId = data.order_id;
             btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Verificando Banco...</span>`;
 
-            // 🎯 Polling cuidadoso para PythonAnywhere Worker
             let intentos = 0;
             const maxIntentos = 3; 
 
@@ -321,7 +319,6 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
                     if (intentos < maxIntentos) {
                         setTimeout(verificarEstadoOrden, 9000); 
                     } else {
-                        // Fallback de alta latencia
                         localStorage.removeItem('gymenez_cart');
                         localStorage.removeItem('gymen_vault_expires_at');
                         
@@ -380,16 +377,13 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
 // ❌ BOTÓN CANCELAR (Salir de la bóveda/cronómetro)
 // ====================================================================
 document.getElementById('btn-cancel-vault')?.addEventListener('click', () => {
-    // 1. Limpiar intervalos si existen
     if (typeof vaultInterval !== 'undefined') clearInterval(vaultInterval);
     
-    // 2. Ocultar la sección actual de la Bóveda/Pago
     const vaultSection = document.getElementById('checkout-vault-section') || document.querySelector('.vault-container') || document.getElementById('vault-view');
     if (vaultSection) {
         vaultSection.classList.add('hidden');
     }
 
-    // 3. Volver a mostrar el resumen de la orden (sin opacidad)
     const summarySection = document.getElementById('checkout-summary-section') || document.querySelector('.summary-container') || document.getElementById('summary-panel');
     if (summarySection) {
         summarySection.classList.remove('hidden');
@@ -400,11 +394,11 @@ document.getElementById('btn-cancel-vault')?.addEventListener('click', () => {
 /**
  * 🔄 Restaura el botón final tras un fallo
  */
-function resetBtn(btn) {
+window.resetBtn = function(btn) {
     if (!btn) return;
     btn.disabled = false;
     btn.innerHTML = `
         <span id="btn-process-text">Procesar Compra</span>
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
     `;
-}
+};
