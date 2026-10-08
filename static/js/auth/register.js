@@ -106,7 +106,7 @@ function validateFields(step) {
         }
 
         const email = emailRaw.trim().toLowerCase();
-        if (!email || email.length > 25 || !document.getElementById('reg-email').checkValidity()) {
+        if (!email || email.length > 40 || !document.getElementById('reg-email').checkValidity()) {
             showUIFeedback("Ingresa un correo válido (Máximo 25 caracteres).", "error");
             return false;
         }
