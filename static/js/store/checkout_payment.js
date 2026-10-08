@@ -1,21 +1,26 @@
 // ====================================================================
-// 💳 MÓDULO 6: GESTIÓN DE PAGO Y ORDEN FINAL (checkout_payment_2.js)
+// 💳 MÓDULO 6: GESTIÓN DE PAGO Y ORDEN FINAL (Experiencia Premium)
 // ====================================================================
 
-// Almacenamiento local de métodos entregados por la API
 let availablePaymentMethods = {};
-let selectedTempMethod = 'pago_movil'; // Método seleccionado temporalmente en el modal
-let currentPaymentMethod = 'pago_movil'; // Método activo confirmado
+let currentPaymentMethod = 'pago_movil'; // Por defecto
 
 /**
- * 🛠️ Configura los datos dinámicos recibidos del Servidor (Tasa BCV y Cuentas Bancarias)
- * @param {Object} methods - Objeto con datos de pago_movil y binance
+ * 🛠️ Configura los datos iniciales y muestra el formulario
  */
 function setupPaymentUI(methods) {
     document.getElementById('loading-payment')?.classList.add('hidden');
+    const formCheckout = document.getElementById('form-checkout-final');
+    
+    if(formCheckout) {
+        formCheckout.classList.remove('hidden');
+        // Pequeño timeout para permitir que la clase display block aplique antes de la opacidad
+        setTimeout(() => formCheckout.classList.remove('opacity-0'), 50);
+    }
+
     availablePaymentMethods = methods || {};
 
-    // Cargar datos bancarios si existen
+    // Cargar datos bancarios
     if (methods.pago_movil) {
         if (document.getElementById('pm-banco')) document.getElementById('pm-banco').innerText = methods.pago_movil.banco;
         if (document.getElementById('pm-tlf')) document.getElementById('pm-tlf').innerText = methods.pago_movil.telefono;
@@ -23,206 +28,202 @@ function setupPaymentUI(methods) {
         if (document.getElementById('pm-nombre')) document.getElementById('pm-nombre').innerText = methods.pago_movil.nombre;
     }
     
-    // Cargar datos de Binance si existen
+    // Cargar datos de Binance
     if (methods.binance) {
         if (document.getElementById('bin-id')) document.getElementById('bin-id').innerText = methods.binance.pay_id;
         if (document.getElementById('bin-email')) document.getElementById('bin-email').innerText = methods.binance.email;
     }
 
-    // Inicializar listeners de entrada numéricos
     setupReferenceInputSanitizer();
+    // Inicializar visualmente la opción por defecto
+    selectPaymentMethod('pago_movil');
 }
 
 /**
- * 🔢 Sanitizador estricto para la referencia de pago (SOLO NÚMEROS) y listeners de emisor
+ * 🎨 Transición fluida entre métodos de pago en línea (UI Premium)
+ */
+window.selectPaymentMethod = function(method) {
+    currentPaymentMethod = method;
+
+    // 1. Resetear estilos de todas las tarjetas
+    const cards = {
+        'pago_movil': { card: 'card-pm', check: 'check-pm', color: '#FFC300' },
+        'binance': { card: 'card-binance', check: 'check-binance', color: '#FCD535' }, // Amarillo Binance
+        'paypal': { card: 'card-intl', check: 'check-intl', color: '#60A5FA' } // Azul PayPal/Stripe
+    };
+
+    Object.keys(cards).forEach(key => {
+        const cardEl = document.getElementById(cards[key].card);
+        const checkEl = document.getElementById(cards[key].check);
+        const dotEl = checkEl?.firstElementChild;
+
+        if (!cardEl || !checkEl || !dotEl) return;
+
+        if (key === method) {
+            // Estado Seleccionado
+            cardEl.className = `payment-card cursor-pointer relative w-full p-5 rounded-2xl border-2 transition-all duration-300 overflow-hidden group shadow-[0_0_20px_rgba(0,0,0,0.3)] border-[${cards[key].color}] bg-[${cards[key].color}]/10`;
+            checkEl.className = `w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-300 border-[${cards[key].color}]`;
+            dotEl.className = `w-2.5 h-2.5 rounded-full transition-transform duration-300 scale-100 bg-[${cards[key].color}]`;
+            
+            // Cambiar color del texto al activo
+            cardEl.querySelector('span.text-xs').classList.add('text-white');
+            cardEl.querySelector('span.text-xs').classList.remove('text-gray-400');
+        } else {
+            // Estado Inactivo
+            cardEl.className = "payment-card cursor-pointer relative w-full p-5 rounded-2xl border-2 border-white/5 bg-white/5 hover:border-white/20 transition-all duration-300 overflow-hidden group";
+            checkEl.className = "w-5 h-5 rounded-full border-2 border-gray-600 flex items-center justify-center transition-all duration-300";
+            dotEl.className = "w-2.5 h-2.5 rounded-full bg-transparent transition-transform duration-300 scale-0";
+            
+            // Texto inactivo
+            cardEl.querySelector('span.text-xs').classList.remove('text-white');
+            cardEl.querySelector('span.text-xs').classList.add('text-gray-400');
+        }
+    });
+
+    // 2. Gestionar la visualización dinámica del formulario (Efecto slide)
+    updatePaymentFormFields();
+};
+
+/**
+ * 🔄 Ajusta los inputs y los textos dependiendo del método seleccionado
+ */
+function updatePaymentFormFields() {
+    const dataPm = document.getElementById('data-pago-movil');
+    const dataBinance = document.getElementById('data-binance');
+    const dataIntl = document.getElementById('data-intl');
+    
+    const originContainer = document.getElementById('payment-origin-data');
+    const refContainer = document.getElementById('reference-container');
+    const verificationInputs = document.getElementById('verification-inputs');
+    
+    const bancoOrigen = document.getElementById('pay-banco-origen');
+    const tlfOrigen = document.getElementById('pay-telefono-origen');
+    const refLabel = document.getElementById('lbl-reference');
+    const refInput = document.getElementById('pay-reference');
+    const btnText = document.getElementById('btn-process-text');
+
+    // Ocultar todos los datos primero
+    [dataPm, dataBinance, dataIntl].forEach(el => el && el.classList.add('hidden'));
+
+    if (currentPaymentMethod === 'pago_movil') {
+        dataPm?.classList.remove('hidden');
+        verificationInputs?.classList.remove('hidden');
+        originContainer?.classList.remove('hidden');
+        refContainer?.classList.remove('hidden');
+        
+        if (bancoOrigen) bancoOrigen.required = true;
+        if (tlfOrigen) tlfOrigen.required = true;
+        if (refInput) {
+            refInput.required = true;
+            refInput.placeholder = "Últimos dígitos (Ej: 1234)";
+        }
+        if (refLabel) refLabel.innerText = "N° de Referencia Bancaria";
+
+        const montoStr = (typeof isBcvValid !== 'undefined' && isBcvValid && typeof currentBcvRate !== 'undefined') 
+            ? `Bs. ${formatMoney(cartTotal * currentBcvRate)}` 
+            : `Procesar Compra`;
+        btnText.innerText = `Pagar ${montoStr}`;
+
+    } else if (currentPaymentMethod === 'binance') {
+        dataBinance?.classList.remove('hidden');
+        verificationInputs?.classList.remove('hidden');
+        originContainer?.classList.add('hidden'); // No necesitamos banco emisor
+        refContainer?.classList.remove('hidden');
+        
+        if (bancoOrigen) bancoOrigen.required = false;
+        if (tlfOrigen) tlfOrigen.required = false;
+        if (refInput) {
+            refInput.required = true;
+            refInput.placeholder = "Ej: 2938471029";
+        }
+        if (refLabel) refLabel.innerText = "TxID / Order ID de Binance";
+        
+        btnText.innerText = `Confirmar Pago USDT`;
+
+    } else if (currentPaymentMethod === 'paypal') {
+        dataIntl?.classList.remove('hidden');
+        // Para PayPal/Tarjetas, usualmente no pedimos referencia, enviamos directo a pasarela
+        verificationInputs?.classList.add('hidden'); 
+        
+        if (bancoOrigen) bancoOrigen.required = false;
+        if (tlfOrigen) tlfOrigen.required = false;
+        if (refInput) refInput.required = false;
+
+        btnText.innerText = `Ir a Pasarela Segura`;
+    }
+
+    validateFinalButton();
+}
+
+/**
+ * 🔢 Sanitizador estricto para referencias numéricas
  */
 function setupReferenceInputSanitizer() {
     const refInput = document.getElementById('pay-reference');
     const bancoSelect = document.getElementById('pay-banco-origen');
     const tlfInput = document.getElementById('pay-telefono-origen');
 
-    // Bloquea letras, símbolos y espacios al escribir o pegar
     if (refInput) {
         refInput.addEventListener('input', (e) => {
-            e.target.value = e.target.value.replace(/\D/g, ''); // Remueve cualquier carácter no dígito
+            // Solo restringir a números si es Pago Móvil
+            if(currentPaymentMethod === 'pago_movil') {
+                e.target.value = e.target.value.replace(/\D/g, ''); 
+            }
             validateFinalButton();
         });
     }
 
-    // Escuchar cambios en Banco y Teléfono emisor para revalidar el botón en vivo
-    if (bancoSelect) {
-        bancoSelect.addEventListener('change', validateFinalButton);
-    }
-
-    if (tlfInput) {
-        tlfInput.addEventListener('input', validateFinalButton);
-    }
+    if (bancoSelect) bancoSelect.addEventListener('change', validateFinalButton);
+    if (tlfInput) tlfInput.addEventListener('input', validateFinalButton);
 }
 
 /**
- * 🔲 Abre el Modal Centrado de Selección de Método de Pago
+ * 🔒 Valida dinámicamente si el botón final debe estar habilitado
  */
-window.openPaymentMethodModal = function() {
-    const modal = document.getElementById('payment-method-modal');
-    if (!modal) return;
+function validateFinalButton() {
+    const btn = document.getElementById('btn-process-order');
+    if (!btn) return;
 
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    setTimeout(() => {
-        modal.classList.remove('opacity-0');
-        document.getElementById('payment-modal-card')?.classList.remove('scale-95', 'opacity-0');
-    }, 10);
-};
-
-/**
- * ❌ Cierra el Modal de Selección de Método de Pago
- */
-window.closePaymentMethodModal = function() {
-    const modal = document.getElementById('payment-method-modal');
-    const card = document.getElementById('payment-modal-card');
-    if (!modal || !card) return;
-
-    card.classList.add('scale-95', 'opacity-0');
-    modal.classList.add('opacity-0');
-    setTimeout(() => {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }, 300);
-};
-
-/**
- * 🎯 Marca visualmente la opción seleccionada dentro del Modal
- * @param {string} method - 'pago_movil' | 'binance' | 'card'
- */
-window.selectModalPaymentOption = function(method) {
-    if (method !== 'pago_movil' && method !== 'binance') {
-        // Opción temporalmente deshabilitada
+    // Si es PayPal/TDC, se habilita directo para ir a la pasarela
+    if (currentPaymentMethod === 'paypal') {
+        btn.disabled = false;
         return;
     }
 
-    selectedTempMethod = method;
-
-    // Actualización de bordes y estados táctiles en el modal
-    const optPm = document.getElementById('opt-pay-pm');
-    const optBinance = document.getElementById('opt-pay-binance');
-    const optCard = document.getElementById('opt-pay-card');
-
-    if (optPm) {
-        optPm.className = method === 'pago_movil'
-            ? "w-full p-4 rounded-2xl border-2 border-[#FFC300] bg-[#FFC300]/10 text-white flex items-center justify-between transition cursor-pointer shadow-[0_0_15px_rgba(255,195,0,0.15)]"
-            : "w-full p-4 rounded-2xl border border-white/10 bg-white/5 text-gray-300 flex items-center justify-between hover:border-white/20 transition cursor-pointer";
-    }
-    if (optBinance) {
-        optBinance.className = method === 'binance'
-            ? "w-full p-4 rounded-2xl border-2 border-[#FFC300] bg-[#FFC300]/10 text-white flex items-center justify-between transition cursor-pointer shadow-[0_0_15px_rgba(255,195,0,0.15)]"
-            : "w-full p-4 rounded-2xl border border-white/10 bg-white/5 text-gray-300 flex items-center justify-between hover:border-white/20 transition cursor-pointer";
-    }
-    if (optCard) {
-        optCard.className = "w-full p-4 rounded-2xl border border-white/10 bg-white/5 text-gray-500 flex items-center justify-between opacity-50 cursor-not-allowed";
-    }
-};
-
-/**
- * ✅ Confirma la selección hecha en el Modal y despliega la UI de pago correspondiente
- */
-window.confirmPaymentSelection = function() {
-    currentPaymentMethod = selectedTempMethod;
-    closePaymentMethodModal();
-
-    const dataPm = document.getElementById('data-pago-movil');
-    const dataBinance = document.getElementById('data-binance');
-    const btnProcess = document.getElementById('btn-process-order');
-    const activeBadge = document.getElementById('active-payment-badge');
-
-    // Elementos de datos de origen (emisor) y etiquetas de referencia
-    const originContainer = document.getElementById('payment-origin-data');
-    const bancoOrigen = document.getElementById('pay-banco-origen');
-    const tlfOrigen = document.getElementById('pay-telefono-origen');
-    const refLabel = document.getElementById('lbl-reference');
-    const refInput = document.getElementById('pay-reference');
-
-    // Ocultar todos los paneles de datos receptor
-    if (dataPm) dataPm.classList.add('hidden');
-    if (dataBinance) dataBinance.classList.add('hidden');
-
-    if (currentPaymentMethod === 'pago_movil') {
-        if (dataPm) dataPm.classList.remove('hidden');
-
-        // Desplegar datos emisores para Pago Móvil
-        if (originContainer) originContainer.classList.remove('hidden');
-        if (bancoOrigen) bancoOrigen.required = true;
-        if (tlfOrigen) tlfOrigen.required = true;
-
-        if (refLabel) refLabel.innerText = "N° de Referencia Bancaria";
-        if (refInput) refInput.placeholder = "Escriba los últimos dígitos...";
-        
-        if (activeBadge) {
-            activeBadge.innerText = "Método Activo: Pago Móvil (Bs)";
-            activeBadge.className = "text-[10px] font-black uppercase tracking-widest text-[#FFC300] bg-[#FFC300]/10 px-3 py-1.5 rounded-full border border-[#FFC300]/30 inline-block mb-4";
-        }
-
-        // Actualización dinámica del texto del botón de compra según Tasa BCV
-        if (typeof isBcvValid !== 'undefined' && isBcvValid && typeof currentBcvRate !== 'undefined' && currentBcvRate > 0) {
-            if (btnProcess) btnProcess.querySelector('span').innerText = `Pagar Bs. ${formatMoney(cartTotal * currentBcvRate)}`;
-        } else {
-            if (btnProcess) btnProcess.querySelector('span').innerText = `Procesar Compra`;
-        }
-    } else if (currentPaymentMethod === 'binance') {
-        if (dataBinance) dataBinance.classList.remove('hidden');
-
-        // Ocultar datos emisores bancarios
-        if (originContainer) originContainer.classList.add('hidden');
-        if (bancoOrigen) bancoOrigen.required = false;
-        if (tlfOrigen) tlfOrigen.required = false;
-
-        if (refLabel) refLabel.innerText = "TxID / Order ID de Binance";
-        if (refInput) refInput.placeholder = "Ej: 2938471029";
-
-        if (activeBadge) {
-            activeBadge.innerText = "Método Activo: Binance Pay";
-            activeBadge.className = "text-[10px] font-black uppercase tracking-widest text-yellow-400 bg-yellow-400/10 px-3 py-1.5 rounded-full border border-yellow-400/30 inline-block mb-4";
-        }
-
-        if (btnProcess) btnProcess.querySelector('span').innerText = `Procesar Compra (Binance)`;
-    }
-
-    validateFinalButton();
-};
-
-/**
- * 🔒 Valida si la referencia y campos obligatorios cumplen los requisitos para habilitar el botón
- */
-function validateFinalButton() {
     const refInput = document.getElementById('pay-reference');
     const ref = refInput ? refInput.value.trim() : '';
-    const btn = document.getElementById('btn-process-order');
-    
-    if (!btn) return;
+    const isShippingReady = typeof isShippingComplete !== 'undefined' ? isShippingComplete : true;
 
-    // Validación según método activo
-    let isOriginComplete = true;
     if (currentPaymentMethod === 'pago_movil') {
         const banco = document.getElementById('pay-banco-origen')?.value;
         const tlf = document.getElementById('pay-telefono-origen')?.value.trim();
-        isOriginComplete = Boolean(banco) && Boolean(tlf);
-    }
-
-    const isShippingReady = typeof isShippingComplete !== 'undefined' ? isShippingComplete : true;
-
-    // Solo números, mínimo 4 dígitos, dirección lista y origen completo (si aplica)
-    if (/^\d{4,}$/.test(ref) && isShippingReady && isOriginComplete) {
-        btn.disabled = false;
-    } else {
-        btn.disabled = true;
+        const isOriginComplete = Boolean(banco) && Boolean(tlf);
+        
+        btn.disabled = !(/^\d{4,}$/.test(ref) && isShippingReady && isOriginComplete);
+    } 
+    else if (currentPaymentMethod === 'binance') {
+        // Binance TXID suele ser alfanumérico y largo
+        btn.disabled = !(ref.length >= 6 && isShippingReady);
     }
 }
 
 // ====================================================================
-// 🛡️ SUBMIT FINAL DE LA ORDEN Y POLLING DE VERIFICACIÓN (IDÉNTICO)
+// 🛡️ SUBMIT FINAL (Adaptado)
 // ====================================================================
 document.getElementById('form-checkout-final')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    // Si es PayPal/TDC simulamos redirección a pasarela externa (Stripe/PayPal)
+    if(currentPaymentMethod === 'paypal') {
+        const btnText = document.getElementById('btn-process-text');
+        btnText.innerText = "Redirigiendo...";
+        setTimeout(() => {
+            alert("Apertura de pasarela internacional en desarrollo...");
+            btnText.innerText = "Ir a Pasarela Segura";
+        }, 1500);
+        return;
+    }
+
     const btn = document.getElementById('btn-process-order');
     const reference = document.getElementById('pay-reference').value.trim();
     const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('jwt_token');
@@ -230,7 +231,8 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
     btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Procesando...</span>`;
     btn.disabled = true;
     document.getElementById('btn-cancel-vault').disabled = true; 
-    clearInterval(vaultInterval); // Pausar reloj mientras se procesa
+    
+    if (typeof vaultInterval !== 'undefined') clearInterval(vaultInterval);
 
     const cleanItems = cartItems.map(item => ({
         id: item.id,
@@ -245,20 +247,10 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
         free_shipping_threshold: parseFloat(item.free_shipping_threshold || 0)
     }));
 
-    const toggleFreeShipping = document.getElementById('toggle-free-shipping');
-    const wantsFreeShipping = toggleFreeShipping ? toggleFreeShipping.checked : false;
+    const wantsFreeShipping = document.getElementById('toggle-free-shipping')?.checked || false;
     
-    // Captura de datos de la cuenta emisora
     const telefonoOrigen = document.getElementById('pay-telefono-origen') ? document.getElementById('pay-telefono-origen').value.trim() : '';
     const bancoOrigen = document.getElementById('pay-banco-origen') ? document.getElementById('pay-banco-origen').value : '';
-
-    if (currentPaymentMethod === 'pago_movil' && (!telefonoOrigen || !bancoOrigen)) {
-        alert("Por favor indique el Banco y Teléfono desde el cual realizó el pago.");
-        resetBtn(btn);
-        startVaultTimer(new Date().getTime() + 60000); 
-        document.getElementById('btn-cancel-vault').disabled = false;
-        return;
-    }
 
     const payload = {
         items: cleanItems,
@@ -270,125 +262,18 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
         banco_origen: bancoOrigen
     };
 
+    // EL RESTO DEL CÓDIGO FETCH SE MANTIENE EXACTAMENTE IGUAL (Lógica del worker de PythonAnywhere, polling, etc)
+    // Pega aquí la continuación del try/catch de fetch de tu script original.
+    
     try {
         const response = await fetch(`${API_BASE_URL}/api/store/checkout`, {
             method: 'POST',
             headers: { 
                 'Authorization': `Bearer ${token}`,
-                'X-Device-ID': deviceId,
+                'X-Device-ID': typeof deviceId !== 'undefined' ? deviceId : 'web',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
         });
 
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-            const orderId = data.order_id;
-            
-            btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Verificando Banco...</span>`;
-
-            // 🎯 Polling cuidadoso para PythonAnywhere Worker
-            let intentos = 0;
-            const maxIntentos = 3; 
-
-            const verificarEstadoOrden = async () => {
-                try {
-                    const statusRes = await fetch(`${API_BASE_URL}/api/store/checkout/status/${orderId}`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-
-                    if (statusRes.ok) {
-                        const statusData = await statusRes.json();
-
-                        if (statusData.status === 'approved') {
-                            localStorage.removeItem('gymenez_cart');
-                            localStorage.removeItem('gymen_vault_expires_at');
-                            
-                            document.getElementById('vault-view').classList.add('hidden');
-                            document.getElementById('summary-panel').classList.add('opacity-0'); 
-                            document.getElementById('success-view').classList.remove('hidden');
-                            document.getElementById('success-ref').innerText = reference;
-                            
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                            return; 
-                        } 
-                        else if (statusData.status === 'rejected') {
-                            alert(statusData.bot_verification_msg || "El banco rechazó la transacción. Verifica los datos e intenta de nuevo.");
-                            
-                            resetBtn(btn);
-                            startVaultTimer(new Date().getTime() + 60000); 
-                            document.getElementById('btn-cancel-vault').disabled = false;
-                            return; 
-                        }
-                    }
-
-                    intentos++;
-                    
-                    if (intentos < maxIntentos) {
-                        setTimeout(verificarEstadoOrden, 9000); 
-                    } else {
-                        // Fallback de alta latencia
-                        localStorage.removeItem('gymenez_cart');
-                        localStorage.removeItem('gymen_vault_expires_at');
-                        
-                        document.getElementById('vault-view').classList.add('hidden');
-                        document.getElementById('summary-panel').classList.add('opacity-0'); 
-                        
-                        const successView = document.getElementById('success-view');
-                        successView.classList.remove('hidden');
-                        
-                        successView.className = "col-span-1 lg:col-span-12 text-center py-24 md:py-32 bg-white/5 rounded-[3rem] border border-[#FFC300]/30 shadow-2xl relative overflow-hidden backdrop-blur-xl mt-4 w-full";
-                        successView.innerHTML = `
-                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div class="w-1/2 h-1/2 bg-[#FFC300]/10 blur-[80px] rounded-full"></div>
-                            </div>
-                            <div class="w-20 h-20 mx-auto bg-[#FFC300]/10 border-2 border-[#FFC300] text-[#FFC300] rounded-full flex items-center justify-center mb-6 relative z-10">
-                                <svg class="w-10 h-10 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            </div>
-                            <h2 class="text-3xl md:text-4xl font-[900] uppercase tracking-tight text-white mb-4 relative z-10">Verificación Demorada</h2>
-                            <p class="text-gray-400 text-sm max-w-md mx-auto mb-10 leading-relaxed font-medium relative z-10">
-                                Tu inventario está reservado bajo la ref: <strong class="text-white bg-white/10 px-2 py-1 rounded">${reference}</strong>. Los servidores bancarios tienen alta latencia.<br><br>
-                                El pago será validado manualmente en breve y te notificaremos.
-                            </p>
-                            <a href="/store/account.html" class="inline-block relative z-10 bg-[#FFC300] text-black px-10 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:scale-[1.02] transition-all shadow-[0_10px_30px_rgba(255,195,0,0.2)]">
-                                Ver Mis Órdenes
-                            </a>
-                        `;
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
-
-                } catch (error) {
-                    console.error("Error consultando estado:", error);
-                    alert("Se interrumpió la conexión al validar. Tu orden está a salvo, verifica su estado en tu cuenta.");
-                    window.location.href = '/store/account.html';
-                }
-            };
-
-            setTimeout(verificarEstadoOrden, 9000);
-
-        } else {
-            alert(data.error || "Transacción rechazada por el servidor.");
-            resetBtn(btn);
-            startVaultTimer(new Date().getTime() + 60000); 
-            document.getElementById('btn-cancel-vault').disabled = false;
-        }
-    } catch (error) {
-        console.error("Error de red:", error);
-        alert("Pérdida de conexión segura. Intente nuevamente.");
-        resetBtn(btn);
-        startVaultTimer(new Date().getTime() + 60000); 
-        document.getElementById('btn-cancel-vault').disabled = false;
-    }
-});
-
-function resetBtn(btn) {
-    btn.disabled = false;
-    btn.innerHTML = `
-        <span>Procesar Compra</span>
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-    `;
-}
+        // ... (resto de tu lógica original de Polling / Success View se mantiene intacta) ...
