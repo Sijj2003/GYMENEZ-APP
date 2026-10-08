@@ -59,11 +59,29 @@ if (!window.originalFetch) {
 }
 
 function ejecutarPurgaLocal(mensaje) {
-    // Destruir rastro de credenciales en el navegador
+    // 1. Destruir rastro de credenciales en el navegador
     localStorage.removeItem('userSession');
     localStorage.removeItem(AUTH_TOKEN_KEY);
     
-    // Informar al atleta y sacarlo al perímetro exterior
-    alert(`ACCESO RESTRINGIDO: ${mensaje}`);
-    window.location.href = '/apps/start/login.html';
+    // 2. Embellecer la alerta (Usamos SweetAlert2 si está disponible en tu proyecto)
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Acceso Restringido',
+            text: mensaje,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#d33',
+            allowOutsideClick: false, // Obliga al usuario a darle al botón
+            allowEscapeKey: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Lo sacamos al perímetro exterior solo DESPUÉS de que leyó y cerró la alerta
+                window.location.href = '/apps/start/login.html';
+            }
+        });
+    } else {
+        // Respaldo de emergencia nativo (por si la librería bonita falla)
+        alert(`ACCESO RESTRINGIDO: ${mensaje}`);
+        window.location.href = '/apps/start/login.html';
+    }
 }
