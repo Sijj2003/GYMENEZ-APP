@@ -124,9 +124,9 @@ function updatePaymentFormFields() {
         if (tlfOrigen) tlfOrigen.required = false;
         if (refInput) {
             refInput.required = true;
-            refInput.placeholder = "Ej: 2938471029";
+            refInput.placeholder = "Ej: GYMPERFORMANCE"; // <-- CAMBIO AQUÍ
         }
-        if (refLabel) refLabel.innerText = "TxID / Order ID de Binance";
+        if (refLabel) refLabel.innerText = "Usuario (Nickname) Binance de Envío"; // <-- CAMBIO AQUÍ
         
         if (btnText) btnText.innerText = `Confirmar Pago USDT`;
 
