@@ -124,9 +124,9 @@ function updatePaymentFormFields() {
         if (tlfOrigen) tlfOrigen.required = false;
         if (refInput) {
             refInput.required = true;
-            refInput.placeholder = "Ej: GYMPERFORMANCE"; // <-- CAMBIO AQUÍ
+            refInput.placeholder = "Ej: GYMPERFORMANCE"; 
         }
-        if (refLabel) refLabel.innerText = "Usuario (Nickname) Binance de Envío"; // <-- CAMBIO AQUÍ
+        if (refLabel) refLabel.innerText = "Usuario (Nickname) Binance de Envío"; 
         
         if (btnText) btnText.innerText = `Confirmar Pago USDT`;
 
@@ -204,7 +204,8 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
         const btnText = document.getElementById('btn-process-text');
         if (btnText) btnText.innerText = "Redirigiendo...";
         setTimeout(() => {
-            alert("Apertura de pasarela internacional en desarrollo...");
+            if (typeof Swal !== 'undefined') Swal.fire("En Desarrollo", "Apertura de pasarela internacional en desarrollo...", "info");
+            else alert("Apertura de pasarela internacional en desarrollo...");
             if (btnText) btnText.innerText = "Ir a Pasarela Segura";
         }, 1500);
         return;
@@ -212,7 +213,7 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
 
     const btn = document.getElementById('btn-process-order');
     const reference = document.getElementById('pay-reference').value.trim();
-    const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('jwt_token');
+    const token = localStorage.getItem(typeof TOKEN_KEY !== 'undefined' ? TOKEN_KEY : 'jwt_token') || localStorage.getItem('jwt_token');
     
     btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Procesando...</span>`;
     btn.disabled = true;
@@ -242,7 +243,8 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
     const bancoOrigen = document.getElementById('pay-banco-origen') ? document.getElementById('pay-banco-origen').value : '';
 
     if (window.currentPaymentMethod === 'pago_movil' && (!telefonoOrigen || !bancoOrigen)) {
-        alert("Por favor indique el Banco y Teléfono desde el cual realizó el pago.");
+        if (typeof Swal !== 'undefined') Swal.fire("Atención", "Por favor indique el Banco y Teléfono desde el cual realizó el pago.", "warning");
+        else alert("Por favor indique el Banco y Teléfono desde el cual realizó el pago.");
         resetBtn(btn);
         if (typeof startVaultTimer === 'function') startVaultTimer(new Date().getTime() + 60000); 
         if (cancelBtn) cancelBtn.disabled = false;
@@ -270,6 +272,14 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
             body: JSON.stringify(payload)
         });
 
+        // ====================================================================
+        // 🛑 LÍNEA DEFENSIVA ANTI-DOBLE MENSAJE
+        // ====================================================================
+        if (response.status === 401 || response.status === 403) {
+            return; // Detenemos el script aquí en silencio.
+        }
+
+        // Parseamos JSON solo UNA vez
         const data = await response.json();
 
         if (response.ok && data.success) {
@@ -306,7 +316,9 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
                             return; 
                         } 
                         else if (statusData.status === 'rejected') {
-                            alert(statusData.bot_verification_msg || "El banco rechazó la transacción. Verifica los datos e intenta de nuevo.");
+                            if (typeof Swal !== 'undefined') Swal.fire("Transacción Rechazada", statusData.bot_verification_msg || "El banco rechazó la transacción. Verifica los datos e intenta de nuevo.", "error");
+                            else alert(statusData.bot_verification_msg || "El banco rechazó la transacción.");
+                            
                             resetBtn(btn);
                             if (typeof startVaultTimer === 'function') startVaultTimer(new Date().getTime() + 60000); 
                             if (cancelBtn) cancelBtn.disabled = false;
@@ -351,7 +363,8 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
 
                 } catch (error) {
                     console.error("Error consultando estado:", error);
-                    alert("Se interrumpió la conexión al validar. Tu orden está a salvo, verifica su estado en tu cuenta.");
+                    if (typeof Swal !== 'undefined') Swal.fire("Interrupción", "Se interrumpió la conexión al validar. Tu orden está a salvo, verifica su estado en tu cuenta.", "info");
+                    else alert("Se interrumpió la conexión al validar.");
                     window.location.href = '/store/account.html';
                 }
             };
@@ -359,14 +372,16 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
             setTimeout(verificarEstadoOrden, 9000);
 
         } else {
-            alert(data.error || "Transacción rechazada por el servidor.");
+            if (typeof Swal !== 'undefined') Swal.fire("Error", data.error || "Transacción rechazada por el servidor.", "warning");
+            else alert(data.error || "Transacción rechazada por el servidor.");
             resetBtn(btn);
             if (typeof startVaultTimer === 'function') startVaultTimer(new Date().getTime() + 60000); 
             if (cancelBtn) cancelBtn.disabled = false;
         }
     } catch (error) {
         console.error("Error de red:", error);
-        alert("Pérdida de conexión segura. Intente nuevamente.");
+        if (typeof Swal !== 'undefined') Swal.fire("Error de Conexión", "Pérdida de conexión segura. Intente nuevamente.", "error");
+        else alert("Pérdida de conexión segura. Intente nuevamente.");
         resetBtn(btn);
         if (typeof startVaultTimer === 'function') startVaultTimer(new Date().getTime() + 60000); 
         if (cancelBtn) cancelBtn.disabled = false;
