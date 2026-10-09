@@ -444,18 +444,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 const cartData = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
                 const itemsToProcess = cartData.items || cartData || [];
 
-                // 🛡️ REPLICA EXACTA CON PARSEADOR INTELIGENTE DE VARIANTES
+                // 🛡️ REPLICA EXACTA CON LIMPIEZA EXTREMA DEL ID
                 const cleanItems = itemsToProcess.map(item => {
                     const finalPrice = Number(parseFloat(item.price).toFixed(2));
                     
-                    // 🔥 EL FIX MÁGICO: Separar la talla/sabor del ID original
-                    const rawId = String(item.id);
-                    const baseId = rawId.includes('_') ? rawId.split('_')[0] : rawId;
+                    // 🔥 LIMPIEZA ABSOLUTA: Agarramos CUALQUIER ID que tenga y le cortamos la talla (_0)
+                    const taintedId = String(item.real_id || item.product_id || item.id);
+                    const cleanBaseId = taintedId.includes('_') ? taintedId.split('_')[0] : taintedId;
 
                     return {
-                        id: rawId, // El ID compuesto (Ej: ABCD_0)
-                        real_id: String(item.real_id || item.product_id || baseId), // El ID puro (Ej: ABCD)
-                        name: item.name,
+                        id: cleanBaseId,              // 🔥 OBLIGAMOS a Python a ver el ID limpio
+                        variant_id: String(item.id),  // Guardamos la talla aquí para la factura
+                        real_id: cleanBaseId,         // Limpio de nuevo por seguridad
+                        name: item.name || 'Producto',
                         price: finalPrice, 
                         qty: parseInt(item.quantity || item.qty || 1),
                         storeName: item.storeName || item.store_name || 'Gymenez Store',
@@ -489,19 +490,27 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                     
                     if (!response.ok) {
-                        const errData = await response.json().catch(() => ({}));
-                        throw new Error(errData.error || `Error HTTP ${response.status}`);
+                        const errorRawText = await response.text();
+                        console.error("⛔ PYTHON DENEGÓ LA ORDEN:", errorRawText);
+                        let errorMessage = `HTTP ${response.status}`;
+                        try {
+                            errorMessage = JSON.parse(errorRawText).error || errorMessage;
+                        } catch(e) {
+                            errorMessage = errorRawText.substring(0, 100);
+                        }
+                        throw new Error(errorMessage);
                     }
+                    
                     const orderData = await response.json();
                     
                     if (!orderData.success) {
-                        if (typeof Swal !== 'undefined') Swal.fire('Error', orderData.error, 'error');
+                        if (typeof Swal !== 'undefined') Swal.fire('Error de Backend', orderData.error, 'error');
                         return null;
                     }
                     return orderData.paypal_order_id; 
                 } catch (error) {
                     console.error("Error creando orden:", error);
-                    if (typeof Swal !== 'undefined') Swal.fire('Error del Servidor', `Python rechazó la orden: ${error.message}`, 'error');
+                    if (typeof Swal !== 'undefined') Swal.fire('Error del Servidor', `Python rechazó los productos: ${error.message}`, 'error');
                     return null;
                 }
             },
@@ -522,18 +531,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     const cartData = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
                     const itemsToProcess = cartData.items || cartData || [];
 
-                    // 🛡️ REPLICA EXACTA CON PARSEADOR INTELIGENTE DE VARIANTES
+                    // 🛡️ REPLICA EXACTA CON LIMPIEZA EXTREMA PARA CAPTURA
                     const cleanItems = itemsToProcess.map(item => {
                         const finalPrice = Number(parseFloat(item.price).toFixed(2));
-                        
-                        // 🔥 EL FIX MÁGICO: Separar la talla/sabor del ID original
-                        const rawId = String(item.id);
-                        const baseId = rawId.includes('_') ? rawId.split('_')[0] : rawId;
+                        const taintedId = String(item.real_id || item.product_id || item.id);
+                        const cleanBaseId = taintedId.includes('_') ? taintedId.split('_')[0] : taintedId;
 
                         return {
-                            id: rawId,
-                            real_id: String(item.real_id || item.product_id || baseId),
-                            name: item.name,
+                            id: cleanBaseId,
+                            variant_id: String(item.id),
+                            real_id: cleanBaseId,
+                            name: item.name || 'Producto',
                             price: finalPrice,
                             qty: parseInt(item.quantity || item.qty || 1),
                             storeName: item.storeName || item.store_name || 'Gymenez Store',
@@ -562,7 +570,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         })
                     });
 
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    if (!response.ok) {
+                        const errorRawText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorRawText.substring(0, 100)}`);
+                    }
+                    
                     const captureData = await response.json();
 
                     if (captureData.success) {
