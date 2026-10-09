@@ -444,12 +444,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 const cartData = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
                 const itemsToProcess = cartData.items || cartData || [];
 
-                // 🛡️ REPLICA EXACTA DE DATOS PARA QUE PYTHON NO DE ERROR 400
+                // 🛡️ REPLICA EXACTA CON PARSEADOR INTELIGENTE DE VARIANTES
                 const cleanItems = itemsToProcess.map(item => {
                     const finalPrice = Number(parseFloat(item.price).toFixed(2));
+                    
+                    // 🔥 EL FIX MÁGICO: Separar la talla/sabor del ID original
+                    const rawId = String(item.id);
+                    const baseId = rawId.includes('_') ? rawId.split('_')[0] : rawId;
+
                     return {
-                        id: String(item.id),
-                        real_id: String(item.real_id || item.product_id || item.id),
+                        id: rawId, // El ID compuesto (Ej: ABCD_0)
+                        real_id: String(item.real_id || item.product_id || baseId), // El ID puro (Ej: ABCD)
                         name: item.name,
                         price: finalPrice, 
                         qty: parseInt(item.quantity || item.qty || 1),
@@ -466,9 +471,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     return null; 
                 }
 
-                // 🔥 CRÍTICO: Python necesita saber si hay envío gratis para calcular bien
                 const wantsFreeShipping = document.getElementById('toggle-free-shipping') ? document.getElementById('toggle-free-shipping').checked : false;
-
                 const baseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '';
                 const apiUrl = `${baseUrl}/api/store/checkout/paypal/create`;
                 
@@ -519,11 +522,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     const cartData = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
                     const itemsToProcess = cartData.items || cartData || [];
 
+                    // 🛡️ REPLICA EXACTA CON PARSEADOR INTELIGENTE DE VARIANTES
                     const cleanItems = itemsToProcess.map(item => {
                         const finalPrice = Number(parseFloat(item.price).toFixed(2));
+                        
+                        // 🔥 EL FIX MÁGICO: Separar la talla/sabor del ID original
+                        const rawId = String(item.id);
+                        const baseId = rawId.includes('_') ? rawId.split('_')[0] : rawId;
+
                         return {
-                            id: String(item.id),
-                            real_id: String(item.real_id || item.product_id || item.id),
+                            id: rawId,
+                            real_id: String(item.real_id || item.product_id || baseId),
                             name: item.name,
                             price: finalPrice,
                             qty: parseInt(item.quantity || item.qty || 1),
