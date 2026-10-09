@@ -432,20 +432,11 @@ window.resetBtn = function(btn) {
 };
 
 // ====================================================================
-// 💳 INICIALIZACIÓN DE LA PASARELA PAYPAL (SMART BUTTONS AVANZADOS)
+// 💳 INICIALIZACIÓN DE LA PASARELA PAYPAL (SMART BUTTONS)
 // ====================================================================
 document.addEventListener("DOMContentLoaded", () => {
     if (typeof paypal !== 'undefined') {
         paypal.Buttons({
-            // 🔥 1. NUEVO DISEÑO PREMIUM Y APPLE/GOOGLE PAY 🔥
-            style: {
-                layout: 'vertical',   // Apila los botones (PayPal, Tarjetas, Apple Pay, Google Pay)
-                color:  'black',      // Botón oscuro para combinar con el modo Dark de Gymenez
-                shape:  'pill',       // Bordes completamente redondeados
-                label:  'pay'         // Muestra "Pagar" en el idioma del usuario
-            },
-
-            // 2. CREACIÓN DE LA ORDEN (Tu lógica original intacta)
             createOrder: async function(data, actions) {
                 const token = localStorage.getItem('jwt_token') || localStorage.getItem('gymen_auth_token');
                 
@@ -455,6 +446,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     qty: item.quantity || item.qty || 1
                 }));
 
+                // 🔥 LA CLAVE ESTÁ AQUÍ: Inyectamos tu API_BASE_URL para que encuentre a Python
                 const baseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '';
                 const apiUrl = `${baseUrl}/api/store/checkout/paypal/create`;
                 
@@ -476,7 +468,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 return orderData.paypal_order_id; 
             },
 
-            // 3. CAPTURA Y APROBACIÓN (Tu lógica original intacta)
             onApprove: async function(data, actions) {
                 const token = localStorage.getItem('jwt_token') || localStorage.getItem('gymen_auth_token');
 
@@ -497,6 +488,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }));
                 const wantsFreeShipping = document.getElementById('toggle-free-shipping') ? document.getElementById('toggle-free-shipping').checked : false;
 
+                // 🔥 LA CLAVE ESTÁ AQUÍ: Inyectamos tu API_BASE_URL
                 const baseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '';
                 const captureUrl = `${baseUrl}/api/store/checkout/paypal/capture`;
                 
