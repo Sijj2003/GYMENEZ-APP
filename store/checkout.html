@@ -8,6 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/store/home.css">
+
+    <!-- 1. SDK DE PAYPAL (Aquí va) -->
+    <script src="https://www.paypal.com/sdk/js?client-id=AX8t-QJzWRb5wFpzoMhUcfhgraZGoeoVMRAa8yYQEaWYPhnMexPUxmr4t-FMEVcd2w2mVICRUEK0bZ_G&currency=USD"></script>
     
     <script>
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { gymenez: { dark: '#030305', accent: '#FFC300' } } } } }
@@ -413,12 +416,11 @@
                 </div>
 
                 <div id="data-intl" class="hidden text-center py-6">
-                    <div class="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-400">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                    </div>
-                    <p class="text-xs text-gray-400 font-medium">Serás redirigido a una pasarela segura y cifrada para procesar tu tarjeta de crédito o cuenta PayPal.</p>
-                </div>
-            </div>
+    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Paga de forma segura sin salir de la tienda</p>
+    <!-- 2. EL CONTENEDOR MÁGICO DE PAYPAL -->
+    <div id="paypal-button-container" class="max-w-xs mx-auto"></div>
+</div>
+</div>
 
             <div id="verification-inputs">
                 <div id="payment-origin-data" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 transition-all duration-300">
