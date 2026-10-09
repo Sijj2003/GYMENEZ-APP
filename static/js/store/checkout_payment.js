@@ -437,7 +437,6 @@ window.resetBtn = function(btn) {
 document.addEventListener("DOMContentLoaded", () => {
     if (typeof paypal !== 'undefined') {
         paypal.Buttons({
-            // 1. CREAR LA ORDEN SEGURA EN TU SERVIDOR
             createOrder: async function(data, actions) {
                 const token = localStorage.getItem('jwt_token') || localStorage.getItem('gymen_auth_token');
                 
@@ -447,10 +446,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     qty: item.quantity || item.qty || 1
                 }));
 
-                // 🔥 SOLUCIÓN: Usamos una ruta relativa absoluta.
-                // Esto garantiza que si estás en localhost:5000, la petición vaya a localhost:5000.
-                // Si estás en gymenez.com, irá a gymenez.com. No forzamos API_BASE_URL a menos que falle.
-                const apiUrl = '/api/store/checkout/paypal/create';
+                // 🔥 LA CLAVE ESTÁ AQUÍ: Inyectamos tu API_BASE_URL para que encuentre a Python
+                const baseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '';
+                const apiUrl = `${baseUrl}/api/store/checkout/paypal/create`;
                 
                 const response = await fetch(apiUrl, {
                     method: 'POST',
@@ -464,14 +462,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 const orderData = await response.json();
                 
                 if (!orderData.success) {
-                    if (typeof Swal !== 'undefined') Swal.fire('Error', 'Fallo al validar los precios: ' + orderData.error, 'error');
+                    if (typeof Swal !== 'undefined') Swal.fire('Error', 'Fallo al validar: ' + orderData.error, 'error');
                     return;
                 }
-                
                 return orderData.paypal_order_id; 
             },
 
-            // 2. CAPTURAR EL PAGO Y MANDAR A CUARENTENA
             onApprove: async function(data, actions) {
                 const token = localStorage.getItem('jwt_token') || localStorage.getItem('gymen_auth_token');
 
@@ -492,8 +488,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 }));
                 const wantsFreeShipping = document.getElementById('toggle-free-shipping') ? document.getElementById('toggle-free-shipping').checked : false;
 
-                // 🔥 SOLUCIÓN: Ruta relativa absoluta
-                const captureUrl = '/api/store/checkout/paypal/capture';
+                // 🔥 LA CLAVE ESTÁ AQUÍ: Inyectamos tu API_BASE_URL
+                const baseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '';
+                const captureUrl = `${baseUrl}/api/store/checkout/paypal/capture`;
                 
                 const response = await fetch(captureUrl, {
                     method: 'POST',
@@ -533,17 +530,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                     
                 } else {
-                    if (typeof Swal !== 'undefined') Swal.fire('Pago Rechazado', captureData.error || 'Hubo un problema procesando la tarjeta.', 'error');
+                    if (typeof Swal !== 'undefined') Swal.fire('Pago Rechazado', captureData.error || 'Hubo un problema.', 'error');
                 }
             },
-            
-            onCancel: function (data) {
-                console.log('El usuario cerró la ventana de PayPal.');
-            },
-            
             onError: function (err) {
-                console.error('Error de red PayPal:', err);
-                if (typeof Swal !== 'undefined') Swal.fire('Error', 'Fallo de conexión con PayPal.', 'error');
+                console.error('Error PayPal:', err);
             }
         }).render('#paypal-button-container');
     }
