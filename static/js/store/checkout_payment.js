@@ -439,17 +439,20 @@ document.addEventListener("DOMContentLoaded", () => {
         paypal.Buttons({
             // 1. CREAR LA ORDEN SEGURA EN TU SERVIDOR
             createOrder: async function(data, actions) {
-                // Recuperar el token del usuario logueado
                 const token = localStorage.getItem('jwt_token') || localStorage.getItem('gymen_auth_token');
                 
-                // Mapear el carrito igual que tu form normal
                 const cleanItems = (typeof cartItems !== 'undefined' ? cartItems : []).map(item => ({
                     id: item.id,
                     price: item.price,
                     qty: item.quantity || item.qty || 1
                 }));
 
-                const response = await fetch('/api/store/checkout/paypal/create', {
+                // 🔥 SOLUCIÓN: Usamos una ruta relativa absoluta.
+                // Esto garantiza que si estás en localhost:5000, la petición vaya a localhost:5000.
+                // Si estás en gymenez.com, irá a gymenez.com. No forzamos API_BASE_URL a menos que falle.
+                const apiUrl = '/api/store/checkout/paypal/create';
+                
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -481,7 +484,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                 }
 
-                const response = await fetch('/api/store/checkout/paypal/capture', {
+                const cleanItems = (typeof cartItems !== 'undefined' ? cartItems : []).map(item => ({
+                    id: item.id,
+                    real_id: item.real_id || item.id,
+                    price: item.price,
+                    qty: item.quantity || item.qty || 1
+                }));
+                const wantsFreeShipping = document.getElementById('toggle-free-shipping') ? document.getElementById('toggle-free-shipping').checked : false;
+
+                // 🔥 SOLUCIÓN: Ruta relativa absoluta
+                const captureUrl = '/api/store/checkout/paypal/capture';
+                
+                const response = await fetch(captureUrl, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -489,7 +503,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     },
                     body: JSON.stringify({ 
                         paypal_order_id: data.orderID,
-                        user_id: typeof currentUser !== 'undefined' ? currentUser.uid : null
+                        user_id: typeof currentUser !== 'undefined' ? currentUser.uid : null,
+                        items: cleanItems,
+                        wants_free_shipping: wantsFreeShipping
                     })
                 });
 
@@ -498,12 +514,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (captureData.success) {
                     if (typeof Swal !== 'undefined') Swal.close();
                     
-                    // LIMPIAR CARRITO
                     localStorage.removeItem('gymenez_cart');
                     localStorage.removeItem('gymen_vault_expires_at');
                     if (typeof vaultInterval !== 'undefined') clearInterval(vaultInterval);
                     
-                    // TRANSICIÓN A TU PANTALLA DE ÉXITO (VISTA C)
                     document.getElementById('vault-view')?.classList.add('hidden');
                     document.getElementById('summary-panel')?.classList.add('opacity-0');
                     
@@ -513,7 +527,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         successView.className = "col-span-1 lg:col-span-12 text-center py-24 md:py-32 bg-white/5 rounded-[3rem] border border-emerald-500/20 shadow-2xl relative overflow-hidden backdrop-blur-xl mt-4 w-full";
                     }
                     
-                    // Imprimir el ID de PayPal como recibo
                     const successRef = document.getElementById('success-ref');
                     if (successRef) successRef.innerText = data.orderID;
                     
