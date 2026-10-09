@@ -437,35 +437,63 @@ window.resetBtn = function(btn) {
 document.addEventListener("DOMContentLoaded", () => {
     if (typeof paypal !== 'undefined') {
         paypal.Buttons({
+            // 🎨 ESTILO: Resalta en oro para el modo oscuro
+            style: {
+                layout: 'vertical',
+                color:  'gold',
+                shape:  'pill',
+                label:  'pay'
+            },
+
             createOrder: async function(data, actions) {
                 const token = localStorage.getItem('jwt_token') || localStorage.getItem('gymen_auth_token');
                 
-                const cleanItems = (typeof cartItems !== 'undefined' ? cartItems : []).map(item => ({
-                    id: item.id,
-                    price: item.price,
-                    qty: item.quantity || item.qty || 1
-                }));
+                // 📦 LEER DIRECTO DE MEMORIA
+                const cartData = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
+                const itemsToProcess = cartData.items || cartData || [];
 
-                // 🔥 LA CLAVE ESTÁ AQUÍ: Inyectamos tu API_BASE_URL para que encuentre a Python
+                // 🛡️ FORMATEO ESTRICTO: Forzar 2 decimales y real_id para evitar error 400
+                const cleanItems = itemsToProcess.map(item => {
+                    const finalPrice = Number(parseFloat(item.price).toFixed(2));
+                    return {
+                        id: String(item.id),
+                        real_id: String(item.real_id || item.product_id || item.id),
+                        price: finalPrice, 
+                        qty: parseInt(item.quantity || item.qty || 1)
+                    };
+                });
+
+                if (cleanItems.length === 0) {
+                    if (typeof Swal !== 'undefined') Swal.fire('Error', 'El carrito está vacío.', 'error');
+                    return null; 
+                }
+
                 const baseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '';
                 const apiUrl = `${baseUrl}/api/store/checkout/paypal/create`;
                 
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ items: cleanItems })
-                });
-                
-                const orderData = await response.json();
-                
-                if (!orderData.success) {
-                    if (typeof Swal !== 'undefined') Swal.fire('Error', 'Fallo al validar: ' + orderData.error, 'error');
-                    return;
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ items: cleanItems })
+                    });
+                    
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const orderData = await response.json();
+                    
+                    if (!orderData.success) {
+                        if (typeof Swal !== 'undefined') Swal.fire('Error', orderData.error, 'error');
+                        return null;
+                    }
+                    return orderData.paypal_order_id; 
+                } catch (error) {
+                    console.error("Error creando orden:", error);
+                    if (typeof Swal !== 'undefined') Swal.fire('Error del Servidor', 'No se pudo crear la orden.', 'error');
+                    return null;
                 }
-                return orderData.paypal_order_id; 
             },
 
             onApprove: async function(data, actions) {
@@ -480,59 +508,85 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                 }
 
-                const cleanItems = (typeof cartItems !== 'undefined' ? cartItems : []).map(item => ({
-                    id: item.id,
-                    real_id: item.real_id || item.id,
-                    price: item.price,
-                    qty: item.quantity || item.qty || 1
-                }));
-                const wantsFreeShipping = document.getElementById('toggle-free-shipping') ? document.getElementById('toggle-free-shipping').checked : false;
+                try {
+                    const cartData = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
+                    const itemsToProcess = cartData.items || cartData || [];
 
-                // 🔥 LA CLAVE ESTÁ AQUÍ: Inyectamos tu API_BASE_URL
-                const baseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '';
-                const captureUrl = `${baseUrl}/api/store/checkout/paypal/capture`;
-                
-                const response = await fetch(captureUrl, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ 
-                        paypal_order_id: data.orderID,
-                        user_id: typeof currentUser !== 'undefined' ? currentUser.uid : null,
-                        items: cleanItems,
-                        wants_free_shipping: wantsFreeShipping
-                    })
-                });
+                    // 🛡️ FORMATEO ESTRICTO DE CAPTURA
+                    const cleanItems = itemsToProcess.map(item => {
+                        const finalPrice = Number(parseFloat(item.price).toFixed(2));
+                        return {
+                            id: String(item.id),
+                            real_id: String(item.real_id || item.product_id || item.id),
+                            price: finalPrice,
+                            qty: parseInt(item.quantity || item.qty || 1)
+                        };
+                    });
+                    
+                    const wantsFreeShipping = document.getElementById('toggle-free-shipping') ? document.getElementById('toggle-free-shipping').checked : false;
+                    const baseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '';
+                    const captureUrl = `${baseUrl}/api/store/checkout/paypal/capture`;
+                    
+                    const response = await fetch(captureUrl, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ 
+                            paypal_order_id: data.orderID,
+                            user_id: typeof currentUser !== 'undefined' ? currentUser.uid : null,
+                            items: cleanItems,
+                            wants_free_shipping: wantsFreeShipping
+                        })
+                    });
 
-                const captureData = await response.json();
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const captureData = await response.json();
 
-                if (captureData.success) {
-                    if (typeof Swal !== 'undefined') Swal.close();
-                    
-                    localStorage.removeItem('gymenez_cart');
-                    localStorage.removeItem('gymen_vault_expires_at');
-                    if (typeof vaultInterval !== 'undefined') clearInterval(vaultInterval);
-                    
-                    document.getElementById('vault-view')?.classList.add('hidden');
-                    document.getElementById('summary-panel')?.classList.add('opacity-0');
-                    
-                    const successView = document.getElementById('success-view');
-                    if (successView) {
-                        successView.classList.remove('hidden');
-                        successView.className = "col-span-1 lg:col-span-12 text-center py-24 md:py-32 bg-white/5 rounded-[3rem] border border-emerald-500/20 shadow-2xl relative overflow-hidden backdrop-blur-xl mt-4 w-full";
+                    if (captureData.success) {
+                        if (typeof Swal !== 'undefined') Swal.close();
+                        
+                        localStorage.removeItem('gymenez_cart');
+                        localStorage.removeItem('gymen_vault_expires_at');
+                        if (typeof vaultInterval !== 'undefined') clearInterval(vaultInterval);
+                        
+                        document.getElementById('vault-view')?.classList.add('hidden');
+                        document.getElementById('summary-panel')?.classList.add('opacity-0');
+                        
+                        const successView = document.getElementById('success-view');
+                        if (successView) {
+                            successView.classList.remove('hidden');
+                            successView.className = "col-span-1 lg:col-span-12 text-center py-24 md:py-32 bg-white/5 rounded-[3rem] border border-emerald-500/20 shadow-2xl relative overflow-hidden backdrop-blur-xl mt-4 w-full";
+                        }
+                        
+                        const successRef = document.getElementById('success-ref');
+                        if (successRef) successRef.innerText = data.orderID;
+                        
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        
+                    } else {
+                        if (typeof Swal !== 'undefined') Swal.fire('Pago Rechazado', captureData.error || 'Hubo un problema.', 'error');
                     }
-                    
-                    const successRef = document.getElementById('success-ref');
-                    if (successRef) successRef.innerText = data.orderID;
-                    
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    
-                } else {
-                    if (typeof Swal !== 'undefined') Swal.fire('Pago Rechazado', captureData.error || 'Hubo un problema.', 'error');
+                } catch (error) {
+                    console.error("Error crítico en onApprove:", error);
+                    if (typeof Swal !== 'undefined') Swal.fire('Error del Servidor', 'El pago se procesó en PayPal, pero falló el registro. Contáctanos con tu ID de transacción.', 'error');
                 }
             },
+
+            // 🛑 NUEVO: MANEJO DE CANCELACIÓN
+            onCancel: function (data) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Pago Cancelado',
+                        text: 'Has cerrado la ventana de PayPal. Tus productos siguen reservados.',
+                        icon: 'info',
+                        confirmButtonColor: '#FFC300',
+                        confirmButtonText: 'Entendido'
+                    });
+                }
+            },
+
             onError: function (err) {
                 console.error('Error PayPal:', err);
             }
