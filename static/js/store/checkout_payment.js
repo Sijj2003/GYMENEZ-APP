@@ -437,6 +437,14 @@ window.resetBtn = function(btn) {
 document.addEventListener("DOMContentLoaded", () => {
     if (typeof paypal !== 'undefined') {
         paypal.Buttons({
+            // 🔥 Ajuste de diseño para Dark Mode 🔥
+            style: {
+                layout: 'vertical',
+                color:  'gold',      // Hace el botón amarillo para que resalte
+                shape:  'pill',      // Bordes redondeados
+                label:  'pay'
+            },
+
             createOrder: async function(data, actions) {
                 const token = localStorage.getItem('jwt_token') || localStorage.getItem('gymen_auth_token');
                 
