@@ -51,7 +51,15 @@ if (!window.originalFetch) {
                 // Falla silenciosa si no se puede parsear
             }
 
+            // Ejecutamos la alerta visual y limpiamos las credenciales
             ejecutarPurgaLocal(errorMsg);
+            
+            // ========================================================
+            // 🛑 EL TRUCO MAESTRO (ANTI-DOBLE MENSAJE)
+            // Retornamos una promesa "congelada". De esta forma, el script 
+            // que hizo la petición se queda en pausa y jamás lanza su propio error.
+            // ========================================================
+            return new Promise(() => {}); 
         }
         
         return response;
