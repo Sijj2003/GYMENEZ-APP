@@ -437,29 +437,27 @@ window.resetBtn = function(btn) {
 document.addEventListener("DOMContentLoaded", () => {
     if (typeof paypal !== 'undefined') {
         paypal.Buttons({
-            // 🎨 ESTILO: Resalta en oro para el modo oscuro
-            style: {
-                layout: 'vertical',
-                color:  'gold',
-                shape:  'pill',
-                label:  'pay'
-            },
+            style: { layout: 'vertical', color: 'gold', shape: 'pill', label: 'pay' },
 
             createOrder: async function(data, actions) {
                 const token = localStorage.getItem('jwt_token') || localStorage.getItem('gymen_auth_token');
-                
-                // 📦 LEER DIRECTO DE MEMORIA
                 const cartData = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
                 const itemsToProcess = cartData.items || cartData || [];
 
-                // 🛡️ FORMATEO ESTRICTO: Forzar 2 decimales y real_id para evitar error 400
+                // 🛡️ REPLICA EXACTA DE DATOS PARA QUE PYTHON NO DE ERROR 400
                 const cleanItems = itemsToProcess.map(item => {
                     const finalPrice = Number(parseFloat(item.price).toFixed(2));
                     return {
                         id: String(item.id),
                         real_id: String(item.real_id || item.product_id || item.id),
+                        name: item.name,
                         price: finalPrice, 
-                        qty: parseInt(item.quantity || item.qty || 1)
+                        qty: parseInt(item.quantity || item.qty || 1),
+                        storeName: item.storeName || item.store_name || 'Gymenez Store',
+                        weight_kg: item.weight_kg || 1,
+                        free_shipping: item.free_shipping === true || item.free_shipping === 'true',
+                        is_on_demand: item.is_on_demand === true || item.is_on_demand === 'true',
+                        free_shipping_threshold: parseFloat(item.free_shipping_threshold || 0)
                     };
                 });
 
@@ -467,6 +465,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (typeof Swal !== 'undefined') Swal.fire('Error', 'El carrito está vacío.', 'error');
                     return null; 
                 }
+
+                // 🔥 CRÍTICO: Python necesita saber si hay envío gratis para calcular bien
+                const wantsFreeShipping = document.getElementById('toggle-free-shipping') ? document.getElementById('toggle-free-shipping').checked : false;
 
                 const baseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '';
                 const apiUrl = `${baseUrl}/api/store/checkout/paypal/create`;
@@ -478,10 +479,16 @@ document.addEventListener("DOMContentLoaded", () => {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
                         },
-                        body: JSON.stringify({ items: cleanItems })
+                        body: JSON.stringify({ 
+                            items: cleanItems,
+                            wants_free_shipping: wantsFreeShipping 
+                        })
                     });
                     
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        throw new Error(errData.error || `Error HTTP ${response.status}`);
+                    }
                     const orderData = await response.json();
                     
                     if (!orderData.success) {
@@ -491,7 +498,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     return orderData.paypal_order_id; 
                 } catch (error) {
                     console.error("Error creando orden:", error);
-                    if (typeof Swal !== 'undefined') Swal.fire('Error del Servidor', 'No se pudo crear la orden.', 'error');
+                    if (typeof Swal !== 'undefined') Swal.fire('Error del Servidor', `Python rechazó la orden: ${error.message}`, 'error');
                     return null;
                 }
             },
@@ -512,14 +519,19 @@ document.addEventListener("DOMContentLoaded", () => {
                     const cartData = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
                     const itemsToProcess = cartData.items || cartData || [];
 
-                    // 🛡️ FORMATEO ESTRICTO DE CAPTURA
                     const cleanItems = itemsToProcess.map(item => {
                         const finalPrice = Number(parseFloat(item.price).toFixed(2));
                         return {
                             id: String(item.id),
                             real_id: String(item.real_id || item.product_id || item.id),
+                            name: item.name,
                             price: finalPrice,
-                            qty: parseInt(item.quantity || item.qty || 1)
+                            qty: parseInt(item.quantity || item.qty || 1),
+                            storeName: item.storeName || item.store_name || 'Gymenez Store',
+                            weight_kg: item.weight_kg || 1,
+                            free_shipping: item.free_shipping === true || item.free_shipping === 'true',
+                            is_on_demand: item.is_on_demand === true || item.is_on_demand === 'true',
+                            free_shipping_threshold: parseFloat(item.free_shipping_threshold || 0)
                         };
                     });
                     
@@ -546,7 +558,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     if (captureData.success) {
                         if (typeof Swal !== 'undefined') Swal.close();
-                        
                         localStorage.removeItem('gymenez_cart');
                         localStorage.removeItem('gymen_vault_expires_at');
                         if (typeof vaultInterval !== 'undefined') clearInterval(vaultInterval);
@@ -559,22 +570,19 @@ document.addEventListener("DOMContentLoaded", () => {
                             successView.classList.remove('hidden');
                             successView.className = "col-span-1 lg:col-span-12 text-center py-24 md:py-32 bg-white/5 rounded-[3rem] border border-emerald-500/20 shadow-2xl relative overflow-hidden backdrop-blur-xl mt-4 w-full";
                         }
-                        
                         const successRef = document.getElementById('success-ref');
                         if (successRef) successRef.innerText = data.orderID;
                         
                         window.scrollTo({ top: 0, behavior: 'smooth' });
-                        
                     } else {
                         if (typeof Swal !== 'undefined') Swal.fire('Pago Rechazado', captureData.error || 'Hubo un problema.', 'error');
                     }
                 } catch (error) {
                     console.error("Error crítico en onApprove:", error);
-                    if (typeof Swal !== 'undefined') Swal.fire('Error del Servidor', 'El pago se procesó en PayPal, pero falló el registro. Contáctanos con tu ID de transacción.', 'error');
+                    if (typeof Swal !== 'undefined') Swal.fire('Error del Servidor', 'El pago se procesó, pero falló el registro en Gymenez Store.', 'error');
                 }
             },
 
-            // 🛑 NUEVO: MANEJO DE CANCELACIÓN
             onCancel: function (data) {
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({
@@ -586,7 +594,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                 }
             },
-
             onError: function (err) {
                 console.error('Error PayPal:', err);
             }
