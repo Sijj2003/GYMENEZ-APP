@@ -114,6 +114,11 @@ function updatePaymentFormFields() {
             : `Procesar Compra`;
         if (btnText) btnText.innerText = `Pagar ${montoStr}`;
 
+        // MOSTRAR BOTONES NATIVOS
+        if (btnText) btnText.parentElement.style.display = '';
+        const cancelBtn = document.getElementById('btn-cancel-vault');
+        if (cancelBtn) cancelBtn.style.display = '';
+
     } else if (window.currentPaymentMethod === 'binance') {
         dataBinance?.classList.remove('hidden');
         verificationInputs?.classList.remove('hidden');
@@ -130,6 +135,11 @@ function updatePaymentFormFields() {
         
         if (btnText) btnText.innerText = `Confirmar Pago USDT`;
 
+        // MOSTRAR BOTONES NATIVOS
+        if (btnText) btnText.parentElement.style.display = '';
+        const cancelBtn = document.getElementById('btn-cancel-vault');
+        if (cancelBtn) cancelBtn.style.display = '';
+
     } else if (window.currentPaymentMethod === 'paypal') {
         dataIntl?.classList.remove('hidden');
         verificationInputs?.classList.add('hidden'); 
@@ -138,7 +148,10 @@ function updatePaymentFormFields() {
         if (tlfOrigen) tlfOrigen.required = false;
         if (refInput) refInput.required = false;
 
-        if (btnText) btnText.innerText = `Ir a Pasarela Segura`;
+        // OCULTAR LOS BOTONES NATIVOS PARA QUE NO CHOQUEN CON PAYPAL
+        if (btnText) btnText.parentElement.style.display = 'none';
+        const cancelBtn = document.getElementById('btn-cancel-vault');
+        if (cancelBtn) cancelBtn.style.display = 'none';
     }
 
     validateFinalButton();
@@ -417,3 +430,108 @@ window.resetBtn = function(btn) {
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
     `;
 };
+
+// ====================================================================
+// 💳 INICIALIZACIÓN DE LA PASARELA PAYPAL (SMART BUTTONS)
+// ====================================================================
+document.addEventListener("DOMContentLoaded", () => {
+    if (typeof paypal !== 'undefined') {
+        paypal.Buttons({
+            // 1. CREAR LA ORDEN SEGURA EN TU SERVIDOR
+            createOrder: async function(data, actions) {
+                // Recuperar el token del usuario logueado
+                const token = localStorage.getItem('jwt_token') || localStorage.getItem('gymen_auth_token');
+                
+                // Mapear el carrito igual que tu form normal
+                const cleanItems = (typeof cartItems !== 'undefined' ? cartItems : []).map(item => ({
+                    id: item.id,
+                    price: item.price,
+                    qty: item.quantity || item.qty || 1
+                }));
+
+                const response = await fetch('/api/store/checkout/paypal/create', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ items: cleanItems })
+                });
+                
+                const orderData = await response.json();
+                
+                if (!orderData.success) {
+                    if (typeof Swal !== 'undefined') Swal.fire('Error', 'Fallo al validar los precios: ' + orderData.error, 'error');
+                    return;
+                }
+                
+                return orderData.paypal_order_id; 
+            },
+
+            // 2. CAPTURAR EL PAGO Y MANDAR A CUARENTENA
+            onApprove: async function(data, actions) {
+                const token = localStorage.getItem('jwt_token') || localStorage.getItem('gymen_auth_token');
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Procesando pago...',
+                        text: 'Asegurando tu orden con cifrado bancario.',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+                }
+
+                const response = await fetch('/api/store/checkout/paypal/capture', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ 
+                        paypal_order_id: data.orderID,
+                        user_id: typeof currentUser !== 'undefined' ? currentUser.uid : null
+                    })
+                });
+
+                const captureData = await response.json();
+
+                if (captureData.success) {
+                    if (typeof Swal !== 'undefined') Swal.close();
+                    
+                    // LIMPIAR CARRITO
+                    localStorage.removeItem('gymenez_cart');
+                    localStorage.removeItem('gymen_vault_expires_at');
+                    if (typeof vaultInterval !== 'undefined') clearInterval(vaultInterval);
+                    
+                    // TRANSICIÓN A TU PANTALLA DE ÉXITO (VISTA C)
+                    document.getElementById('vault-view')?.classList.add('hidden');
+                    document.getElementById('summary-panel')?.classList.add('opacity-0');
+                    
+                    const successView = document.getElementById('success-view');
+                    if (successView) {
+                        successView.classList.remove('hidden');
+                        successView.className = "col-span-1 lg:col-span-12 text-center py-24 md:py-32 bg-white/5 rounded-[3rem] border border-emerald-500/20 shadow-2xl relative overflow-hidden backdrop-blur-xl mt-4 w-full";
+                    }
+                    
+                    // Imprimir el ID de PayPal como recibo
+                    const successRef = document.getElementById('success-ref');
+                    if (successRef) successRef.innerText = data.orderID;
+                    
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    
+                } else {
+                    if (typeof Swal !== 'undefined') Swal.fire('Pago Rechazado', captureData.error || 'Hubo un problema procesando la tarjeta.', 'error');
+                }
+            },
+            
+            onCancel: function (data) {
+                console.log('El usuario cerró la ventana de PayPal.');
+            },
+            
+            onError: function (err) {
+                console.error('Error de red PayPal:', err);
+                if (typeof Swal !== 'undefined') Swal.fire('Error', 'Fallo de conexión con PayPal.', 'error');
+            }
+        }).render('#paypal-button-container');
+    }
+});
