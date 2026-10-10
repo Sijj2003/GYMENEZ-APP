@@ -55,11 +55,9 @@ function calculateMetrics(orders, catalog) {
     orders.forEach(order => {
         const orderTotal = parseFloat(order.my_total_usd || 0);
         
-        // Estandarizamos los estados (los pasamos a minúsculas para evitar errores de mayúsculas)
+        // Estandarizamos los estados (los pasamos a minúsculas para evitar errores)
         const globalStatus = (order.global_payment_status || '').toLowerCase();
-        
-        // A veces el backend puede enviar null, undefined, o un string distinto, nos aseguramos:
-        const shippingStatus = (order.partner_shipping_status || 'pending').toLowerCase();
+        const shippingStatus = (order.partner_shipping_status || '').toLowerCase();
 
         // Ventas SOLO DEL MES ACTUAL
         if (order.created_at) {
@@ -72,27 +70,21 @@ function calculateMetrics(orders, catalog) {
             }
         }
 
-        // Escrow (Retenido Seguro: Pagos confirmados, orden aún no liquidada ni completada 100%)
+        // Escrow (Retenido Seguro: Pagos confirmados, orden aún no liquidada)
         if (globalStatus === 'processing' || globalStatus === 'enviado') {
             netEscrow += orderTotal;
         }
 
-        // 🎯 CORRECCIÓN: Órdenes por Despachar (El semáforo verde "Luz Verde")
-        // Condición: El pago ya no está en validación ('pending_verification') Y la tienda aún no ha anexado la guía ('shipped')
+        // 🎯 CORRECCIÓN INFALIBLE: Lógica espejo del panel de Órdenes
+        // Si NO está esperando pago, NO ha sido cancelada/completada, y el partner NO la ha enviado...
         if (
-            (globalStatus === 'processing' || globalStatus === 'liquidated' || globalStatus === 'enviado') && 
-            shippingStatus !== 'shipped' && 
-            shippingStatus !== 'delivered' &&
-            shippingStatus !== 'completado'
+            globalStatus !== 'pending_verification' && 
+            globalStatus !== 'cancelled' && 
+            globalStatus !== 'failed' && 
+            globalStatus !== 'completado' &&
+            shippingStatus !== 'shipped'
         ) {
-            // Validar de forma extra que no exista historial logístico previo en la orden principal
-            // (A veces el estado global puede estar desfasado del estado del partner)
-            if (!order.historial_envio || order.historial_envio.length === 0) {
-                // Validación final: Nos aseguramos de que no hay tracking guides de esta tienda
-                if (!order.tracking_guides || order.tracking_guides.length === 0) {
-                     pendingOrdersCount++;
-                }
-            }
+            pendingOrdersCount++;
         }
     });
 
