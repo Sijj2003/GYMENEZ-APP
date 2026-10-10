@@ -195,9 +195,56 @@
     </main>
 
     <!-- ======================================================= -->
-    <!-- MODAL DE PERFIL (Para no romper imports) -->
+    <!-- MODAL DE PERFIL B2B PREMIUM -->
     <!-- ======================================================= -->
-    <div id="profile-modal" class="hidden"></div> 
+    <div id="profile-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-lg rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500">
+            
+            <div class="p-8 pb-0 text-right">
+                <button onclick="if(typeof closeProfileModal === 'function') closeProfileModal()" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="p-8 pt-0 flex flex-col items-center">
+                <!-- Avatar Upload -->
+                <div class="relative group cursor-pointer mb-6" onclick="document.getElementById('upload-logo-input').click()">
+                    <div id="modal-profile-logo" class="w-28 h-28 rounded-full bg-[#12121a] border-2 border-dashed border-white/20 flex items-center justify-center text-4xl font-black text-gray-600 overflow-hidden group-hover:border-[#FFC300] transition-colors shadow-xl">
+                        P
+                    </div>
+                    <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </div>
+                    <input type="file" id="upload-logo-input" class="hidden" accept="image/*" onchange="if(typeof uploadNewLogo === 'function') uploadNewLogo(this)">
+                </div>
+
+                <h2 class="text-2xl font-[900] tracking-tighter uppercase italic text-white mb-8">Datos <span class="text-[#FFC300]">Corporativos</span></h2>
+
+                <div class="w-full space-y-4">
+                    <div>
+                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Razón Social / Tienda</label>
+                        <input type="text" id="prof-name" class="w-full bg-[#030305] border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none" readonly>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Documento (RIF/CI)</label>
+                            <input type="text" id="prof-doc" class="w-full bg-[#030305] border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Teléfono</label>
+                            <input type="text" id="prof-phone" class="w-full bg-[#030305] border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none" readonly>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Correo de Acceso Master</label>
+                        <input type="text" id="prof-email" class="w-full bg-[#030305] border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-emerald-400 focus:outline-none" readonly>
+                    </div>
+                </div>
+                
+                <p class="text-[9px] text-gray-600 font-bold mt-8 mb-4 text-center">Para modificar datos fiscales o el correo máster de acceso, debes emitir un ticket al departamento de Soporte de Gymenez.</p>
+            </div>
+        </div>
+    </div>
 
     <!-- ======================================================= -->
     <!-- MOTOR JAVASCRIPT MODULAR B2B -->
