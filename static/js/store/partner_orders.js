@@ -340,16 +340,72 @@ window.addTrackingGuide = async function(event) {
 };
 
 // ==========================================
-// UTILITIES (Placeholders para desarrollo futuro)
+// UTILITIES: GENERADOR DE ETIQUETAS Y ESCÁNER
 // ==========================================
-window.generarEtiquetaPDF = function() {
-    if(navigator.vibrate) navigator.vibrate([30]);
-    alert("Iniciando generación de Packing Slip PDF para la orden #" + currentSelectedOrder.id + "...");
-    // Aquí integraremos jsPDF o enviaremos al backend para retornar el documento.
+window.generarEtiquetaPDF = async function(event) {
+    if (!currentSelectedOrder) return;
+    
+    if(navigator.vibrate) navigator.vibrate([30, 50, 30]);
+
+    // Feedback visual: Cambiamos el ícono de la impresora por un spinner de carga
+    const eventBtn = event ? event.currentTarget : null;
+    let originalHTML = '';
+    if (eventBtn) {
+        originalHTML = eventBtn.innerHTML;
+        eventBtn.innerHTML = `<div class="w-5 h-5 border-2 border-gray-400 border-t-white rounded-full animate-spin"></div>`;
+        eventBtn.disabled = true;
+    }
+
+    try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const res = await fetch(`${API_BASE_URL}/api/partner/orders/${currentSelectedOrder.id}/packing-slip`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!res.ok) {
+            // Si falla, el backend nos devuelve un JSON con el error
+            const errorData = await res.json();
+            alert(errorData.error || "No se pudo generar la etiqueta.");
+            return;
+        }
+
+        // 1. Extraemos el archivo binario de la respuesta (Blob)
+        const blob = await res.blob();
+        
+        // 2. Creamos una URL temporal en la memoria del navegador
+        const url = window.URL.createObjectURL(blob);
+        
+        // 3. Creamos un enlace invisible, simulamos el clic y lo destruimos
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `Etiqueta_Gymenez_${currentSelectedOrder.id}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        
+        // Limpiamos la memoria RAM del navegador
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        if(navigator.vibrate) navigator.vibrate([50]); // Vibración de éxito
+
+    } catch (error) {
+        console.error("Error al descargar PDF:", error);
+        alert("Fallo de red al intentar generar la etiqueta.");
+    } finally {
+        // Restauramos el botón a su estado original
+        if (eventBtn) {
+            eventBtn.innerHTML = originalHTML;
+            eventBtn.disabled = false;
+        }
+    }
 };
 
 window.escanearGuiaMobil = function() {
     if(navigator.vibrate) navigator.vibrate([30]);
-    alert("Abriendo cámara para escanear código de barras del recibo logístico...");
-    // Aquí integraremos la API Web de Scanner (HTML5 QR Code / Barcode Scanner).
+    alert("Próximamente: Se abrirá la cámara de tu dispositivo para leer el código de barras de MRW o Zoom automáticamente.");
+    // Aquí integraremos HTML5 QR/Barcode Scanner
 };
