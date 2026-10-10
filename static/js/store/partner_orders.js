@@ -404,8 +404,72 @@ window.generarEtiquetaPDF = async function(event) {
     }
 };
 
+// ==========================================
+// 📸 ESCÁNER MÓVIL DE CÓDIGOS DE BARRAS
+// ==========================================
+let html5QrcodeScanner = null;
+
 window.escanearGuiaMobil = function() {
-    if(navigator.vibrate) navigator.vibrate([30]);
-    alert("Próximamente: Se abrirá la cámara de tu dispositivo para leer el código de barras de MRW o Zoom automáticamente.");
-    // Aquí integraremos HTML5 QR/Barcode Scanner
+    if (!currentSelectedOrder) return;
+    if (navigator.vibrate) navigator.vibrate([30]);
+
+    // Mostrar el modal
+    const modal = document.getElementById('scanner-modal');
+    if (modal) modal.classList.remove('hidden');
+
+    // Inicializar el escáner (Configurado rectangular para códigos de barras de envío)
+    html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader",
+        { 
+            fps: 10, 
+            qrbox: { width: 250, height: 100 },
+            formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39 ],
+            aspectRatio: 1.0
+        },
+        false
+    );
+
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+};
+
+function onScanSuccess(decodedText, decodedResult) {
+    // Éxito: El código de barras fue leído
+    if (navigator.vibrate) navigator.vibrate([50, 50]);
+    
+    console.log(`[Escáner] Código detectado: ${decodedText}`);
+
+    // Detenemos la cámara y cerramos el modal
+    cerrarEscaner();
+
+    // Buscar el input donde el partner normalmente teclea el número de guía
+    const inputGuia = document.getElementById('tracking-guide-input'); 
+    
+    if (inputGuia) {
+        // Autocompletamos el input con el número limpio (solo dígitos)
+        inputGuia.value = decodedText.replace(/\D/g, ''); 
+        
+        // Feedback visual: Hacemos parpadear el input en verde suave
+        inputGuia.classList.add('bg-green-100', 'transition', 'duration-300');
+        setTimeout(() => inputGuia.classList.remove('bg-green-100'), 1000);
+    } else {
+        alert("Código detectado: " + decodedText);
+    }
+}
+
+function onScanFailure(error) {
+    // El escáner falla decenas de veces por segundo mientras intenta enfocar.
+    // Esto es un comportamiento normal, por lo que lo mantenemos en silencio.
+}
+
+window.cerrarEscaner = function() {
+    const modal = document.getElementById('scanner-modal');
+    if (modal) modal.classList.add('hidden');
+    
+    // Apagar la cámara de forma segura
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear().catch(error => {
+            console.error("Error al detener el escáner:", error);
+        });
+        html5QrcodeScanner = null;
+    }
 };
