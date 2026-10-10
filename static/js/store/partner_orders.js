@@ -409,27 +409,45 @@ window.generarEtiquetaPDF = async function(event) {
 // ==========================================
 let html5QrcodeScanner = null;
 
-window.escanearGuiaMobil = function() {
+window.escanearGuiaMobil = function(event) {
     if (!currentSelectedOrder) return;
-    if (navigator.vibrate) navigator.vibrate([30]);
+    
+    // Feedback visual en el botón de "Escanear"
+    const btn = event ? event.currentTarget : null;
+    let originalText = '';
+    
+    if (btn) {
+        originalText = btn.innerHTML;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin text-blue-400" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span class="text-blue-400">Abriendo...</span>`;
+        btn.disabled = true;
+    }
 
     // Mostrar el modal
     const modal = document.getElementById('scanner-modal');
     if (modal) modal.classList.remove('hidden');
 
-    // Inicializar el escáner (Configurado rectangular para códigos de barras de envío)
-    html5QrcodeScanner = new Html5QrcodeScanner(
-        "reader",
-        { 
-            fps: 10, 
-            qrbox: { width: 250, height: 100 },
-            formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39 ],
-            aspectRatio: 1.0
-        },
-        false
-    );
+    // Retardo mínimo para que la UI reaccione y la cámara tenga tiempo de montar el div
+    setTimeout(() => {
+        html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader",
+            { 
+                fps: 10, 
+                qrbox: { width: 250, height: 100 },
+                formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39 ],
+                aspectRatio: 1.0
+            },
+            false
+        );
 
-    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        
+        // Restaurar el botón original
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+        if (navigator.vibrate) navigator.vibrate([30]); // Cámara lista
+    }, 300);
 };
 
 function onScanSuccess(decodedText, decodedResult) {
@@ -441,16 +459,16 @@ function onScanSuccess(decodedText, decodedResult) {
     // Detenemos la cámara y cerramos el modal
     cerrarEscaner();
 
-    // Buscar el input donde el partner normalmente teclea el número de guía
-    const inputGuia = document.getElementById('tracking-guide-input'); 
+    // 🎯 AQUÍ usamos el ID real de tu HTML: 'guide-number'
+    const inputGuia = document.getElementById('guide-number'); 
     
     if (inputGuia) {
         // Autocompletamos el input con el número limpio (solo dígitos)
         inputGuia.value = decodedText.replace(/\D/g, ''); 
         
-        // Feedback visual: Hacemos parpadear el input en verde suave
-        inputGuia.classList.add('bg-green-100', 'transition', 'duration-300');
-        setTimeout(() => inputGuia.classList.remove('bg-green-100'), 1000);
+        // Feedback visual: Hacemos parpadear el input en azul (acorde al diseño oscuro)
+        inputGuia.classList.add('bg-blue-900/50', 'transition', 'duration-300');
+        setTimeout(() => inputGuia.classList.remove('bg-blue-900/50'), 1000);
     } else {
         alert("Código detectado: " + decodedText);
     }
