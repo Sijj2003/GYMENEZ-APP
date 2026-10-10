@@ -1,5 +1,5 @@
 // ====================================================================
-// 📊 MOTOR DE MÉTRICAS DEL DASHBOARD (B2B) - V2 (Accionable)
+// 📊 MOTOR DE MÉTRICAS DEL DASHBOARD (B2B) - V2 (Accionable & Robusto)
 // ====================================================================
 
 const API_BASE_URL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' 
@@ -11,7 +11,8 @@ const TOKEN_KEY = 'gymenez_partner_token';
 document.addEventListener('DOMContentLoaded', () => {
     // Configurar el título con el mes actual (Ej: "Métricas de Agosto")
     const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-    document.getElementById('current-month-title').innerText = meses[new Date().getMonth()];
+    const titleElement = document.getElementById('current-month-title');
+    if (titleElement) titleElement.innerText = meses[new Date().getMonth()];
     
     fetchDashboardMetrics();
 });
@@ -53,25 +54,45 @@ function calculateMetrics(orders, catalog) {
     // 1️⃣ CALCULAR MÉTRICAS FINANCIERAS Y OPERATIVAS
     orders.forEach(order => {
         const orderTotal = parseFloat(order.my_total_usd || 0);
-        const globalStatus = order.global_payment_status;
-        const shippingStatus = order.partner_shipping_status;
         
+        // Estandarizamos los estados (los pasamos a minúsculas para evitar errores de mayúsculas)
+        const globalStatus = (order.global_payment_status || '').toLowerCase();
+        
+        // A veces el backend puede enviar null, undefined, o un string distinto, nos aseguramos:
+        const shippingStatus = (order.partner_shipping_status || 'pending').toLowerCase();
+
         // Ventas SOLO DEL MES ACTUAL
         if (order.created_at) {
             const orderDate = new Date(order.created_at);
             if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
-                monthlySales += orderTotal;
+                // Solo sumar a las ventas si el pago no fue rechazado
+                if (globalStatus !== 'failed' && globalStatus !== 'cancelled') {
+                    monthlySales += orderTotal;
+                }
             }
         }
 
-        // Escrow (Retenido Seguro, sin importar de qué mes sea)
-        if (globalStatus !== 'liquidated' && globalStatus !== 'cancelled') {
+        // Escrow (Retenido Seguro: Pagos confirmados, orden aún no liquidada ni completada 100%)
+        if (globalStatus === 'processing' || globalStatus === 'enviado') {
             netEscrow += orderTotal;
         }
 
-        // Órdenes por Despachar (Sin importar el mes)
-        if ((globalStatus === 'processing' || globalStatus === 'liquidated') && shippingStatus !== 'shipped') {
-            pendingOrdersCount++;
+        // 🎯 CORRECCIÓN: Órdenes por Despachar (El semáforo verde "Luz Verde")
+        // Condición: El pago ya no está en validación ('pending_verification') Y la tienda aún no ha anexado la guía ('shipped')
+        if (
+            (globalStatus === 'processing' || globalStatus === 'liquidated' || globalStatus === 'enviado') && 
+            shippingStatus !== 'shipped' && 
+            shippingStatus !== 'delivered' &&
+            shippingStatus !== 'completado'
+        ) {
+            // Validar de forma extra que no exista historial logístico previo en la orden principal
+            // (A veces el estado global puede estar desfasado del estado del partner)
+            if (!order.historial_envio || order.historial_envio.length === 0) {
+                // Validación final: Nos aseguramos de que no hay tracking guides de esta tienda
+                if (!order.tracking_guides || order.tracking_guides.length === 0) {
+                     pendingOrdersCount++;
+                }
+            }
         }
     });
 
