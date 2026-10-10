@@ -157,7 +157,25 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Banco / Institución</label>
-                                <input type="text" id="wallet-bank-name" placeholder="Ej. Banesco" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-white/30 transition-colors">
+                                <select id="wallet-bank-name" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-white/30 transition-colors cursor-pointer">
+                                    <option value="" disabled selected>Selecciona un Banco</option>
+                                    <option value="Bancamiga">Bancamiga</option>
+                                    <option value="Bancaribe">Bancaribe</option>
+                                    <option value="Banco Activo">Banco Activo</option>
+                                    <option value="Banco Bicentenario">Banco Bicentenario</option>
+                                    <option value="Banco Caroní">Banco Caroní</option>
+                                    <option value="Banco de Venezuela">Banco de Venezuela</option>
+                                    <option value="Banco del Tesoro">Banco del Tesoro</option>
+                                    <option value="Banco Exterior">Banco Exterior</option>
+                                    <option value="Banco Mercantil">Banco Mercantil</option>
+                                    <option value="Banco Nacional de Crédito (BNC)">Banco Nacional de Crédito (BNC)</option>
+                                    <option value="Banco Plaza">Banco Plaza</option>
+                                    <option value="Banco Provincial">Banco Provincial</option>
+                                    <option value="Banco Sofitasa">Banco Sofitasa</option>
+                                    <option value="Banco Venezolano de Crédito">Banco Venezolano de Crédito</option>
+                                    <option value="Banesco">Banesco</option>
+                                    <option value="Banplus">Banplus</option>
+                                </select>
                             </div>
                             <div>
                                 <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Cuenta de 20 Dígitos</label>
@@ -326,7 +344,7 @@
     <!-- SCRIPTS -->
     <script src="/static/js/store/partner_session.js"></script>
     <script src="/static/js/store/partner_profile.js"></script>
-    <script src="/static/js/store/partner_business.js?v=1.0"></script>
+    <script src="/static/js/store/partner_business.js?v=1.1"></script>
     <script src="/static/js/store/partner_main.js?v=1.0"></script>
 
 </body>
