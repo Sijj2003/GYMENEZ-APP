@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gymenez Partner | Centro de Negocios</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/store/home.css">
+    
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+    </script>
+    <style>
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .skeleton-text { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; border-radius: 4px; color: transparent !important; pointer-events: none; }
+        @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
+</head>
+<body class="bg-[#030305] text-white selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col md:flex-row relative pb-16 md:pb-0 overflow-hidden">
+
+    <script>
+        const token = localStorage.getItem('gymenez_partner_token');
+        if (!token) window.location.href = '/store/partner/login.html';
+    </script>
+
+    <!-- ======================================================= -->
+    <!-- SIDEBAR (PC) -->
+    <!-- ======================================================= -->
+    <aside class="w-72 border-r border-white/5 bg-[#0a0a0f] hidden md:flex flex-col z-20 h-screen shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
+        <div class="p-8 border-b border-white/5">
+            <a href="dashboard.html" class="flex items-center leading-none">
+                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
+                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+            </a>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mt-2">Partner Workspace</p>
+        </div>
+
+        <nav class="flex-1 p-6 space-y-3 overflow-y-auto">
+            <a href="dashboard.html" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white border border-transparent transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Vista General
+            </a>
+            <a href="inventory.html" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white border border-transparent transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                Inventario
+            </a>
+            <a href="orders.html" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white border border-transparent transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                Órdenes
+            </a>
+            <a href="finance.html" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white border border-transparent transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                Liquidaciones
+            </a>
+            <!-- NUEVO: Centro de Negocios 🍎 -->
+            <a href="business.html" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left text-sm font-bold bg-white/5 text-white border border-white/5 shadow-sm transition mt-8">
+                <svg class="w-5 h-5 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Centro de Negocios
+            </a>
+        </nav>
+
+        <div class="p-8 border-t border-white/5">
+            <button onclick="if(typeof logout === 'function') logout()" class="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Cerrar Sesión
+            </button>
+        </div>
+    </aside>
+
+    <!-- ======================================================= -->
+    <!-- BOTTOM NAV (Móvil) -->
+    <!-- ======================================================= -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full z-50 glass-nav border-t border-white/10 pb-safe">
+        <div class="flex items-center justify-around h-16 px-2">
+            <!-- (Iconos habituales reducidos para ahorrar espacio) -->
+            <a href="dashboard.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 transition"><svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2zm-10 10a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg></a>
+            <a href="finance.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 transition"><svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></a>
+            <a href="business.html" class="flex flex-col items-center justify-center w-full h-full text-[#FFC300] transition"><svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></a>
+        </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- ÁREA PRINCIPAL -->
+    <!-- ======================================================= -->
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto relative hide-scroll">
+        
+        <header class="w-full h-24 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 sticky top-0">
+            <div class="md:hidden flex items-center gap-2">
+                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
+                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+            </div>
+            <div class="hidden md:block">
+                <h1 class="text-2xl font-[900] tracking-tighter uppercase italic text-white">Centro de <span class="text-[#FFC300]">Negocios</span></h1>
+            </div>
+        </header>
+
+        <div class="p-6 md:p-12 max-w-5xl mx-auto w-full pb-32">
+            
+            <!-- 🎁 WIDGET DINÁMICO: CRÉDITO DE ACTIVACIÓN (Se oculta si es <= 0) -->
+            <div id="activation-credit-widget" class="hidden mb-12 bg-gradient-to-br from-[#12121a] to-[#0a0a0f] border border-[#FFC300]/30 rounded-[2rem] p-8 shadow-[0_15px_40px_rgba(255,195,0,0.1)] relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-[#FFC300]/5 rounded-full blur-[60px] -mr-10 -mt-10 pointer-events-none"></div>
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+                    <div>
+                        <h3 class="text-lg font-[900] uppercase italic text-white mb-2">Crédito de Activación Tecnológica</h3>
+                        <p class="text-xs text-gray-400 font-medium max-w-md">El 10% de tus ventas actuales se descuenta de este saldo a favor. Operas libre de retenciones hasta agotarlo.</p>
+                    </div>
+                    <div class="text-left md:text-right w-full md:w-auto">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mb-2">Saldo Disponible</p>
+                        <p id="credit-amount" class="text-4xl md:text-5xl font-[900] text-white italic tracking-tighter">$100.00</p>
+                    </div>
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-full bg-white/5 h-2 mt-6 rounded-full overflow-hidden">
+                    <div id="credit-progress" class="bg-[#FFC300] h-full rounded-full transition-all duration-1000" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <!-- 🏦 WIDGET: BÓVEDA DE LIQUIDACIÓN -->
+            <div class="mb-12">
+                <h2 class="text-xl font-[900] tracking-tighter uppercase italic text-white mb-6">Bóveda de <span class="text-gray-400">Liquidación</span></h2>
+                <p class="text-xs text-gray-500 font-bold mb-6">Por seguridad Zero-Trust, las cuentas ingresadas no podrán ser modificadas desde este panel una vez guardadas. Los datos deben coincidir con la Razón Social / Titular de la tienda.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Binance -->
+                    <div class="bg-[#12121a] border border-white/5 rounded-[2rem] p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <h3 class="text-sm font-[900] uppercase italic text-white">Binance Pay</h3>
+                            <span class="bg-[#F3BA2F]/10 text-[#F3BA2F] border border-[#F3BA2F]/20 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Recomendado - 0% Fee</span>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Email / Pay ID (Binance)</label>
+                                <input type="text" id="wallet-binance" placeholder="ej. partner@empresa.com" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#F3BA2F] transition-colors">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Transferencia Bancaria -->
+                    <div class="bg-[#12121a] border border-white/5 rounded-[2rem] p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <h3 class="text-sm font-[900] uppercase italic text-white">Cuenta Bancaria (Nacional)</h3>
+                            <span class="bg-white/5 text-gray-400 border border-white/10 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Solo Transferencia</span>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Banco / Institución</label>
+                                <input type="text" id="wallet-bank-name" placeholder="Ej. Banesco" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-white/30 transition-colors">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Cuenta de 20 Dígitos</label>
+                                <input type="text" id="wallet-bank-account" placeholder="0134-xxxx-xxxx-xxxx-xxxx" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-white/30 transition-colors">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-end">
+                    <button id="btn-save-wallet" onclick="saveWallets()" class="bg-white text-black font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-xl hover:bg-gray-200 transition shadow-lg">Guardar Bóveda</button>
+                    <!-- Mensaje Lock -->
+                    <div id="wallet-locked-msg" class="hidden text-[10px] font-bold text-gray-500 uppercase tracking-widest items-center gap-2 bg-white/5 px-6 py-4 rounded-xl border border-white/5">
+                        <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        Bóveda Sellada. Contacte a soporte para modificar.
+                    </div>
+                </div>
+            </div>
+
+            <!-- ⚖️ WIDGET: MODELO DE RENTABILIDAD & CONTRATO -->
+            <div class="mb-12 border-t border-white/5 pt-12">
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <h2 class="text-xl font-[900] tracking-tighter uppercase italic text-white mb-2">Modelo de <span class="text-[#FFC300]">Rentabilidad</span></h2>
+                        <p class="text-xs text-gray-400 font-bold max-w-xl">Selecciona cómo tu tienda procesará el cobro del fee operativo y pasarelas de pago. La firma del contrato generará un documento PDF inmutable en el sistema.</p>
+                    </div>
+                    <div id="active-model-badge" class="hidden">
+                        <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Contrato Activo
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Panel Si ya tiene modelo (Requiere carta 24h) -->
+                <div id="model-locked-panel" class="hidden bg-[#12121a] border border-red-500/20 rounded-[2rem] p-8 mb-6">
+                    <h3 class="text-sm font-[900] uppercase italic text-white mb-2 text-red-400">Modificación Restringida (Zero-Trust)</h3>
+                    <p class="text-xs text-gray-400 font-bold mb-6 leading-relaxed">Para cambiar su modelo de rentabilidad, su tienda <span class="text-white">no debe tener ventas en proceso ni por liquidar</span>. La solicitud debe realizarse enviando una carta firmada (física o digital) en formato PDF al soporte de Gymenez (partners@gymenez.com) indicando Nombre, Cédula/RIF y fecha de emisión. La tienda entrará en pausa de hasta 24 horas durante el ajuste.</p>
+                    <a href="mailto:partners@gymenez.com" class="inline-block border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 text-[10px] font-black uppercase tracking-widest px-6 py-3 rounded-xl transition">Contactar Soporte Técnico</a>
+                </div>
+
+                <!-- Grilla de Selección -->
+                <div id="models-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Modelo 1 -->
+                    <div class="border border-white/10 bg-[#0a0a0f] rounded-[2rem] p-6 hover:border-[#FFC300]/50 transition cursor-pointer flex flex-col justify-between" onclick="openContractModal('Neto Garantizado')">
+                        <div>
+                            <h3 class="text-lg font-[900] uppercase italic text-white mb-2">Neto Garantizado</h3>
+                            <p class="text-xs text-gray-500 font-medium">Tú exiges tu ganancia intacta. El sistema infla el precio de vitrina para que el cliente final absorba el 100% de los costos operativos y pasarelas de pago.</p>
+                        </div>
+                        <button class="mt-6 w-full bg-white/5 text-white font-bold text-[10px] uppercase tracking-widest py-3 rounded-xl border border-white/5 hover:bg-white/10">Leer Contrato</button>
+                    </div>
+                    <!-- Modelo 2 -->
+                    <div class="border border-[#FFC300]/30 bg-[#12121a] rounded-[2rem] p-6 hover:border-[#FFC300] transition cursor-pointer relative overflow-hidden flex flex-col justify-between" onclick="openContractModal('Absorción B2B')">
+                        <div class="absolute top-0 right-0 bg-[#FFC300] text-black text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-lg">Más Popular</div>
+                        <div>
+                            <h3 class="text-lg font-[900] uppercase italic text-white mb-2">Absorción B2B</h3>
+                            <p class="text-xs text-gray-500 font-medium">Precios cerrados y competitivos. Tú asumes los costos operativos, descontándose al momento de la liquidación. Genera alta conversión de ventas.</p>
+                        </div>
+                        <button class="mt-6 w-full bg-[#FFC300] text-black font-bold text-[10px] uppercase tracking-widest py-3 rounded-xl hover:bg-[#e6b000]">Leer Contrato</button>
+                    </div>
+                    <!-- Modelo 3 -->
+                    <div class="border border-white/10 bg-[#0a0a0f] rounded-[2rem] p-6 hover:border-[#FFC300]/50 transition cursor-pointer flex flex-col justify-between" onclick="openContractModal('Modelo Híbrido')">
+                        <div>
+                            <h3 class="text-lg font-[900] uppercase italic text-white mb-2">Modelo Híbrido</h3>
+                            <p class="text-xs text-gray-500 font-medium">Tú asumes el Take Rate fijo de la plataforma (10%), y el cliente asume como "Service Fee" exclusivo el costo de la pasarela de pago seleccionada.</p>
+                        </div>
+                        <button class="mt-6 w-full bg-white/5 text-white font-bold text-[10px] uppercase tracking-widest py-3 rounded-xl border border-white/5 hover:bg-white/10">Leer Contrato</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 🏪 WIDGET: ESCAPARATE DIGITAL (Opcional, datos públicos) -->
+            <div class="border-t border-white/5 pt-12">
+                <h2 class="text-xl font-[900] tracking-tighter uppercase italic text-white mb-2">Escaparate <span class="text-gray-400">Público</span></h2>
+                <p class="text-xs text-gray-500 font-bold mb-6">Información visible para los compradores en la tienda Gymenez.</p>
+                <div class="bg-[#12121a] border border-white/5 rounded-[2rem] p-8">
+                    <!-- Aquí iría la carga del logo público, descripción, WhatsApp de Soporte (Tier 1) -->
+                    <div class="space-y-4 max-w-lg">
+                        <div>
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">WhatsApp de Soporte a Clientes</label>
+                            <input type="text" placeholder="+58 412 000 0000" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-white/30 transition-colors">
+                        </div>
+                        <p class="text-[9px] text-gray-600 font-bold mt-2">Este número se adjuntará en las guías de envío y recibos digitales de tus compradores.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ======================================================= -->
+    <!-- MODAL DE FIRMA DE CONTRATO (Zero-Trust Backend Trigger) -->
+    <!-- ======================================================= -->
+    <div id="contract-modal" class="fixed inset-0 z-[120] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <!-- Header Modal -->
+            <div class="p-8 border-b border-white/5 flex justify-between items-center bg-[#12121a]">
+                <div>
+                    <h3 class="text-sm font-[900] uppercase italic text-[#FFC300] mb-1">Borrador Legal</h3>
+                    <p class="text-xl font-[900] tracking-tighter uppercase italic text-white" id="contract-title">Contrato de Modelo</p>
+                </div>
+                <button onclick="closeContractModal()" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Body Modal (Documento) -->
+            <div class="p-8 overflow-y-auto hide-scroll flex-1 text-gray-300 text-xs leading-relaxed space-y-4 font-medium" id="contract-body">
+                <!-- Se inyecta por JS -->
+            </div>
+            
+            <!-- Footer Modal (Firma) -->
+            <div class="p-8 border-t border-white/5 bg-[#12121a]">
+                <p class="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-4 leading-relaxed">
+                    Al hacer clic en "Firmar y Sellar", nuestro servidor central construirá un documento PDF inmutable con los datos jurídicos registrados en su cuenta. Este acto equivale a su firma electrónica y es legalmente vinculante.
+                </p>
+                <div class="flex gap-4">
+                    <button onclick="closeContractModal()" class="flex-1 bg-transparent border border-white/10 text-white font-black uppercase tracking-widest text-[10px] py-4 rounded-xl hover:bg-white/5 transition">Cancelar</button>
+                    <button id="btn-sign-contract" onclick="signContract()" class="flex-1 bg-[#FFC300] text-black font-black uppercase tracking-widest text-[10px] py-4 rounded-xl hover:bg-[#e6b000] transition shadow-[0_0_15px_rgba(255,195,0,0.3)] flex justify-center items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        Firmar y Sellar Documento
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE PERFIL B2B (Para el Header) -->
+    <div id="profile-modal" class="hidden"></div> 
+    
+    <!-- SCRIPTS -->
+    <script src="/static/js/store/partner_session.js"></script>
+    <!-- <script src="/static/js/store/partner_profile.js"></script> (Asume que lo tienes para el logo superior) -->
+    <script src="/static/js/store/partner_business.js?v=1.0"></script>
+
+</body>
+</html>
