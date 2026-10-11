@@ -123,10 +123,11 @@ function renderInstantResults(results, container, platform, originalQuery) {
     }
 
     let html = results.slice(0, 6).map(item => {
-        const price = parseFloat(item.price_usd || item.price || 0);
+        // 🍎 ZERO-TRUST: Leemos directamente los precios calculados por el backend
+        const bestPrice = item.display_best_price ? parseFloat(item.display_best_price).toFixed(2) : parseFloat(item.price_usd).toFixed(2);
+        const maxPrice = item.display_max_price ? parseFloat(item.display_max_price).toFixed(2) : parseFloat(item.price_usd).toFixed(2);
         const discount = parseInt(item.discount_percentage || item.discount || 0);
         const hasDiscount = discount > 0;
-        const finalPrice = hasDiscount ? (price * (1 - discount / 100)) : price;
 
         const isOnDemand = (item.is_on_demand === true || item.is_on_demand === 'true' || item.is_on_demand === 'True');
         const hasFreeShipping = (item.free_shipping === true || item.free_shipping === 'true' || item.free_shipping === 'True');
@@ -146,8 +147,8 @@ function renderInstantResults(results, container, platform, originalQuery) {
                 </div>
             </div>
             <div class="text-right flex-shrink-0 flex flex-col items-end justify-center">
-                ${hasDiscount ? `<span class="text-[9px] text-gray-500 line-through leading-none mb-0.5">$${price.toFixed(2)}</span>` : ''}
-                <span class="${hasDiscount ? 'text-[#FFC300]' : 'text-white'} font-[900] italic text-sm leading-none">$${finalPrice.toFixed(2)}</span>
+                <span class="text-[9px] text-gray-500 line-through leading-none mb-0.5">$${maxPrice}</span>
+                <span class="text-[#FFC300] font-[900] italic text-sm leading-none">$${bestPrice}</span>
             </div>
         </a>
         `;
@@ -310,10 +311,11 @@ function renderDeepResults(productsToRender, grid) {
 
     // Dibujamos las tarjetas, pero OJO: las creamos "invisibles" (opacity-0 y movidas hacia abajo)
     grid.innerHTML = productsToRender.map((p, index) => {
-        const price = parseFloat(p.price_usd || p.price || 0);
+        // 🍎 ZERO-TRUST: Leemos directamente los precios calculados por el backend
+        const bestPrice = p.display_best_price ? parseFloat(p.display_best_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
+        const maxPrice = p.display_max_price ? parseFloat(p.display_max_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
         const discount = parseInt(p.discount_percentage || p.discount || 0);
         const hasDiscount = discount > 0;
-        const finalPrice = hasDiscount ? (price * (1 - discount / 100)) : price;
 
         const isOnDemand = (p.is_on_demand === true || p.is_on_demand === 'true' || p.is_on_demand === 'True');
         const hasFreeShipping = (p.free_shipping === true || p.free_shipping === 'true' || p.free_shipping === 'True');
@@ -325,7 +327,6 @@ function renderDeepResults(productsToRender, grid) {
             etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis</span> `;
         }
 
-        // 🍎 NOTA: Añadida clase 'result-card opacity-0 translate-y-12' para la magia
         return `
         <a href="/store/product.html?id=${p.id}" class="result-card opacity-0 translate-y-12 group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all duration-[600ms] ease-out cursor-pointer relative shadow-lg hover:shadow-[0_10px_30px_rgba(255,195,0,0.1)]">
             
@@ -346,10 +347,10 @@ function renderDeepResults(productsToRender, grid) {
                 <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${p.store_name || 'Gymenez Store'}</span>
                 
                 <div class="flex items-center justify-between mt-4 border-t border-white/5 pt-3">
-                    ${hasDiscount 
-                        ? `<div class="flex flex-col"><span class="text-xs text-gray-500 line-through leading-none">$${price.toFixed(2)}</span><span class="text-white font-black text-sm md:text-base leading-none mt-1">$${finalPrice.toFixed(2)}</span></div>` 
-                        : `<span class="text-sm md:text-base font-black text-white">$${finalPrice.toFixed(2)}</span>`
-                    }
+                    <div class="flex flex-col">
+                        <span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice}</span>
+                        <span class="text-white font-black text-sm md:text-base leading-none mt-1">$${bestPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">vía Binance</span></span>
+                    </div>
                     <div class="bg-white/10 p-2 rounded-full text-white group-hover:bg-[#FFC300] group-hover:text-black transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                     </div>
@@ -360,15 +361,13 @@ function renderDeepResults(productsToRender, grid) {
     }).join('');
 
     // 🍎 LA MAGIA SUCEDE AQUÍ: Disparamos la animación en cascada
-    // Damos unos milisegundos para que el DOM pinte las tarjetas "invisibles", 
-    // y luego las mostramos una a una con un pequeño retraso de 40ms entre ellas.
     setTimeout(() => {
         const cards = grid.querySelectorAll('.result-card');
         cards.forEach((card, i) => {
             setTimeout(() => {
                 card.classList.remove('opacity-0', 'translate-y-12');
                 card.classList.add('opacity-100', 'translate-y-0');
-            }, i * 40); // El retraso aumenta 40ms por cada tarjeta (efecto dominó)
+            }, i * 40); 
         });
     }, 20);
 }
