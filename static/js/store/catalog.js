@@ -336,7 +336,7 @@ function renderProductsGrid(productsToRender) {
                     <div class="flex flex-col">
                         <!-- El texto tachado es universal, puede ser el precio base del partner o el de PayPal -->
                         <span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice}</span>
-                        <span class="text-white font-black text-sm md:text-base leading-none mt-1">$${bestPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">vía Binance</span></span>
+                        <span class="text-white font-black text-sm md:text-base leading-none mt-1">$${bestPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">Binance Pay</span></span>
                     </div>
                     <div class="bg-white/10 p-2 rounded-full text-white group-hover:bg-[#FFC300] group-hover:text-black transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
