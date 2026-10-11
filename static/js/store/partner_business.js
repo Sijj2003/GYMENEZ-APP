@@ -57,10 +57,17 @@ function initializeBusinessCenter(settings) {
 
     // B. Widget de Bóveda (Wallet Lock - Zero Trust)
     if (settings.has_wallet_configured) {
+        // 1. INYECTAR LOS DATOS GUARDADOS
+        document.getElementById('wallet-binance').value = settings.wallet_binance || '';
+        document.getElementById('wallet-bank-name').value = settings.wallet_bank_name || '';
+        document.getElementById('wallet-bank-account').value = settings.wallet_bank_account || '';
+
+        // 2. BLOQUEAR LOS CAMPOS (Input usa readonly, Select usa disabled)
         document.getElementById('wallet-binance').setAttribute('readonly', true);
-        document.getElementById('wallet-bank-name').setAttribute('readonly', true);
+        document.getElementById('wallet-bank-name').setAttribute('disabled', true);
         document.getElementById('wallet-bank-account').setAttribute('readonly', true);
         
+        // 3. CAMBIAR INTERFAZ
         document.getElementById('btn-save-wallet').classList.add('hidden');
         document.getElementById('wallet-locked-msg').classList.remove('hidden');
         document.getElementById('wallet-locked-msg').classList.add('flex');
