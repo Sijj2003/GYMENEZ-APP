@@ -270,7 +270,14 @@ function renderSearchDropdown(results, container) {
 
     container.innerHTML = results.slice(0, 8).map(p => {
         const discount = p.discount_percentage || 0;
-        const finalPrice = discount > 0 ? (p.price_usd * (1 - discount/100)).toFixed(2) : p.price_usd.toFixed(2);
+        const hasDiscount = discount > 0;
+        
+        // 🍎 APLICAMOS EL MOTOR FINANCIERO AL PRECIO BASE
+        const basePrice = p.display_best_price ? p.display_best_price : parseFloat(p.price_usd);
+        const finalPrice = hasDiscount ? (basePrice * (1 - discount/100)).toFixed(2) : basePrice.toFixed(2);
+        
+        // 🍎 EXTRAEMOS EL PRECIO DE PAYPAL PARA MOSTRARLO TACHADO SI NO HAY DESCUENTO DE PARTNER
+        const maxPrice = p.display_max_price ? p.display_max_price.toFixed(2) : basePrice.toFixed(2);
         
         return `
         <a href="/store/product.html?id=${p.id}" class="flex items-center justify-between p-3 hover:bg-white/5 transition border-b border-white/5 last:border-0 cursor-pointer">
@@ -282,8 +289,10 @@ function renderSearchDropdown(results, container) {
                 </div>
             </div>
             <div class="text-right shrink-0">
-                <p class="text-xs font-black text-white">$${finalPrice}</p>
-                ${discount > 0 ? `<p class="text-[8px] text-red-500 font-bold uppercase">-${discount}% OFF</p>` : ''}
+                ${hasDiscount 
+                    ? `<p class="text-xs font-black text-white">$${finalPrice}</p><p class="text-[8px] text-red-500 font-bold uppercase mt-1">-${discount}% OFF</p>` 
+                    : `<p class="text-[9px] text-gray-500 line-through leading-none">$${maxPrice}</p><p class="text-xs font-black text-[#FFC300] mt-1">$${finalPrice}</p>`
+                }
             </div>
         </a>
         `;
@@ -312,11 +321,17 @@ function renderProductsGrid(productsToRender) {
     grid.innerHTML = productsToRender.map(p => {
         const discount = p.discount_percentage || 0;
         const hasDiscount = discount > 0;
-        const finalPrice = hasDiscount ? (p.price_usd * (1 - discount/100)).toFixed(2) : p.price_usd.toFixed(2);
+        
+        // 🍎 APLICAMOS EL MOTOR FINANCIERO AL PRECIO BASE
+        const basePrice = p.display_best_price ? p.display_best_price : parseFloat(p.price_usd);
+        const finalPrice = hasDiscount ? (basePrice * (1 - discount/100)).toFixed(2) : basePrice.toFixed(2);
+        
+        // 🍎 EXTRAEMOS EL PRECIO DE PAYPAL PARA MOSTRARLO TACHADO SI NO HAY DESCUENTO DE PARTNER
+        const maxPrice = p.display_max_price ? p.display_max_price.toFixed(2) : basePrice.toFixed(2);
         
         const storeName = p.store_name || 'Gymenez Partner';
 
-        // 🍎 LÓGICA DE ETIQUETAS CLIENTE
+        // LÓGICA DE ETIQUETAS CLIENTE ORIGINAL (Intacta)
         const isOnDemand = (p.is_on_demand === true || p.is_on_demand === 'true' || p.is_on_demand === 'True');
         const hasFreeShipping = (p.free_shipping === true || p.free_shipping === 'true' || p.free_shipping === 'True');
 
@@ -328,7 +343,7 @@ function renderProductsGrid(productsToRender) {
             etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis</span> `;
         }
 
-        // AQUÍ EMPIEZA LA NUEVA TARJETA REDISEÑADA
+        // AQUÍ EMPIEZA LA TARJETA CON LA LÓGICA MIXTA
         return `
         <a href="/store/product.html?id=${p.id}" class="group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all cursor-pointer relative">
             
@@ -342,7 +357,7 @@ function renderProductsGrid(productsToRender) {
             <!-- INFORMACIÓN DEBAJO -->
             <div class="p-4 flex flex-col flex-grow relative">
                 
-                <!-- 🍎 ETIQUETAS FLOTANTES SOBRE EL TÍTULO -->
+                <!-- ETIQUETAS FLOTANTES SOBRE EL TÍTULO -->
                 ${etiquetasHtml ? `<div class="absolute -top-3 left-3 flex gap-1 z-20">${etiquetasHtml}</div>` : ''}
 
                 <!-- Título (Con margen superior si hay etiquetas) -->
@@ -356,11 +371,11 @@ function renderProductsGrid(productsToRender) {
                 <!-- Nombre de la Tienda -->
                 <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${storeName}</span>
                 
-                <!-- Precio y Botón -->
+                <!-- Precio y Botón (Lógica mixta: si hay descuento de partner, tacha el precio base. Si no hay descuento, tacha el precio de paypal) -->
                 <div class="flex items-center justify-between mt-4 border-t border-white/5 pt-3">
                     ${hasDiscount 
-                        ? `<div class="flex flex-col"><span class="text-xs text-gray-500 line-through leading-none">$${p.price_usd.toFixed(2)}</span><span class="text-white font-black text-sm md:text-base leading-none mt-1">$${finalPrice}</span></div>` 
-                        : `<span class="text-sm md:text-base font-black text-white">$${finalPrice}</span>`
+                        ? `<div class="flex flex-col"><span class="text-xs text-gray-500 line-through leading-none">$${basePrice.toFixed(2)}</span><span class="text-white font-black text-sm md:text-base leading-none mt-1">$${finalPrice}</span></div>` 
+                        : `<div class="flex flex-col"><span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice} con PayPal</span><span class="text-white font-black text-sm md:text-base leading-none mt-1">$${finalPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">vía Binance</span></span></div>`
                     }
                     <div class="bg-white/10 p-2 rounded-full text-white group-hover:bg-[#FFC300] group-hover:text-black transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
