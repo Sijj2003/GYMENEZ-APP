@@ -88,22 +88,38 @@ function renderProduct() {
         badgesContainer.innerHTML = badgesHtml;
     }
     
-    // Calcular Precio y Descuento
-    const basePrice = parseFloat(currentProduct.price_usd || currentProduct.price);
+    // 🍎 ZERO-TRUST: LEER PRECIOS PRECALCULADOS DEL BACKEND EN LUGAR DE MULTIPLICAR
+    const bestPrice = currentProduct.display_best_price ? parseFloat(currentProduct.display_best_price) : parseFloat(currentProduct.price_usd || currentProduct.price);
+    const maxPrice = currentProduct.display_max_price ? parseFloat(currentProduct.display_max_price) : bestPrice;
     const discount = parseInt(currentProduct.discount_percentage || currentProduct.discount) || 0;
     
+    finalPrice = bestPrice; // El precio de Binance pasa a ser la memoria del multiplicador de cantidad
+
+    // 🛡️ Restaurar etiqueta roja
     if (discount > 0) {
-        finalPrice = basePrice - (basePrice * (discount / 100));
-        document.getElementById('prod-old-price').innerText = `$${basePrice.toFixed(2)}`;
-        document.getElementById('prod-old-price').classList.remove('hidden');
-        
         const badge = document.getElementById('prod-discount-badge');
-        badge.innerText = `-${discount}% OFF`; 
-        badge.classList.remove('hidden');
-    } else {
-        finalPrice = basePrice;
+        if (badge) {
+            badge.innerText = `-${discount}% OFF`; 
+            badge.classList.remove('hidden');
+        }
     }
-    document.getElementById('prod-price').innerText = `$${finalPrice.toFixed(2)}`;
+
+    // 🛡️ Mostrar el precio de PayPal tachado y el de Binance destacado
+    const oldPriceEl = document.getElementById('prod-old-price');
+    if (maxPrice > bestPrice) {
+        if (oldPriceEl) {
+            oldPriceEl.innerText = `$${maxPrice.toFixed(2)} con PayPal`;
+            oldPriceEl.classList.remove('hidden');
+        }
+    } else {
+        if (oldPriceEl) oldPriceEl.classList.add('hidden');
+    }
+    
+    const priceEl = document.getElementById('prod-price');
+    if (priceEl) {
+        priceEl.innerHTML = `$${bestPrice.toFixed(2)} <span class="text-[#FFC300] text-[10px] md:text-xs uppercase tracking-widest font-black ml-2">vía Binance</span>`;
+    }
+
     updateTotalDisplay();
 
     // ===============================================
@@ -263,7 +279,6 @@ function addToCart() {
         cartItemName = `${currentProduct.name} (${selectedVariant.name})`;
     }
 
-    // 🍎 CORRECCIÓN: Volvemos a leer el precio base y el descuento aquí para que no de error
     const basePrice = parseFloat(currentProduct.price_usd || currentProduct.price);
     const discount = parseInt(currentProduct.discount_percentage || currentProduct.discount) || 0;
 
@@ -272,16 +287,15 @@ function addToCart() {
         real_id: currentProduct.id,  
         name: cartItemName,
         storeName: currentProduct.store_name, 
-        price: finalPrice,
-        basePrice: basePrice,              // Ya no dará error
-        discount: discount,                // Ya no dará error
+        price: finalPrice,                                 // 🍎 Se envía al carrito el `display_best_price` correcto
+        basePrice: basePrice,              
+        discount: discount,                
         imageUrl: currentProduct.image_url || currentProduct.imageUrl,
         qty: currentQuantity,
         maxStock: maxStock,
         weight_kg: currentProduct.weight_kg || 1, 
         is_on_demand: isOnDemand,
         free_shipping: hasFreeShipping,
-        // 🍎 LA PIEZA FALTANTE: MANDAR LA META FINANCIERA AL CARRITO
         free_shipping_threshold: parseFloat(currentProduct.free_shipping_threshold || 0)
     };
 
