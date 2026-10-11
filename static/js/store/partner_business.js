@@ -214,33 +214,150 @@ async function downloadCurrentContract() {
     const token = localStorage.getItem(TOKEN_KEY);
     
     try {
-        // Obtenemos el archivo desde el backend protegido
-        const res = await fetch(`${API_BASE_URL}${currentSettings.contract_pdf_url}`, {
+        // En lugar de descargar un archivo físico desde el backend, le pedimos al backend
+        // los datos en formato JSON para que el frontend genere el PDF bonito.
+        const res = await fetch(`${API_BASE_URL}${currentSettings.contract_pdf_url}?format=json`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
+        const data = await res.json();
+        
         if (!res.ok) {
-            const data = await res.json();
             alert(data.message || "Error al descargar el contrato.");
             return;
         }
-        
-        // Convertimos la respuesta binaria a un blob para forzar la descarga en el navegador
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "Contrato_Gymenez_B2B.pdf"; // Sugerencia de nombre
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
+
+        if (data.success && data.contract) {
+            generateBeautifulPDF(data.contract);
+        } else {
+            alert("No se pudieron obtener los datos del contrato para generar el PDF.");
+        }
         
     } catch (error) {
         console.error("Error en la descarga del contrato:", error);
         alert("Ocurrió un error al intentar descargar el contrato legal.");
     }
+}
+
+function generateBeautifulPDF(contractData) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Configuraciones Generales
+    const margin = 20;
+    let yPos = 20;
+
+    // Encabezado
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(255, 195, 0); // Color corporativo Gymenez
+    doc.text("GYMENEZ", margin, yPos);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text("CENTRO DE NEGOCIOS B2B", margin, yPos + 6);
+    
+    // Título del Documento
+    yPos += 25;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text("REGLAMENTO B2B - ANEXO DE RENTABILIDAD", 105, yPos, null, null, "center");
+    
+    // Subtítulo
+    yPos += 8;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text(`MODELO SELECCIONADO: ${contractData.model_selected.toUpperCase()}`, 105, yPos, null, null, "center");
+    
+    // Línea separadora
+    yPos += 5;
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, yPos, 190, yPos);
+    
+    // Bloque de Datos de la Tienda
+    yPos += 15;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("DATOS DE LA TIENDA Y REPRESENTANTE:", margin, yPos);
+    
+    yPos += 8;
+    doc.setFont("helvetica", "normal");
+    doc.text(`Razón Social: ${contractData.partner_name}`, margin, yPos);
+    yPos += 6;
+    doc.text(`Cédula / RIF: ${contractData.partner_document}`, margin, yPos);
+    yPos += 6;
+    doc.text(`Correo Electrónico (Máster): ${contractData.partner_email}`, margin, yPos);
+    
+    // Línea separadora
+    yPos += 8;
+    doc.line(margin, yPos, 190, yPos);
+    
+    // Cláusula Legal
+    yPos += 15;
+    doc.setFont("helvetica", "bold");
+    doc.text("CLÁUSULA DE OPERACIÓN ACEPTADA:", margin, yPos);
+    
+    yPos += 8;
+    doc.setFont("helvetica", "normal");
+    // Dividir texto largo para que encaje
+    const splitClause = doc.splitTextToSize(contractData.legal_clause, 170);
+    doc.text(splitClause, margin, yPos);
+    
+    // Ajustar yPos después del texto largo
+    yPos += (splitClause.length * 6) + 15;
+    
+    doc.setFont("helvetica", "bold");
+    doc.text("ACEPTACIÓN Y VALIDACIÓN ZERO-TRUST:", margin, yPos);
+    
+    yPos += 8;
+    doc.setFont("helvetica", "normal");
+    doc.text("Al presionar 'Firmar y Sellar' en la plataforma, la Tienda aceptó irrevocablemente", margin, yPos);
+    yPos += 6;
+    doc.text("los términos de este anexo.", margin, yPos);
+    
+    // Datos de auditoría / Firma digital
+    yPos += 15;
+    doc.setFont("helvetica", "bold");
+    doc.text(`FECHA DE FIRMA:`, margin, yPos);
+    doc.setFont("helvetica", "normal");
+    // Formatear fecha
+    const dateObj = new Date(contractData.signed_at);
+    const dateStr = dateObj.toLocaleDateString('es-VE') + " " + dateObj.toLocaleTimeString('es-VE');
+    doc.text(dateStr, margin + 40, yPos);
+    
+    yPos += 6;
+    doc.setFont("helvetica", "bold");
+    doc.text(`DIRECCIÓN IP DE ORIGEN:`, margin, yPos);
+    doc.setFont("helvetica", "normal");
+    doc.text(contractData.signed_ip, margin + 55, yPos);
+    
+    // Zona de "Firma" Visual
+    yPos += 30;
+    doc.setDrawColor(0, 0, 0);
+    doc.line(60, yPos, 150, yPos);
+    
+    yPos += 6;
+    doc.setFont("helvetica", "bold");
+    doc.text("ACEPTADO Y FIRMADO DIGITALMENTE POR:", 105, yPos, null, null, "center");
+    
+    yPos += 6;
+    doc.setFont("helvetica", "normal");
+    doc.text(contractData.partner_name, 105, yPos, null, null, "center");
+    
+    yPos += 6;
+    doc.text(`C.I / RIF: ${contractData.partner_document}`, 105, yPos, null, null, "center");
+
+    // Pie de página (Validación del sistema)
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`Documento Inmutable Hash ID: ${contractData.contract_id || 'Validado por Gymenez System'}`, 105, 280, null, null, "center");
+
+    // Guardar el archivo
+    doc.save(`Contrato_${contractData.model_selected.replace(' ', '_')}_${contractData.partner_document}.pdf`);
 }
 
 function generateChangeRequestPDF() {
