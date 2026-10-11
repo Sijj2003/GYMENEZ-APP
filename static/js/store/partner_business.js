@@ -8,10 +8,10 @@ const API_BASE_URL = window.location.hostname === '127.0.0.1' || window.location
 
 const TOKEN_KEY = 'gymenez_partner_token';
 let selectedModel = null;
+let currentSettings = null; // Guardar las settings para usar el link de descarga
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchBusinessSettings();
-    setupDescriptionListener(); // Escucha cambios en el Escaparate
 });
 
 // ====================================================================
@@ -29,13 +29,8 @@ async function fetchBusinessSettings() {
         const data = await res.json();
         
         if (data.success) {
+            currentSettings = data.settings;
             initializeBusinessCenter(data.settings);
-            
-            // Inyectar descripción pública si existe
-            const descInput = document.querySelector('textarea');
-            if (descInput && data.settings.store_description) {
-                descInput.value = data.settings.store_description;
-            }
         }
     } catch (error) {
         console.error("Error cargando configuración del negocio:", error);
@@ -208,38 +203,109 @@ async function signContract() {
 }
 
 // ====================================================================
-// 4. LÓGICA DEL ESCAPARATE PÚBLICO (AUTO-GUARDADO)
+// 4. DESCARGA DEL CONTRATO VIGENTE Y SOLICITUD DE CAMBIO (Zero-Trust Frontend)
 // ====================================================================
-function setupDescriptionListener() {
-    const descInput = document.querySelector('textarea');
-    if (!descInput) return;
-
-    let timeoutId;
+async function downloadCurrentContract() {
+    if (!currentSettings || !currentSettings.contract_pdf_url) {
+        alert("No se encontró una ruta de descarga para el contrato vigente. Contacte a soporte.");
+        return;
+    }
     
-    descInput.addEventListener('input', () => {
-        clearTimeout(timeoutId);
-        // Auto-guardar 1.5 segundos después de que dejen de escribir
-        timeoutId = setTimeout(() => {
-            saveStoreDescription(descInput.value.trim());
-        }, 1500);
-    });
+    const token = localStorage.getItem(TOKEN_KEY);
+    
+    try {
+        // Obtenemos el archivo desde el backend protegido
+        const res = await fetch(`${API_BASE_URL}${currentSettings.contract_pdf_url}`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!res.ok) {
+            const data = await res.json();
+            alert(data.message || "Error al descargar el contrato.");
+            return;
+        }
+        
+        // Convertimos la respuesta binaria a un blob para forzar la descarga en el navegador
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "Contrato_Gymenez_B2B.pdf"; // Sugerencia de nombre
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        
+    } catch (error) {
+        console.error("Error en la descarga del contrato:", error);
+        alert("Ocurrió un error al intentar descargar el contrato legal.");
+    }
 }
 
-async function saveStoreDescription(text) {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return;
-
-    try {
-        await fetch(`${API_BASE_URL}/api/partner/settings/profile`, {
-            method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ description: text })
-        });
-        // No mostramos alert aquí para que sea un auto-guardado silencioso y fluido
-    } catch (error) {
-        console.error("Error auto-guardando la descripción:", error);
+function generateChangeRequestPDF() {
+    // Obtenemos los datos cacheados que ya se inyectaron en el modal de Perfil
+    const storeName = document.getElementById('prof-name').value || "Tienda Desconocida";
+    const documentId = document.getElementById('prof-doc').value || "N/A";
+    const email = document.getElementById('prof-email').value || "N/A";
+    
+    if (!currentSettings || !currentSettings.active_commission_model) {
+        alert("Actualmente no tienes un modelo activo para cambiar.");
+        return;
     }
+    
+    const currentModel = currentSettings.active_commission_model;
+    
+    // Configuración de jsPDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Título
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("SOLICITUD DE MODIFICACION B2B (ZERO-TRUST)", 105, 20, null, null, "center");
+    
+    // Subtítulo / Instrucciones
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("INSTRUCCIONES OBLIGATORIAS PARA LA TIENDA:", 20, 35);
+    doc.text("1. Imprima este documento en físico.", 20, 42);
+    doc.text("2. Firme y coloque la huella dactilar del representante legal en la parte inferior.", 20, 49);
+    doc.text("3. Escanee o tome una fotografía legible del documento firmado.", 20, 56);
+    doc.text("4. Envíe el documento digital en formato PDF vía WhatsApp al soporte técnico de Gymenez.", 20, 63);
+    
+    // Línea separadora
+    doc.line(20, 70, 190, 70);
+    
+    // Datos de la solicitud
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("DATOS DE LA SOLICITUD:", 20, 85);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.text(`Razón Social / Nombre de Tienda: ${storeName}`, 20, 95);
+    doc.text(`RIF / Cédula de Identidad: ${documentId}`, 20, 102);
+    doc.text(`Correo Electrónico (Máster): ${email}`, 20, 109);
+    doc.text(`Modelo de Rentabilidad Actual: ${currentModel}`, 20, 116);
+    
+    // Fecha actual
+    const today = new Date();
+    const dateString = today.toLocaleDateString('es-VE', { year: 'numeric', month: 'long', day: 'numeric' });
+    doc.text(`Fecha de Emisión: ${dateString}`, 20, 123);
+    
+    // Declaración
+    doc.setFont("helvetica", "italic");
+    doc.text("Por medio del presente documento, declaro que no poseo ventas en proceso ni", 20, 140);
+    doc.text("fondos pendientes por liquidar, y autorizo formalmente a Gymenez Store a revocar", 20, 147);
+    doc.text("el contrato vigente para proceder a la selección de un nuevo Modelo de Rentabilidad.", 20, 154);
+    
+    // Zona de firma
+    doc.line(60, 200, 150, 200);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("FIRMA DEL REPRESENTANTE LEGAL", 105, 207, null, null, "center");
+    
+    // Guardar el PDF y forzar descarga
+    doc.save(`Solicitud_Cambio_Modelo_${documentId}.pdf`);
 }
