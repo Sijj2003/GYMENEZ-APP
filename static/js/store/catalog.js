@@ -247,8 +247,7 @@ function renderSearchDropdown(results, container) {
         const discount = p.discount_percentage || 0;
         const hasDiscount = discount > 0;
         
-        // 🍎 ZERO-TRUST: El backend ya calculó todo (incluyendo el descuento del partner)
-        // Solo leemos los valores que mandó el servidor
+        // 🍎 ZERO-TRUST: El backend ya calculó todo. Solo leemos y mostramos.
         const bestPrice = p.display_best_price ? parseFloat(p.display_best_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
         const maxPrice = p.display_max_price ? parseFloat(p.display_max_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
         
@@ -262,7 +261,7 @@ function renderSearchDropdown(results, container) {
                 </div>
             </div>
             <div class="text-right shrink-0">
-                <p class="text-[9px] text-gray-500 line-through leading-none">$${maxPrice} con PayPal</p>
+                <p class="text-[9px] text-gray-500 line-through leading-none">$${maxPrice}</p>
                 <p class="text-xs font-black text-[#FFC300] mt-1">$${bestPrice}</p>
                 ${hasDiscount ? `<p class="text-[8px] text-red-500 font-bold uppercase mt-1">-${discount}% OFF</p>` : ''}
             </div>
@@ -294,14 +293,13 @@ function renderProductsGrid(productsToRender) {
         const discount = p.discount_percentage || 0;
         const hasDiscount = discount > 0;
         
-        // 🍎 ZERO-TRUST: El backend ya calculó todo (incluyendo el descuento del partner)
-        // Solo leemos los valores que mandó el servidor
+        // 🍎 ZERO-TRUST: El backend ya calculó todo.
         const bestPrice = p.display_best_price ? parseFloat(p.display_best_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
         const maxPrice = p.display_max_price ? parseFloat(p.display_max_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
         
         const storeName = p.store_name || 'Gymenez Partner';
 
-        // LÓGICA DE ETIQUETAS CLIENTE ORIGINAL
+        // LÓGICA DE ETIQUETAS CLIENTE
         const isOnDemand = (p.is_on_demand === true || p.is_on_demand === 'true' || p.is_on_demand === 'True');
         const hasFreeShipping = (p.free_shipping === true || p.free_shipping === 'true' || p.free_shipping === 'True');
 
@@ -316,34 +314,28 @@ function renderProductsGrid(productsToRender) {
         return `
         <a href="/store/product.html?id=${p.id}" class="group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all cursor-pointer relative">
             
-            <!-- IMAGEN LIMPIA Y SIN TEXTO -->
             <div class="relative w-full aspect-square overflow-hidden bg-[#030305] border-b border-white/5 flex items-center justify-center">
                 <img src="${p.image_url}" class="w-full h-full object-contain filter drop-shadow-xl group-hover:scale-110 transition-transform duration-700" alt="${p.name}">
                 
                 ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${discount}% OFF</span>` : ''}
             </div>
             
-            <!-- INFORMACIÓN DEBAJO -->
             <div class="p-4 flex flex-col flex-grow relative">
-                
-                <!-- ETIQUETAS FLOTANTES SOBRE EL TÍTULO -->
                 ${etiquetasHtml ? `<div class="absolute -top-3 left-3 flex gap-1 z-20">${etiquetasHtml}</div>` : ''}
 
-                <!-- Título (Con margen superior si hay etiquetas) -->
                 <h3 class="text-sm md:text-base font-bold text-white mb-1 uppercase tracking-tight truncate ${etiquetasHtml ? 'mt-2' : ''}">${p.name}</h3>
                 
-                <!-- Categoría y Unidades -->
                 <p class="text-[10px] md:text-xs text-gray-400 mb-2 font-medium capitalize">
                     ${p.category} • ${isOnDemand ? '<span class="text-purple-400 font-bold">Bajo Pedido</span>' : (p.stock > 0 ? p.stock + ' unidades' : '<span class="text-red-500 font-bold">Agotado</span>')}
                 </p>
                 
-                <!-- Nombre de la Tienda -->
                 <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${storeName}</span>
                 
-                <!-- Precio y Botón: Ahora solo imprime lo que manda el backend -->
+                <!-- PRECIOS ZERO-TRUST -->
                 <div class="flex items-center justify-between mt-4 border-t border-white/5 pt-3">
                     <div class="flex flex-col">
-                        <span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice} con PayPal</span>
+                        <!-- El texto tachado es universal, puede ser el precio base del partner o el de PayPal -->
+                        <span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice}</span>
                         <span class="text-white font-black text-sm md:text-base leading-none mt-1">$${bestPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">vía Binance</span></span>
                     </div>
                     <div class="bg-white/10 p-2 rounded-full text-white group-hover:bg-[#FFC300] group-hover:text-black transition-colors">
