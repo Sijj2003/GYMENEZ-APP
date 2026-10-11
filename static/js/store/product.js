@@ -104,11 +104,11 @@ function renderProduct() {
         }
     }
 
-    // 🛡️ Mostrar el precio de PayPal tachado y el de Binance destacado
+    // 🛡️ Mostrar el precio mayor tachado y el de Binance destacado sin forzar la etiqueta "con PayPal"
     const oldPriceEl = document.getElementById('prod-old-price');
     if (maxPrice > bestPrice) {
         if (oldPriceEl) {
-            oldPriceEl.innerText = `$${maxPrice.toFixed(2)} con PayPal`;
+            oldPriceEl.innerText = `$${maxPrice.toFixed(2)}`;
             oldPriceEl.classList.remove('hidden');
         }
     } else {
