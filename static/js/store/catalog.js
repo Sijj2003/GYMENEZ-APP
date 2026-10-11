@@ -15,31 +15,28 @@ async function loadPartners() {
     const grid = document.getElementById('partners-grid');
     if (!grid) return;
 
-    // 1. Revisar si existen datos guardados en caché local
     const rawCache = sessionStorage.getItem('gymenez_partners');
 
     if (rawCache) {
         try {
             const cachedData = JSON.parse(rawCache);
             const now = new Date().getTime();
-            const CACHE_LIMIT = 5 * 60 * 1000; // 5 minutos
+            const CACHE_LIMIT = 5 * 60 * 1000; 
 
             if (cachedData.partners && cachedData.timestamp && (now - cachedData.timestamp < CACHE_LIMIT)) {
                 renderPartnersList(cachedData.partners, grid);
-                return; // Usa la caché y no realiza la petición HTTP
+                return; 
             }
         } catch (e) {
             console.warn("Caché de partners expirado o inválido, reconsultando...");
         }
     }
 
-    // 2. Si no hay caché o expiró, realiza la petición a PythonAnywhere
     try {
         const res = await fetch('https://sijj2003.pythonanywhere.com/api/store/partners');
         const data = await res.json();
 
         if (data.success && data.partners.length > 0) {
-            // Guardar respuesta en la memoria del navegador
             const cachePayload = {
                 partners: data.partners,
                 timestamp: new Date().getTime()
@@ -56,7 +53,6 @@ async function loadPartners() {
     }
 }
 
-// Función auxiliar de renderizado conectada a vendor.html
 function renderPartnersList(partners, grid) {
     grid.innerHTML = partners.map(p => {
         const initial = p.store_name.charAt(0).toUpperCase();
@@ -84,25 +80,21 @@ async function loadStoreCatalog() {
     const grid = document.getElementById('catalog-grid');
     if (!grid) return;
 
-    // 1. Mostrar Skeletons estructurados con Tailwind mientras verificamos
     grid.innerHTML = renderSkeletons(8);
 
-    // 2. Revisar si tenemos los productos guardados en caché (Session Storage)
     const rawCache = sessionStorage.getItem('gymenez_catalog');
 
     if (rawCache) {
         try {
             const cachedData = JSON.parse(rawCache);
-            // Validamos que tenga la nueva estructura de caché con timestamp
             if (!Array.isArray(cachedData) && cachedData.products && cachedData.timestamp) {
                 const now = new Date().getTime();
-                const CACHE_LIMIT = 5 * 60 * 1000; // 5 minutos en milisegundos
+                const CACHE_LIMIT = 5 * 60 * 1000; 
                 
                 if (now - cachedData.timestamp < CACHE_LIMIT) {
-                    // Si el caché tiene menos de 5 minutos, lo usamos
                     window.allProducts = cachedData.products;
                     applyCategoryFilter();
-                    return; // Salimos, no molestamos al backend
+                    return; 
                 }
             }
         } catch (e) {
@@ -110,7 +102,6 @@ async function loadStoreCatalog() {
         }
     }
 
-    // 3. Si no hay caché o ya expiró, pedimos al backend
     try {
         const response = await fetch('https://sijj2003.pythonanywhere.com/api/store/catalog');
         const data = await response.json();
@@ -118,7 +109,6 @@ async function loadStoreCatalog() {
         if (response.ok && data.success) {
             window.allProducts = data.products; 
             
-            // Guardamos en la bóveda local incluyendo el timestamp actual
             const cachePayload = {
                 products: data.products,
                 timestamp: new Date().getTime()
@@ -134,25 +124,17 @@ async function loadStoreCatalog() {
     }
 }
 
-// Función que genera los Skeletons respetando tu diseño UI exacto en Tailwind
 function renderSkeletons(count) {
     let html = '';
     for (let i = 0; i < count; i++) {
         html += `
         <div class="glass-panel p-4 rounded-2xl relative flex flex-col border border-white/5 animate-pulse">
-            <!-- Etiqueta superior -->
             <div class="absolute top-6 left-6 z-10 bg-white/5 w-24 h-4 rounded border border-white/10"></div>
-            
-            <!-- Imagen (Cuadro grande) -->
             <div class="aspect-square bg-white/5 rounded-xl mb-4 border border-white/5"></div>
-            
-            <!-- Título y categoría -->
             <div class="flex-grow">
                 <div class="h-4 bg-white/10 rounded w-3/4 mb-2"></div>
                 <div class="h-2 bg-white/5 rounded w-1/2 mb-4"></div>
             </div>
-            
-            <!-- Precio abajo -->
             <div class="flex items-center justify-between mt-auto">
                 <div class="h-6 bg-white/10 rounded w-1/3"></div>
             </div>
@@ -168,9 +150,8 @@ function renderSkeletons(count) {
 function setupFiltersAndSearch() {
     const searchInput = document.getElementById('search-input');
     const searchDropdown = document.getElementById('search-dropdown');
-    const searchBtn = document.getElementById('search-btn'); // Botón de la lupa
+    const searchBtn = document.getElementById('search-btn'); 
     
-    // Función central para viajar a la página de búsqueda
     const executeSearch = () => {
         if (!searchInput) return;
         const term = searchInput.value.trim();
@@ -181,7 +162,6 @@ function setupFiltersAndSearch() {
 
     if (searchInput && searchDropdown) {
         
-        // 1. Disparar búsqueda con la tecla ENTER
         searchInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -189,12 +169,10 @@ function setupFiltersAndSearch() {
             }
         });
 
-        // 2. Disparar búsqueda haciendo clic en la lupa
         if (searchBtn) {
             searchBtn.addEventListener('click', executeSearch);
         }
 
-        // 3. El dropdown en vivo (Letra por letra desde memoria, velocidad extrema)
         searchInput.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase().trim();
             if (term.length === 0) {
@@ -209,12 +187,10 @@ function setupFiltersAndSearch() {
             renderSearchDropdown(filtered, searchDropdown);
         });
 
-        // Mostrar dropdown al enfocar
         searchInput.addEventListener('focus', (e) => {
             if (e.target.value.trim().length > 0) searchDropdown.classList.remove('hidden');
         });
 
-        // Ocultar dropdown al hacer clic fuera
         document.addEventListener('click', (e) => {
             if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
                 searchDropdown.classList.add('hidden');
@@ -222,7 +198,6 @@ function setupFiltersAndSearch() {
         });
     }
 
-    // --- LÓGICA DE BOTONES DE CATEGORÍA ---
     const categoryBtns = document.querySelectorAll('.category-btn');
     categoryBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -254,7 +229,7 @@ function applyCategoryFilter() {
         countDisplay.innerText = `${filtered.length} Resultados`;
     }
     
-    renderProductsGrid(filtered); // Esto solo actualiza las cuadrículas grandes de abajo
+    renderProductsGrid(filtered); 
 }
 
 // ==========================================
@@ -272,12 +247,10 @@ function renderSearchDropdown(results, container) {
         const discount = p.discount_percentage || 0;
         const hasDiscount = discount > 0;
         
-        // 🍎 APLICAMOS EL MOTOR FINANCIERO AL PRECIO BASE
-        const basePrice = p.display_best_price ? p.display_best_price : parseFloat(p.price_usd);
-        const finalPrice = hasDiscount ? (basePrice * (1 - discount/100)).toFixed(2) : basePrice.toFixed(2);
-        
-        // 🍎 EXTRAEMOS EL PRECIO DE PAYPAL PARA MOSTRARLO TACHADO SI NO HAY DESCUENTO DE PARTNER
-        const maxPrice = p.display_max_price ? p.display_max_price.toFixed(2) : basePrice.toFixed(2);
+        // 🍎 ZERO-TRUST: El backend ya calculó todo (incluyendo el descuento del partner)
+        // Solo leemos los valores que mandó el servidor
+        const bestPrice = p.display_best_price ? parseFloat(p.display_best_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
+        const maxPrice = p.display_max_price ? parseFloat(p.display_max_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
         
         return `
         <a href="/store/product.html?id=${p.id}" class="flex items-center justify-between p-3 hover:bg-white/5 transition border-b border-white/5 last:border-0 cursor-pointer">
@@ -289,10 +262,9 @@ function renderSearchDropdown(results, container) {
                 </div>
             </div>
             <div class="text-right shrink-0">
-                ${hasDiscount 
-                    ? `<p class="text-xs font-black text-white">$${finalPrice}</p><p class="text-[8px] text-red-500 font-bold uppercase mt-1">-${discount}% OFF</p>` 
-                    : `<p class="text-[9px] text-gray-500 line-through leading-none">$${maxPrice}</p><p class="text-xs font-black text-[#FFC300] mt-1">$${finalPrice}</p>`
-                }
+                <p class="text-[9px] text-gray-500 line-through leading-none">$${maxPrice} con PayPal</p>
+                <p class="text-xs font-black text-[#FFC300] mt-1">$${bestPrice}</p>
+                ${hasDiscount ? `<p class="text-[8px] text-red-500 font-bold uppercase mt-1">-${discount}% OFF</p>` : ''}
             </div>
         </a>
         `;
@@ -322,16 +294,14 @@ function renderProductsGrid(productsToRender) {
         const discount = p.discount_percentage || 0;
         const hasDiscount = discount > 0;
         
-        // 🍎 APLICAMOS EL MOTOR FINANCIERO AL PRECIO BASE
-        const basePrice = p.display_best_price ? p.display_best_price : parseFloat(p.price_usd);
-        const finalPrice = hasDiscount ? (basePrice * (1 - discount/100)).toFixed(2) : basePrice.toFixed(2);
-        
-        // 🍎 EXTRAEMOS EL PRECIO DE PAYPAL PARA MOSTRARLO TACHADO SI NO HAY DESCUENTO DE PARTNER
-        const maxPrice = p.display_max_price ? p.display_max_price.toFixed(2) : basePrice.toFixed(2);
+        // 🍎 ZERO-TRUST: El backend ya calculó todo (incluyendo el descuento del partner)
+        // Solo leemos los valores que mandó el servidor
+        const bestPrice = p.display_best_price ? parseFloat(p.display_best_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
+        const maxPrice = p.display_max_price ? parseFloat(p.display_max_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
         
         const storeName = p.store_name || 'Gymenez Partner';
 
-        // LÓGICA DE ETIQUETAS CLIENTE ORIGINAL (Intacta)
+        // LÓGICA DE ETIQUETAS CLIENTE ORIGINAL
         const isOnDemand = (p.is_on_demand === true || p.is_on_demand === 'true' || p.is_on_demand === 'True');
         const hasFreeShipping = (p.free_shipping === true || p.free_shipping === 'true' || p.free_shipping === 'True');
 
@@ -343,7 +313,6 @@ function renderProductsGrid(productsToRender) {
             etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis</span> `;
         }
 
-        // AQUÍ EMPIEZA LA TARJETA CON LA LÓGICA MIXTA
         return `
         <a href="/store/product.html?id=${p.id}" class="group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all cursor-pointer relative">
             
@@ -351,7 +320,7 @@ function renderProductsGrid(productsToRender) {
             <div class="relative w-full aspect-square overflow-hidden bg-[#030305] border-b border-white/5 flex items-center justify-center">
                 <img src="${p.image_url}" class="w-full h-full object-contain filter drop-shadow-xl group-hover:scale-110 transition-transform duration-700" alt="${p.name}">
                 
-                ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${discount}%</span>` : ''}
+                ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${discount}% OFF</span>` : ''}
             </div>
             
             <!-- INFORMACIÓN DEBAJO -->
@@ -371,12 +340,12 @@ function renderProductsGrid(productsToRender) {
                 <!-- Nombre de la Tienda -->
                 <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${storeName}</span>
                 
-                <!-- Precio y Botón (Lógica mixta: si hay descuento de partner, tacha el precio base. Si no hay descuento, tacha el precio de paypal) -->
+                <!-- Precio y Botón: Ahora solo imprime lo que manda el backend -->
                 <div class="flex items-center justify-between mt-4 border-t border-white/5 pt-3">
-                    ${hasDiscount 
-                        ? `<div class="flex flex-col"><span class="text-xs text-gray-500 line-through leading-none">$${basePrice.toFixed(2)}</span><span class="text-white font-black text-sm md:text-base leading-none mt-1">$${finalPrice}</span></div>` 
-                        : `<div class="flex flex-col"><span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice} con PayPal</span><span class="text-white font-black text-sm md:text-base leading-none mt-1">$${finalPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">vía Binance</span></span></div>`
-                    }
+                    <div class="flex flex-col">
+                        <span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice} con PayPal</span>
+                        <span class="text-white font-black text-sm md:text-base leading-none mt-1">$${bestPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">vía Binance</span></span>
+                    </div>
                     <div class="bg-white/10 p-2 rounded-full text-white group-hover:bg-[#FFC300] group-hover:text-black transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                     </div>
