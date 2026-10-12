@@ -79,6 +79,12 @@ window.renderCartSummary = function() {
         sumOfBestPrices += bestPriceTotal;
         sumOfMaxPrices += maxPriceTotal;
         
+        // 🍎 CÁLCULO VISUAL REAL DEL DESCUENTO PORCENTUAL (Igual que en Catálogo)
+        let visualDiscount = 0;
+        if (maxPrice > bestPrice) {
+            visualDiscount = Math.round(((maxPrice - bestPrice) / maxPrice) * 100);
+        }
+
         const store = item.storeName || item.store_name || 'Gymenez Store';
         storeSet.add(store);
         
@@ -93,11 +99,15 @@ window.renderCartSummary = function() {
         let logicBadges = '';
         // Solo mostramos "Envío Gratis" en el producto si LA TIENDA alcanzó la meta
         if (storeTotals[store].earnedFreeShipping && (item.free_shipping === true || item.free_shipping === 'true')) {
-            logicBadges += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">🚚 Envío Gratis Aplicado</span>`;
+            logicBadges += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">🚚 Envío Gratis</span>`;
         }
         if (item.is_on_demand === true || item.is_on_demand === 'true') {
             hasOnDemand = true;
             logicBadges += `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">⚡ Bajo Pedido</span>`;
+        }
+        // 🍎 ETIQUETA ROJA DE DESCUENTO: Solo aparece si el método es Binance Y hay un ahorro real
+        if (window.currentPaymentMethod === 'binance' && visualDiscount > 0) {
+            logicBadges += `<span class="bg-red-500/10 text-red-500 border border-red-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">-${visualDiscount}% OFF</span>`;
         }
 
         // 🍎 BOTONES SEPARADOS PARA EVITAR CLICS FALSOS
@@ -121,7 +131,7 @@ window.renderCartSummary = function() {
         let priceVisualHtml = '';
         if (window.currentPaymentMethod === 'binance' && maxPriceTotal > bestPriceTotal) {
             priceVisualHtml = `
-                <span class="text-[9px] text-gray-500 line-through leading-none mb-0.5 font-bold uppercase tracking-widest">Ref: $${formatMoney(maxPriceTotal)}</span>
+                <span class="text-[9px] text-gray-500 line-through leading-none mb-0.5 font-bold uppercase tracking-widest">$${formatMoney(maxPriceTotal)}</span>
                 <span class="font-black text-white text-sm tracking-tight leading-none">$${formatMoney(bestPriceTotal)}</span>
             `;
         } else {
