@@ -1,71 +1,111 @@
 /**
  * Gymenez Store - Partner Store Profile & Catalog Engine
- * Carga el catálogo por Slug y gestiona la caché local (15 minutos).
+ * Arquitectura Zero-Trust: Lee de la memoria global del Catálogo para consistencia absoluta.
  */
 
-const CACHE_TTL_MINUTES = 15;
+// Memoria local de esta tienda para el buscador interno
+window.vendorProducts = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Capturar el slug o identificador amigable desde la URL (ej: vendor.html?store=gymenez-performance)
+    // Capturar el slug o ID desde la URL
     const urlParams = new URLSearchParams(window.location.search);
-    const storeSlug = urlParams.get('store') || urlParams.get('slug') || urlParams.get('id');
+    const storeIdentifier = urlParams.get('store') || urlParams.get('slug') || urlParams.get('id');
 
-    if (!storeSlug) {
-        console.warn('No se especificó la tienda asociada. Redirigiendo al catálogo general.');
+    if (!storeIdentifier) {
+        console.warn('No se especificó la tienda. Redirigiendo al catálogo.');
         window.location.href = '/store/catalog.html';
         return;
     }
 
-    // 2. Cargar perfil y catálogo utilizando la caché local o API
-    await loadPartnerStoreData(storeSlug);
-
-    // 3. Vincular buscadores internos
-    setupStoreSearch(storeSlug);
+    // Iniciar ecosistema
+    await loadVendorEcosystem(storeIdentifier);
+    setupStoreSearch();
 });
 
-/**
- * Carga los datos de la tienda desde caché o mediante API REST en Flask
- */
-async function loadPartnerStoreData(slug) {
-    const cacheKey = `gymen_vendor_cache_${slug.toLowerCase()}`;
-    const cachedData = getValidCache(cacheKey);
-
-    if (cachedData) {
-        console.log(`[Gymenez Cache] Datos de tienda '${slug}' cargados desde caché local.`);
-        renderVendorProfile(cachedData.vendor);
-        renderVendorProducts(cachedData.products);
-        return;
-    }
-
-    try {
-        console.log(`[Gymenez Network] Solicitando tienda '${slug}' al backend...`);
-        
-        // Petición real al backend de Flask por slug/id
-        const response = await fetch(`https://sijj2003.pythonanywhere.com/api/store/vendor/${slug}`);
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-            // Guardar en la caché local con tiempo de expiración
-            setCacheWithExpiry(cacheKey, data, CACHE_TTL_MINUTES);
-            
-            renderVendorProfile(data.vendor);
-            renderVendorProducts(data.products);
-        } else {
-            console.error(data.message || 'Error al obtener la tienda');
-            showEmptyState(true);
-        }
-    } catch (error) {
-        console.error('Error de red al conectar con el backend de la tienda:', error);
-        showEmptyState(true);
-    }
+// Utilidad para limpiar textos y URLs
+function slugify(text) {
+    if (!text) return '';
+    return text.toString().toLowerCase().trim()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Quita acentos
+        .replace(/\s+/g, '-')           
+        .replace(/[^\w\-]+/g, '')       
+        .replace(/\-\-+/g, '-');        
 }
 
-/**
- * Renderiza el encabezado y datos generales de la tienda
- */
-function renderVendorProfile(vendor) {
-    if (!vendor) return;
+async function loadVendorEcosystem(identifier) {
+    // ==========================================
+    // 1. CARGAR PERFIL DEL PARTNER (Memoria Global)
+    // ==========================================
+    let partners = [];
+    const rawPartnersCache = sessionStorage.getItem('gymenez_partners');
+    
+    if (rawPartnersCache) {
+        try {
+            const pData = JSON.parse(rawPartnersCache);
+            if (new Date().getTime() - pData.timestamp < 5 * 60 * 1000) {
+                partners = pData.partners;
+            }
+        } catch(e) {}
+    }
 
+    // Si no hay caché, pedir al backend
+    if (partners.length === 0) {
+        try {
+            const res = await fetch('https://sijj2003.pythonanywhere.com/api/store/partners');
+            const data = await res.json();
+            if (data.success) {
+                partners = data.partners;
+                sessionStorage.setItem('gymenez_partners', JSON.stringify({partners, timestamp: new Date().getTime()}));
+            }
+        } catch(e) { console.error('Error cargando partners', e); }
+    }
+
+    // Buscar el partner actual (Por ID exacto o por Slug del nombre)
+    const currentVendor = partners.find(p => p.id === identifier || slugify(p.store_name) === slugify(identifier));
+    
+    if (currentVendor) {
+        renderVendorProfile(currentVendor);
+    } else {
+        renderVendorProfile({ store_name: identifier.replace(/-/g, ' ') }); // Fallback visual
+    }
+
+    // ==========================================
+    // 2. CARGAR CATÁLOGO GLOBAL Y FILTRAR (Zero-Trust)
+    // ==========================================
+    let allProducts = [];
+    const rawCatalogCache = sessionStorage.getItem('gymenez_catalog');
+    
+    if (rawCatalogCache) {
+        try {
+            const cData = JSON.parse(rawCatalogCache);
+            if (new Date().getTime() - cData.timestamp < 5 * 60 * 1000) {
+                allProducts = cData.products;
+            }
+        } catch(e) {}
+    }
+
+    // Si no hay catálogo en memoria, lo pedimos todo y lo cacheamos
+    if (allProducts.length === 0) {
+        try {
+            const res = await fetch('https://sijj2003.pythonanywhere.com/api/store/catalog');
+            const data = await res.json();
+            if (data.success) {
+                allProducts = data.products;
+                sessionStorage.setItem('gymenez_catalog', JSON.stringify({products: allProducts, timestamp: new Date().getTime()}));
+            }
+        } catch(e) { console.error('Error cargando catálogo', e); }
+    }
+
+    // 🍎 LA MAGIA: Filtramos la memoria global matemáticamente perfecta
+    window.vendorProducts = allProducts.filter(p => {
+        return (currentVendor && p.partner_id === currentVendor.id) || 
+               slugify(p.store_name) === slugify(identifier);
+    });
+
+    renderVendorProducts(window.vendorProducts);
+}
+
+function renderVendorProfile(vendor) {
     const titleEl = document.getElementById('vendor-title');
     const descEl = document.getElementById('vendor-description');
     const logoFallback = document.getElementById('vendor-logo-fallback');
@@ -85,20 +125,15 @@ function renderVendorProfile(vendor) {
         if (logoFallback) logoFallback.classList.add('hidden');
     } else {
         if (logoFallback) {
-            const initial = storeName.charAt(0).toUpperCase();
-            logoFallback.innerText = initial;
+            logoFallback.innerText = storeName.charAt(0).toUpperCase();
             logoFallback.classList.remove('hidden');
         }
         if (logoImg) logoImg.classList.add('hidden');
     }
 
-    // Retirar estilo skeleton
     document.getElementById('vendor-logo-container')?.classList.remove('skeleton-pulse');
 }
 
-/**
- * Renderiza la grilla de productos idéntica a catalog.js (Precios, Descuentos y Envíos Gratis)
- */
 function renderVendorProducts(products) {
     const grid = document.getElementById('vendor-products-grid') || document.getElementById('catalog-grid');
     const counter = document.getElementById('results-counter');
@@ -117,13 +152,12 @@ function renderVendorProducts(products) {
     if (badge) badge.innerText = `${products.length} Productos`;
     if (counter) counter.innerText = `${products.length} artículos disponibles`;
 
-    // Renderizado eficiente con mapeo idéntico a catalog.js
     grid.innerHTML = products.map(p => {
-        // 🍎 ZERO-TRUST: Extraemos los números puros
+        // 🍎 ZERO-TRUST: Extraemos los números puros desde la memoria global
         const bestPriceNum = p.display_best_price ? parseFloat(p.display_best_price) : parseFloat(p.price_usd);
         const maxPriceNum = p.display_max_price ? parseFloat(p.display_max_price) : parseFloat(p.price_usd);
         
-        // 🍎 CÁLCULO VISUAL REAL: Diferencia porcentual entre el precio más alto y el de Binance
+        // 🍎 CÁLCULO VISUAL REAL
         let visualDiscount = 0;
         if (maxPriceNum > bestPriceNum) {
             visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
@@ -132,11 +166,10 @@ function renderVendorProducts(products) {
 
         const bestPrice = bestPriceNum.toFixed(2);
         const maxPrice = maxPriceNum.toFixed(2);
-        
+
         const storeName = p.store_name || 'Gymenez Partner';
         const category = p.category || 'General';
 
-        // Banderas booleanas (soporta String o Boolean)
         const isOnDemand = (p.is_on_demand === true || p.is_on_demand === 'true' || p.is_on_demand === 'True');
         const hasFreeShipping = (p.free_shipping === true || p.free_shipping === 'true' || p.free_shipping === 'True');
 
@@ -145,7 +178,7 @@ function renderVendorProducts(products) {
             etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis</span>`;
         }
 
-        // 🍎 Lógica visual segura para la cuadrícula
+        // 🍎 Lógica visual segura
         let priceBlockHtml = '';
         if (maxPriceNum > bestPriceNum) {
             priceBlockHtml = `
@@ -165,31 +198,23 @@ function renderVendorProducts(products) {
         return `
         <a href="/store/product.html?id=${p.id}" class="group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all cursor-pointer relative shadow-lg hover:shadow-[0_10px_30px_rgba(255,195,0,0.1)]">
             
-            <!-- IMAGEN LIMPIA Y BADGE DE DESCUENTO -->
             <div class="relative w-full aspect-square overflow-hidden bg-[#030305] border-b border-white/5 flex items-center justify-center">
                 <img src="${p.image_url || '/static/img/placeholder.png'}" class="w-full h-full object-contain filter drop-shadow-xl group-hover:scale-110 transition-transform duration-700" alt="${p.name}">
                 
                 ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${visualDiscount}% OFF</span>` : ''}
             </div>
             
-            <!-- INFORMACIÓN Y PRECIOS -->
             <div class="p-4 flex flex-col flex-grow relative">
-                
-                <!-- ETIQUETAS FLOTANTES SOBRE EL TÍTULO -->
                 ${etiquetasHtml ? `<div class="absolute -top-3 left-3 flex gap-1 z-20">${etiquetasHtml}</div>` : ''}
 
-                <!-- Título -->
                 <h3 class="text-sm md:text-base font-bold text-white mb-1 uppercase tracking-tight truncate ${etiquetasHtml ? 'mt-2' : ''}">${p.name}</h3>
                 
-                <!-- Categoría y Unidades -->
                 <p class="text-[10px] md:text-xs text-gray-400 mb-2 font-medium capitalize">
                     ${category} • ${isOnDemand ? '<span class="text-purple-400 font-bold">Bajo Pedido</span>' : (p.stock > 0 ? p.stock + ' unidades' : '<span class="text-red-500 font-bold">Agotado</span>')}
                 </p>
                 
-                <!-- Nombre de la Tienda -->
                 <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${storeName}</span>
                 
-                <!-- PRECIOS ZERO-TRUST CONDICIONALES -->
                 <div class="flex items-center justify-between mt-4 border-t border-white/5 pt-3">
                     ${priceBlockHtml}
                     <div class="bg-white/10 p-2 rounded-full text-white group-hover:bg-[#FFC300] group-hover:text-black transition-colors">
@@ -202,10 +227,7 @@ function renderVendorProducts(products) {
     }).join('');
 }
 
-/**
- * Filtro flexible inteligente en tiempo real por palabras clave (Tokens)
- */
-function setupStoreSearch(slug) {
+function setupStoreSearch() {
     const searchInputs = [
         document.getElementById('store-search-input'),
         document.getElementById('store-search-input-mobile')
@@ -215,30 +237,16 @@ function setupStoreSearch(slug) {
         if (!input) return;
         input.addEventListener('input', (e) => {
             const rawQuery = e.target.value.toLowerCase().trim();
-            const cached = getValidCache(`gymen_vendor_cache_${slug.toLowerCase()}`);
 
-            if (!cached || !cached.products) return;
-
-            // Si el buscador está vacío, renderiza todo el catálogo
             if (rawQuery.length === 0) {
-                renderVendorProducts(cached.products);
+                renderVendorProducts(window.vendorProducts);
                 return;
             }
 
-            // Separar la búsqueda en palabras clave individuales (ignorando espacios múltiples)
-            const queryTokens = rawQuery.split(/\s+/).filter(token => token.length > 0);
+            const queryTokens = rawQuery.split(/\s+/).filter(t => t.length > 0);
 
-            const filtered = cached.products.filter(p => {
-                // Creamos un súper texto con todos los atributos del producto
-                const searchableText = `
-                    ${p.name || ''} 
-                    ${p.category || ''} 
-                    ${p.description || ''} 
-                    ${p.short_description || ''} 
-                    ${p.store_name || ''}
-                `.toLowerCase();
-
-                // El producto cumple si CADA palabra buscada existe en alguna parte del texto del producto
+            const filtered = window.vendorProducts.filter(p => {
+                const searchableText = `${p.name || ''} ${p.category || ''} ${p.description || ''} ${p.store_name || ''}`.toLowerCase();
                 return queryTokens.every(token => searchableText.includes(token));
             });
 
@@ -247,42 +255,10 @@ function setupStoreSearch(slug) {
     });
 }
 
-/**
- * Control del estado vacío
- */
 function showEmptyState(show) {
     const emptyState = document.getElementById('vendor-empty-state');
     const grid = document.getElementById('vendor-products-grid') || document.getElementById('catalog-grid');
 
     if (emptyState) emptyState.classList.toggle('hidden', !show);
     if (grid && show) grid.innerHTML = '';
-}
-
-/* ==========================================================================
-   GESTOR DE CACHÉ LOCAL (LocalStorage)
-   ========================================================================== */
-
-function setCacheWithExpiry(key, value, timeToLiveInMinutes) {
-    const item = {
-        value: value,
-        expiry: new Date().getTime() + timeToLiveInMinutes * 60 * 1000,
-    };
-    localStorage.setItem(key, JSON.stringify(item));
-}
-
-function getValidCache(key) {
-    const itemStr = localStorage.getItem(key);
-    if (!itemStr) return null;
-
-    try {
-        const item = JSON.parse(itemStr);
-        if (new Date().getTime() > item.expiry) {
-            localStorage.removeItem(key);
-            return null;
-        }
-        return item.value;
-    } catch (e) {
-        localStorage.removeItem(key);
-        return null;
-    }
 }
