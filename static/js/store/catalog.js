@@ -251,6 +251,21 @@ function renderSearchDropdown(results, container) {
         const bestPrice = p.display_best_price ? parseFloat(p.display_best_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
         const maxPrice = p.display_max_price ? parseFloat(p.display_max_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
         
+        // Lógica visual para la lupa (sólo tacha si el precio es mayor)
+        let priceBlock = '';
+        if (parseFloat(maxPrice) > parseFloat(bestPrice)) {
+            priceBlock = `
+                <p class="text-[9px] text-gray-500 line-through leading-none">$${maxPrice}</p>
+                <p class="text-xs font-black text-[#FFC300] mt-1">$${bestPrice}</p>
+            `;
+        } else {
+            priceBlock = `<p class="text-xs font-black text-white mt-1">$${bestPrice}</p>`;
+        }
+        
+        if (hasDiscount) {
+            priceBlock += `<p class="text-[8px] text-red-500 font-bold uppercase mt-1">-${discount}% OFF</p>`;
+        }
+
         return `
         <a href="/store/product.html?id=${p.id}" class="flex items-center justify-between p-3 hover:bg-white/5 transition border-b border-white/5 last:border-0 cursor-pointer">
             <div class="flex items-center gap-4">
@@ -261,9 +276,7 @@ function renderSearchDropdown(results, container) {
                 </div>
             </div>
             <div class="text-right shrink-0">
-                <p class="text-[9px] text-gray-500 line-through leading-none">$${maxPrice}</p>
-                <p class="text-xs font-black text-[#FFC300] mt-1">$${bestPrice}</p>
-                ${hasDiscount ? `<p class="text-[8px] text-red-500 font-bold uppercase mt-1">-${discount}% OFF</p>` : ''}
+                ${priceBlock}
             </div>
         </a>
         `;
@@ -311,6 +324,23 @@ function renderProductsGrid(productsToRender) {
             etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis</span> `;
         }
 
+        // 🍎 Lógica visual segura para la cuadrícula (sólo tacha si el precio es estrictamente mayor)
+        let priceBlockHtml = '';
+        if (parseFloat(maxPrice) > parseFloat(bestPrice)) {
+            priceBlockHtml = `
+                <div class="flex flex-col">
+                    <span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice}</span>
+                    <span class="text-white font-black text-sm md:text-base leading-none mt-1">$${bestPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">Binance Pay</span></span>
+                </div>
+            `;
+        } else {
+            priceBlockHtml = `
+                <div class="flex flex-col justify-end mt-2">
+                    <span class="text-white font-black text-sm md:text-base leading-none">$${bestPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">Binance Pay</span></span>
+                </div>
+            `;
+        }
+
         return `
         <a href="/store/product.html?id=${p.id}" class="group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all cursor-pointer relative">
             
@@ -331,13 +361,9 @@ function renderProductsGrid(productsToRender) {
                 
                 <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${storeName}</span>
                 
-                <!-- PRECIOS ZERO-TRUST -->
+                <!-- PRECIOS ZERO-TRUST CONDICIONALES -->
                 <div class="flex items-center justify-between mt-4 border-t border-white/5 pt-3">
-                    <div class="flex flex-col">
-                        <!-- El texto tachado es universal, puede ser el precio base del partner o el de PayPal -->
-                        <span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice}</span>
-                        <span class="text-white font-black text-sm md:text-base leading-none mt-1">$${bestPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">Binance Pay</span></span>
-                    </div>
+                    ${priceBlockHtml}
                     <div class="bg-white/10 p-2 rounded-full text-white group-hover:bg-[#FFC300] group-hover:text-black transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                     </div>
