@@ -45,21 +45,27 @@ async function executeVaultEntry() {
     btn.innerHTML = '<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Reservando Inventario...</span>';
 
     // 🧠 PAYLOAD PERFECTO PARA EL BACKEND
-    // 🍎 Ajuste Zero-Trust: Enviamos ambos precios para que Python tenga visibilidad total de la orden
-    const cleanItems = cartItems.map(item => ({
-        id: item.id, 
-        real_id: item.real_id || item.id, 
-        name: item.name,
-        price: parseFloat(item.price),                   // Precio Binance
-        basePrice: parseFloat(item.basePrice || item.price), // Precio Max (PayPal)
-        qty: item.quantity || item.qty || 1,
-        storeName: item.storeName || item.store_name || 'Gymenez Store',
-        weight_kg: item.weight_kg || 1,
-        // Banderas de logística
-        free_shipping: item.free_shipping === true || item.free_shipping === 'true',
-        free_shipping_threshold: parseFloat(item.free_shipping_threshold || 0),
-        is_on_demand: item.is_on_demand === true || item.is_on_demand === 'true'
-    }));
+    // 🍎 Ajuste Zero-Trust: Enviamos ambos precios dinámicos para que Python tenga visibilidad total de la orden
+    const cleanItems = cartItems.map(item => {
+        const itemBestPrice = parseFloat(item.price);
+        const itemMaxPrice = parseFloat(item.basePrice || item.price);
+        const itemFinalPrice = window.currentPaymentMethod === 'binance' ? itemBestPrice : itemMaxPrice;
+
+        return {
+            id: item.id, 
+            real_id: item.real_id || item.id, 
+            name: item.name,
+            price: itemFinalPrice, // <-- Envía el precio validado exacto a Python
+            basePrice: itemMaxPrice, // <-- Por seguridad
+            qty: item.quantity || item.qty || 1,
+            storeName: item.storeName || item.store_name || 'Gymenez Store',
+            weight_kg: item.weight_kg || 1,
+            // Banderas de logística
+            free_shipping: item.free_shipping === true || item.free_shipping === 'true',
+            free_shipping_threshold: parseFloat(item.free_shipping_threshold || 0),
+            is_on_demand: item.is_on_demand === true || item.is_on_demand === 'true'
+        };
+    });
 
     // Capturamos si el cliente activó el switch ANTES de entrar a la bóveda
     const toggleFreeShipping = document.getElementById('toggle-free-shipping');
