@@ -119,11 +119,19 @@ function renderVendorProducts(products) {
 
     // Renderizado eficiente con mapeo idéntico a catalog.js
     grid.innerHTML = products.map(p => {
-        // Parseo seguro de Firestore (soporta price_usd o price)
-        const priceNum = parseFloat(p.price_usd || p.price) || 0;
-        const discount = parseInt(p.discount_percentage) || 0;
-        const hasDiscount = discount > 0;
-        const finalPrice = hasDiscount ? (priceNum * (1 - discount / 100)).toFixed(2) : priceNum.toFixed(2);
+        // 🍎 ZERO-TRUST: Extraemos los números puros calculados por el backend
+        const bestPriceNum = p.display_best_price ? parseFloat(p.display_best_price) : parseFloat(p.price_usd || p.price);
+        const maxPriceNum = p.display_max_price ? parseFloat(p.display_max_price) : parseFloat(p.price_usd || p.price);
+        
+        // 🍎 CÁLCULO VISUAL REAL: Diferencia porcentual entre el precio más alto y el de Binance
+        let visualDiscount = 0;
+        if (maxPriceNum > bestPriceNum) {
+            visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+        }
+        const hasDiscount = visualDiscount > 0;
+
+        const bestPrice = bestPriceNum.toFixed(2);
+        const maxPrice = maxPriceNum.toFixed(2);
 
         const storeName = p.store_name || 'Gymenez Partner';
         const category = p.category || 'General';
@@ -137,14 +145,31 @@ function renderVendorProducts(products) {
             etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis</span>`;
         }
 
+        // 🍎 Lógica visual segura para la cuadrícula
+        let priceBlockHtml = '';
+        if (maxPriceNum > bestPriceNum) {
+            priceBlockHtml = `
+                <div class="flex flex-col">
+                    <span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice}</span>
+                    <span class="text-white font-black text-sm md:text-base leading-none mt-1">$${bestPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">Binance Pay</span></span>
+                </div>
+            `;
+        } else {
+            priceBlockHtml = `
+                <div class="flex flex-col justify-end mt-2">
+                    <span class="text-white font-black text-sm md:text-base leading-none">$${bestPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">Binance Pay</span></span>
+                </div>
+            `;
+        }
+
         return `
-        <a href="/store/product.html?id=${p.id}" class="group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all cursor-pointer relative">
+        <a href="/store/product.html?id=${p.id}" class="group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all cursor-pointer relative shadow-lg hover:shadow-[0_10px_30px_rgba(255,195,0,0.1)]">
             
             <!-- IMAGEN LIMPIA Y BADGE DE DESCUENTO -->
             <div class="relative w-full aspect-square overflow-hidden bg-[#030305] border-b border-white/5 flex items-center justify-center">
                 <img src="${p.image_url || '/static/img/placeholder.png'}" class="w-full h-full object-contain filter drop-shadow-xl group-hover:scale-110 transition-transform duration-700" alt="${p.name}">
                 
-                ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${discount}%</span>` : ''}
+                ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${visualDiscount}% OFF</span>` : ''}
             </div>
             
             <!-- INFORMACIÓN Y PRECIOS -->
@@ -164,12 +189,9 @@ function renderVendorProducts(products) {
                 <!-- Nombre de la Tienda -->
                 <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${storeName}</span>
                 
-                <!-- Precio y Botón -->
+                <!-- PRECIOS ZERO-TRUST CONDICIONALES -->
                 <div class="flex items-center justify-between mt-4 border-t border-white/5 pt-3">
-                    ${hasDiscount 
-                        ? `<div class="flex flex-col"><span class="text-xs text-gray-500 line-through leading-none">$${priceNum.toFixed(2)}</span><span class="text-white font-black text-sm md:text-base leading-none mt-1">$${finalPrice}</span></div>` 
-                        : `<span class="text-sm md:text-base font-black text-white">$${finalPrice}</span>`
-                    }
+                    ${priceBlockHtml}
                     <div class="bg-white/10 p-2 rounded-full text-white group-hover:bg-[#FFC300] group-hover:text-black transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                     </div>
@@ -224,6 +246,7 @@ function setupStoreSearch(slug) {
         });
     });
 }
+
 /**
  * Control del estado vacío
  */
