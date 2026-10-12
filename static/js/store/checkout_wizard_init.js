@@ -65,8 +65,9 @@ async function initWizardData() {
             }
         }
         
-        if (typeof renderCartSummary === 'function') {
-            renderCartSummary(); 
+        // 🍎 APLICAMOS EL CÁLCULO VISUAL DINÁMICO INICIAL
+        if (typeof window.renderCartSummary === 'function') {
+            window.renderCartSummary(); 
         }
 
     } catch (error) {
