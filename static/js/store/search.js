@@ -123,18 +123,26 @@ function renderInstantResults(results, container, platform, originalQuery) {
     }
 
     let html = results.slice(0, 6).map(item => {
-        // 🍎 ZERO-TRUST: Leemos directamente los precios calculados por el backend
-        const bestPrice = item.display_best_price ? parseFloat(item.display_best_price).toFixed(2) : parseFloat(item.price_usd).toFixed(2);
-        const maxPrice = item.display_max_price ? parseFloat(item.display_max_price).toFixed(2) : parseFloat(item.price_usd).toFixed(2);
-        const discount = parseInt(item.discount_percentage || item.discount || 0);
-        const hasDiscount = discount > 0;
+        // 🍎 ZERO-TRUST: Extraemos los números puros
+        const bestPriceNum = item.display_best_price ? parseFloat(item.display_best_price) : parseFloat(item.price_usd);
+        const maxPriceNum = item.display_max_price ? parseFloat(item.display_max_price) : parseFloat(item.price_usd);
+        
+        // 🍎 CÁLCULO VISUAL REAL: Diferencia porcentual entre el precio más alto y el de Binance
+        let visualDiscount = 0;
+        if (maxPriceNum > bestPriceNum) {
+            visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+        }
+        const hasDiscount = visualDiscount > 0;
+
+        const bestPrice = bestPriceNum.toFixed(2);
+        const maxPrice = maxPriceNum.toFixed(2);
 
         const isOnDemand = (item.is_on_demand === true || item.is_on_demand === 'true' || item.is_on_demand === 'True');
         const hasFreeShipping = (item.free_shipping === true || item.free_shipping === 'true' || item.free_shipping === 'True');
 
         // Lógica visual condicional para la búsqueda rápida (dropdown)
         let priceBlock = '';
-        if (parseFloat(maxPrice) > parseFloat(bestPrice)) {
+        if (maxPriceNum > bestPriceNum) {
             priceBlock = `
                 <span class="text-[9px] text-gray-500 line-through leading-none mb-0.5">$${maxPrice}</span>
                 <span class="text-[#FFC300] font-[900] italic text-sm leading-none">$${bestPrice}</span>
@@ -149,7 +157,7 @@ function renderInstantResults(results, container, platform, originalQuery) {
         <a href="/store/product.html?id=${item.id}" class="flex items-center gap-4 p-3 bg-[#0a0a0f] md:bg-transparent rounded-xl hover:bg-white/5 transition border-b border-white/5 md:border-b md:rounded-none md:last:border-0 group">
             <div class="w-14 h-14 rounded-lg bg-white/5 p-1 flex-shrink-0 border border-white/10 relative">
                 <img src="${item.image_url || item.imageUrl}" class="w-full h-full object-contain group-hover:scale-110 transition">
-                ${hasDiscount ? `<span class="absolute -top-2 -right-2 bg-red-600 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-lg">-${discount}%</span>` : ''}
+                ${hasDiscount ? `<span class="absolute -top-2 -right-2 bg-red-600 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-lg">-${visualDiscount}%</span>` : ''}
             </div>
             <div class="flex-grow min-w-0 pr-2">
                 <h4 class="text-sm font-bold text-white truncate">${item.name}</h4>
@@ -323,11 +331,19 @@ function renderDeepResults(productsToRender, grid) {
 
     // Dibujamos las tarjetas
     grid.innerHTML = productsToRender.map((p, index) => {
-        // 🍎 ZERO-TRUST: Leemos directamente los precios calculados por el backend
-        const bestPrice = p.display_best_price ? parseFloat(p.display_best_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
-        const maxPrice = p.display_max_price ? parseFloat(p.display_max_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
-        const discount = parseInt(p.discount_percentage || p.discount || 0);
-        const hasDiscount = discount > 0;
+        // 🍎 ZERO-TRUST: Extraemos los números puros
+        const bestPriceNum = p.display_best_price ? parseFloat(p.display_best_price) : parseFloat(p.price_usd);
+        const maxPriceNum = p.display_max_price ? parseFloat(p.display_max_price) : parseFloat(p.price_usd);
+        
+        // 🍎 CÁLCULO VISUAL REAL: Diferencia porcentual entre el precio más alto y el de Binance
+        let visualDiscount = 0;
+        if (maxPriceNum > bestPriceNum) {
+            visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+        }
+        const hasDiscount = visualDiscount > 0;
+
+        const bestPrice = bestPriceNum.toFixed(2);
+        const maxPrice = maxPriceNum.toFixed(2);
 
         const isOnDemand = (p.is_on_demand === true || p.is_on_demand === 'true' || p.is_on_demand === 'True');
         const hasFreeShipping = (p.free_shipping === true || p.free_shipping === 'true' || p.free_shipping === 'True');
@@ -341,7 +357,7 @@ function renderDeepResults(productsToRender, grid) {
 
         // 🍎 Lógica visual condicional para la grilla profunda
         let priceBlockHtml = '';
-        if (parseFloat(maxPrice) > parseFloat(bestPrice)) {
+        if (maxPriceNum > bestPriceNum) {
             priceBlockHtml = `
                 <div class="flex flex-col">
                     <span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice}</span>
@@ -361,7 +377,7 @@ function renderDeepResults(productsToRender, grid) {
             
             <div class="relative w-full aspect-square overflow-hidden bg-[#030305] border-b border-white/5 flex items-center justify-center">
                 <img src="${p.image_url || p.imageUrl}" alt="${p.name}" class="w-full h-full object-contain filter drop-shadow-xl group-hover:scale-110 transition-transform duration-700">
-                ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${discount}% OFF</span>` : ''}
+                ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${visualDiscount}% OFF</span>` : ''}
             </div>
             
             <div class="p-4 flex flex-col flex-grow relative">
