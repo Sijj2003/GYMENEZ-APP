@@ -119,9 +119,9 @@ function renderVendorProducts(products) {
 
     // Renderizado eficiente con mapeo idéntico a catalog.js
     grid.innerHTML = products.map(p => {
-        // 🍎 ZERO-TRUST: Extraemos los números puros calculados por el backend
-        const bestPriceNum = p.display_best_price ? parseFloat(p.display_best_price) : parseFloat(p.price_usd || p.price);
-        const maxPriceNum = p.display_max_price ? parseFloat(p.display_max_price) : parseFloat(p.price_usd || p.price);
+        // 🍎 ZERO-TRUST: Extraemos los números puros
+        const bestPriceNum = p.display_best_price ? parseFloat(p.display_best_price) : parseFloat(p.price_usd);
+        const maxPriceNum = p.display_max_price ? parseFloat(p.display_max_price) : parseFloat(p.price_usd);
         
         // 🍎 CÁLCULO VISUAL REAL: Diferencia porcentual entre el precio más alto y el de Binance
         let visualDiscount = 0;
@@ -132,7 +132,7 @@ function renderVendorProducts(products) {
 
         const bestPrice = bestPriceNum.toFixed(2);
         const maxPrice = maxPriceNum.toFixed(2);
-
+        
         const storeName = p.store_name || 'Gymenez Partner';
         const category = p.category || 'General';
 
