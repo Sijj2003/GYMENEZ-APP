@@ -132,6 +132,19 @@ function renderInstantResults(results, container, platform, originalQuery) {
         const isOnDemand = (item.is_on_demand === true || item.is_on_demand === 'true' || item.is_on_demand === 'True');
         const hasFreeShipping = (item.free_shipping === true || item.free_shipping === 'true' || item.free_shipping === 'True');
 
+        // Lógica visual condicional para la búsqueda rápida (dropdown)
+        let priceBlock = '';
+        if (parseFloat(maxPrice) > parseFloat(bestPrice)) {
+            priceBlock = `
+                <span class="text-[9px] text-gray-500 line-through leading-none mb-0.5">$${maxPrice}</span>
+                <span class="text-[#FFC300] font-[900] italic text-sm leading-none">$${bestPrice}</span>
+            `;
+        } else {
+            priceBlock = `
+                <span class="text-[#FFC300] font-[900] italic text-sm leading-none">$${bestPrice}</span>
+            `;
+        }
+
         return `
         <a href="/store/product.html?id=${item.id}" class="flex items-center gap-4 p-3 bg-[#0a0a0f] md:bg-transparent rounded-xl hover:bg-white/5 transition border-b border-white/5 md:border-b md:rounded-none md:last:border-0 group">
             <div class="w-14 h-14 rounded-lg bg-white/5 p-1 flex-shrink-0 border border-white/10 relative">
@@ -147,8 +160,7 @@ function renderInstantResults(results, container, platform, originalQuery) {
                 </div>
             </div>
             <div class="text-right flex-shrink-0 flex flex-col items-end justify-center">
-                <span class="text-[9px] text-gray-500 line-through leading-none mb-0.5">$${maxPrice}</span>
-                <span class="text-[#FFC300] font-[900] italic text-sm leading-none">$${bestPrice}</span>
+                ${priceBlock}
             </div>
         </a>
         `;
@@ -309,7 +321,7 @@ function renderDeepResults(productsToRender, grid) {
         return;
     }
 
-    // Dibujamos las tarjetas, pero OJO: las creamos "invisibles" (opacity-0 y movidas hacia abajo)
+    // Dibujamos las tarjetas
     grid.innerHTML = productsToRender.map((p, index) => {
         // 🍎 ZERO-TRUST: Leemos directamente los precios calculados por el backend
         const bestPrice = p.display_best_price ? parseFloat(p.display_best_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
@@ -327,12 +339,29 @@ function renderDeepResults(productsToRender, grid) {
             etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis</span> `;
         }
 
+        // 🍎 Lógica visual condicional para la grilla profunda
+        let priceBlockHtml = '';
+        if (parseFloat(maxPrice) > parseFloat(bestPrice)) {
+            priceBlockHtml = `
+                <div class="flex flex-col">
+                    <span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice}</span>
+                    <span class="text-white font-black text-sm md:text-base leading-none mt-1">$${bestPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">vía Binance</span></span>
+                </div>
+            `;
+        } else {
+            priceBlockHtml = `
+                <div class="flex flex-col justify-end mt-2">
+                    <span class="text-white font-black text-sm md:text-base leading-none">$${bestPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">vía Binance</span></span>
+                </div>
+            `;
+        }
+
         return `
         <a href="/store/product.html?id=${p.id}" class="result-card opacity-0 translate-y-12 group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-[#FFC300]/50 transition-all duration-[600ms] ease-out cursor-pointer relative shadow-lg hover:shadow-[0_10px_30px_rgba(255,195,0,0.1)]">
             
             <div class="relative w-full aspect-square overflow-hidden bg-[#030305] border-b border-white/5 flex items-center justify-center">
                 <img src="${p.image_url || p.imageUrl}" alt="${p.name}" class="w-full h-full object-contain filter drop-shadow-xl group-hover:scale-110 transition-transform duration-700">
-                ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${discount}%</span>` : ''}
+                ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${discount}% OFF</span>` : ''}
             </div>
             
             <div class="p-4 flex flex-col flex-grow relative">
@@ -347,10 +376,7 @@ function renderDeepResults(productsToRender, grid) {
                 <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${p.store_name || 'Gymenez Store'}</span>
                 
                 <div class="flex items-center justify-between mt-4 border-t border-white/5 pt-3">
-                    <div class="flex flex-col">
-                        <span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice}</span>
-                        <span class="text-white font-black text-sm md:text-base leading-none mt-1">$${bestPrice} <span class="text-[#FFC300] text-[8px] uppercase tracking-widest">Binance Pay</span></span>
-                    </div>
+                    ${priceBlockHtml}
                     <div class="bg-white/10 p-2 rounded-full text-white group-hover:bg-[#FFC300] group-hover:text-black transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                     </div>
