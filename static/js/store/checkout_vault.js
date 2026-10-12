@@ -44,21 +44,24 @@ async function executeVaultEntry() {
     btn.disabled = true;
     btn.innerHTML = '<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Reservando Inventario...</span>';
 
-    // 🧠 PAYLOAD PERFECTO PARA EL BACKEND (Ahora incluye las banderas de logística)
+    // 🧠 PAYLOAD PERFECTO PARA EL BACKEND
+    // 🍎 Ajuste Zero-Trust: Enviamos ambos precios para que Python tenga visibilidad total de la orden
     const cleanItems = cartItems.map(item => ({
         id: item.id, 
         real_id: item.real_id || item.id, 
         name: item.name,
-        price: item.price,
+        price: parseFloat(item.price),                   // Precio Binance
+        basePrice: parseFloat(item.basePrice || item.price), // Precio Max (PayPal)
         qty: item.quantity || item.qty || 1,
         storeName: item.storeName || item.store_name || 'Gymenez Store',
         weight_kg: item.weight_kg || 1,
-        // 👇 ESCUDO 4 y 5: Le decimos a Python lo que el cliente tiene en su caché
+        // Banderas de logística
         free_shipping: item.free_shipping === true || item.free_shipping === 'true',
-        free_shipping_threshold: parseFloat(item.free_shipping_threshold || 0)
+        free_shipping_threshold: parseFloat(item.free_shipping_threshold || 0),
+        is_on_demand: item.is_on_demand === true || item.is_on_demand === 'true'
     }));
 
-    // 👇 ESCUDO 5: Capturamos si el cliente activó el switch ANTES de entrar a la bóveda
+    // Capturamos si el cliente activó el switch ANTES de entrar a la bóveda
     const toggleFreeShipping = document.getElementById('toggle-free-shipping');
     const wantsFreeShipping = toggleFreeShipping ? toggleFreeShipping.checked : false;
 
@@ -66,7 +69,6 @@ async function executeVaultEntry() {
         const res = await fetch(`${API_BASE_URL}/api/store/checkout/reserve`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-            // 👇 Enviamos la variable wants_free_shipping al backend
             body: JSON.stringify({ 
                 items: cleanItems,
                 wants_free_shipping: wantsFreeShipping
@@ -90,9 +92,10 @@ async function executeVaultEntry() {
             document.getElementById('wizard-view').classList.add('hidden');
             document.getElementById('vault-view').classList.remove('hidden');
             isCartLocked = true;
-            renderCartSummary(); 
+            
+            if(typeof window.renderCartSummary === 'function') window.renderCartSummary(); 
+            
             startVaultTimer(expiresAt);
-
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
             // 👇 Si Python bloquea por precio o envíos cambiados, saldrá esta alerta roja
@@ -129,13 +132,15 @@ function startVaultTimer(expiresAt) {
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
         // Formateo 00:00
-        timerEl.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        if(timerEl) {
+            timerEl.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-        // Alerta roja en el último minuto
-        if (distance < 60000) { 
-            timerEl.classList.add('timer-danger');
-        } else {
-            timerEl.classList.remove('timer-danger');
+            // Alerta roja en el último minuto
+            if (distance < 60000) { 
+                timerEl.classList.add('timer-danger');
+            } else {
+                timerEl.classList.remove('timer-danger');
+            }
         }
     }
 
@@ -149,12 +154,15 @@ async function handleVaultExpiration() {
     window.location.reload(); 
 }
 
-document.getElementById('btn-cancel-vault').addEventListener('click', async () => {
+document.getElementById('btn-cancel-vault')?.addEventListener('click', async () => {
     const btn = document.getElementById('btn-cancel-vault');
     const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('jwt_token');
     
-    btn.disabled = true;
-    btn.innerText = 'Liberando...';
+    if(btn) {
+        btn.disabled = true;
+        btn.innerText = 'Liberando...';
+    }
+    
     clearInterval(vaultInterval);
     localStorage.removeItem('gymen_vault_expires_at');
 
