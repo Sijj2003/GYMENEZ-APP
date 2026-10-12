@@ -244,16 +244,23 @@ function renderSearchDropdown(results, container) {
     }
 
     container.innerHTML = results.slice(0, 8).map(p => {
-        const discount = p.discount_percentage || 0;
-        const hasDiscount = discount > 0;
+        // 🍎 ZERO-TRUST: Extraemos los números puros
+        const bestPriceNum = p.display_best_price ? parseFloat(p.display_best_price) : parseFloat(p.price_usd);
+        const maxPriceNum = p.display_max_price ? parseFloat(p.display_max_price) : parseFloat(p.price_usd);
         
-        // 🍎 ZERO-TRUST: El backend ya calculó todo. Solo leemos y mostramos.
-        const bestPrice = p.display_best_price ? parseFloat(p.display_best_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
-        const maxPrice = p.display_max_price ? parseFloat(p.display_max_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
+        // 🍎 CÁLCULO VISUAL REAL: Diferencia porcentual entre el precio más alto y el de Binance
+        let visualDiscount = 0;
+        if (maxPriceNum > bestPriceNum) {
+            visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+        }
+        const hasDiscount = visualDiscount > 0;
+
+        const bestPrice = bestPriceNum.toFixed(2);
+        const maxPrice = maxPriceNum.toFixed(2);
         
         // Lógica visual para la lupa (sólo tacha si el precio es mayor)
         let priceBlock = '';
-        if (parseFloat(maxPrice) > parseFloat(bestPrice)) {
+        if (maxPriceNum > bestPriceNum) {
             priceBlock = `
                 <p class="text-[9px] text-gray-500 line-through leading-none">$${maxPrice}</p>
                 <p class="text-xs font-black text-[#FFC300] mt-1">$${bestPrice}</p>
@@ -262,8 +269,9 @@ function renderSearchDropdown(results, container) {
             priceBlock = `<p class="text-xs font-black text-white mt-1">$${bestPrice}</p>`;
         }
         
+        // Inyectamos la etiqueta con el porcentaje visual real
         if (hasDiscount) {
-            priceBlock += `<p class="text-[8px] text-red-500 font-bold uppercase mt-1">-${discount}% OFF</p>`;
+            priceBlock += `<p class="text-[8px] text-red-500 font-bold uppercase mt-1">-${visualDiscount}% OFF</p>`;
         }
 
         return `
@@ -303,12 +311,19 @@ function renderProductsGrid(productsToRender) {
     }
 
     grid.innerHTML = productsToRender.map(p => {
-        const discount = p.discount_percentage || 0;
-        const hasDiscount = discount > 0;
+        // 🍎 ZERO-TRUST: Extraemos los números puros
+        const bestPriceNum = p.display_best_price ? parseFloat(p.display_best_price) : parseFloat(p.price_usd);
+        const maxPriceNum = p.display_max_price ? parseFloat(p.display_max_price) : parseFloat(p.price_usd);
         
-        // 🍎 ZERO-TRUST: El backend ya calculó todo.
-        const bestPrice = p.display_best_price ? parseFloat(p.display_best_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
-        const maxPrice = p.display_max_price ? parseFloat(p.display_max_price).toFixed(2) : parseFloat(p.price_usd).toFixed(2);
+        // 🍎 CÁLCULO VISUAL REAL: Diferencia porcentual entre el precio más alto y el de Binance
+        let visualDiscount = 0;
+        if (maxPriceNum > bestPriceNum) {
+            visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+        }
+        const hasDiscount = visualDiscount > 0;
+
+        const bestPrice = bestPriceNum.toFixed(2);
+        const maxPrice = maxPriceNum.toFixed(2);
         
         const storeName = p.store_name || 'Gymenez Partner';
 
@@ -324,9 +339,9 @@ function renderProductsGrid(productsToRender) {
             etiquetasHtml += `<span class="bg-emerald-500/90 text-black border border-emerald-400 text-[8px] font-black uppercase px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.3)]">🚚 Envío Gratis</span> `;
         }
 
-        // 🍎 Lógica visual segura para la cuadrícula (sólo tacha si el precio es estrictamente mayor)
+        // 🍎 Lógica visual segura para la cuadrícula
         let priceBlockHtml = '';
-        if (parseFloat(maxPrice) > parseFloat(bestPrice)) {
+        if (maxPriceNum > bestPriceNum) {
             priceBlockHtml = `
                 <div class="flex flex-col">
                     <span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice}</span>
@@ -347,7 +362,7 @@ function renderProductsGrid(productsToRender) {
             <div class="relative w-full aspect-square overflow-hidden bg-[#030305] border-b border-white/5 flex items-center justify-center">
                 <img src="${p.image_url}" class="w-full h-full object-contain filter drop-shadow-xl group-hover:scale-110 transition-transform duration-700" alt="${p.name}">
                 
-                ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${discount}% OFF</span>` : ''}
+                ${hasDiscount ? `<span class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg z-10">-${visualDiscount}% OFF</span>` : ''}
             </div>
             
             <div class="p-4 flex flex-col flex-grow relative">
@@ -361,7 +376,6 @@ function renderProductsGrid(productsToRender) {
                 
                 <span class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mt-auto">${storeName}</span>
                 
-                <!-- PRECIOS ZERO-TRUST CONDICIONALES -->
                 <div class="flex items-center justify-between mt-4 border-t border-white/5 pt-3">
                     ${priceBlockHtml}
                     <div class="bg-white/10 p-2 rounded-full text-white group-hover:bg-[#FFC300] group-hover:text-black transition-colors">
