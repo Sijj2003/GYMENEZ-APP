@@ -7,12 +7,16 @@ if (typeof window.userWantsFreeShipping === 'undefined') {
     window.userWantsFreeShipping = true;
 }
 
-function renderCartSummary() {
+// 🍎 NUEVO: Exponemos la función al objeto window para llamarla desde checkout_payment.js
+window.renderCartSummary = function() {
     const container = document.getElementById('cart-items-container');
-    container.innerHTML = '';
+    if(container) container.innerHTML = '';
     
     let rawTotal = 0;   
     let finalTotal = 0; 
+    let sumOfMaxPrices = 0;   // 🍎 NUEVO: Total usando los precios altos
+    let sumOfBestPrices = 0;  // 🍎 NUEVO: Total usando los precios Binance
+
     let hasOnDemand = false;
     const storeSet = new Set();
     
@@ -61,18 +65,19 @@ function renderCartSummary() {
     // Identificamos si es un carrito híbrido (unas tiendas sí tienen gratis, otras no)
     const isHybrid = storesWithFreeShippingEarned > 0 && storesWithFreeShippingEarned < totalStores;
 
-    // 🧠 2. DIBUJAR PRODUCTOS
+    // 🧠 2. DIBUJAR PRODUCTOS Y CALCULAR TOTALES DINÁMICOS
     cartItems.forEach((item, index) => {
         const qty = item.quantity || item.qty || 1;
-        const bPrice = parseFloat(item.basePrice || item.price);
-        const fPrice = parseFloat(item.price);
         
-        const bPriceTotal = bPrice * qty;
-        const fPriceTotal = fPrice * qty;
-        const discountTotal = bPriceTotal - fPriceTotal;
+        // 🍎 CÁLCULOS ZERO-TRUST
+        const bestPrice = parseFloat(item.price); // El mejor precio (Binance) guardado por el catálogo
+        const maxPrice = parseFloat(item.basePrice || item.price); // El precio alto guardado por el catálogo
+        
+        const bestPriceTotal = bestPrice * qty;
+        const maxPriceTotal = maxPrice * qty;
 
-        rawTotal += bPriceTotal;
-        finalTotal += fPriceTotal;
+        sumOfBestPrices += bestPriceTotal;
+        sumOfMaxPrices += maxPriceTotal;
         
         const store = item.storeName || item.store_name || 'Gymenez Store';
         storeSet.add(store);
@@ -112,53 +117,77 @@ function renderCartSummary() {
             <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-2.5 text-gray-400 hover:text-white transition font-black text-sm">+</button>
         </div>`;
 
-        container.innerHTML += `
-        <div class="bg-[#050508]/50 p-3 rounded-[1.5rem] border ${isCartLocked ? 'border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-white/5 hover:border-white/20'} mb-3 transition-all duration-300">
-            <div class="flex gap-3">
-                <div class="w-16 h-16 bg-white/5 rounded-xl border border-white/5 p-1 shrink-0 flex items-center justify-center">
-                    <img src="${item.imageUrl || item.image_url}" class="max-h-full object-contain filter drop-shadow-md" alt="${displayName}">
-                </div>
-                
-                <div class="flex-grow flex flex-col justify-between min-w-0">
-                    <div class="flex justify-between items-start">
-                        <div class="pr-2 min-w-0">
-                            <h4 class="text-xs font-bold text-white leading-tight truncate w-full">${displayName}</h4>
-                            <span class="text-[8px] text-[#FFC300] uppercase font-bold tracking-widest block truncate w-full">${store}</span>
-                        </div>
-                        <div class="shrink-0">
-                            ${deleteBtnHtml}
-                        </div>
+        // 🍎 VISUAL DINÁMICO EN EL ITEM: Solo tacha si es Binance Y hay ahorro
+        let priceVisualHtml = '';
+        if (window.currentPaymentMethod === 'binance' && maxPriceTotal > bestPriceTotal) {
+            priceVisualHtml = `
+                <span class="text-[9px] text-gray-500 line-through leading-none mb-0.5 font-bold uppercase tracking-widest">Ref: $${formatMoney(maxPriceTotal)}</span>
+                <span class="font-black text-white text-sm tracking-tight leading-none">$${formatMoney(bestPriceTotal)}</span>
+            `;
+        } else {
+            priceVisualHtml = `<span class="font-black text-white text-sm tracking-tight leading-none">$${formatMoney(maxPriceTotal)}</span>`;
+        }
+
+        if(container) {
+            container.innerHTML += `
+            <div class="bg-[#050508]/50 p-3 rounded-[1.5rem] border ${isCartLocked ? 'border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-white/5 hover:border-white/20'} mb-3 transition-all duration-300">
+                <div class="flex gap-3">
+                    <div class="w-16 h-16 bg-white/5 rounded-xl border border-white/5 p-1 shrink-0 flex items-center justify-center">
+                        <img src="${item.imageUrl || item.image_url}" class="max-h-full object-contain filter drop-shadow-md" alt="${displayName}">
                     </div>
                     
-                    <div class="flex flex-wrap gap-1 mt-1">
-                        ${variantBadgeHtml}
-                        ${logicBadges}
+                    <div class="flex-grow flex flex-col justify-between min-w-0">
+                        <div class="flex justify-between items-start">
+                            <div class="pr-2 min-w-0">
+                                <h4 class="text-xs font-bold text-white leading-tight truncate w-full">${displayName}</h4>
+                                <span class="text-[8px] text-[#FFC300] uppercase font-bold tracking-widest block truncate w-full">${store}</span>
+                            </div>
+                            <div class="shrink-0">
+                                ${deleteBtnHtml}
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-1 mt-1">
+                            ${variantBadgeHtml}
+                            ${logicBadges}
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
-                ${controlsHtml}
-                <div class="flex flex-col items-end">
-                    ${discountTotal > 0 ? `<span class="text-[9px] text-gray-500 line-through leading-none mb-0.5 font-bold uppercase tracking-widest">Ref: $${formatMoney(bPriceTotal)}</span>` : ''}
-                    <span class="font-black text-white text-sm tracking-tight leading-none">$${formatMoney(fPriceTotal)}</span>
+                
+                <div class="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+                    ${controlsHtml}
+                    <div class="flex flex-col items-end">
+                        ${priceVisualHtml}
+                    </div>
                 </div>
-            </div>
-        </div>`;
+            </div>`;
+        }
     });
 
-    cartTotal = finalTotal;
-    const totalSavings = rawTotal - finalTotal;
+    // 🍎 CÁLCULO DEL TOTAL FINAL DEPENDIENDO DEL MÉTODO DE PAGO ACTIVO
+    if (window.currentPaymentMethod === 'binance') {
+        cartTotal = sumOfBestPrices;
+    } else {
+        cartTotal = sumOfMaxPrices;
+    }
 
-    // Actualizar Totales
-    document.getElementById('summary-raw-total').innerText = `$${formatMoney(rawTotal)}`;
-    document.getElementById('summary-total').innerText = `$${formatMoney(cartTotal)}`;
-    
+    const currentSavings = sumOfMaxPrices - cartTotal;
+
+    // Actualizar Totales en Pantalla
+    const rawTotalEl = document.getElementById('summary-raw-total');
+    const totalEl = document.getElementById('summary-total');
     const savingsRow = document.getElementById('summary-savings-row');
-    if (savingsRow) {
-        if (totalSavings > 0) {
+    const savingsVal = document.getElementById('summary-savings');
+
+    if(rawTotalEl) rawTotalEl.innerText = `$${formatMoney(sumOfMaxPrices)}`;
+    if(totalEl) totalEl.innerText = `$${formatMoney(cartTotal)}`;
+    
+    // 🍎 MOSTRAR AHORRO SOLO SI ES BINANCE
+    if (savingsRow && savingsVal) {
+        if (currentSavings > 0 && window.currentPaymentMethod === 'binance') {
             savingsRow.classList.remove('hidden');
-            document.getElementById('summary-savings').innerText = `-$${formatMoney(totalSavings)}`;
+            savingsVal.innerText = `-$${formatMoney(currentSavings)}`;
+            savingsRow.innerHTML = `<span class="text-[10px] uppercase font-bold tracking-widest">Ahorro Binance Pay</span><span class="font-bold text-sm">-$${formatMoney(currentSavings)}</span>`;
         } else {
             savingsRow.classList.add('hidden');
         }
@@ -243,24 +272,24 @@ function renderCartSummary() {
         if(document.getElementById('bcv-rate-display')) document.getElementById('bcv-rate-display').innerText = `Tasa Oficial BCV: Bs. ${formatMoney(currentBcvRate)}`;
         if(vesContainer) vesContainer.classList.remove('hidden');
         if(warningMsg) warningMsg.classList.add('hidden');
-        if(currentPaymentMethod === 'pago_movil' && btnProcess) btnProcess.querySelector('span').innerText = `Pagar Bs. ${totalBs}`;
+        if(window.currentPaymentMethod === 'pago_movil' && btnProcess) btnProcess.querySelector('span').innerText = `Pagar Bs. ${totalBs}`;
     } else {
         if(vesContainer) vesContainer.classList.add('hidden');
         if(warningMsg) warningMsg.classList.remove('hidden');
-        if(currentPaymentMethod === 'pago_movil' && btnProcess) btnProcess.querySelector('span').innerText = `Completar Compra (Calcular BCV)`;
+        if(window.currentPaymentMethod === 'pago_movil' && btnProcess) btnProcess.querySelector('span').innerText = `Completar Compra (Calcular BCV)`;
     }
 
     if (cartItems.length === 0) {
-        document.getElementById('checkout-content').classList.remove('hidden'); 
-        document.getElementById('checkout-container').classList.add('hidden'); 
-        document.getElementById('empty-cart-msg').classList.remove('hidden'); 
+        document.getElementById('checkout-content')?.classList.remove('hidden'); 
+        document.getElementById('checkout-container')?.classList.add('hidden'); 
+        document.getElementById('empty-cart-msg')?.classList.remove('hidden'); 
     } else {
-        document.getElementById('checkout-container').classList.remove('hidden');
-        document.getElementById('empty-cart-msg').classList.add('hidden');
+        document.getElementById('checkout-container')?.classList.remove('hidden');
+        document.getElementById('empty-cart-msg')?.classList.add('hidden');
     }
 }
 
-// 🍎 NUEVA FUNCIÓN: Actualiza el texto en vivo cuando tocas el Switch
+// 🍎 ACTUALIZA EL TEXTO DEL SWITCH
 window.updateShippingLabelUI = function(isChecked, isHybrid) {
     window.userWantsFreeShipping = isChecked; 
     const shippingLabel = document.getElementById('summary-shipping-label');
@@ -294,7 +323,7 @@ window.removeCheckoutItem = function(index) {
 
 function saveAndReRenderCart() {
     localStorage.setItem('gymenez_cart', JSON.stringify(cartItems));
-    renderCartSummary();
+    if(typeof window.renderCartSummary === 'function') window.renderCartSummary();
     
     const totalItems = cartItems.reduce((sum, item) => sum + (item.qty || item.quantity || 1), 0);
     const badgeDesktop = document.getElementById('cartCountDesktop');
