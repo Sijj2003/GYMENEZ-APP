@@ -88,27 +88,34 @@ function renderProduct() {
         badgesContainer.innerHTML = badgesHtml;
     }
     
-    // 🍎 ZERO-TRUST: LEER PRECIOS PRECALCULADOS DEL BACKEND EN LUGAR DE MULTIPLICAR
-    const bestPrice = currentProduct.display_best_price ? parseFloat(currentProduct.display_best_price) : parseFloat(currentProduct.price_usd || currentProduct.price);
-    const maxPrice = currentProduct.display_max_price ? parseFloat(currentProduct.display_max_price) : bestPrice;
-    const discount = parseInt(currentProduct.discount_percentage || currentProduct.discount) || 0;
+    // 🍎 ZERO-TRUST: Extraemos los números puros del backend
+    const bestPriceNum = currentProduct.display_best_price ? parseFloat(currentProduct.display_best_price) : parseFloat(currentProduct.price_usd || currentProduct.price);
+    const maxPriceNum = currentProduct.display_max_price ? parseFloat(currentProduct.display_max_price) : bestPriceNum;
     
-    finalPrice = bestPrice; // El precio de Binance pasa a ser la memoria del multiplicador de cantidad
+    // 🍎 CÁLCULO VISUAL REAL: Diferencia porcentual entre el precio más alto y el de Binance
+    let visualDiscount = 0;
+    if (maxPriceNum > bestPriceNum) {
+        visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+    }
+    
+    finalPrice = bestPriceNum; // El precio de Binance pasa a ser la memoria del multiplicador de cantidad
 
-    // 🛡️ Restaurar etiqueta roja
-    if (discount > 0) {
-        const badge = document.getElementById('prod-discount-badge');
+    // 🛡️ Mostrar u ocultar etiqueta roja usando el descuento matemático real
+    const badge = document.getElementById('prod-discount-badge');
+    if (visualDiscount > 0) {
         if (badge) {
-            badge.innerText = `-${discount}% OFF`; 
+            badge.innerText = `-${visualDiscount}% OFF`; 
             badge.classList.remove('hidden');
         }
+    } else {
+        if (badge) badge.classList.add('hidden');
     }
 
     // 🛡️ Mostrar el precio mayor tachado y el de Binance destacado sin forzar la etiqueta "con PayPal"
     const oldPriceEl = document.getElementById('prod-old-price');
-    if (maxPrice > bestPrice) {
+    if (maxPriceNum > bestPriceNum) {
         if (oldPriceEl) {
-            oldPriceEl.innerText = `$${maxPrice.toFixed(2)}`;
+            oldPriceEl.innerText = `$${maxPriceNum.toFixed(2)}`;
             oldPriceEl.classList.remove('hidden');
         }
     } else {
@@ -117,8 +124,8 @@ function renderProduct() {
     
     const priceEl = document.getElementById('prod-price');
     if (priceEl) {
-        // 🍎 Lógica visual para la grilla profunda: Binance Pay uray ania pay ti modelo
-        priceEl.innerHTML = `$${bestPrice.toFixed(2)} <span class="text-[#FFC300] text-[10px] md:text-xs uppercase tracking-widest font-black ml-2">Binance Pay</span>`;
+        // 🍎 Lógica visual para Binance Pay
+        priceEl.innerHTML = `$${bestPriceNum.toFixed(2)} <span class="text-[#FFC300] text-[10px] md:text-xs uppercase tracking-widest font-black ml-2">Binance Pay</span>`;
     }
 
     updateTotalDisplay();
