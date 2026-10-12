@@ -117,6 +117,7 @@ function renderProduct() {
     
     const priceEl = document.getElementById('prod-price');
     if (priceEl) {
+        // 🍎 Lógica visual para la grilla profunda: Binance Pay uray ania pay ti modelo
         priceEl.innerHTML = `$${bestPrice.toFixed(2)} <span class="text-[#FFC300] text-[10px] md:text-xs uppercase tracking-widest font-black ml-2">Binance Pay</span>`;
     }
 
