@@ -73,6 +73,9 @@ window.selectPaymentMethod = function(method) {
     });
 
     updatePaymentFormFields();
+
+    // 🍎 NUEVO: Forzar al resumen de compra a recalcular los precios y la visual al vuelo
+    if(typeof window.renderCartSummary === 'function') window.renderCartSummary();
 };
 
 /**
