@@ -287,9 +287,13 @@ function addToCart() {
         cartItemName = `${currentProduct.name} (${selectedVariant.name})`;
     }
 
-    // 🔥 MODIFICACIÓN QUIRÚRGICA FASE 1: GUARDAMOS AMBOS PRECIOS CALCULADOS 🔥
+    // 🔥 MODIFICACIÓN QUIRÚRGICA FASE 1: GUARDAMOS LOS 3 PRECIOS CALCULADOS 🔥
     const bestPriceToSave = currentProduct.display_best_price ? parseFloat(currentProduct.display_best_price) : parseFloat(currentProduct.price_usd || currentProduct.price);
     const maxPriceToSave = currentProduct.display_max_price ? parseFloat(currentProduct.display_max_price) : bestPriceToSave;
+    
+    // 🍎 NUEVO: Extraemos y guardamos el precio intermedio de Pago Móvil
+    const pmPriceToSave = currentProduct.display_pm_price ? parseFloat(currentProduct.display_pm_price) : maxPriceToSave;
+    
     const discount = parseInt(currentProduct.discount_percentage || currentProduct.discount) || 0;
 
     const payload = {
@@ -297,8 +301,9 @@ function addToCart() {
         real_id: currentProduct.id,  
         name: cartItemName,
         storeName: currentProduct.store_name, 
-        price: bestPriceToSave,       // 🍎 Ahora sí: Siempre será el precio de Binance
-        basePrice: maxPriceToSave,    // 🍎 Ahora sí: Siempre será el precio para PayPal
+        price: bestPriceToSave,       // Precio Binance
+        pmPrice: pmPriceToSave,       // 🍎 NUEVO: Precio Pago Móvil
+        basePrice: maxPriceToSave,    // Precio Max (PayPal)
         discount: discount,                
         imageUrl: currentProduct.image_url || currentProduct.imageUrl,
         qty: currentQuantity,
