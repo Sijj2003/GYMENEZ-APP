@@ -83,7 +83,7 @@ function handleInstantSearch(query, platform) {
     let products = (window.allProducts && window.allProducts.length > 0) ? window.allProducts : [];
 
     if (products.length === 0) {
-        const rawCache = sessionStorage.getItem('gymenez_catalog');
+        const rawCache = sessionStorage.getItem('gymenez_catalog_v3'); // Actualizado a v3
         if (rawCache) {
             try {
                 const cachedData = JSON.parse(rawCache);
@@ -127,22 +127,29 @@ function renderInstantResults(results, container, platform, originalQuery) {
         const bestPriceNum = item.display_best_price ? parseFloat(item.display_best_price) : parseFloat(item.price_usd);
         const maxPriceNum = item.display_max_price ? parseFloat(item.display_max_price) : parseFloat(item.price_usd);
         
-        // 🍎 CÁLCULO VISUAL REAL: Diferencia porcentual entre el precio más alto y el de Binance
-        let visualDiscount = 0;
+        // 🍎 LÓGICA DE MARKETING: Descuento real vs Pasarela
+        const baseOriginalPrice = parseFloat(item.price_usd || 0);
+        const partnerDiscountPercentage = parseInt(item.discount_percentage || item.discount) || 0;
+        
+        let gatewayDiscount = 0;
         if (maxPriceNum > bestPriceNum) {
-            visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+            gatewayDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
         }
+
+        // Elegimos el mayor descuento
+        const visualDiscount = Math.max(partnerDiscountPercentage, gatewayDiscount);
         const hasDiscount = visualDiscount > 0;
 
         const bestPrice = bestPriceNum.toFixed(2);
-        const maxPrice = maxPriceNum.toFixed(2);
+        // Tachamos el mayor precio
+        const maxPrice = Math.max(baseOriginalPrice, maxPriceNum).toFixed(2);
 
         const isOnDemand = (item.is_on_demand === true || item.is_on_demand === 'true' || item.is_on_demand === 'True');
         const hasFreeShipping = (item.free_shipping === true || item.free_shipping === 'true' || item.free_shipping === 'True');
 
         // Lógica visual condicional para la búsqueda rápida (dropdown)
         let priceBlock = '';
-        if (maxPriceNum > bestPriceNum) {
+        if (hasDiscount) {
             priceBlock = `
                 <span class="text-[9px] text-gray-500 line-through leading-none mb-0.5">$${maxPrice}</span>
                 <span class="text-[#FFC300] font-[900] italic text-sm leading-none">$${bestPrice}</span>
@@ -255,7 +262,7 @@ async function fetchAndFilterProducts(query) {
     let needsFetch = products.length === 0;
 
     if (needsFetch) {
-        const rawCache = sessionStorage.getItem('gymenez_catalog');
+        const rawCache = sessionStorage.getItem('gymenez_catalog_v3'); // Actualizado a v3
         if (rawCache) {
             try {
                 const cachedData = JSON.parse(rawCache);
@@ -286,7 +293,7 @@ async function fetchAndFilterProducts(query) {
             if (response.ok && data.success) {
                 products = data.products;
                 window.allProducts = products;
-                sessionStorage.setItem('gymenez_catalog', JSON.stringify({ products, timestamp: new Date().getTime() }));
+                sessionStorage.setItem('gymenez_catalog_v3', JSON.stringify({ products, timestamp: new Date().getTime() }));
             } else throw new Error('Error al cargar');
         }
         
@@ -335,15 +342,22 @@ function renderDeepResults(productsToRender, grid) {
         const bestPriceNum = p.display_best_price ? parseFloat(p.display_best_price) : parseFloat(p.price_usd);
         const maxPriceNum = p.display_max_price ? parseFloat(p.display_max_price) : parseFloat(p.price_usd);
         
-        // 🍎 CÁLCULO VISUAL REAL: Diferencia porcentual entre el precio más alto y el de Binance
-        let visualDiscount = 0;
+        // 🍎 LÓGICA DE MARKETING: Descuento real vs Pasarela
+        const baseOriginalPrice = parseFloat(p.price_usd || 0);
+        const partnerDiscountPercentage = parseInt(p.discount_percentage || p.discount) || 0;
+        
+        let gatewayDiscount = 0;
         if (maxPriceNum > bestPriceNum) {
-            visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+            gatewayDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
         }
+
+        // Elegimos el mayor descuento
+        const visualDiscount = Math.max(partnerDiscountPercentage, gatewayDiscount);
         const hasDiscount = visualDiscount > 0;
 
         const bestPrice = bestPriceNum.toFixed(2);
-        const maxPrice = maxPriceNum.toFixed(2);
+        // Tachamos el mayor precio
+        const maxPrice = Math.max(baseOriginalPrice, maxPriceNum).toFixed(2);
 
         const isOnDemand = (p.is_on_demand === true || p.is_on_demand === 'true' || p.is_on_demand === 'True');
         const hasFreeShipping = (p.free_shipping === true || p.free_shipping === 'true' || p.free_shipping === 'True');
@@ -357,7 +371,7 @@ function renderDeepResults(productsToRender, grid) {
 
         // 🍎 Lógica visual condicional para la grilla profunda
         let priceBlockHtml = '';
-        if (maxPriceNum > bestPriceNum) {
+        if (hasDiscount) {
             priceBlockHtml = `
                 <div class="flex flex-col">
                     <span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice}</span>
