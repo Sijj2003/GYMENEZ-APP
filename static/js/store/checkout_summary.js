@@ -62,18 +62,21 @@ function renderCartSummary() {
     // Identificamos si es un carrito híbrido (unas tiendas sí tienen gratis, otras no)
     const isHybrid = storesWithFreeShippingEarned > 0 && storesWithFreeShippingEarned < totalStores;
 
-    // 🧠 2. DIBUJAR PRODUCTOS (INYECCIÓN ZERO-TRUST)
+    // 🧠 2. DIBUJAR PRODUCTOS (INYECCIÓN ZERO-TRUST 3 PRECIOS)
     cartItems.forEach((item, index) => {
         const qty = item.quantity || item.qty || 1;
         
-        // 🍎 Extraemos los dos precios guardados desde product.js
+        // 🍎 Extraemos los TRES precios guardados desde product.js
         const bestPrice = parseFloat(item.price);
+        const pmPrice = parseFloat(item.pmPrice || item.basePrice || item.price); // Fallback por seguridad
         const maxPrice = parseFloat(item.basePrice || item.price);
         
         sumBestPrices += (bestPrice * qty);
         
-        // El precio final se decide según el método de pago seleccionado
-        const itemFinalPrice = (window.currentPaymentMethod === 'binance') ? bestPrice : maxPrice;
+        // 🍎 El precio final se decide según los 3 métodos de pago posibles
+        let itemFinalPrice = maxPrice; // Por defecto (PayPal o sin seleccionar)
+        if (window.currentPaymentMethod === 'binance') itemFinalPrice = bestPrice;
+        if (window.currentPaymentMethod === 'pago_movil') itemFinalPrice = pmPrice;
         
         const maxPriceTotal = maxPrice * qty;
         const finalPriceTotal = itemFinalPrice * qty;
@@ -93,10 +96,10 @@ function renderCartSummary() {
             variantBadgeHtml = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">${variantMatch[2]}</span>`;
         }
 
-        // 🍎 CÁLCULO DEL PORCENTAJE VISUAL
+        // 🍎 CÁLCULO DEL PORCENTAJE VISUAL (Siempre comparado contra el Max para que el cliente vea el ahorro real)
         let visualDiscount = 0;
-        if (maxPrice > bestPrice) {
-            visualDiscount = Math.round(((maxPrice - bestPrice) / maxPrice) * 100);
+        if (maxPrice > itemFinalPrice) {
+            visualDiscount = Math.round(((maxPrice - itemFinalPrice) / maxPrice) * 100);
         }
 
         let logicBadges = '';
@@ -108,8 +111,8 @@ function renderCartSummary() {
             hasOnDemand = true;
             logicBadges += `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">⚡ Bajo Pedido</span>`;
         }
-        // Etiqueta roja SOLO si eligen Binance y hay descuento matemático
-        if (window.currentPaymentMethod === 'binance' && visualDiscount > 0) {
+        // Etiqueta roja SOLO si hay descuento matemático (Binance o Pago Móvil)
+        if (visualDiscount > 0) {
             logicBadges += `<span class="bg-red-500/10 text-red-500 border border-red-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">-${visualDiscount}% OFF</span>`;
         }
 
@@ -130,9 +133,9 @@ function renderCartSummary() {
             <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-2.5 text-gray-400 hover:text-white transition font-black text-sm">+</button>
         </div>`;
 
-        // 🍎 VISUAL DINÁMICO DEL PRECIO: Solo tacha si es Binance
+        // 🍎 VISUAL DINÁMICO DEL PRECIO: Solo tacha si hay descuento (Binance o Pago Móvil)
         let priceVisualHtml = '';
-        if (window.currentPaymentMethod === 'binance' && discountTotal > 0) {
+        if (discountTotal > 0) {
             priceVisualHtml = `
                 <span class="text-[9px] text-gray-500 line-through leading-none mb-0.5 font-bold uppercase tracking-widest">Ref: $${formatMoney(maxPriceTotal)}</span>
                 <span class="font-black text-white text-sm tracking-tight leading-none">$${formatMoney(finalPriceTotal)}</span>
@@ -182,7 +185,7 @@ function renderCartSummary() {
     document.getElementById('summary-raw-total').innerText = `$${formatMoney(rawTotal)}`;
     document.getElementById('summary-total').innerText = `$${formatMoney(cartTotal)}`;
     
-    // 🧠 3. LÓGICA DEL GANCHO VISUAL DINÁMICO
+    // 🧠 3. LÓGICA DEL GANCHO VISUAL DINÁMICO (Ahorro Binance)
     const savingsRow = document.getElementById('summary-savings-row');
     const savingsText = document.getElementById('summary-savings-text');
     const savingsAmount = document.getElementById('summary-savings');
@@ -199,10 +202,15 @@ function renderCartSummary() {
                 savingsRow.className = "flex justify-between items-center text-emerald-400 bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20";
                 savingsText.innerText = "✅ Ahorro Binance Pay Aplicado";
                 savingsAmount.innerText = `-$${formatMoney(potentialSavings)}`;
+            } else if (window.currentPaymentMethod === 'pago_movil') {
+                // AHORRO PARCIAL APLICADO (Naranja) + GANCHO BINANCE
+                savingsRow.className = "flex justify-between items-center text-orange-400 bg-orange-500/10 p-2 rounded-lg border border-orange-500/20";
+                const pmSavings = rawTotal - cartTotal;
+                savingsText.innerText = "✅ Ahorro Pago Móvil Aplicado";
+                savingsAmount.innerText = `-$${formatMoney(pmSavings)}`;
             } else {
-                // GANCHO VISUAL UPSELL (Dorado/Naranja)
+                // GANCHO VISUAL UPSELL (Dorado/Naranja) - Para PayPal o Sin Seleccionar
                 savingsRow.className = "flex justify-between items-center text-[#FFC300] bg-[#FFC300]/10 p-2 rounded-lg border border-[#FFC300]/30 shadow-[0_0_15px_rgba(255,195,0,0.15)]";
-                
                 const percentOff = Math.round((potentialSavings / rawTotal) * 100);
                 savingsText.innerHTML = `💡 <span class="ml-1">Ahorra con Binance Pay (-${percentOff}%) al final</span>`;
                 savingsAmount.innerText = `$${formatMoney(potentialSavings)}`;
