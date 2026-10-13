@@ -276,7 +276,7 @@ function updateTotalDisplay() {
 }
 
 // ==========================================
-// COMPRA ZERO TRUST & CARRITO DINÁMICO (HACKEADO PARA PRUEBAS)
+// COMPRA ZERO TRUST & CARRITO DINÁMICO
 // ==========================================
 function addToCart() {
     if (!currentProduct) return;
@@ -286,6 +286,7 @@ function addToCart() {
     
     let maxStock = selectedVariant ? selectedVariant.stock : currentProduct.stock;
     
+    // 🍎 TRAMPA MATEMÁTICA CORREGIDA PARA EL CARRITO
     if (isOnDemand) maxStock = 999;
     
     if (maxStock <= 0) return;
@@ -299,11 +300,12 @@ function addToCart() {
         cartItemName = `${currentProduct.name} (${selectedVariant.name})`;
     }
 
-    // 🔥 HACK INYECTADO: Forzamos todos los precios a $1.00 para la prueba de Zero-Trust 🔥
-    console.warn("⚠️ MODO PRUEBA ACTIVO: Forzando precios a $1.00 para auditar el backend");
-    const bestPriceToSave = 1.00;
-    const maxPriceToSave = 1.00;
-    const pmPriceToSave = 1.00;
+    // 🔥 MODIFICACIÓN QUIRÚRGICA FASE 1: GUARDAMOS LOS 3 PRECIOS CALCULADOS 🔥
+    const bestPriceToSave = currentProduct.display_best_price ? parseFloat(currentProduct.display_best_price) : parseFloat(currentProduct.price_usd || currentProduct.price);
+    const maxPriceToSave = currentProduct.display_max_price ? parseFloat(currentProduct.display_max_price) : bestPriceToSave;
+    
+    // 🍎 NUEVO: Extraemos y guardamos el precio intermedio de Pago Móvil
+    const pmPriceToSave = currentProduct.display_pm_price ? parseFloat(currentProduct.display_pm_price) : maxPriceToSave;
     
     const discount = parseInt(currentProduct.discount_percentage || currentProduct.discount) || 0;
 
@@ -312,9 +314,9 @@ function addToCart() {
         real_id: currentProduct.id,  
         name: cartItemName,
         storeName: currentProduct.store_name, 
-        price: bestPriceToSave,       
-        pmPrice: pmPriceToSave,       
-        basePrice: maxPriceToSave,    
+        price: bestPriceToSave,       // Precio Binance
+        pmPrice: pmPriceToSave,       // 🍎 NUEVO: Precio Pago Móvil
+        basePrice: maxPriceToSave,    // Precio Max (PayPal)
         discount: discount,                
         imageUrl: currentProduct.image_url || currentProduct.imageUrl,
         qty: currentQuantity,
