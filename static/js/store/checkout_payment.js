@@ -4,7 +4,7 @@
 
 // Usamos el objeto global window para evitar choques de variables declaradas en otros archivos
 window.availablePaymentMethods = window.availablePaymentMethods || {};
-window.currentPaymentMethod = window.currentPaymentMethod || 'pago_movil'; 
+window.currentPaymentMethod = window.currentPaymentMethod || null; // 🍎 1. Sin selección por defecto
 
 /**
  * 🛠️ Configura los datos iniciales y muestra el formulario
@@ -32,8 +32,18 @@ window.setupPaymentUI = function(methods) {
         if (document.getElementById('bin-email')) document.getElementById('bin-email').innerText = methods.binance.email;
     }
 
+    // 🍎 Inyectar gancho visual a la tarjeta Binance (Badge Recomendado)
+    const binanceCard = document.getElementById('card-binance');
+    if (binanceCard && !binanceCard.querySelector('.badge-recomendado')) {
+        const badge = document.createElement('div');
+        badge.className = 'badge-recomendado absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20 animate-pulse';
+        badge.innerText = 'Recomendado';
+        binanceCard.appendChild(badge);
+    }
+
     setupReferenceInputSanitizer();
-    selectPaymentMethod('pago_movil');
+    // 🍎 Eliminamos selectPaymentMethod('pago_movil') para obligar al usuario a elegir
+    updatePaymentFormFields(); 
 };
 
 /**
@@ -73,6 +83,11 @@ window.selectPaymentMethod = function(method) {
     });
 
     updatePaymentFormFields();
+    
+    // 🍎 Avisar al summary para que actualice precios visuales y ganchos
+    if (typeof renderCartSummary === 'function') {
+        renderCartSummary();
+    }
 };
 
 /**
@@ -92,8 +107,18 @@ function updatePaymentFormFields() {
     const refLabel = document.getElementById('lbl-reference');
     const refInput = document.getElementById('pay-reference');
     const btnText = document.getElementById('btn-process-text');
+    const cancelBtn = document.getElementById('btn-cancel-vault');
 
     [dataPm, dataBinance, dataIntl].forEach(el => el && el.classList.add('hidden'));
+
+    // 🍎 Estado inicial (Ningún método seleccionado)
+    if (!window.currentPaymentMethod) {
+        verificationInputs?.classList.add('hidden');
+        if (btnText) btnText.innerText = `Seleccione Método de Pago`;
+        if (btnText) btnText.parentElement.disabled = true;
+        if (cancelBtn) cancelBtn.style.display = ''; // Cancelar siempre visible
+        return;
+    }
 
     if (window.currentPaymentMethod === 'pago_movil') {
         dataPm?.classList.remove('hidden');
@@ -114,10 +139,8 @@ function updatePaymentFormFields() {
             : `Procesar Compra`;
         if (btnText) btnText.innerText = `Pagar ${montoStr}`;
 
-        // MOSTRAR BOTONES NATIVOS
         if (btnText) btnText.parentElement.style.display = '';
-        const cancelBtn = document.getElementById('btn-cancel-vault');
-        if (cancelBtn) cancelBtn.style.display = '';
+        if (cancelBtn) cancelBtn.style.display = ''; 
 
     } else if (window.currentPaymentMethod === 'binance') {
         dataBinance?.classList.remove('hidden');
@@ -133,12 +156,10 @@ function updatePaymentFormFields() {
         }
         if (refLabel) refLabel.innerText = "Usuario (Nickname) Binance de Envío"; 
         
-        if (btnText) btnText.innerText = `Confirmar Pago USDT`;
+        if (btnText) btnText.innerText = `Confirmar Pago $${formatMoney(cartTotal)} USDT`;
 
-        // MOSTRAR BOTONES NATIVOS
         if (btnText) btnText.parentElement.style.display = '';
-        const cancelBtn = document.getElementById('btn-cancel-vault');
-        if (cancelBtn) cancelBtn.style.display = '';
+        if (cancelBtn) cancelBtn.style.display = ''; 
 
     } else if (window.currentPaymentMethod === 'paypal') {
         dataIntl?.classList.remove('hidden');
@@ -148,10 +169,10 @@ function updatePaymentFormFields() {
         if (tlfOrigen) tlfOrigen.required = false;
         if (refInput) refInput.required = false;
 
-        // OCULTAR LOS BOTONES NATIVOS PARA QUE NO CHOQUEN CON PAYPAL
+        // Ocultamos el botón amarillo de Gymenez para evitar clics dobles,
+        // pero DEJAMOS el botón cancelar visible en su contenedor flex
         if (btnText) btnText.parentElement.style.display = 'none';
-        const cancelBtn = document.getElementById('btn-cancel-vault');
-        if (cancelBtn) cancelBtn.style.display = 'none';
+        if (cancelBtn) cancelBtn.style.display = ''; 
     }
 
     validateFinalButton();
@@ -185,6 +206,11 @@ function validateFinalButton() {
     const btn = document.getElementById('btn-process-order');
     if (!btn) return;
 
+    if (!window.currentPaymentMethod) {
+        btn.disabled = true;
+        return;
+    }
+
     if (window.currentPaymentMethod === 'paypal') {
         btn.disabled = false;
         return;
@@ -211,6 +237,12 @@ function validateFinalButton() {
 // ====================================================================
 document.getElementById('form-checkout-final')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    if (!window.currentPaymentMethod) {
+        if (typeof Swal !== 'undefined') Swal.fire("Atención", "Por favor seleccione un método de pago.", "warning");
+        else alert("Por favor seleccione un método de pago.");
+        return;
+    }
     
     // 1. Redirección Internacional simulada
     if(window.currentPaymentMethod === 'paypal') {
@@ -292,14 +324,10 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
             body: JSON.stringify(payload)
         });
 
-        // ====================================================================
-        // 🛑 LÍNEA DEFENSIVA ANTI-DOBLE MENSAJE
-        // ====================================================================
         if (response.status === 401 || response.status === 403) {
-            return; // Detenemos el script aquí en silencio.
+            return;
         }
 
-        // Parseamos JSON solo UNA vez
         const data = await response.json();
 
         if (response.ok && data.success) {
@@ -413,6 +441,9 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
 // ====================================================================
 document.getElementById('btn-cancel-vault')?.addEventListener('click', () => {
     if (typeof vaultInterval !== 'undefined') clearInterval(vaultInterval);
+    
+    // Limpiamos la variable global
+    window.currentPaymentMethod = null;
     
     const vaultSection = document.getElementById('checkout-vault-section') || document.querySelector('.vault-container') || document.getElementById('vault-view');
     if (vaultSection) {
