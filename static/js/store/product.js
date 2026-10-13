@@ -273,10 +273,12 @@ function addToCart() {
     
     let maxStock = selectedVariant ? selectedVariant.stock : currentProduct.stock;
     
+    // 🍎 TRAMPA MATEMÁTICA CORREGIDA PARA EL CARRITO
     if (isOnDemand) maxStock = 999;
     
     if (maxStock <= 0) return;
 
+    // Generamos un ID Dinámico para el carrito.
     let cartItemId = currentProduct.id;
     let cartItemName = currentProduct.name;
     
@@ -285,9 +287,8 @@ function addToCart() {
         cartItemName = `${currentProduct.name} (${selectedVariant.name})`;
     }
 
-    // 🔥 AHORA GUARDAMOS LOS 3 PRECIOS 🔥
+    // 🔥 MODIFICACIÓN QUIRÚRGICA FASE 1: GUARDAMOS AMBOS PRECIOS CALCULADOS 🔥
     const bestPriceToSave = currentProduct.display_best_price ? parseFloat(currentProduct.display_best_price) : parseFloat(currentProduct.price_usd || currentProduct.price);
-    const pmPriceToSave = currentProduct.display_pm_price ? parseFloat(currentProduct.display_pm_price) : bestPriceToSave;
     const maxPriceToSave = currentProduct.display_max_price ? parseFloat(currentProduct.display_max_price) : bestPriceToSave;
     const discount = parseInt(currentProduct.discount_percentage || currentProduct.discount) || 0;
 
@@ -296,9 +297,8 @@ function addToCart() {
         real_id: currentProduct.id,  
         name: cartItemName,
         storeName: currentProduct.store_name, 
-        price: bestPriceToSave,       // Precio Binance
-        pmPrice: pmPriceToSave,       // 🍎 NUEVO: Precio Pago Móvil
-        basePrice: maxPriceToSave,    // Precio PayPal
+        price: bestPriceToSave,       // 🍎 Ahora sí: Siempre será el precio de Binance
+        basePrice: maxPriceToSave,    // 🍎 Ahora sí: Siempre será el precio para PayPal
         discount: discount,                
         imageUrl: currentProduct.image_url || currentProduct.imageUrl,
         qty: currentQuantity,
@@ -309,6 +309,7 @@ function addToCart() {
         free_shipping_threshold: parseFloat(currentProduct.free_shipping_threshold || 0)
     };
 
+    // 🛡️ ENVOLVEMOS LA ACCIÓN EN EL INTERCEPTOR DE AUTENTICACIÓN
     requireAuth(() => {
         let cart = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
         const existingIndex = cart.findIndex(item => String(item.id) === String(payload.id));
@@ -323,6 +324,7 @@ function addToCart() {
 
         localStorage.setItem('gymenez_cart', JSON.stringify(cart));
         
+        // Ejecutar utilidades visuales
         if(typeof updateCartCount === 'function') updateCartCount();
         
         showToastFallback(); 
@@ -331,6 +333,7 @@ function addToCart() {
 }
 
 function showToastFallback() {
+    // Si la píldora animada del HTML no existe, usamos el toast básico
     if (document.getElementById('toast-premium')) return;
     
     const toast = document.getElementById('toast-cart');
