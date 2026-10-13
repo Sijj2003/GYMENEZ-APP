@@ -44,17 +44,19 @@ async function executeVaultEntry() {
     btn.disabled = true;
     btn.innerHTML = '<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Reservando Inventario...</span>';
 
-    // 🧠 PAYLOAD PERFECTO PARA EL BACKEND (Ahora incluye las banderas de logística y ambos precios)
+    // 🧠 PAYLOAD PERFECTO PARA EL BACKEND (Ahora incluye las banderas de logística y los 3 precios)
     const cleanItems = cartItems.map(item => {
-        // 🍎 Ajuste Zero-Trust: Enviamos ambos precios para que Python tenga visibilidad total
+        // 🍎 Ajuste Zero-Trust: Enviamos los TRES precios para que Python tenga visibilidad total
         const itemBestPrice = parseFloat(item.price);
         const itemMaxPrice = parseFloat(item.basePrice || item.price);
+        const itemPmPrice = parseFloat(item.pmPrice || item.basePrice || item.price); // Fallback de seguridad
         
         return {
             id: item.id, 
             real_id: item.real_id || item.id, 
             name: item.name,
             price: itemBestPrice,       // Precio Binance
+            pmPrice: itemPmPrice,       // 🍎 NUEVO: Precio Pago Móvil
             basePrice: itemMaxPrice,    // Precio Max (PayPal)
             qty: item.quantity || item.qty || 1,
             storeName: item.storeName || item.store_name || 'Gymenez Store',
