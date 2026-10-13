@@ -287,7 +287,9 @@ function addToCart() {
         cartItemName = `${currentProduct.name} (${selectedVariant.name})`;
     }
 
-    const basePrice = parseFloat(currentProduct.price_usd || currentProduct.price);
+    // 🔥 MODIFICACIÓN QUIRÚRGICA FASE 1: GUARDAMOS AMBOS PRECIOS CALCULADOS 🔥
+    const bestPriceToSave = currentProduct.display_best_price ? parseFloat(currentProduct.display_best_price) : parseFloat(currentProduct.price_usd || currentProduct.price);
+    const maxPriceToSave = currentProduct.display_max_price ? parseFloat(currentProduct.display_max_price) : bestPriceToSave;
     const discount = parseInt(currentProduct.discount_percentage || currentProduct.discount) || 0;
 
     const payload = {
@@ -295,8 +297,8 @@ function addToCart() {
         real_id: currentProduct.id,  
         name: cartItemName,
         storeName: currentProduct.store_name, 
-        price: finalPrice,                                 // 🍎 Se envía al carrito el `display_best_price` correcto
-        basePrice: basePrice,              
+        price: bestPriceToSave,       // 🍎 Ahora sí: Siempre será el precio de Binance
+        basePrice: maxPriceToSave,    // 🍎 Ahora sí: Siempre será el precio para PayPal
         discount: discount,                
         imageUrl: currentProduct.image_url || currentProduct.imageUrl,
         qty: currentQuantity,
