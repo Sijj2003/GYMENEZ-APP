@@ -88,19 +88,29 @@ function renderProduct() {
         badgesContainer.innerHTML = badgesHtml;
     }
     
-    // 🍎 ZERO-TRUST: Extraemos los números puros del backend
+    // 🍎 ZERO-TRUST: Extraemos los números puros del backend para transaccionar
     const bestPriceNum = currentProduct.display_best_price ? parseFloat(currentProduct.display_best_price) : parseFloat(currentProduct.price_usd || currentProduct.price);
     const maxPriceNum = currentProduct.display_max_price ? parseFloat(currentProduct.display_max_price) : bestPriceNum;
     
-    // 🍎 CÁLCULO VISUAL REAL: Diferencia porcentual entre el precio más alto y el de Binance
-    let visualDiscount = 0;
-    if (maxPriceNum > bestPriceNum) {
-        visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
-    }
+    // 🍎 LÓGICA DE MARKETING: Extraemos la oferta real del Partner (Base de la tienda)
+    const baseOriginalPrice = parseFloat(currentProduct.price_usd || currentProduct.price || 0);
+    const partnerDiscountPercentage = parseInt(currentProduct.discount_percentage || currentProduct.discount) || 0;
     
     finalPrice = bestPriceNum; // El precio de Binance pasa a ser la memoria del multiplicador de cantidad
 
-    // 🛡️ Mostrar u ocultar etiqueta roja usando el descuento matemático real
+    // 🛡️ CÁLCULO DEL DESCUENTO VISUAL (EL MEJOR DE LOS DOS MUNDOS)
+    let visualDiscount = 0;
+    
+    // 1. Calculamos el ahorro por método de pago (La diferencia entre PayPal y Binance)
+    let gatewayDiscount = 0;
+    if (maxPriceNum > bestPriceNum) {
+        gatewayDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+    }
+
+    // 2. Elegimos el descuento más atractivo para mostrar
+    visualDiscount = Math.max(partnerDiscountPercentage, gatewayDiscount);
+
+    // 🛡️ Mostrar u ocultar etiqueta roja
     const badge = document.getElementById('prod-discount-badge');
     if (visualDiscount > 0) {
         if (badge) {
@@ -111,11 +121,14 @@ function renderProduct() {
         if (badge) badge.classList.add('hidden');
     }
 
-    // 🛡️ Mostrar el precio mayor tachado y el de Binance destacado sin forzar la etiqueta "con PayPal"
+    // 🛡️ Mostrar el precio original tachado
     const oldPriceEl = document.getElementById('prod-old-price');
-    if (maxPriceNum > bestPriceNum) {
+    
+    if (visualDiscount > 0) {
         if (oldPriceEl) {
-            oldPriceEl.innerText = `$${maxPriceNum.toFixed(2)}`;
+            // Tachamos el precio más alto posible para maximizar el gancho psicológico
+            const priceToStrike = Math.max(baseOriginalPrice, maxPriceNum);
+            oldPriceEl.innerText = `$${priceToStrike.toFixed(2)}`;
             oldPriceEl.classList.remove('hidden');
         }
     } else {
@@ -124,7 +137,7 @@ function renderProduct() {
     
     const priceEl = document.getElementById('prod-price');
     if (priceEl) {
-        // 🍎 Lógica visual para Binance Pay
+        // 🍎 Lógica visual para Binance Pay (Siempre usa el bestPriceNum del backend)
         priceEl.innerHTML = `$${bestPriceNum.toFixed(2)} <span class="text-[#FFC300] text-[10px] md:text-xs uppercase tracking-widest font-black ml-2">Binance Pay</span>`;
     }
 
