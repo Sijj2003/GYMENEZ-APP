@@ -134,8 +134,16 @@ function updatePaymentFormFields() {
         }
         if (refLabel) refLabel.innerText = "N° de Referencia Bancaria";
 
+        // 🍎 CÁLCULO DINÁMICO EXACTO PARA PAGO MÓVIL
+        let totalPmUsd = 0;
+        cartItems.forEach(item => {
+            const qty = item.quantity || item.qty || 1;
+            const pmPrice = parseFloat(item.pmPrice || item.basePrice || item.price);
+            totalPmUsd += (pmPrice * qty);
+        });
+
         const montoStr = (typeof isBcvValid !== 'undefined' && isBcvValid && typeof currentBcvRate !== 'undefined') 
-            ? `Bs. ${formatMoney(cartTotal * currentBcvRate)}` 
+            ? `Bs. ${formatMoney(totalPmUsd * currentBcvRate)}` 
             : `Procesar Compra`;
         if (btnText) btnText.innerText = `Pagar ${montoStr}`;
 
@@ -156,7 +164,15 @@ function updatePaymentFormFields() {
         }
         if (refLabel) refLabel.innerText = "Usuario (Nickname) Binance de Envío"; 
         
-        if (btnText) btnText.innerText = `Confirmar Pago $${formatMoney(cartTotal)} USDT`;
+        // 🍎 CÁLCULO DINÁMICO EXACTO PARA BINANCE
+        let totalBinanceUsd = 0;
+        cartItems.forEach(item => {
+            const qty = item.quantity || item.qty || 1;
+            const bestPrice = parseFloat(item.price);
+            totalBinanceUsd += (bestPrice * qty);
+        });
+
+        if (btnText) btnText.innerText = `Confirmar Pago $${formatMoney(totalBinanceUsd)} USDT`;
 
         if (btnText) btnText.parentElement.style.display = '';
         if (cancelBtn) cancelBtn.style.display = ''; 
@@ -305,9 +321,21 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
         return;
     }
 
+    // 🍎 RECALCULAMOS EL TOTAL EXACTO ANTES DE ENVIAR A PYTHON
+    let finalPayloadTotalUsd = 0;
+    cleanItems.forEach(item => {
+        if (window.currentPaymentMethod === 'binance') {
+            finalPayloadTotalUsd += (item.price * item.qty);
+        } else if (window.currentPaymentMethod === 'pago_movil') {
+            finalPayloadTotalUsd += (item.pmPrice * item.qty);
+        } else {
+            finalPayloadTotalUsd += (item.basePrice * item.qty);
+        }
+    });
+
     const payload = {
         items: cleanItems,
-        totalAmount: typeof cartTotal !== 'undefined' ? cartTotal : 0,
+        totalAmount: finalPayloadTotalUsd, // 🍎 Enviamos el total matemáticamente exacto
         paymentMethod: window.currentPaymentMethod,
         reference: reference,
         wants_free_shipping: wantsFreeShipping,
