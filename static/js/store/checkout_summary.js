@@ -62,7 +62,7 @@ function renderCartSummary() {
     // Identificamos si es un carrito híbrido (unas tiendas sí tienen gratis, otras no)
     const isHybrid = storesWithFreeShippingEarned > 0 && storesWithFreeShippingEarned < totalStores;
 
-    // 🧠 2. DIBUJAR PRODUCTOS (INYECCIÓN ZERO-TRUST 3 PRECIOS)
+    // 🧠 2. DIBUJAR PRODUCTOS (INYECCIÓN ZERO-TRUST 3 PRECIOS + LÓGICA DE MARKETING)
     cartItems.forEach((item, index) => {
         const qty = item.quantity || item.qty || 1;
         
@@ -71,6 +71,16 @@ function renderCartSummary() {
         const pmPrice = parseFloat(item.pmPrice || item.basePrice || item.price); // Fallback por seguridad
         const maxPrice = parseFloat(item.basePrice || item.price);
         
+        // 🍎 LÓGICA DE MARKETING: Descuento real vs Pasarela (Igual que en Catálogo)
+        const partnerDiscountPercentage = parseInt(item.discount || item.discount_percentage || 0);
+        let gatewayDiscount = 0;
+        if (maxPrice > bestPrice) {
+            gatewayDiscount = Math.round(((maxPrice - bestPrice) / maxPrice) * 100);
+        }
+        
+        // Elegimos el mayor descuento para mostrar la etiqueta visual
+        const visualDiscount = Math.max(partnerDiscountPercentage, gatewayDiscount);
+        
         sumBestPrices += (bestPrice * qty);
         
         // 🍎 El precio final se decide según los 3 métodos de pago posibles
@@ -78,10 +88,23 @@ function renderCartSummary() {
         if (window.currentPaymentMethod === 'binance') itemFinalPrice = bestPrice;
         if (window.currentPaymentMethod === 'pago_movil') itemFinalPrice = pmPrice;
         
-        const maxPriceTotal = maxPrice * qty;
+        // 🍎 El precio tachado ahora siempre es el MAX(precio_base_original, maxPrice)
+        // Para calcularlo aquí, usamos el descuento guardado o asumimos que maxPrice ya incluye la protección
+        let priceToStrike = maxPrice;
+        if (partnerDiscountPercentage > 0) {
+            // Si hay descuento del partner, calculamos el precio base original matemático
+            const assumedBaseOriginal = bestPrice / (1 - (partnerDiscountPercentage / 100));
+            priceToStrike = Math.max(assumedBaseOriginal, maxPrice);
+        }
+        
+        const priceToStrikeTotal = priceToStrike * qty;
         const finalPriceTotal = itemFinalPrice * qty;
-        const discountTotal = maxPriceTotal - finalPriceTotal;
+        
+        // El ahorro que le mostramos es la diferencia entre el precio tachado y lo que paga hoy
+        const discountTotal = priceToStrikeTotal - finalPriceTotal;
 
+        // Para los totales reales de cobro (No visuales), sumamos el maxPrice real de la pasarela
+        const maxPriceTotal = maxPrice * qty;
         rawTotal += maxPriceTotal;
         finalTotal += finalPriceTotal;
         
@@ -96,12 +119,6 @@ function renderCartSummary() {
             variantBadgeHtml = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">${variantMatch[2]}</span>`;
         }
 
-        // 🍎 CÁLCULO DEL PORCENTAJE VISUAL (Siempre comparado contra el Max para que el cliente vea el ahorro real)
-        let visualDiscount = 0;
-        if (maxPrice > itemFinalPrice) {
-            visualDiscount = Math.round(((maxPrice - itemFinalPrice) / maxPrice) * 100);
-        }
-
         let logicBadges = '';
         // Solo mostramos "Envío Gratis" en el producto si LA TIENDA alcanzó la meta
         if (storeTotals[store].earnedFreeShipping && (item.free_shipping === true || item.free_shipping === 'true')) {
@@ -111,7 +128,7 @@ function renderCartSummary() {
             hasOnDemand = true;
             logicBadges += `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">⚡ Bajo Pedido</span>`;
         }
-        // Etiqueta roja SOLO si hay descuento matemático (Binance o Pago Móvil)
+        // Etiqueta roja con el porcentaje unificado
         if (visualDiscount > 0) {
             logicBadges += `<span class="bg-red-500/10 text-red-500 border border-red-500/20 text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-inner inline-block">-${visualDiscount}% OFF</span>`;
         }
@@ -133,11 +150,11 @@ function renderCartSummary() {
             <button onclick="updateCheckoutItemQty(${index}, 1)" class="px-2.5 text-gray-400 hover:text-white transition font-black text-sm">+</button>
         </div>`;
 
-        // 🍎 VISUAL DINÁMICO DEL PRECIO: Solo tacha si hay descuento (Binance o Pago Móvil)
+        // 🍎 VISUAL DINÁMICO DEL PRECIO: Solo tacha si hay descuento y muestra la ref correcta
         let priceVisualHtml = '';
-        if (discountTotal > 0) {
+        if (discountTotal > 0.05) { // Un pequeño margen para evitar tachar por centavos perdidos
             priceVisualHtml = `
-                <span class="text-[9px] text-gray-500 line-through leading-none mb-0.5 font-bold uppercase tracking-widest">Ref: $${formatMoney(maxPriceTotal)}</span>
+                <span class="text-[9px] text-gray-500 line-through leading-none mb-0.5 font-bold uppercase tracking-widest">Ref: $${formatMoney(priceToStrikeTotal)}</span>
                 <span class="font-black text-white text-sm tracking-tight leading-none">$${formatMoney(finalPriceTotal)}</span>
             `;
         } else {
@@ -179,7 +196,6 @@ function renderCartSummary() {
     });
 
     cartTotal = finalTotal;
-    const totalSavings = rawTotal - finalTotal;
 
     // Actualizar Totales
     document.getElementById('summary-raw-total').innerText = `$${formatMoney(rawTotal)}`;
@@ -190,7 +206,7 @@ function renderCartSummary() {
     const savingsText = document.getElementById('summary-savings-text');
     const savingsAmount = document.getElementById('summary-savings');
     
-    // Calculamos el máximo ahorro posible si pagara con Binance
+    // Calculamos el máximo ahorro posible si pagara con Binance (Contra el costo real de pasarela)
     const potentialSavings = rawTotal - sumBestPrices;
 
     if (savingsRow && savingsText && savingsAmount) {
