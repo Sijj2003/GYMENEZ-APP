@@ -146,7 +146,7 @@
             <a href="/store/home.html" class="inline-block bg-[#FFC300] text-black px-10 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:scale-[1.02] hover:bg-yellow-400 transition-all shadow-[0_10px_30px_rgba(255,195,0,0.2)]">Volver a la Tienda</a>
         </div>
 
-        <!-- 🍎 CONTENEDOR MAESTRO DEL GRID (items-start asegura que la columna derecha haga sticky) -->
+        <!-- 🍎 CONTENEDOR MAESTRO DEL GRID -->
         <div id="checkout-container" class="grid grid-cols-1 lg:grid-cols-12 gap-10 hidden w-full items-start">
             
             <!-- ========================================== -->
@@ -297,7 +297,7 @@
                                 </div>
                             </div>
 
-                            <!-- 🍎 Alerta Envío Gratis & Toggle (CONTROLADO 100% POR JS AHORA, SIN TRAMPAS) -->
+                            <!-- Alerta Envío Gratis & Toggle -->
                             <div id="alert-free-shipping" class="hidden"></div>
                         </div>
 
@@ -313,7 +313,6 @@
                         </div>
                     </section>
                 </div> 
-                <!-- 🍎 AQUÍ ESTABA EL MALDITO ERROR: FALTABA ESTE CIERRE DE WIZARD-VIEW QUE ROMPIÓ TODO EL GRID -->
 
                 <!-- VISTA B: PASARELA DE PAGO (LA BÓVEDA) -->
                 <div id="vault-view" class="space-y-6 hidden">
@@ -417,7 +416,6 @@
 
                 <div id="data-intl" class="hidden text-center py-6">
     <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Paga de forma segura sin salir de la tienda</p>
-    <!-- 🌟 ESTE ES EL FONDO GRIS/DORADO QUE HACE QUE LAS LETRAS SE VEAN 🌟 -->
     <div class="max-w-sm mx-auto bg-gray-200 p-6 rounded-[2rem] border-2 border-[#FFC300] shadow-[0_0_25px_rgba(255,195,0,0.25)] relative overflow-hidden">
         <div id="paypal-button-container" class="w-full relative z-10"></div>
     </div>
@@ -501,15 +499,16 @@
                     <!-- Panel de Totales Dinámico -->
                     <div class="space-y-4">
                         
-                        <!-- 1. Precio Original (Tachado) -->
+                        <!-- 🍎 1. Precio Original (Tachado Controlado por JS) -->
                         <div class="flex justify-between items-center text-gray-400">
                             <span class="text-[10px] uppercase font-bold tracking-widest">Subtotal Original</span>
-                            <span id="summary-raw-total" class="font-medium text-gray-500 text-sm line-through">$0.00</span>
+                            <!-- Se quitó la clase 'line-through' fija -->
+                            <span id="summary-raw-total" class="font-medium text-gray-500 text-sm">$0.00</span>
                         </div>
                         
-                        <!-- 2. Fila de Ahorro -->
+                        <!-- 🍎 2. Fila de Ahorro (Gancho Binance) -->
                         <div id="summary-savings-row" class="hidden flex justify-between items-center text-emerald-400 bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
-                            <span class="text-[10px] uppercase font-bold tracking-widest">Ahorro por Descuentos</span>
+                            <span id="summary-savings-text" class="text-[10px] uppercase font-bold tracking-widest">Ahorro por Descuentos</span>
                             <span id="summary-savings" class="font-bold text-sm">-$0.00</span>
                         </div>
                         
@@ -547,7 +546,7 @@
             </div> <!-- CIERRE DE COLUMNA DERECHA -->
         </div> 
 
-        <!-- 🍎 VISTA C: ÉXITO ABSOLUTO (Sacado de la columna izquierda para que ocupe todo el ancho) -->
+        <!-- VISTA C: ÉXITO ABSOLUTO -->
         <div id="success-view" class="col-span-1 lg:col-span-12 text-center py-24 md:py-32 bg-white/5 rounded-[3rem] border border-emerald-500/20 shadow-2xl hidden relative overflow-hidden backdrop-blur-xl mt-4 w-full">
             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div class="w-1/2 h-1/2 bg-emerald-500/10 blur-[80px] rounded-full"></div>
@@ -567,9 +566,7 @@
 
     </main>
 
-    <!-- ======================================================= -->
     <!-- MODAL MÚLTIPLES TIENDAS -->
-    <!-- ======================================================= -->
     <div id="multi-store-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-[#030305]/95 backdrop-blur-xl opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-white/5 p-8 md:p-10 rounded-[2.5rem] border border-white/10 max-w-md w-full relative transform scale-95 transition-transform duration-300 shadow-2xl backdrop-blur-2xl" id="multi-store-modal-content">
             <button onclick="closeMultiStoreModal()" class="absolute top-6 right-6 text-gray-500 hover:text-white transition bg-white/5 rounded-full p-2">
@@ -591,9 +588,7 @@
         </div>
     </div>
 
-    <!-- ======================================================= -->
     <!-- MODAL DE BÚSQUEDA MÓVIL (Necesario para la lupa) -->
-    <!-- ======================================================= -->
     <div id="mobile-search-modal" class="md:hidden fixed inset-0 z-[100] bg-[#030305]/95 backdrop-blur-2xl transition-all duration-300 opacity-0 pointer-events-none flex flex-col">
         <div class="flex items-center px-4 h-20 border-b border-white/10 bg-[#0a0a0f]/50 mt-safe">
             <svg class="w-5 h-5 text-[#FFC300] mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -610,9 +605,7 @@
         </div>
     </div>
 
-    <!-- ======================================================= -->
     <!-- BOTTOM NAV (Móvil) & FOOTER (Escritorio) -->
-    <!-- ======================================================= -->
     
     <!-- Mobile Bottom Nav -->
     <div id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 w-full z-50 bg-[#030305]/95 backdrop-blur-xl border-t border-white/10 transition-all duration-300">
@@ -657,23 +650,21 @@
         </div>
     </footer>
     
-
-    <!-- Auth Middleware (Se ejecuta primero para verificar sesión) -->
+    <!-- Auth Middleware -->
     <script src="/static/js/auth/auth_middleware.js"></script>
 
-    <!-- Módulos de Checkout (Sustituyen a checkout.js) -->
+    <!-- Módulos de Checkout -->
     <script src="/static/js/store/checkout_core.js?v=2.0"></script>
-    <script src="/static/js/store/checkout_summary.js?v=2.5"></script>
+    <script src="/static/js/store/checkout_summary.js?v=2.4"></script>
     <script src="/static/js/store/checkout_shipping.js?v=2.0"></script>
-    <script src="/static/js/store/checkout_vault.js?v=2.5"></script>
-    <script src="/static/js/store/checkout_payment.js?v=3.1"></script>
+    <script src="/static/js/store/checkout_vault.js?v=2.4"></script>
+    <script src="/static/js/store/checkout_payment.js?v=3.0"></script>
     <script src="/static/js/store/checkout_wizard_init.js?v=2.2"></script>
 
     <!-- Scripts adicionales mantenidos -->
     <script src="/static/js/store/search.js?v=1.0"></script>
-    <!-- ======================================================= -->
-    <!-- SCRIPT DE TRANSICIÓN DE UI (Túnel de Pago Seguro) -->
-    <!-- ======================================================= -->
+    
+    <!-- SCRIPT DE TRANSICIÓN DE UI -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const vaultView = document.getElementById('vault-view');
