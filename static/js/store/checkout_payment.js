@@ -268,16 +268,18 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
     
     if (typeof vaultInterval !== 'undefined') clearInterval(vaultInterval);
 
-    // 🍎 INYECCIÓN ZERO-TRUST PARA PAGO MÓVIL Y BINANCE
+    // 🍎 INYECCIÓN ZERO-TRUST PARA PAGO MÓVIL Y BINANCE (AHORA CON 3 PRECIOS)
     const cleanItems = (typeof cartItems !== 'undefined' ? cartItems : []).map(item => {
         const itemBestPrice = parseFloat(item.price);
         const itemMaxPrice = parseFloat(item.basePrice || item.price);
+        const itemPmPrice = parseFloat(item.pmPrice || item.basePrice || item.price); // Fallback
         
         return {
             id: item.id,
             real_id: item.real_id || item.id,
             name: item.name,
             price: itemBestPrice,
+            pmPrice: itemPmPrice,      // 🍎 Inyectado
             basePrice: itemMaxPrice,
             qty: item.quantity || item.qty || 1,
             storeName: item.storeName || item.store_name || 'Gymenez Store',
@@ -482,10 +484,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 const cartData = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
                 const itemsToProcess = cartData.items || cartData || [];
 
-                // 🍎 INYECCIÓN ZERO-TRUST PARA PAYPAL CREATE
+                // 🍎 INYECCIÓN ZERO-TRUST PARA PAYPAL CREATE (AHORA CON 3 PRECIOS)
                 const cleanItems = itemsToProcess.map(item => {
                     const itemBestPrice = Number(parseFloat(item.price).toFixed(2));
                     const itemMaxPrice = Number(parseFloat(item.basePrice || item.price).toFixed(2));
+                    const itemPmPrice = Number(parseFloat(item.pmPrice || item.basePrice || item.price).toFixed(2)); // Fallback
                     
                     const taintedId = String(item.real_id || item.product_id || item.id);
                     const cleanBaseId = taintedId.includes('_') ? taintedId.split('_')[0] : taintedId;
@@ -496,6 +499,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         real_id: cleanBaseId,         
                         name: item.name || 'Producto',
                         price: itemBestPrice,
+                        pmPrice: itemPmPrice,         // 🍎 Inyectado
                         basePrice: itemMaxPrice,
                         qty: parseInt(item.quantity || item.qty || 1),
                         storeName: item.storeName || item.store_name || 'Gymenez Store',
@@ -570,10 +574,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     const cartData = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
                     const itemsToProcess = cartData.items || cartData || [];
 
-                    // 🍎 INYECCIÓN ZERO-TRUST PARA PAYPAL CAPTURE
+                    // 🍎 INYECCIÓN ZERO-TRUST PARA PAYPAL CAPTURE (AHORA CON 3 PRECIOS)
                     const cleanItems = itemsToProcess.map(item => {
                         const itemBestPrice = Number(parseFloat(item.price).toFixed(2));
                         const itemMaxPrice = Number(parseFloat(item.basePrice || item.price).toFixed(2));
+                        const itemPmPrice = Number(parseFloat(item.pmPrice || item.basePrice || item.price).toFixed(2)); // Fallback
                         
                         const taintedId = String(item.real_id || item.product_id || item.id);
                         const cleanBaseId = taintedId.includes('_') ? taintedId.split('_')[0] : taintedId;
@@ -584,6 +589,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             real_id: cleanBaseId,
                             name: item.name || 'Producto',
                             price: itemBestPrice,
+                            pmPrice: itemPmPrice,         // 🍎 Inyectado
                             basePrice: itemMaxPrice,
                             qty: parseInt(item.quantity || item.qty || 1),
                             storeName: item.storeName || item.store_name || 'Gymenez Store',
