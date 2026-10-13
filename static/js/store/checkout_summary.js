@@ -13,6 +13,7 @@ function renderCartSummary() {
     
     let rawTotal = 0;   
     let finalTotal = 0; 
+    let sumBestPrices = 0; // Guardamos el mejor total posible para el Upsell
     let hasOnDemand = false;
     const storeSet = new Set();
     
@@ -68,6 +69,8 @@ function renderCartSummary() {
         // 🍎 Extraemos los dos precios guardados desde product.js
         const bestPrice = parseFloat(item.price);
         const maxPrice = parseFloat(item.basePrice || item.price);
+        
+        sumBestPrices += (bestPrice * qty);
         
         // El precio final se decide según el método de pago seleccionado
         const itemFinalPrice = (window.currentPaymentMethod === 'binance') ? bestPrice : maxPrice;
@@ -179,17 +182,37 @@ function renderCartSummary() {
     document.getElementById('summary-raw-total').innerText = `$${formatMoney(rawTotal)}`;
     document.getElementById('summary-total').innerText = `$${formatMoney(cartTotal)}`;
     
+    // 🧠 3. LÓGICA DEL GANCHO VISUAL DINÁMICO
     const savingsRow = document.getElementById('summary-savings-row');
-    if (savingsRow) {
-        if (totalSavings > 0 && window.currentPaymentMethod === 'binance') {
+    const savingsText = document.getElementById('summary-savings-text');
+    const savingsAmount = document.getElementById('summary-savings');
+    
+    // Calculamos el máximo ahorro posible si pagara con Binance
+    const potentialSavings = rawTotal - sumBestPrices;
+
+    if (savingsRow && savingsText && savingsAmount) {
+        if (potentialSavings > 0) {
             savingsRow.classList.remove('hidden');
-            document.getElementById('summary-savings').innerText = `-$${formatMoney(totalSavings)}`;
+            
+            if (window.currentPaymentMethod === 'binance') {
+                // AHORRO APLICADO (Verde)
+                savingsRow.className = "flex justify-between items-center text-emerald-400 bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20";
+                savingsText.innerText = "✅ Ahorro Binance Pay Aplicado";
+                savingsAmount.innerText = `-$${formatMoney(potentialSavings)}`;
+            } else {
+                // GANCHO VISUAL UPSELL (Dorado/Naranja)
+                savingsRow.className = "flex justify-between items-center text-[#FFC300] bg-[#FFC300]/10 p-2 rounded-lg border border-[#FFC300]/30 shadow-[0_0_15px_rgba(255,195,0,0.15)]";
+                
+                const percentOff = Math.round((potentialSavings / rawTotal) * 100);
+                savingsText.innerHTML = `💡 <span class="ml-1">Ahorra con Binance Pay (-${percentOff}%) al final</span>`;
+                savingsAmount.innerText = `$${formatMoney(potentialSavings)}`;
+            }
         } else {
             savingsRow.classList.add('hidden');
         }
     }
 
-    // 🧠 3. ALERTAS DE LOGÍSTICA (ESTRICTAS Y REACTIVAS)
+    // 🧠 4. ALERTAS DE LOGÍSTICA (ESTRICTAS Y REACTIVAS)
     const alertMulti = document.getElementById('alert-multi-store');
     const alertOnDemand = document.getElementById('alert-on-demand');
     const alertFreeShipping = document.getElementById('alert-free-shipping');
