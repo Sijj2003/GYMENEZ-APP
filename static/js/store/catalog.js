@@ -82,7 +82,8 @@ async function loadStoreCatalog() {
 
     grid.innerHTML = renderSkeletons(8);
 
-    const rawCache = sessionStorage.getItem('gymenez_catalog');
+    // 🍎 ACTUALIZACIÓN QUIRÚRGICA: Cambiamos la key del caché para forzar recarga
+    const rawCache = sessionStorage.getItem('gymenez_catalog_v2'); 
 
     if (rawCache) {
         try {
@@ -113,7 +114,8 @@ async function loadStoreCatalog() {
                 products: data.products,
                 timestamp: new Date().getTime()
             };
-            sessionStorage.setItem('gymenez_catalog', JSON.stringify(cachePayload));
+            // 🍎 ACTUALIZACIÓN QUIRÚRGICA: Guardar en la nueva key
+            sessionStorage.setItem('gymenez_catalog_v2', JSON.stringify(cachePayload));
             
             applyCategoryFilter(); 
         } else {
