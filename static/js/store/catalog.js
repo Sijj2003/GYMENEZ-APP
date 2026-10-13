@@ -83,7 +83,7 @@ async function loadStoreCatalog() {
     grid.innerHTML = renderSkeletons(8);
 
     // 🍎 ACTUALIZACIÓN QUIRÚRGICA: Cambiamos la key del caché para forzar recarga
-    const rawCache = sessionStorage.getItem('gymenez_catalog_v2'); 
+    const rawCache = sessionStorage.getItem('gymenez_catalog_v3'); // Forzamos nueva key
 
     if (rawCache) {
         try {
@@ -115,7 +115,7 @@ async function loadStoreCatalog() {
                 timestamp: new Date().getTime()
             };
             // 🍎 ACTUALIZACIÓN QUIRÚRGICA: Guardar en la nueva key
-            sessionStorage.setItem('gymenez_catalog_v2', JSON.stringify(cachePayload));
+            sessionStorage.setItem('gymenez_catalog_v3', JSON.stringify(cachePayload));
             
             applyCategoryFilter(); 
         } else {
@@ -250,19 +250,25 @@ function renderSearchDropdown(results, container) {
         const bestPriceNum = p.display_best_price ? parseFloat(p.display_best_price) : parseFloat(p.price_usd);
         const maxPriceNum = p.display_max_price ? parseFloat(p.display_max_price) : parseFloat(p.price_usd);
         
-        // 🍎 CÁLCULO VISUAL REAL: Diferencia porcentual entre el precio más alto y el de Binance
-        let visualDiscount = 0;
+        // 🍎 LÓGICA DE MARKETING: Descuento real vs Pasarela
+        const baseOriginalPrice = parseFloat(p.price_usd || 0);
+        const partnerDiscountPercentage = parseInt(p.discount_percentage || p.discount) || 0;
+        
+        let gatewayDiscount = 0;
         if (maxPriceNum > bestPriceNum) {
-            visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+            gatewayDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
         }
+        
+        // Elegimos el mayor descuento
+        const visualDiscount = Math.max(partnerDiscountPercentage, gatewayDiscount);
         const hasDiscount = visualDiscount > 0;
 
         const bestPrice = bestPriceNum.toFixed(2);
-        const maxPrice = maxPriceNum.toFixed(2);
+        // Tachamos el mayor precio
+        const maxPrice = Math.max(baseOriginalPrice, maxPriceNum).toFixed(2);
         
-        // Lógica visual para la lupa (sólo tacha si el precio es mayor)
         let priceBlock = '';
-        if (maxPriceNum > bestPriceNum) {
+        if (hasDiscount) {
             priceBlock = `
                 <p class="text-[9px] text-gray-500 line-through leading-none">$${maxPrice}</p>
                 <p class="text-xs font-black text-[#FFC300] mt-1">$${bestPrice}</p>
@@ -271,7 +277,6 @@ function renderSearchDropdown(results, container) {
             priceBlock = `<p class="text-xs font-black text-white mt-1">$${bestPrice}</p>`;
         }
         
-        // Inyectamos la etiqueta con el porcentaje visual real
         if (hasDiscount) {
             priceBlock += `<p class="text-[8px] text-red-500 font-bold uppercase mt-1">-${visualDiscount}% OFF</p>`;
         }
@@ -317,15 +322,22 @@ function renderProductsGrid(productsToRender) {
         const bestPriceNum = p.display_best_price ? parseFloat(p.display_best_price) : parseFloat(p.price_usd);
         const maxPriceNum = p.display_max_price ? parseFloat(p.display_max_price) : parseFloat(p.price_usd);
         
-        // 🍎 CÁLCULO VISUAL REAL: Diferencia porcentual entre el precio más alto y el de Binance
-        let visualDiscount = 0;
+        // 🍎 LÓGICA DE MARKETING: Descuento real vs Pasarela
+        const baseOriginalPrice = parseFloat(p.price_usd || 0);
+        const partnerDiscountPercentage = parseInt(p.discount_percentage || p.discount) || 0;
+        
+        let gatewayDiscount = 0;
         if (maxPriceNum > bestPriceNum) {
-            visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+            gatewayDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
         }
+
+        // Elegimos el mayor descuento
+        const visualDiscount = Math.max(partnerDiscountPercentage, gatewayDiscount);
         const hasDiscount = visualDiscount > 0;
 
         const bestPrice = bestPriceNum.toFixed(2);
-        const maxPrice = maxPriceNum.toFixed(2);
+        // Tachamos el mayor precio
+        const maxPrice = Math.max(baseOriginalPrice, maxPriceNum).toFixed(2);
         
         const storeName = p.store_name || 'Gymenez Partner';
 
@@ -343,7 +355,7 @@ function renderProductsGrid(productsToRender) {
 
         // 🍎 Lógica visual segura para la cuadrícula
         let priceBlockHtml = '';
-        if (maxPriceNum > bestPriceNum) {
+        if (hasDiscount) {
             priceBlockHtml = `
                 <div class="flex flex-col">
                     <span class="text-[9px] md:text-[10px] text-gray-500 line-through leading-none">$${maxPrice}</span>
