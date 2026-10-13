@@ -236,18 +236,25 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
     
     if (typeof vaultInterval !== 'undefined') clearInterval(vaultInterval);
 
-    const cleanItems = (typeof cartItems !== 'undefined' ? cartItems : []).map(item => ({
-        id: item.id,
-        real_id: item.real_id || item.id,
-        name: item.name,
-        price: item.price,
-        qty: item.quantity || item.qty || 1,
-        storeName: item.storeName || item.store_name || 'Gymenez Store',
-        weight_kg: item.weight_kg || 1,
-        free_shipping: item.free_shipping === true || item.free_shipping === 'true',
-        is_on_demand: item.is_on_demand === true || item.is_on_demand === 'true',
-        free_shipping_threshold: parseFloat(item.free_shipping_threshold || 0)
-    }));
+    // 🍎 INYECCIÓN ZERO-TRUST PARA PAGO MÓVIL Y BINANCE
+    const cleanItems = (typeof cartItems !== 'undefined' ? cartItems : []).map(item => {
+        const itemBestPrice = parseFloat(item.price);
+        const itemMaxPrice = parseFloat(item.basePrice || item.price);
+        
+        return {
+            id: item.id,
+            real_id: item.real_id || item.id,
+            name: item.name,
+            price: itemBestPrice,
+            basePrice: itemMaxPrice,
+            qty: item.quantity || item.qty || 1,
+            storeName: item.storeName || item.store_name || 'Gymenez Store',
+            weight_kg: item.weight_kg || 1,
+            free_shipping: item.free_shipping === true || item.free_shipping === 'true',
+            is_on_demand: item.is_on_demand === true || item.is_on_demand === 'true',
+            free_shipping_threshold: parseFloat(item.free_shipping_threshold || 0)
+        };
+    });
 
     const toggleFreeShipping = document.getElementById('toggle-free-shipping');
     const wantsFreeShipping = toggleFreeShipping ? toggleFreeShipping.checked : false;
@@ -444,20 +451,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 const cartData = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
                 const itemsToProcess = cartData.items || cartData || [];
 
-                // 🛡️ REPLICA EXACTA CON LIMPIEZA EXTREMA DEL ID
+                // 🍎 INYECCIÓN ZERO-TRUST PARA PAYPAL CREATE
                 const cleanItems = itemsToProcess.map(item => {
-                    const finalPrice = Number(parseFloat(item.price).toFixed(2));
+                    const itemBestPrice = Number(parseFloat(item.price).toFixed(2));
+                    const itemMaxPrice = Number(parseFloat(item.basePrice || item.price).toFixed(2));
                     
-                    // 🔥 LIMPIEZA ABSOLUTA: Agarramos CUALQUIER ID que tenga y le cortamos la talla (_0)
                     const taintedId = String(item.real_id || item.product_id || item.id);
                     const cleanBaseId = taintedId.includes('_') ? taintedId.split('_')[0] : taintedId;
 
                     return {
-                        id: cleanBaseId,              // 🔥 OBLIGAMOS a Python a ver el ID limpio
-                        variant_id: String(item.id),  // Guardamos la talla aquí para la factura
-                        real_id: cleanBaseId,         // Limpio de nuevo por seguridad
+                        id: cleanBaseId,              
+                        variant_id: String(item.id),  
+                        real_id: cleanBaseId,         
                         name: item.name || 'Producto',
-                        price: finalPrice, 
+                        price: itemBestPrice,
+                        basePrice: itemMaxPrice,
                         qty: parseInt(item.quantity || item.qty || 1),
                         storeName: item.storeName || item.store_name || 'Gymenez Store',
                         weight_kg: item.weight_kg || 1,
@@ -531,9 +539,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     const cartData = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
                     const itemsToProcess = cartData.items || cartData || [];
 
-                    // 🛡️ REPLICA EXACTA CON LIMPIEZA EXTREMA PARA CAPTURA
+                    // 🍎 INYECCIÓN ZERO-TRUST PARA PAYPAL CAPTURE
                     const cleanItems = itemsToProcess.map(item => {
-                        const finalPrice = Number(parseFloat(item.price).toFixed(2));
+                        const itemBestPrice = Number(parseFloat(item.price).toFixed(2));
+                        const itemMaxPrice = Number(parseFloat(item.basePrice || item.price).toFixed(2));
+                        
                         const taintedId = String(item.real_id || item.product_id || item.id);
                         const cleanBaseId = taintedId.includes('_') ? taintedId.split('_')[0] : taintedId;
 
@@ -542,7 +552,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             variant_id: String(item.id),
                             real_id: cleanBaseId,
                             name: item.name || 'Producto',
-                            price: finalPrice,
+                            price: itemBestPrice,
+                            basePrice: itemMaxPrice,
                             qty: parseInt(item.quantity || item.qty || 1),
                             storeName: item.storeName || item.store_name || 'Gymenez Store',
                             weight_kg: item.weight_kg || 1,
