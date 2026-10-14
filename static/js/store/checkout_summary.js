@@ -71,15 +71,25 @@ function renderCartSummary() {
         const pmPrice = parseFloat(item.pmPrice || item.basePrice || item.price); // Fallback por seguridad
         const maxPrice = parseFloat(item.basePrice || item.price);
         
-        // 🍎 LÓGICA DE MARKETING: Descuento real vs Pasarela (Igual que en Catálogo)
+        // 🍎 LÓGICA DE MARKETING: Separación estricta por modelo financiero
         const partnerDiscountPercentage = parseInt(item.discount || item.discount_percentage || 0);
-        let gatewayDiscount = 0;
-        if (maxPrice > bestPrice) {
-            gatewayDiscount = Math.round(((maxPrice - bestPrice) / maxPrice) * 100);
-        }
         
-        // Elegimos el mayor descuento para mostrar la etiqueta visual
-        const visualDiscount = Math.max(partnerDiscountPercentage, gatewayDiscount);
+        let visualDiscount = 0;
+        let priceToStrike = maxPrice;
+
+        if (maxPrice > bestPrice) {
+            // Híbrido / Neto Garantizado: Tachamos PayPal
+            visualDiscount = Math.round(((maxPrice - bestPrice) / maxPrice) * 100);
+            priceToStrike = maxPrice;
+        } else {
+            // Absorción B2B: Rescatar el precio base matemático del partner
+            visualDiscount = partnerDiscountPercentage;
+            if (partnerDiscountPercentage > 0) {
+                priceToStrike = bestPrice / (1 - (partnerDiscountPercentage / 100));
+            } else {
+                priceToStrike = maxPrice;
+            }
+        }
         
         sumBestPrices += (bestPrice * qty);
         
@@ -87,15 +97,6 @@ function renderCartSummary() {
         let itemFinalPrice = maxPrice; // Por defecto (PayPal o sin seleccionar)
         if (window.currentPaymentMethod === 'binance') itemFinalPrice = bestPrice;
         if (window.currentPaymentMethod === 'pago_movil') itemFinalPrice = pmPrice;
-        
-        // 🍎 El precio tachado ahora siempre es el MAX(precio_base_original, maxPrice)
-        // Para calcularlo aquí, usamos el descuento guardado o asumimos que maxPrice ya incluye la protección
-        let priceToStrike = maxPrice;
-        if (partnerDiscountPercentage > 0) {
-            // Si hay descuento del partner, calculamos el precio base original matemático
-            const assumedBaseOriginal = bestPrice / (1 - (partnerDiscountPercentage / 100));
-            priceToStrike = Math.max(assumedBaseOriginal, maxPrice);
-        }
         
         const priceToStrikeTotal = priceToStrike * qty;
         const finalPriceTotal = itemFinalPrice * qty;
