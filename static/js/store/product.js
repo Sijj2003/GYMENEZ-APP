@@ -92,23 +92,24 @@ function renderProduct() {
     const bestPriceNum = currentProduct.display_best_price ? parseFloat(currentProduct.display_best_price) : parseFloat(currentProduct.price_usd || currentProduct.price);
     const maxPriceNum = currentProduct.display_max_price ? parseFloat(currentProduct.display_max_price) : bestPriceNum;
     
-    // 🍎 LÓGICA DE MARKETING: Extraemos la oferta real del Partner (Base de la tienda)
+    // 🍎 LÓGICA DE MARKETING: Separación estricta por modelo financiero
     const baseOriginalPrice = parseFloat(currentProduct.price_usd || currentProduct.price || 0);
     const partnerDiscountPercentage = parseInt(currentProduct.discount_percentage || currentProduct.discount) || 0;
     
     finalPrice = bestPriceNum; // El precio de Binance pasa a ser la memoria del multiplicador de cantidad
 
-    // 🛡️ CÁLCULO DEL DESCUENTO VISUAL (EL MEJOR DE LOS DOS MUNDOS)
     let visualDiscount = 0;
-    
-    // 1. Calculamos el ahorro por método de pago (La diferencia entre PayPal y Binance)
-    let gatewayDiscount = 0;
-    if (maxPriceNum > bestPriceNum) {
-        gatewayDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
-    }
+    let priceToStrike = maxPriceNum;
 
-    // 2. Elegimos el descuento más atractivo para mostrar
-    visualDiscount = Math.max(partnerDiscountPercentage, gatewayDiscount);
+    if (maxPriceNum > bestPriceNum) {
+        // Híbrido / Neto Garantizado: Tachamos PayPal, mostramos el ahorro con Binance
+        visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+        priceToStrike = maxPriceNum;
+    } else {
+        // Absorción B2B (max == best): Tachamos el precio original del partner
+        visualDiscount = partnerDiscountPercentage;
+        priceToStrike = baseOriginalPrice;
+    }
 
     // 🛡️ Mostrar u ocultar etiqueta roja
     const badge = document.getElementById('prod-discount-badge');
@@ -121,13 +122,10 @@ function renderProduct() {
         if (badge) badge.classList.add('hidden');
     }
 
-    // 🛡️ Mostrar el precio original tachado
+    // 🛡️ Mostrar el precio tachado exacto
     const oldPriceEl = document.getElementById('prod-old-price');
-    
     if (visualDiscount > 0) {
         if (oldPriceEl) {
-            // Tachamos el precio más alto posible para maximizar el gancho psicológico
-            const priceToStrike = Math.max(baseOriginalPrice, maxPriceNum);
             oldPriceEl.innerText = `$${priceToStrike.toFixed(2)}`;
             oldPriceEl.classList.remove('hidden');
         }
