@@ -94,8 +94,13 @@ function renderOrdersGrid(ordersList) {
             statusBadge = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-inner animate-pulse">🟢 Por Enviar</span>`;
         }
 
+        // 🔥 CEREBRO FINANCIERO: Extraemos la ganancia neta para la tarjeta principal
+        const breakdown = order.financial_breakdown || {};
+        const realPartnerNet = parseFloat(breakdown.store_partner_net !== undefined ? breakdown.store_partner_net : order.my_total_usd || 0);
+
         // Formato de Fecha y Dinero
-        const totalUsd = Number(order.my_total_usd || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const totalNetUsdStr = realPartnerNet.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        
         let dateStr = 'Fecha Desconocida';
         if (order.created_at) {
             const d = new Date(order.created_at);
@@ -120,8 +125,8 @@ function renderOrdersGrid(ordersList) {
             </div>
             
             <div class="flex items-center justify-between pt-4 border-t border-white/5">
-                <span class="text-xs font-black text-gray-400">Total Venta:</span>
-                <span class="text-lg font-[900] italic text-[#FFC300] tracking-tighter drop-shadow-md">$${totalUsd}</span>
+                <span class="text-xs font-black text-gray-400">Neto a Liquidar:</span>
+                <span class="text-lg font-[900] italic text-[#FFC300] tracking-tighter drop-shadow-md">$${totalNetUsdStr}</span>
             </div>
         </div>
         `;
@@ -138,6 +143,13 @@ window.openOrderModal = function(orderId) {
     
     currentSelectedOrder = order;
 
+    // 🔥 CEREBRO FINANCIERO: Cálculo inmutable del recibo
+    const breakdown = order.financial_breakdown || {};
+    const grossUsd = parseFloat(order.my_total_usd || 0);
+    const netUsd = parseFloat(breakdown.store_partner_net !== undefined ? breakdown.store_partner_net : grossUsd);
+    const gymFee = parseFloat(breakdown.store_gymenez_fee || 0);
+    const gatewayFee = parseFloat(breakdown.store_gateway_fee || 0);
+
     // A) Llenar Datos Base
     document.getElementById('modal-order-id-title').innerText = `#${order.id}`;
     document.getElementById('modal-buyer-name').innerText = `${order.buyer_name || 'Desconocido'} • CI: ${order.buyer_doc || 'N/A'}`;
@@ -146,7 +158,10 @@ window.openOrderModal = function(orderId) {
     const sInfo = order.shipping_info || {};
     document.getElementById('modal-shipping-agency').innerText = `${sInfo.courier || 'Envío'} - ${sInfo.municipality || 'Agencia'}`;
     document.getElementById('modal-shipping-state').innerText = `${sInfo.state || ''}, ${sInfo.city || ''}`;
-    document.getElementById('modal-total-usd').innerText = `$${Number(order.my_total_usd || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    
+    // Mostramos el Neto en el header del Modal si existe el elemento
+    const headerTotalEl = document.getElementById('modal-total-usd');
+    if (headerTotalEl) headerTotalEl.innerText = `$${netUsd.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
 
     // B) Semáforo Lógico de Seguridad
     const semaforoEl = document.getElementById('modal-semaforo');
@@ -227,6 +242,32 @@ window.openOrderModal = function(orderId) {
                 <div class="text-right"><p class="text-sm font-[900] italic text-white">$${price}</p></div>
             </div>`;
     });
+
+    // 🔥 D) INYECCIÓN DEL RECIBO FINANCIERO (CEREBRO B2B)
+    itemsContainer.innerHTML += `
+        <div class="mt-4 pt-4 border-t border-white/10">
+            <h5 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Auditoría Financiera (${order.commission_model || 'No definido'})</h5>
+            <div class="space-y-2">
+                <div class="flex justify-between text-xs text-gray-400 font-bold">
+                    <span>Venta Bruta Procesada</span>
+                    <span>$${grossUsd.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                </div>
+                <div class="flex justify-between text-xs text-red-400 font-bold">
+                    <span>Fee Operativo (Gymenez)</span>
+                    <span>-$${gymFee.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                </div>
+                ${gatewayFee > 0 ? `
+                <div class="flex justify-between text-xs text-orange-400 font-bold">
+                    <span>Fee Pasarela Bancaria</span>
+                    <span>-$${gatewayFee.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                </div>` : ''}
+                <div class="flex justify-between text-sm text-emerald-400 font-[900] italic pt-2 border-t border-white/5 mt-2">
+                    <span>Neto a Liquidar</span>
+                    <span>$${netUsd.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                </div>
+            </div>
+        </div>
+    `;
 
     // Mostrar Panel Fluido
     const backdrop = document.getElementById('order-modal-backdrop');
