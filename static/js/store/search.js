@@ -127,22 +127,26 @@ function renderInstantResults(results, container, platform, originalQuery) {
         const bestPriceNum = item.display_best_price ? parseFloat(item.display_best_price) : parseFloat(item.price_usd);
         const maxPriceNum = item.display_max_price ? parseFloat(item.display_max_price) : parseFloat(item.price_usd);
         
-        // 🍎 LÓGICA DE MARKETING: Descuento real vs Pasarela
+        // 🍎 LÓGICA DE MARKETING: Separación estricta por modelo financiero
         const baseOriginalPrice = parseFloat(item.price_usd || 0);
         const partnerDiscountPercentage = parseInt(item.discount_percentage || item.discount) || 0;
         
-        let gatewayDiscount = 0;
+        let visualDiscount = 0;
+        let priceToStrike = maxPriceNum;
+
         if (maxPriceNum > bestPriceNum) {
-            gatewayDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+            // Híbrido / Neto Garantizado: Tachamos PayPal
+            visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+            priceToStrike = maxPriceNum;
+        } else {
+            // Absorción B2B: Tachamos precio original
+            visualDiscount = partnerDiscountPercentage;
+            priceToStrike = baseOriginalPrice;
         }
 
-        // Elegimos el mayor descuento
-        const visualDiscount = Math.max(partnerDiscountPercentage, gatewayDiscount);
         const hasDiscount = visualDiscount > 0;
-
         const bestPrice = bestPriceNum.toFixed(2);
-        // Tachamos el mayor precio
-        const maxPrice = Math.max(baseOriginalPrice, maxPriceNum).toFixed(2);
+        const maxPrice = priceToStrike.toFixed(2);
 
         const isOnDemand = (item.is_on_demand === true || item.is_on_demand === 'true' || item.is_on_demand === 'True');
         const hasFreeShipping = (item.free_shipping === true || item.free_shipping === 'true' || item.free_shipping === 'True');
@@ -342,22 +346,26 @@ function renderDeepResults(productsToRender, grid) {
         const bestPriceNum = p.display_best_price ? parseFloat(p.display_best_price) : parseFloat(p.price_usd);
         const maxPriceNum = p.display_max_price ? parseFloat(p.display_max_price) : parseFloat(p.price_usd);
         
-        // 🍎 LÓGICA DE MARKETING: Descuento real vs Pasarela
+        // 🍎 LÓGICA DE MARKETING: Separación estricta por modelo financiero
         const baseOriginalPrice = parseFloat(p.price_usd || 0);
         const partnerDiscountPercentage = parseInt(p.discount_percentage || p.discount) || 0;
         
-        let gatewayDiscount = 0;
+        let visualDiscount = 0;
+        let priceToStrike = maxPriceNum;
+
         if (maxPriceNum > bestPriceNum) {
-            gatewayDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+            // Híbrido / Neto Garantizado: Tachamos PayPal
+            visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+            priceToStrike = maxPriceNum;
+        } else {
+            // Absorción B2B: Tachamos precio original
+            visualDiscount = partnerDiscountPercentage;
+            priceToStrike = baseOriginalPrice;
         }
 
-        // Elegimos el mayor descuento
-        const visualDiscount = Math.max(partnerDiscountPercentage, gatewayDiscount);
         const hasDiscount = visualDiscount > 0;
-
         const bestPrice = bestPriceNum.toFixed(2);
-        // Tachamos el mayor precio
-        const maxPrice = Math.max(baseOriginalPrice, maxPriceNum).toFixed(2);
+        const maxPrice = priceToStrike.toFixed(2);
 
         const isOnDemand = (p.is_on_demand === true || p.is_on_demand === 'true' || p.is_on_demand === 'True');
         const hasFreeShipping = (p.free_shipping === true || p.free_shipping === 'true' || p.free_shipping === 'True');
