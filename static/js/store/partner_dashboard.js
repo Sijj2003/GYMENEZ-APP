@@ -73,9 +73,9 @@ function calculateMetrics(orders, catalog) {
         }
 
         // Escrow (Retenido Seguro: Pagos confirmados, orden aún no liquidada)
-        if (globalStatus === 'processing' || globalStatus === 'enviado') {
-            netEscrow += realPartnerEarnings;
-        }
+    if (globalStatus === 'processing' || globalStatus === 'approved' || globalStatus === 'enviado') {
+        netEscrow += realPartnerEarnings;
+    }
 
         // 🎯 CORRECCIÓN INFALIBLE: Lógica espejo del panel de Órdenes
         // Si NO está esperando pago, NO ha sido cancelada/completada, y el partner NO la ha enviado...
