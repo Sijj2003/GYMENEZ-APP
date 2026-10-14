@@ -73,8 +73,8 @@ async function loadVendorEcosystem(identifier) {
     // 2. CARGAR CATÁLOGO GLOBAL Y FILTRAR (Zero-Trust)
     // ==========================================
     let allProducts = [];
-    // 🍎 Usamos v3 para forzar la recarga con la nueva matemática de precios
-    const rawCatalogCache = sessionStorage.getItem('gymenez_catalog_v3');
+    // 🍎 Usamos v4 para sincronizar con la nueva matemática de precios del catálogo
+    const rawCatalogCache = sessionStorage.getItem('gymenez_catalog_v4');
     
     if (rawCatalogCache) {
         try {
@@ -92,7 +92,7 @@ async function loadVendorEcosystem(identifier) {
             const data = await res.json();
             if (data.success) {
                 allProducts = data.products;
-                sessionStorage.setItem('gymenez_catalog_v3', JSON.stringify({products: allProducts, timestamp: new Date().getTime()}));
+                sessionStorage.setItem('gymenez_catalog_v4', JSON.stringify({products: allProducts, timestamp: new Date().getTime()}));
             }
         } catch(e) { console.error('Error cargando catálogo', e); }
     }
@@ -158,22 +158,26 @@ function renderVendorProducts(products) {
         const bestPriceNum = p.display_best_price ? parseFloat(p.display_best_price) : parseFloat(p.price_usd);
         const maxPriceNum = p.display_max_price ? parseFloat(p.display_max_price) : parseFloat(p.price_usd);
         
-        // 🍎 LÓGICA DE MARKETING: Descuento real vs Pasarela
+        // 🍎 LÓGICA DE MARKETING: Separación estricta por modelo financiero
         const baseOriginalPrice = parseFloat(p.price_usd || 0);
         const partnerDiscountPercentage = parseInt(p.discount_percentage || p.discount) || 0;
         
-        let gatewayDiscount = 0;
+        let visualDiscount = 0;
+        let priceToStrike = maxPriceNum;
+
         if (maxPriceNum > bestPriceNum) {
-            gatewayDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+            // Híbrido / Neto Garantizado: Tachamos PayPal
+            visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+            priceToStrike = maxPriceNum;
+        } else {
+            // Absorción B2B: Tachamos precio original
+            visualDiscount = partnerDiscountPercentage;
+            priceToStrike = baseOriginalPrice;
         }
 
-        // Elegimos el mayor descuento
-        const visualDiscount = Math.max(partnerDiscountPercentage, gatewayDiscount);
         const hasDiscount = visualDiscount > 0;
-
         const bestPrice = bestPriceNum.toFixed(2);
-        // Tachamos el mayor precio (El original o el inflado)
-        const maxPrice = Math.max(baseOriginalPrice, maxPriceNum).toFixed(2);
+        const maxPrice = priceToStrike.toFixed(2);
 
         const storeName = p.store_name || 'Gymenez Partner';
         const category = p.category || 'General';
