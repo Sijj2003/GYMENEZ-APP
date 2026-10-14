@@ -54,8 +54,8 @@ window.filterOrders = function() {
         if (statusVal === 'pending_verification') {
             matchesStatus = order.global_payment_status === 'pending_verification';
         } else if (statusVal === 'processing') {
-            matchesStatus = (order.global_payment_status === 'processing' || order.global_payment_status === 'liquidated') && order.partner_shipping_status !== 'shipped';
-        } else if (statusVal === 'shipped') {
+        matchesStatus = (order.global_payment_status === 'processing' || order.global_payment_status === 'approved' || order.global_payment_status === 'liquidated') && order.partner_shipping_status !== 'shipped';
+    } else if (statusVal === 'shipped') {
             matchesStatus = order.partner_shipping_status === 'shipped';
         }
 
