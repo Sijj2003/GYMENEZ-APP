@@ -46,14 +46,16 @@ function calculateMetrics(orders, catalog) {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    let monthlySales = 0;
-    let netEscrow = 0;
+    let monthlyNetSales = 0; // 🍎 AHORA ES NETO REAL
+    let netEscrow = 0;       // 🍎 AHORA ES NETO REAL
     let pendingOrdersCount = 0;
     let lowStockCount = 0;
 
     // 1️⃣ CALCULAR MÉTRICAS FINANCIERAS Y OPERATIVAS
     orders.forEach(order => {
-        const orderTotal = parseFloat(order.my_total_usd || 0);
+        // 🔥 CEREBRO FINANCIERO: Extraemos la ganancia neta a liquidar (Con fallback a ventas brutas si es una orden antigua)
+        const breakdown = order.financial_breakdown || {};
+        const realPartnerEarnings = parseFloat(breakdown.store_partner_net !== undefined ? breakdown.store_partner_net : order.my_total_usd || 0);
         
         // Estandarizamos los estados (los pasamos a minúsculas para evitar errores)
         const globalStatus = (order.global_payment_status || '').toLowerCase();
@@ -65,14 +67,14 @@ function calculateMetrics(orders, catalog) {
             if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
                 // Solo sumar a las ventas si el pago no fue rechazado
                 if (globalStatus !== 'failed' && globalStatus !== 'cancelled') {
-                    monthlySales += orderTotal;
+                    monthlyNetSales += realPartnerEarnings;
                 }
             }
         }
 
         // Escrow (Retenido Seguro: Pagos confirmados, orden aún no liquidada)
         if (globalStatus === 'processing' || globalStatus === 'enviado') {
-            netEscrow += orderTotal;
+            netEscrow += realPartnerEarnings;
         }
 
         // 🎯 CORRECCIÓN INFALIBLE: Lógica espejo del panel de Órdenes
@@ -109,7 +111,7 @@ function calculateMetrics(orders, catalog) {
     });
 
     // 3️⃣ DISPARAR ANIMACIONES DE NÚMEROS
-    animateValue("metric-sales", 0, monthlySales, 1500, true);
+    animateValue("metric-sales", 0, monthlyNetSales, 1500, true);
     animateValue("metric-escrow", 0, netEscrow, 1500, true);
     animateValue("metric-orders", 0, pendingOrdersCount, 1500, false);
     animateValue("metric-stock", 0, lowStockCount, 1500, false);
