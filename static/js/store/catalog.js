@@ -82,8 +82,8 @@ async function loadStoreCatalog() {
 
     grid.innerHTML = renderSkeletons(8);
 
-    // 🍎 ACTUALIZACIÓN QUIRÚRGICA: Cambiamos la key del caché para forzar recarga
-    const rawCache = sessionStorage.getItem('gymenez_catalog_v3'); // Forzamos nueva key
+    // 🍎 ACTUALIZACIÓN QUIRÚRGICA: Cambiamos a v4 para limpiar cachés viejos con la lógica anterior
+    const rawCache = sessionStorage.getItem('gymenez_catalog_v4'); 
 
     if (rawCache) {
         try {
@@ -114,8 +114,8 @@ async function loadStoreCatalog() {
                 products: data.products,
                 timestamp: new Date().getTime()
             };
-            // 🍎 ACTUALIZACIÓN QUIRÚRGICA: Guardar en la nueva key
-            sessionStorage.setItem('gymenez_catalog_v3', JSON.stringify(cachePayload));
+            // 🍎 Guardar en la nueva key v4
+            sessionStorage.setItem('gymenez_catalog_v4', JSON.stringify(cachePayload));
             
             applyCategoryFilter(); 
         } else {
@@ -250,22 +250,26 @@ function renderSearchDropdown(results, container) {
         const bestPriceNum = p.display_best_price ? parseFloat(p.display_best_price) : parseFloat(p.price_usd);
         const maxPriceNum = p.display_max_price ? parseFloat(p.display_max_price) : parseFloat(p.price_usd);
         
-        // 🍎 LÓGICA DE MARKETING: Descuento real vs Pasarela
+        // 🍎 LÓGICA DE MARKETING: Separación estricta por modelo financiero
         const baseOriginalPrice = parseFloat(p.price_usd || 0);
         const partnerDiscountPercentage = parseInt(p.discount_percentage || p.discount) || 0;
         
-        let gatewayDiscount = 0;
-        if (maxPriceNum > bestPriceNum) {
-            gatewayDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
-        }
-        
-        // Elegimos el mayor descuento
-        const visualDiscount = Math.max(partnerDiscountPercentage, gatewayDiscount);
-        const hasDiscount = visualDiscount > 0;
+        let visualDiscount = 0;
+        let priceToStrike = maxPriceNum;
 
+        if (maxPriceNum > bestPriceNum) {
+            // Híbrido / Neto Garantizado: Tachamos PayPal
+            visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+            priceToStrike = maxPriceNum;
+        } else {
+            // Absorción B2B: Tachamos precio original
+            visualDiscount = partnerDiscountPercentage;
+            priceToStrike = baseOriginalPrice;
+        }
+
+        const hasDiscount = visualDiscount > 0;
         const bestPrice = bestPriceNum.toFixed(2);
-        // Tachamos el mayor precio
-        const maxPrice = Math.max(baseOriginalPrice, maxPriceNum).toFixed(2);
+        const maxPrice = priceToStrike.toFixed(2);
         
         let priceBlock = '';
         if (hasDiscount) {
@@ -322,22 +326,26 @@ function renderProductsGrid(productsToRender) {
         const bestPriceNum = p.display_best_price ? parseFloat(p.display_best_price) : parseFloat(p.price_usd);
         const maxPriceNum = p.display_max_price ? parseFloat(p.display_max_price) : parseFloat(p.price_usd);
         
-        // 🍎 LÓGICA DE MARKETING: Descuento real vs Pasarela
+        // 🍎 LÓGICA DE MARKETING: Separación estricta por modelo financiero
         const baseOriginalPrice = parseFloat(p.price_usd || 0);
         const partnerDiscountPercentage = parseInt(p.discount_percentage || p.discount) || 0;
         
-        let gatewayDiscount = 0;
+        let visualDiscount = 0;
+        let priceToStrike = maxPriceNum;
+
         if (maxPriceNum > bestPriceNum) {
-            gatewayDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+            // Híbrido / Neto Garantizado: Tachamos PayPal
+            visualDiscount = Math.round(((maxPriceNum - bestPriceNum) / maxPriceNum) * 100);
+            priceToStrike = maxPriceNum;
+        } else {
+            // Absorción B2B: Tachamos precio original
+            visualDiscount = partnerDiscountPercentage;
+            priceToStrike = baseOriginalPrice;
         }
 
-        // Elegimos el mayor descuento
-        const visualDiscount = Math.max(partnerDiscountPercentage, gatewayDiscount);
         const hasDiscount = visualDiscount > 0;
-
         const bestPrice = bestPriceNum.toFixed(2);
-        // Tachamos el mayor precio
-        const maxPrice = Math.max(baseOriginalPrice, maxPriceNum).toFixed(2);
+        const maxPrice = priceToStrike.toFixed(2);
         
         const storeName = p.store_name || 'Gymenez Partner';
 
