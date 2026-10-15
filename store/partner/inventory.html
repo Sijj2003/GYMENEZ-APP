@@ -65,6 +65,9 @@
             flex-shrink: 0 !important;
             margin: 0 !important;
             position: relative !important;
+            background: transparent !important; /* Elimina fondo cuadrado si lo hay */
+            border: none !important;
+            padding: 0 !important;
         }
         
         /* Imagen limpia */
@@ -74,12 +77,13 @@
             object-fit: cover !important;
             border-radius: 12px !important;
             position: relative !important;
+            margin-bottom: 8px !important;
         }
 
         /* Elementos que flotaban SOBRE la imagen ahora van DEBAJO de ella */
         .view-mode-list > div > :first-child > *:not(img) {
             position: static !important; /* Quita la posición absoluta */
-            margin-top: 8px !important; /* Separación visual */
+            margin-top: 4px !important; /* Separación visual */
             width: 100% !important;
             text-align: center !important;
             transform: none !important;
@@ -110,15 +114,28 @@
             word-break: break-word !important;
         }
         
-        /* Controles / Botones */
+        /* Ajuste de div interno para titulo y categorias */
+        .view-mode-list > div > :nth-child(2) > :first-child {
+            margin-bottom: 0 !important;
+            flex: 1 !important;
+        }
+
+        /* Controles / Botones (El div inferior de la tarjeta original) */
         .view-mode-list > div > :nth-child(2) > :last-child {
             display: flex !important;
-            flex-direction: column !important; /* PC: Botones apilados verticalmente */
+            flex-direction: column !important; /* PC: Precios y botones apilados verticalmente */
             align-items: flex-end !important;
             gap: 8px !important;
             margin-top: 0 !important;
             flex-shrink: 0 !important;
             min-width: 120px !important;
+            border-top: none !important; /* Elimina la linea separadora */
+            padding-top: 0 !important;
+        }
+        
+        /* Asegura que los precios se alineen a la derecha en PC */
+        .view-mode-list > div > :nth-child(2) > :last-child > :first-child {
+             text-align: right !important;
         }
 
         /* ========================================================================= */
@@ -147,14 +164,18 @@
             .view-mode-list > div > :nth-child(2) > :last-child {
                 flex-direction: row !important;
                 align-items: center !important;
-                justify-content: flex-start !important;
+                justify-content: space-between !important;
                 width: 100% !important;
                 margin-top: 12px !important;
+                border-top: 1px solid rgba(255,255,255,0.05) !important;
+                padding-top: 12px !important;
+            }
+            .view-mode-list > div > :nth-child(2) > :last-child > :first-child {
+                 text-align: left !important;
             }
         }
     </style>
 </head>
-<!-- 🔥 FIX SCROLL (Scroll Nativo) -->
 <body class="bg-[#030305] text-white selection:bg-[#FFC300] selection:text-black min-h-screen md:h-screen flex flex-col md:flex-row relative overflow-x-hidden md:overflow-hidden">
 
     <script>
@@ -328,7 +349,6 @@
     <div id="product-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-6 opacity-0 transition-opacity duration-300">
         <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-5xl rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500 flex flex-col max-h-[95vh] md:max-h-[90vh]">
             
-            <!-- Cabecera Fija del Modal -->
             <div class="flex justify-between items-center p-6 md:p-8 border-b border-white/5 shrink-0 bg-[#0a0a0f] md:rounded-t-[2.5rem]">
                 <h3 class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white">Gestor de <span class="text-[#FFC300]">Inventario</span></h3>
                 <button onclick="if(typeof closeModal === 'function') closeModal()" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition">
@@ -336,12 +356,10 @@
                 </button>
             </div>
 
-            <!-- Cuerpo Scrolleable del Formulario -->
             <div class="p-5 md:p-8 overflow-y-auto custom-scroll flex-1">
                 <form id="add-product-form" class="space-y-6 md:space-y-8">
                     <input type="hidden" id="prod-id" value="">
 
-                    <!-- Bloque 1: Datos Base -->
                     <div class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-white/5 relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
@@ -397,7 +415,6 @@
                         </div>
                     </div>
 
-                    <!-- Bloque 2: Logística y Multimedia -->
                     <div class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-white/5 relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
@@ -430,7 +447,6 @@
                         </div>
                     </div>
 
-                    <!-- Bloque 3: Constructor de Variantes -->
                     <div id="variants-master-container" class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.05)] hidden relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="flex items-center justify-between mb-6 border-b border-white/5 pb-4 relative z-10">
@@ -455,7 +471,6 @@
                         </div>
                     </div>
 
-                    <!-- Bloque 4: Configuraciones Avanzadas -->
                     <div class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-white/5 relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
@@ -500,7 +515,6 @@
                 </form>
             </div>
 
-            <!-- Pie del Modal Fijo -->
             <div class="p-6 md:p-8 border-t border-white/5 shrink-0 flex flex-col sm:flex-row justify-end gap-4 bg-[#0a0a0f] md:rounded-b-[2.5rem]">
                 <button onclick="if(typeof closeModal === 'function') closeModal()" class="w-full sm:w-auto px-6 py-4 md:px-8 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 border border-white/10 hover:text-white hover:bg-white/5 transition">Cancelar</button>
                 <button onclick="if(typeof submitProduct === 'function') submitProduct(event)" id="btn-save-prod" class="w-full sm:w-auto bg-[#FFC300] text-black px-8 py-4 md:px-10 rounded-full text-[10px] md:text-xs font-[900] uppercase tracking-widest hover:bg-yellow-400 transition shadow-[0_10px_20px_rgba(255,195,0,0.3)] flex items-center justify-center gap-2">
