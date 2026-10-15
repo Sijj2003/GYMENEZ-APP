@@ -31,114 +31,116 @@
         }
 
         /* ========================================================================= */
-        /* 🔥 MAGIA CSS: MODO LISTA PROFESIONAL (IMAGEN DESPEJADA Y FLUIDA)          */
+        /* 🔥 MAGIA CSS: MODO LISTA PROFESIONAL (ESTILO CUPERTINO RESPONSIVO)        */
         /* ========================================================================= */
         .view-mode-list {
             display: flex !important;
             flex-direction: column !important;
-            gap: 16px !important;
+            gap: 12px !important;
         }
         
         .view-mode-list .product-card {
             flex-direction: row !important;
             height: auto !important;
-            min-height: 140px !important;
+            min-height: 100px !important;
             align-items: stretch !important;
-            border-radius: 1.5rem !important;
-            padding: 0 !important; 
+            border-radius: 1.25rem !important;
+            padding: 12px !important; /* Padding general de la tarjeta */
+            background: rgba(18, 18, 26, 0.6) !important;
         }
 
-        /* 1. Contenedor Imagen (Alto completo a la izquierda, libre de textos) */
+        /* 1. Contenedor Imagen (Despejado a la izquierda) */
         .view-mode-list .card-image-wrapper {
-            width: 140px !important;
-            min-width: 140px !important;
-            aspect-ratio: auto !important;
-            border-b: none !important;
-            border-right: 1px solid rgba(255,255,255,0.05) !important;
-            padding: 16px !important;
-            border-radius: 1.5rem 0 0 1.5rem !important;
+            width: 85px !important;
+            min-width: 85px !important;
+            height: 85px !important;
+            aspect-ratio: 1 !important;
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            margin-right: 14px !important;
+            border-radius: 0.75rem !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
+            align-self: center !important; /* Centrado verticalmente respecto al bloque */
         }
         .view-mode-list .card-image-wrapper img {
             width: 100% !important;
-            height: auto !important;
-            max-height: 120px !important; 
+            height: 100% !important;
             object-fit: contain !important;
+            border-radius: 0.75rem !important;
         }
 
-        /* 2. Contenedor Textos (Tolerancia hacia abajo) */
+        /* 2. Contenedor Textos (Flexible) */
         .view-mode-list .card-info-wrapper {
-            padding: 20px 24px !important;
+            padding: 0 !important;
             display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            flex: 1 !important;
+            min-width: 0 !important; /* Vital para que el texto no desborde */
+        }
+
+        .view-mode-list .info-top-section {
+            margin-bottom: 8px !important;
+        }
+
+        /* 3. Acciones y Precios */
+        .view-mode-list .card-actions-wrapper {
+            margin-top: auto !important;
+            padding-top: 8px !important;
+            border-top: 1px solid rgba(255,255,255,0.05) !important;
             flex-direction: row !important;
             align-items: center !important;
             justify-content: space-between !important;
-            flex: 1 !important;
+            width: 100% !important;
         }
+        
+        .view-mode-list .card-price { text-align: left !important; }
 
-        /* Títulos y Badges (Lado Izquierdo de Info) */
-        .view-mode-list .card-info-wrapper > div:first-child {
-            margin-bottom: 0 !important;
-            flex: 1 !important;
-            padding-right: 24px !important;
-        }
-
-        /* Precios y Botones (Lado Derecho de Info) */
-        .view-mode-list .card-actions-wrapper {
-            margin-top: 0 !important;
-            padding-top: 0 !important;
-            border-top: none !important;
-            flex-direction: column !important;
-            align-items: flex-end !important;
-            gap: 12px !important;
-            flex-shrink: 0 !important;
-        }
-        .view-mode-list .card-price { text-align: right !important; }
-
-        /* 🔥 MANEJO DE BADGES: Grid vs List */
-        .product-card .list-only-badges { display: none; } /* Oculto en modo Grid por defecto */
-        .view-mode-list .grid-floating-badges { display: none !important; } /* Oculta los de la imagen en Lista */
-        .view-mode-list .list-only-badges { display: flex !important; } /* Muestra los agrupados en Lista */
+        /* Control de Visibilidad de Badges */
+        .product-card .list-only-badges { display: none !important; }
+        .view-mode-list .grid-floating-badges { display: none !important; }
+        .view-mode-list .list-only-badges { display: flex !important; }
 
         /* ========================================================================= */
-        /* RESPONSIVE MÓVIL (Vista Lista para Celulares)                             */
+        /* PC OVERRIDES PARA LISTA (Más expansivo)                                 */
         /* ========================================================================= */
-        @media (max-width: 768px) {
-            .view-mode-list .product-card { 
-                align-items: stretch !important; 
-                min-height: 120px !important;
+        @media (min-width: 768px) {
+            .view-mode-list .product-card {
+                padding: 16px !important;
+                border-radius: 1.5rem !important;
             }
             .view-mode-list .card-image-wrapper {
-                width: 110px !important;
-                min-width: 110px !important;
-                padding: 12px !important;
-            }
-            .view-mode-list .card-image-wrapper img {
-                max-height: 100px !important;
+                width: 100px !important;
+                min-width: 100px !important;
+                height: 100px !important;
+                margin-right: 20px !important;
             }
             .view-mode-list .card-info-wrapper {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                padding: 16px !important;
-                justify-content: center !important;
-                gap: 16px !important;
-            }
-            .view-mode-list .card-info-wrapper > div:first-child {
-                padding-right: 0 !important;
-                margin-bottom: 0 !important;
-                width: 100% !important;
-            }
-            .view-mode-list .card-actions-wrapper {
-                width: 100% !important;
-                flex-direction: row !important;
+                flex-direction: row !important; /* PC: Textos izquierda, Precios derecha */
                 align-items: center !important;
-                border-top: 1px solid rgba(255,255,255,0.05) !important;
-                padding-top: 12px !important;
                 justify-content: space-between !important;
             }
-            .view-mode-list .card-price { text-align: left !important; }
+            .view-mode-list .info-top-section {
+                margin-bottom: 0 !important;
+                padding-right: 24px !important;
+                flex: 1 !important;
+            }
+            .view-mode-list .card-actions-wrapper {
+                border-top: none !important;
+                padding-top: 0 !important;
+                flex-direction: column !important; /* Apilar precio sobre botones */
+                align-items: flex-end !important;
+                gap: 12px !important;
+                width: auto !important;
+                min-width: 120px !important;
+            }
+            .view-mode-list .card-price { text-align: right !important; }
+            .view-mode-list .card-actions-wrapper > div:last-child {
+                flex-direction: row !important;
+            }
         }
     </style>
 </head>
@@ -200,7 +202,6 @@
                 <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2zm-10 10a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                 <span class="text-[9px] font-bold uppercase tracking-wider">Inicio</span>
             </a>
-            <!-- Activo -->
             <a href="inventory.html" class="flex flex-col items-center justify-center w-full h-full text-[#FFC300] active:scale-95 transition">
                 <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                 <span class="text-[9px] font-black uppercase tracking-wider">Catálogo</span>
@@ -220,9 +221,7 @@
         </nav>
     </div>
 
-    <!-- ======================================================= -->
     <!-- ÁREA PRINCIPAL -->
-    <!-- ======================================================= -->
     <main class="flex-1 flex flex-col min-h-screen md:h-screen relative md:overflow-hidden">
         
         <header class="w-full h-20 md:h-24 border-b border-white/5 bg-[#030305]/90 backdrop-blur-md flex items-center justify-between px-5 md:px-8 z-30 shrink-0 sticky top-0">
@@ -258,13 +257,12 @@
                     </div>
                     
                     <div class="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-3">
-                        <!-- Buscador Moderno -->
                         <div class="relative w-full sm:w-64 shrink-0">
                             <svg class="w-4 h-4 absolute left-4 top-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             <input type="text" id="search-inventory" oninput="nativeSearchInventory()" placeholder="Buscar producto..." class="w-full bg-[#12121a] border border-white/10 rounded-full pl-11 pr-5 py-3 text-xs font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner">
                         </div>
 
-                        <!-- Selector de Vistas (LISTA PREDETERMINADA) -->
+                        <!-- Selector de Vistas -->
                         <div class="flex bg-[#12121a] border border-white/10 rounded-full p-1 w-full sm:w-auto justify-center shrink-0">
                             <button id="view-list-btn" onclick="toggleViewMode('list')" class="bg-white/10 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
@@ -276,7 +274,6 @@
                             </button>
                         </div>
 
-                        <!-- Botón Nuevo -->
                         <button onclick="if(typeof openModal === 'function') openModal()" class="w-full sm:w-auto bg-gradient-to-r from-[#FFD000] to-[#FFC300] text-black px-6 py-3 rounded-full text-[10px] font-[900] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,195,0,0.3)] flex items-center justify-center gap-2 shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                             Nuevo
@@ -284,7 +281,6 @@
                     </div>
                 </div>
 
-                <!-- ESTADO VACÍO -->
                 <div id="empty-state" class="hidden bg-[#12121a] border border-white/5 p-12 md:p-20 rounded-[3rem] flex flex-col items-center justify-center text-center shadow-2xl transition-all duration-300">
                     <div class="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 text-gray-600 border border-white/10">
                         <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
@@ -293,41 +289,31 @@
                     <p class="text-sm text-gray-400 max-w-md mb-8 font-medium leading-relaxed">Publica tu primer artículo. Configura tallas, sabores, precios y Gymenez se encargará de venderlo a nivel nacional.</p>
                 </div>
 
-                <!-- 🍎 GRILLA DE PRODUCTOS (Inicia con la clase de MODO LISTA) -->
-                <div id="products-grid" class="view-mode-list pb-10 transition-all duration-300">
-                    <!-- Aquí JS inyectará el nuevo código -->
-                </div>
+                <!-- 🍎 GRILLA DE PRODUCTOS (Modo Lista Activo) -->
+                <div id="products-grid" class="view-mode-list pb-10 transition-all duration-300"></div>
 
             </div>
         </div>
     </main>
 
-    <!-- (Se omiten los modales de Producto y Perfil por brevedad, son idénticos) -->
-
-    <!-- ======================================================= -->
-    <!-- MODAL: CONSTRUCTOR DE PRODUCTOS (Intacto en IDs) -->
-    <!-- ======================================================= -->
+    <!-- (Modales de Producto y Perfil intactos) -->
     <div id="product-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-6 opacity-0 transition-opacity duration-300">
         <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-5xl rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500 flex flex-col max-h-[95vh] md:max-h-[90vh]">
-            
             <div class="flex justify-between items-center p-6 md:p-8 border-b border-white/5 shrink-0 bg-[#0a0a0f] md:rounded-t-[2.5rem]">
                 <h3 class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white">Gestor de <span class="text-[#FFC300]">Inventario</span></h3>
                 <button onclick="if(typeof closeModal === 'function') closeModal()" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-
             <div class="p-5 md:p-8 overflow-y-auto custom-scroll flex-1">
                 <form id="add-product-form" class="space-y-6 md:space-y-8">
                     <input type="hidden" id="prod-id" value="">
-
                     <div class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-white/5 relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
                             <span class="w-8 h-8 rounded-full bg-[#FFC300] text-black font-[900] text-sm flex items-center justify-center shadow-lg">1</span>
                             <h4 class="text-xs md:text-sm font-bold uppercase tracking-widest text-white">Información Principal</h4>
                         </div>
-                        
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 mb-6">
                             <div class="md:col-span-2">
                                 <label class="block text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Título Oficial del Producto</label>
@@ -346,13 +332,10 @@
                                         <option value="recuperacion">Recuperación Muscular</option>
                                         <option value="jugos">Jugos y Bebidas</option>
                                     </select>
-                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-gray-500">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                    </div>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-gray-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
                                 </div>
                             </div>
                         </div>
-                        
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 mb-6">
                             <div>
                                 <label class="block text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Precio Base (USD)</label>
@@ -369,26 +352,20 @@
                                 </div>
                             </div>
                         </div>
-
                         <div>
                             <label class="block text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Descripción de Ventas</label>
                             <textarea id="prod-desc" rows="4" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition resize-none shadow-inner custom-scroll" placeholder="Beneficios, uso recomendado, advertencias..." required></textarea>
                         </div>
                     </div>
-
                     <div class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-white/5 relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
                             <span class="w-8 h-8 rounded-full bg-emerald-500 text-black font-[900] text-sm flex items-center justify-center shadow-lg">2</span>
                             <h4 class="text-xs md:text-sm font-bold uppercase tracking-widest text-white">Logística & Multimedia</h4>
                         </div>
-                        
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 mb-6">
                             <div>
-                                <label class="block text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1 flex justify-between">
-                                    <span>Peso P/Envío (Kg)</span>
-                                    <span class="text-emerald-500 font-black">Min 0.5 - Max 50</span>
-                                </label>
+                                <label class="block text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1 flex justify-between"><span>Peso P/Envío (Kg)</span><span class="text-emerald-500 font-black">Min 0.5 - Max 50</span></label>
                                 <input type="number" id="prod-weight" step="0.1" min="0.5" max="50" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-emerald-500 transition shadow-inner" placeholder="Ej: 2.5" required>
                             </div>
                             <div>
@@ -397,7 +374,6 @@
                                 <p id="stock-helper" class="text-[8px] md:text-[9px] text-emerald-500 font-bold mt-2 hidden">El stock se calcula automáticamente según las variantes.</p>
                             </div>
                         </div>
-
                         <div>
                             <label class="block text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Fotografía HD Oficial</label>
                             <div class="relative w-full border-2 border-dashed border-white/10 hover:border-emerald-500/50 rounded-[2rem] p-6 md:p-8 text-center bg-[#030305] transition-all group cursor-pointer" onclick="document.getElementById('prod-image').click()">
@@ -407,7 +383,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div id="variants-master-container" class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.05)] hidden relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="flex items-center justify-between mb-6 border-b border-white/5 pb-4 relative z-10">
@@ -417,11 +392,7 @@
                             </div>
                             <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 md:px-3 py-1.5 rounded-lg text-[8px] md:text-[9px] font-black uppercase tracking-widest">Activa</span>
                         </div>
-                        
-                        <div id="variant-builder-controls" class="bg-[#030305] p-5 md:p-6 rounded-2xl border border-white/5 relative z-10 mb-6">
-                            <!-- Se llena por JS -->
-                        </div>
-
+                        <div id="variant-builder-controls" class="bg-[#030305] p-5 md:p-6 rounded-2xl border border-white/5 relative z-10 mb-6"></div>
                         <div class="relative z-10">
                             <h5 class="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3 pl-1">Catálogo de Variantes</h5>
                             <div id="variants-list" class="space-y-3">
@@ -431,14 +402,12 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-white/5 relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
                             <span class="w-8 h-8 rounded-full bg-purple-500 text-white font-[900] text-sm flex items-center justify-center shadow-lg">4</span>
                             <h4 class="text-xs md:text-sm font-bold uppercase tracking-widest text-white">Configuraciones de Venta</h4>
                         </div>
-                        
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 relative z-10">
                             <div class="bg-[#030305] border border-white/5 p-4 md:p-5 rounded-2xl flex items-center justify-between shadow-inner">
                                 <div>
@@ -450,7 +419,6 @@
                                     <div class="w-10 md:w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                                 </label>
                             </div>
-
                             <div class="bg-[#030305] border border-white/5 p-4 md:p-5 rounded-2xl shadow-inner">
                                 <div class="flex items-center justify-between mb-3">
                                     <div>
@@ -472,10 +440,8 @@
                             </div>
                         </div>
                     </div>
-
                 </form>
             </div>
-
             <div class="p-6 md:p-8 border-t border-white/5 shrink-0 flex flex-col sm:flex-row justify-end gap-4 bg-[#0a0a0f] md:rounded-b-[2.5rem]">
                 <button onclick="if(typeof closeModal === 'function') closeModal()" class="w-full sm:w-auto px-6 py-4 md:px-8 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 border border-white/10 hover:text-white hover:bg-white/5 transition">Cancelar</button>
                 <button onclick="if(typeof submitProduct === 'function') submitProduct(event)" id="btn-save-prod" class="w-full sm:w-auto bg-[#FFC300] text-black px-8 py-4 md:px-10 rounded-full text-[10px] md:text-xs font-[900] uppercase tracking-widest hover:bg-yellow-400 transition shadow-[0_10px_20px_rgba(255,195,0,0.3)] flex items-center justify-center gap-2">
@@ -483,13 +449,9 @@
                     Publicar
                 </button>
             </div>
-
         </div>
     </div>
     
-    <!-- ======================================================= -->
-    <!-- MODAL DE PERFIL B2B (Estructura Original) -->
-    <!-- ======================================================= -->
     <div id="profile-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-lg rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform scale-95 transition-transform duration-500 max-h-[92vh] overflow-y-auto hide-scroll">
             <div class="p-8 pb-0 flex items-center justify-between">
@@ -536,9 +498,7 @@
         </div>
     </div>
 
-    <!-- ======================================================= -->
     <!-- 🍎 SCRIPT NATIVO: BUSCADOR INSTANTÁNEO Y TOGGLE VISTAS -->
-    <!-- ======================================================= -->
     <script>
         function toggleViewMode(mode) {
             const gridBtn = document.getElementById('view-grid-btn');
@@ -597,11 +557,10 @@
         }
     </script>
 
-    <!-- SCRIPTS INTÁCTOS -->
     <script src="/static/js/store/partner_session.js"></script>
     <script src="/static/js/store/partner_ui.js"></script>
     <script src="/static/js/store/partner_profile.js"></script>
-    <script src="/static/js/store/partner_catalog.js?v=1.5"></script>
+    <script src="/static/js/store/partner_catalog.js?v=1.4"></script>
     <script src="/static/js/store/partner_main.js"></script>
 
 </body>
