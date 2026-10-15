@@ -24,11 +24,11 @@
 
         /* Dock Flotante estilo App Nativa (Móvil y Tablet) */
         .native-dock {
-            background: rgba(10, 10, 15, 0.88);
+            background: rgba(10, 10, 15, 0.90);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.75);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
         }
     </style>
 </head>
@@ -44,11 +44,13 @@
     <!-- ======================================================= -->
     <aside class="w-72 border-r border-white/5 bg-[#0a0a0f] hidden lg:flex flex-col z-20 h-screen shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
         <div class="p-8 border-b border-white/5">
-            <a href="dashboard.html" class="flex items-center leading-none">
-                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
-                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+            <a href="dashboard.html" class="flex flex-col leading-none">
+                <div class="flex items-center">
+                    <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span><span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+                </div>
+                <span class="text-[9px] font-black uppercase tracking-[0.3em] text-white/60 mt-1">Store</span>
             </a>
-            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mt-2">Partner Workspace</p>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mt-3">Partner Workspace</p>
         </div>
 
         <nav class="flex-1 p-6 space-y-2.5 overflow-y-auto hide-scroll">
@@ -118,10 +120,13 @@
         
         <!-- HEADER SUPERIOR -->
         <header class="w-full h-20 lg:h-24 border-b border-white/5 bg-[#030305]/90 backdrop-blur-md flex items-center justify-between px-5 md:px-8 z-30 shrink-0 sticky top-0">
-            <div class="lg:hidden flex items-center gap-1">
-                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
-                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
-            </div>
+            <!-- LOGO MÓVIL UNIDO + STORE ABAJO -->
+            <a href="dashboard.html" class="lg:hidden flex flex-col leading-none">
+                <div class="flex items-center">
+                    <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span><span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+                </div>
+                <span class="text-[8px] font-black uppercase tracking-[0.3em] text-emerald-500 mt-1">Store • Partner</span>
+            </a>
             
             <div class="hidden lg:block">
                 <span class="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-500 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">
@@ -130,12 +135,12 @@
             </div>
             
             <div class="flex items-center gap-3 md:gap-5">
-                <div class="text-right">
+                <div class="text-right cursor-pointer" onclick="if(typeof openProfileModal === 'function') openProfileModal()">
                     <p id="store-name-display" class="text-xs md:text-sm font-bold text-white skeleton-text min-w-[100px] md:min-w-[120px]">Cargando...</p>
                     <p class="text-[8px] md:text-[9px] text-gray-500 uppercase tracking-widest font-bold mt-0.5">Partner Oficial</p>
                 </div>
-                <!-- Botón de Perfil activo en TODOS los dispositivos -->
-                <button onclick="if(typeof openProfileModal === 'function') openProfileModal()" class="flex w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/5 border border-white/10 p-[2px] hover:scale-105 active:scale-95 transition transform shadow-[0_0_15px_rgba(255,195,0,0.15)] cursor-pointer">
+                <!-- Botón de Perfil activo en Móvil, Tablet y PC -->
+                <button type="button" onclick="if(typeof openProfileModal === 'function') openProfileModal()" class="relative z-40 pointer-events-auto flex w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/5 border border-white/10 p-[2px] hover:scale-105 active:scale-95 transition transform shadow-[0_0_15px_rgba(255,195,0,0.15)] cursor-pointer">
                     <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-gray-500 font-black text-sm md:text-lg overflow-hidden skeleton-text">
                         P
                     </div>
@@ -218,27 +223,26 @@
     </main>
 
     <!-- ======================================================= -->
-    <!-- MODAL DE PERFIL B2B PREMIUM -->
+    <!-- MODAL DE PERFIL B2B PREMIUM (Estructura exacta para partner_profile.js) -->
     <!-- ======================================================= -->
     <div id="profile-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-lg rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500 max-h-[90vh] overflow-y-auto hide-scroll">
+        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-lg rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500 max-h-[92vh] overflow-y-auto hide-scroll">
             
-            <div class="p-6 md:p-8 pb-0 flex justify-between items-center">
-                <!-- Botón Cerrar Sesión accesible en Móvil/Tablet dentro del modal de perfil -->
-                <button onclick="if(typeof logout === 'function') logout()" class="lg:hidden flex items-center gap-2 bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition">
+            <div class="p-8 pb-0 flex items-center justify-between">
+                <button type="button" onclick="if(typeof logout === 'function') logout()" class="lg:hidden flex items-center gap-2 bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                     Cerrar Sesión
                 </button>
-                <div class="hidden lg:block"></div>
-                <button onclick="if(typeof closeProfileModal === 'function') closeProfileModal()" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition">
+                <span class="hidden lg:inline-block"></span>
+                <button type="button" onclick="if(typeof closeProfileModal === 'function') closeProfileModal()" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
 
-            <div class="p-6 md:p-8 pt-2 flex flex-col items-center">
+            <div class="p-8 pt-0 flex flex-col items-center">
                 <!-- Avatar Upload -->
                 <div class="relative group cursor-pointer mb-6" onclick="document.getElementById('upload-logo-input').click()">
-                    <div id="modal-profile-logo" class="w-24 h-24 md:w-28 md:h-28 rounded-full bg-[#12121a] border-2 border-dashed border-white/20 flex items-center justify-center text-4xl font-black text-gray-600 overflow-hidden group-hover:border-[#FFC300] transition-colors shadow-xl">
+                    <div id="modal-profile-logo" class="w-28 h-28 rounded-full bg-[#12121a] border-2 border-dashed border-white/20 flex items-center justify-center text-4xl font-black text-gray-600 overflow-hidden group-hover:border-[#FFC300] transition-colors shadow-xl">
                         P
                     </div>
                     <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -247,7 +251,7 @@
                     <input type="file" id="upload-logo-input" class="hidden" accept="image/*" onchange="if(typeof uploadNewLogo === 'function') uploadNewLogo(this)">
                 </div>
 
-                <h2 class="text-2xl font-[900] tracking-tighter uppercase italic text-white mb-6 md:mb-8">Datos <span class="text-[#FFC300]">Corporativos</span></h2>
+                <h2 class="text-2xl font-[900] tracking-tighter uppercase italic text-white mb-8">Datos <span class="text-[#FFC300]">Corporativos</span></h2>
 
                 <div class="w-full space-y-4">
                     <div>
