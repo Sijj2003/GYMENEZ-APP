@@ -108,10 +108,7 @@
         </nav>
     </div>
 
-    <!-- ======================================================= -->
     <!-- ÁREA PRINCIPAL -->
-    <!-- ======================================================= -->
-    <!-- 🔥 FIX SCROLL: Desbloqueo en móvil -->
     <main class="flex-1 flex flex-col min-h-screen md:h-screen relative md:overflow-hidden">
         
         <!-- HEADER SUPERIOR -->
@@ -133,7 +130,7 @@
                     <p class="text-[8px] md:text-[9px] text-gray-500 uppercase tracking-widest font-bold mt-0.5">Partner Oficial</p>
                 </div>
                 <button type="button" onclick="if(typeof openProfileModal === 'function') openProfileModal()" class="relative z-40 pointer-events-auto flex w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/5 border border-white/10 p-[2px] hover:scale-105 active:scale-95 transition transform shadow-[0_0_15px_rgba(255,195,0,0.15)] cursor-pointer">
-                    <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-gray-500 font-black text-sm md:text-lg overflow-hidden">
+                    <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-gray-500 font-black text-sm md:text-lg overflow-hidden skeleton-text">
                         P
                     </div>
                 </button>
@@ -160,6 +157,31 @@
                     <!-- Progress Bar -->
                     <div class="w-full bg-white/5 h-2 mt-6 rounded-full overflow-hidden">
                         <div id="credit-progress" class="bg-[#FFC300] h-full rounded-full transition-all duration-1000" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- 🍎 SECCIÓN DE SOPORTE DIRECTO (BOTONES NUEVOS) -->
+                <div class="mb-12">
+                    <h2 class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white mb-6">Asistencia <span class="text-[#FFC300]">Directa</span></h2>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <!-- Soporte Correo (Glassmorphism) -->
+                        <a href="mailto:performance@gymenez.com" class="flex-1 bg-[#12121a] border border-white/5 hover:border-white/20 transition-all duration-300 rounded-[1.5rem] md:rounded-full py-4 px-6 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl group active:scale-[0.98]">
+                            <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                                <svg class="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <span class="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-gray-300 group-hover:text-white transition-colors">Soporte Correo</span>
+                        </a>
+                        
+                        <!-- Soporte WhatsApp (Verde Oficial) -->
+                        <a href="https://wa.me/584148780392" target="_blank" class="flex-1 bg-gradient-to-r from-[#25D366] to-[#1EBE57] hover:from-[#20bd5a] hover:to-[#1aa64c] transition-all duration-300 rounded-[1.5rem] md:rounded-full py-4 px-6 flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(37,211,102,0.2)] hover:shadow-[0_15px_40px_rgba(37,211,102,0.3)] text-white group active:scale-[0.98]">
+                            <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12.031 0C5.385 0 0 5.385 0 12.031c0 2.122.553 4.195 1.606 6.012L.493 22l4.08-1.071c1.764.954 3.738 1.458 5.761 1.458 6.646 0 12.031-5.385 12.031-12.031S18.677 0 12.031 0zm3.842 17.29c-.164.462-.953.863-1.32.894-.368.031-1.002.106-3.21-.806-2.668-1.098-4.385-3.83-4.518-4.008-.133-.178-1.077-1.433-1.077-2.735 0-1.302.68-1.944.922-2.211.242-.267.525-.334.698-.334.174 0 .348.006.505.014.166.009.388-.063.606.462.226.544.73 1.782.795 1.916.066.134.11.29.023.468-.087.178-.133.29-.267.444-.134.154-.282.33-.404.462-.134.154-.286.323-.133.59.153.267.683 1.134 1.47 1.838.995.894 1.848 1.173 2.115 1.306.267.134.423.11.58-.066.157-.176.68-1.127.863-1.516.183-.39.366-.323.606-.233.24.089 1.52.716 1.78.85.26.134.505.21.776.32.984.11.21.11.39-.022.545z"/>
+                                </svg>
+                            </div>
+                            <span class="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-white drop-shadow-md">Soporte WhatsApp</span>
+                        </a>
                     </div>
                 </div>
 
@@ -346,7 +368,7 @@
             <div class="p-6 md:p-8 pt-2 flex flex-col items-center">
                 <!-- Avatar Upload -->
                 <div class="relative group cursor-pointer mb-6" onclick="document.getElementById('upload-logo-input').click()">
-                    <div id="modal-profile-logo" class="w-24 h-24 md:w-28 md:h-28 rounded-full bg-[#12121a] border-2 border-dashed border-white/20 flex items-center justify-center text-4xl font-black text-gray-600 overflow-hidden group-hover:border-[#FFC300] transition-colors shadow-xl">
+                    <div id="modal-profile-logo" class="w-28 h-28 rounded-full bg-[#12121a] border-2 border-dashed border-white/20 flex items-center justify-center text-4xl font-black text-gray-600 overflow-hidden group-hover:border-[#FFC300] transition-colors shadow-xl">
                         P
                     </div>
                     <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -355,7 +377,7 @@
                     <input type="file" id="upload-logo-input" class="hidden" accept="image/*" onchange="if(typeof uploadNewLogo === 'function') uploadNewLogo(this)">
                 </div>
 
-                <h2 class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white mb-6 md:mb-8">Datos <span class="text-[#FFC300]">Corporativos</span></h2>
+                <h2 class="text-2xl font-[900] tracking-tighter uppercase italic text-white mb-8">Datos <span class="text-[#FFC300]">Corporativos</span></h2>
 
                 <div class="w-full space-y-4">
                     <div>
@@ -378,7 +400,7 @@
                     </div>
                 </div>
                 
-                <p class="text-[9px] text-gray-600 font-bold mt-6 md:mt-8 mb-4 text-center">Para modificar datos fiscales o el correo máster de acceso, debes emitir un ticket al departamento de Soporte de Gymenez.</p>
+                <p class="text-[9px] text-gray-600 font-bold mt-8 mb-4 text-center">Para modificar datos fiscales o el correo máster de acceso, debes emitir un ticket al departamento de Soporte de Gymenez.</p>
             </div>
         </div>
     </div>
