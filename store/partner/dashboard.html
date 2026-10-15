@@ -114,13 +114,12 @@
     </div>
 
     <!-- ======================================================= -->
-    <!-- ÁREA PRINCIPAL (Scroll libre en móvil, independiente en PC) -->
+    <!-- ÁREA PRINCIPAL -->
     <!-- ======================================================= -->
     <main class="flex-1 flex flex-col min-h-screen lg:h-screen lg:overflow-hidden relative">
         
         <!-- HEADER SUPERIOR -->
         <header class="w-full h-20 lg:h-24 border-b border-white/5 bg-[#030305]/90 backdrop-blur-md flex items-center justify-between px-5 md:px-8 z-30 shrink-0 sticky top-0">
-            <!-- LOGO MÓVIL UNIDO + STORE ABAJO -->
             <a href="dashboard.html" class="lg:hidden flex flex-col leading-none">
                 <div class="flex items-center">
                     <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span><span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
@@ -139,7 +138,6 @@
                     <p id="store-name-display" class="text-xs md:text-sm font-bold text-white skeleton-text min-w-[100px] md:min-w-[120px]">Cargando...</p>
                     <p class="text-[8px] md:text-[9px] text-gray-500 uppercase tracking-widest font-bold mt-0.5">Partner Oficial</p>
                 </div>
-                <!-- Botón de Perfil activo en Móvil, Tablet y PC -->
                 <button type="button" onclick="if(typeof openProfileModal === 'function') openProfileModal()" class="relative z-40 pointer-events-auto flex w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/5 border border-white/10 p-[2px] hover:scale-105 active:scale-95 transition transform shadow-[0_0_15px_rgba(255,195,0,0.15)] cursor-pointer">
                     <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-gray-500 font-black text-sm md:text-lg overflow-hidden skeleton-text">
                         P
@@ -148,7 +146,7 @@
             </div>
         </header>
 
-        <!-- CONTENIDO ESPECÍFICO DE ESTA PÁGINA (DASHBOARD) -->
+        <!-- CONTENIDO DASHBOARD -->
         <div class="flex-1 lg:overflow-y-auto hide-scroll p-5 sm:p-8 lg:p-12 pb-28 lg:pb-12">
             <div class="max-w-7xl mx-auto">
                 
@@ -160,7 +158,6 @@
                 <!-- GRILLA DE 4 MÉTRICAS ACCIONABLES -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
                     
-                    <!-- Tarjeta 1: Ventas del Mes -->
                     <div onclick="window.location.href='finance.html'" class="bg-[#12121a] border border-white/5 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] relative overflow-hidden shadow-2xl transition-all hover:-translate-y-2 active:scale-[0.98] hover:border-[#FFC300]/30 hover:shadow-[0_20px_40px_rgba(255,195,0,0.1)] duration-300 group cursor-pointer flex flex-col justify-between min-h-[190px] md:min-h-[220px]">
                         <div class="absolute top-0 right-0 w-40 h-40 bg-[#FFC300]/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-150 duration-700"></div>
                         <div>
@@ -174,7 +171,6 @@
                         </div>
                     </div>
 
-                    <!-- Tarjeta 2: Escrow / Ganancia -->
                     <div onclick="window.location.href='finance.html'" class="bg-[#12121a] border border-white/5 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-all hover:-translate-y-2 active:scale-[0.98] hover:border-emerald-500/30 hover:shadow-[0_20px_40px_rgba(16,185,129,0.1)] duration-300 group cursor-pointer flex flex-col justify-between min-h-[190px] md:min-h-[220px]">
                         <div class="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-150 duration-700"></div>
                         <div>
@@ -187,7 +183,6 @@
                         </div>
                     </div>
 
-                    <!-- Tarjeta 3: Órdenes Pendientes -->
                     <div onclick="window.location.href='orders.html'" class="bg-[#12121a] border border-white/5 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-all hover:-translate-y-2 active:scale-[0.98] hover:border-blue-500/30 hover:shadow-[0_20px_40px_rgba(59,130,246,0.1)] duration-300 group cursor-pointer flex flex-col justify-between min-h-[190px] md:min-h-[220px]">
                         <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-150 duration-700"></div>
                         <div>
@@ -201,7 +196,6 @@
                         </div>
                     </div>
 
-                    <!-- Tarjeta 4: Alerta de Inventario -->
                     <div onclick="window.location.href='inventory.html'" class="bg-[#12121a] border border-red-500/20 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-all hover:-translate-y-2 active:scale-[0.98] hover:border-red-500/50 hover:shadow-[0_20px_40px_rgba(239,68,68,0.15)] duration-300 group cursor-pointer flex flex-col justify-between min-h-[190px] md:min-h-[220px]">
                         <div class="absolute top-0 right-0 w-40 h-40 bg-red-500/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-150 duration-700"></div>
                         <div>
@@ -223,12 +217,12 @@
     </main>
 
     <!-- ======================================================= -->
-    <!-- MODAL DE PERFIL B2B PREMIUM (Estructura exacta para partner_profile.js) -->
+    <!-- MODAL DE PERFIL B2B PREMIUM (Corregido para móviles) -->
     <!-- ======================================================= -->
-    <div id="profile-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-lg rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500 max-h-[92vh] overflow-y-auto hide-scroll">
+    <div id="profile-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-end lg:items-center justify-center p-0 lg:p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-lg rounded-t-[2.5rem] lg:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full lg:translate-y-0 lg:scale-95 transition-transform duration-500 max-h-[92vh] overflow-y-auto hide-scroll">
             
-            <div class="p-8 pb-0 flex items-center justify-between">
+            <div class="p-6 md:p-8 pb-0 flex items-center justify-between">
                 <button type="button" onclick="if(typeof logout === 'function') logout()" class="lg:hidden flex items-center gap-2 bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                     Cerrar Sesión
@@ -239,7 +233,7 @@
                 </button>
             </div>
 
-            <div class="p-8 pt-0 flex flex-col items-center">
+            <div class="p-6 md:p-8 pt-2 flex flex-col items-center">
                 <!-- Avatar Upload -->
                 <div class="relative group cursor-pointer mb-6" onclick="document.getElementById('upload-logo-input').click()">
                     <div id="modal-profile-logo" class="w-28 h-28 rounded-full bg-[#12121a] border-2 border-dashed border-white/20 flex items-center justify-center text-4xl font-black text-gray-600 overflow-hidden group-hover:border-[#FFC300] transition-colors shadow-xl">
