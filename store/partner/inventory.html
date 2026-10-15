@@ -22,13 +22,89 @@
         .skeleton-text { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; border-radius: 4px; color: transparent !important; pointer-events: none; }
         @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        /* Dock Flotante estilo App Nativa */
         .native-dock {
             background: rgba(10, 10, 15, 0.90);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        /* ========================================================================= */
+        /* 🔥 MAGIA CSS: TRANSFORMA LAS TARJETAS JS A RECTÁNGULOS (MODO LISTA)     */
+        /* ========================================================================= */
+        #products-grid.view-mode-list {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 12px !important;
+        }
+        /* Contenedor principal de la tarjeta */
+        #products-grid.view-mode-list > div {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            padding: 12px 16px !important;
+            height: auto !important;
+            width: 100% !important;
+            gap: 16px !important;
+            text-align: left !important;
+        }
+        /* 1. La Imagen (Fuerza a miniatura cuadrada a la izquierda) */
+        #products-grid.view-mode-list > div > :first-child {
+            width: 70px !important;
+            height: 70px !important;
+            min-width: 70px !important;
+            min-height: 70px !important;
+            flex-shrink: 0 !important;
+            margin: 0 !important;
+            border-radius: 12px !important;
+            object-fit: cover !important;
+        }
+        /* 2. El Contenedor de Texto y Botones */
+        #products-grid.view-mode-list > div > :nth-child(2) {
+            flex: 1 !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            gap: 16px !important;
+        }
+        /* Adapta controles para evitar que se aplasten */
+        #products-grid.view-mode-list > div > :nth-child(2) > :last-child {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin-top: 0 !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* Comportamiento de Modo Lista en Celulares */
+        @media (max-width: 640px) {
+            #products-grid.view-mode-list > div {
+                padding: 12px !important;
+                gap: 12px !important;
+                align-items: flex-start !important;
+            }
+            #products-grid.view-mode-list > div > :first-child {
+                width: 60px !important;
+                height: 60px !important;
+                min-width: 60px !important;
+                min-height: 60px !important;
+            }
+            /* En móvil, los textos arriba y los botones se agrupan debajo */
+            #products-grid.view-mode-list > div > :nth-child(2) {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 8px !important;
+            }
+            #products-grid.view-mode-list > div > :nth-child(2) > :last-child {
+                width: 100% !important;
+                justify-content: flex-start !important;
+            }
         }
     </style>
 </head>
@@ -39,9 +115,7 @@
         if (!token) window.location.href = '/store/partner/login.html';
     </script>
 
-    <!-- ======================================================= -->
-    <!-- SIDEBAR (PC) -->
-    <!-- ======================================================= -->
+    <!-- SIDEBAR PC -->
     <aside class="w-72 border-r border-white/5 bg-[#0a0a0f] hidden md:flex flex-col z-20 h-full shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
         <div class="p-8 border-b border-white/5">
             <a href="dashboard.html" class="flex flex-col leading-none">
@@ -85,16 +159,14 @@
         </div>
     </aside>
 
-    <!-- ======================================================= -->
-    <!-- BOTTOM DOCK NATIVO (Móvil) -->
-    <!-- ======================================================= -->
-    <div class="md:hidden fixed bottom-4 left-4 right-4 z-50 pointer-events-none">
+    <!-- DOCK FLOTANTE MÓVIL -->
+    <div class="md:hidden fixed bottom-3 left-3 right-3 z-50 pointer-events-none">
         <nav class="native-dock rounded-2xl h-16 px-1 flex items-center justify-around pointer-events-auto">
             <a href="dashboard.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white active:scale-95 transition">
                 <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2zm-10 10a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                 <span class="text-[9px] font-bold uppercase tracking-wider">Inicio</span>
             </a>
-            <!-- Activo 🍎 -->
+            <!-- Activo -->
             <a href="inventory.html" class="flex flex-col items-center justify-center w-full h-full text-[#FFC300] active:scale-95 transition">
                 <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                 <span class="text-[9px] font-black uppercase tracking-wider">Catálogo</span>
@@ -114,9 +186,7 @@
         </nav>
     </div>
 
-    <!-- ======================================================= -->
     <!-- ÁREA PRINCIPAL -->
-    <!-- ======================================================= -->
     <main class="flex-1 flex flex-col min-h-screen md:h-screen relative md:overflow-hidden">
         
         <!-- HEADER SUPERIOR -->
@@ -151,7 +221,7 @@
         <div class="flex-1 md:overflow-y-auto hide-scroll p-5 sm:p-8 md:p-12 pb-32 md:pb-12">
             <div class="max-w-7xl mx-auto">
                 
-                <!-- 🍎 NUEVA CABECERA CON BUSCADOR Y VISTAS -->
+                <!-- CABECERA CON BUSCADOR Y VISTAS -->
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-10 border-b border-white/5 pb-8">
                     <div class="w-full lg:w-auto">
                         <h1 class="text-4xl md:text-5xl font-[900] tracking-tighter uppercase italic">Control de <span class="text-[#FFC300]">Catálogo</span></h1>
@@ -159,11 +229,10 @@
                     </div>
                     
                     <div class="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-3">
-                        <!-- Buscador Moderno -->
+                        <!-- Buscador Moderno 100% Funcional -->
                         <div class="relative w-full sm:w-64 shrink-0">
                             <svg class="w-4 h-4 absolute left-4 top-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            <!-- Llama a una función de filtro si existe, si no, es solo UI visual por ahora -->
-                            <input type="text" id="search-inventory" oninput="if(typeof filterInventory === 'function') filterInventory()" placeholder="Buscar producto..." class="w-full bg-[#12121a] border border-white/10 rounded-full pl-11 pr-5 py-3 text-xs font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner">
+                            <input type="text" id="search-inventory" oninput="nativeSearchInventory()" placeholder="Buscar producto..." class="w-full bg-[#12121a] border border-white/10 rounded-full pl-11 pr-5 py-3 text-xs font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner">
                         </div>
 
                         <!-- Selector de Vistas (Grid / Lista) -->
@@ -186,7 +255,7 @@
                     </div>
                 </div>
 
-                <!-- ESTADO VACÍO -->
+                <!-- ESTADO VACÍO ORIGINAL -->
                 <div id="empty-state" class="hidden bg-[#12121a] border border-white/5 p-12 md:p-20 rounded-[3rem] flex flex-col items-center justify-center text-center shadow-2xl transition-all duration-300">
                     <div class="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 text-gray-600 border border-white/10">
                         <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
@@ -195,7 +264,7 @@
                     <p class="text-sm text-gray-400 max-w-md mb-8 font-medium leading-relaxed">Publica tu primer artículo. Configura tallas, sabores, precios y Gymenez se encargará de venderlo a nivel nacional.</p>
                 </div>
 
-                <!-- 🍎 GRILLA DE PRODUCTOS (Clases Base para la Vista Grid) -->
+                <!-- GRILLA DE PRODUCTOS -->
                 <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 pb-10 transition-all duration-300">
                     <!-- Aquí el partner_catalog.js inyectará las tarjetas -->
                 </div>
@@ -210,6 +279,7 @@
     <div id="product-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-6 opacity-0 transition-opacity duration-300">
         <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-5xl rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500 flex flex-col max-h-[95vh] md:max-h-[90vh]">
             
+            <!-- Cabecera Fija del Modal -->
             <div class="flex justify-between items-center p-6 md:p-8 border-b border-white/5 shrink-0 bg-[#0a0a0f] md:rounded-t-[2.5rem]">
                 <h3 class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white">Gestor de <span class="text-[#FFC300]">Inventario</span></h3>
                 <button onclick="if(typeof closeModal === 'function') closeModal()" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition">
@@ -217,10 +287,12 @@
                 </button>
             </div>
 
+            <!-- Cuerpo Scrolleable del Formulario -->
             <div class="p-5 md:p-8 overflow-y-auto custom-scroll flex-1">
                 <form id="add-product-form" class="space-y-6 md:space-y-8">
                     <input type="hidden" id="prod-id" value="">
 
+                    <!-- Bloque 1: Datos Base -->
                     <div class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-white/5 relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
@@ -276,6 +348,7 @@
                         </div>
                     </div>
 
+                    <!-- Bloque 2: Logística y Multimedia -->
                     <div class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-white/5 relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
@@ -308,6 +381,7 @@
                         </div>
                     </div>
 
+                    <!-- Bloque 3: Constructor de Variantes Inteligente -->
                     <div id="variants-master-container" class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.05)] hidden relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="flex items-center justify-between mb-6 border-b border-white/5 pb-4 relative z-10">
@@ -332,6 +406,7 @@
                         </div>
                     </div>
 
+                    <!-- Bloque 4: Configuraciones Avanzadas -->
                     <div class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-white/5 relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
@@ -376,6 +451,7 @@
                 </form>
             </div>
 
+            <!-- Pie del Modal Fijo -->
             <div class="p-6 md:p-8 border-t border-white/5 shrink-0 flex flex-col sm:flex-row justify-end gap-4 bg-[#0a0a0f] md:rounded-b-[2.5rem]">
                 <button onclick="if(typeof closeModal === 'function') closeModal()" class="w-full sm:w-auto px-6 py-4 md:px-8 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 border border-white/10 hover:text-white hover:bg-white/5 transition">Cancelar</button>
                 <button onclick="if(typeof submitProduct === 'function') submitProduct(event)" id="btn-save-prod" class="w-full sm:w-auto bg-[#FFC300] text-black px-8 py-4 md:px-10 rounded-full text-[10px] md:text-xs font-[900] uppercase tracking-widest hover:bg-yellow-400 transition shadow-[0_10px_20px_rgba(255,195,0,0.3)] flex items-center justify-center gap-2">
@@ -388,7 +464,7 @@
     </div>
     
     <!-- ======================================================= -->
-    <!-- MODAL DE PERFIL B2B (Estructura Original) -->
+    <!-- MODAL DE PERFIL B2B (Misma estructura comprobada) -->
     <!-- ======================================================= -->
     <div id="profile-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-lg rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform scale-95 transition-transform duration-500 max-h-[92vh] overflow-y-auto hide-scroll">
@@ -412,9 +488,7 @@
                     </div>
                     <input type="file" id="upload-logo-input" class="hidden" accept="image/*" onchange="if(typeof uploadNewLogo === 'function') uploadNewLogo(this)">
                 </div>
-
                 <h2 class="text-2xl font-[900] tracking-tighter uppercase italic text-white mb-8">Datos <span class="text-[#FFC300]">Corporativos</span></h2>
-
                 <div class="w-full space-y-4">
                     <div>
                         <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Razón Social / Tienda</label>
@@ -435,39 +509,76 @@
                         <input type="text" id="prof-email" class="w-full bg-[#030305] border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-emerald-400 focus:outline-none" readonly>
                     </div>
                 </div>
-                
                 <p class="text-[9px] text-gray-600 font-bold mt-8 mb-4 text-center">Para modificar datos fiscales o el correo máster de acceso, debes emitir un ticket al departamento de Soporte de Gymenez.</p>
             </div>
         </div>
     </div>
 
     <!-- ======================================================= -->
-    <!-- 🍎 SCRIPT NATIVO: Toggle Grid/Lista sin tocar JS principal -->
+    <!-- 🍎 SCRIPT NATIVO: BUSCADOR INSTANTÁNEO Y TOGGLE VISTAS -->
     <!-- ======================================================= -->
     <script>
+        // 1. Alternar Grid / Lista inyectando la clase CSS mágica
         function toggleViewMode(mode) {
             const gridBtn = document.getElementById('view-grid-btn');
             const listBtn = document.getElementById('view-list-btn');
             const container = document.getElementById('products-grid');
 
             if (mode === 'list') {
-                // Estilos Botón
                 listBtn.classList.replace('text-gray-500', 'text-white');
                 listBtn.classList.add('bg-white/10');
                 gridBtn.classList.replace('text-white', 'text-gray-500');
                 gridBtn.classList.remove('bg-white/10');
                 
-                // Cambia el grid para forzar que la tarjeta estire al 100% (Lista)
-                container.className = 'grid grid-cols-1 gap-4 pb-10 transition-all duration-300';
+                // Activa la Magia CSS
+                container.classList.remove('md:grid-cols-2', 'lg:grid-cols-3');
+                container.classList.add('view-mode-list');
             } else {
-                // Estilos Botón
                 gridBtn.classList.replace('text-gray-500', 'text-white');
                 gridBtn.classList.add('bg-white/10');
                 listBtn.classList.replace('text-white', 'text-gray-500');
                 listBtn.classList.remove('bg-white/10');
                 
-                // Devuelve a Grid responsivo
-                container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 pb-10 transition-all duration-300';
+                // Restaura al Grid Original
+                container.classList.remove('view-mode-list');
+                container.classList.add('md:grid-cols-2', 'lg:grid-cols-3');
+            }
+        }
+
+        // 2. Buscador Instantáneo en el DOM (No toca backend)
+        function nativeSearchInventory() {
+            const query = document.getElementById('search-inventory').value.toLowerCase();
+            const grid = document.getElementById('products-grid');
+            
+            // Ignoramos divs inyectados que no sean tarjetas
+            const cards = grid.querySelectorAll(':scope > div:not(#no-search-results)'); 
+            let hasResults = false;
+
+            cards.forEach(card => {
+                const text = card.textContent || card.innerText;
+                if (text.toLowerCase().includes(query)) {
+                    card.style.display = ''; // Muestra la tarjeta respetando CSS
+                    hasResults = true;
+                } else {
+                    card.style.display = 'none'; // Oculta la tarjeta
+                }
+            });
+
+            // Manejo del estado vacío de la búsqueda
+            let noResultsMsg = document.getElementById('no-search-results');
+            
+            if (!hasResults && cards.length > 0) {
+                if (!noResultsMsg) {
+                    noResultsMsg = document.createElement('div');
+                    noResultsMsg.id = 'no-search-results';
+                    noResultsMsg.className = 'col-span-full py-12 text-center text-gray-500 font-bold text-sm bg-[#12121a] rounded-[2rem] border border-white/5';
+                    noResultsMsg.innerHTML = '<span class="text-2xl block mb-2">🔍</span>No se encontraron productos con ese nombre.';
+                    grid.appendChild(noResultsMsg);
+                } else {
+                    noResultsMsg.style.display = 'block';
+                }
+            } else if (noResultsMsg) {
+                noResultsMsg.style.display = 'none';
             }
         }
     </script>
