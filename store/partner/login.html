@@ -32,8 +32,36 @@
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
 
-        .scroll-shadow {
-            box-shadow: inset 0 -40px 40px -40px rgba(0,0,0,0.9);
+        .scroll-shadow { box-shadow: inset 0 -40px 40px -40px rgba(0,0,0,0.9); }
+
+        /* Estilos del Carrusel */
+        .promo-slide {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            flex-col;
+            justify-content: center;
+        }
+        .promo-slide.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+            z-index: 10;
+        }
+        
+        /* Efecto de resplandor detrás de los íconos */
+        .icon-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: -1;
         }
     </style>
 </head>
@@ -49,17 +77,12 @@
         </div>
     </div>
 
-    <!-- ======================================================= -->
-    <!-- HEADER UNIFICADO (CENTRAO ABSOLUTO) -->
-    <!-- ======================================================= -->
+    <!-- HEADER UNIFICADO -->
     <header class="w-full h-20 md:h-24 border-b border-white/5 bg-[#030305]/80 backdrop-blur-xl flex items-center justify-between px-5 md:px-8 z-40 fixed top-0 left-0 right-0">
-        
-        <!-- Izquierda: Botón Salir / Volver a Home -->
         <a href="../home.html" class="flex w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/5 border border-white/10 items-center justify-center hover:scale-105 active:scale-95 transition transform cursor-pointer group shrink-0 relative z-10">
             <svg class="w-4 h-4 md:w-5 md:h-5 text-gray-500 group-hover:text-white group-hover:-translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
         </a>
 
-        <!-- Centro Absoluto: Logo Gymenez -->
         <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none w-full px-16">
             <div class="flex items-center leading-none">
                 <span class="text-2xl md:text-3xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span><span class="text-2xl md:text-3xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
@@ -67,42 +90,22 @@
             <span class="text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] text-gray-500 mt-1.5 text-center leading-none">Store • Partner Workspace</span>
         </div>
 
-        <!-- Derecha: Div fantasma para respetar el flex-between -->
         <div class="w-10 h-10 md:w-12 md:h-12 invisible shrink-0 relative z-10"></div>
     </header>
 
-    <!-- ======================================================= -->
     <!-- LOBBY PRINCIPAL -->
-    <!-- ======================================================= -->
     <main class="flex-1 flex flex-col lg:flex-row items-center justify-center p-6 md:p-8 pt-28 md:pt-32 relative z-10 w-full max-w-7xl mx-auto min-h-screen lg:h-screen lg:overflow-hidden pb-12">
-        <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center h-full">
             
-            <!-- Zona de Texto (Estilo premium) -->
-            <div class="hidden lg:flex flex-col pr-8">
-                <div class="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md shadow-xl">
-                    <svg class="w-8 h-8 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                </div>
-                <h1 class="text-5xl xl:text-6xl font-[900] tracking-tighter uppercase mb-6 leading-[1.1]">
-                    El Estándar <br>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">Comercial.</span>
-                </h1>
-                <p class="text-gray-400 text-sm font-medium leading-relaxed mb-12 max-w-md">
-                    Bienvenido al lobby de administración B2B de Gymenez Store. Escala tus ventas, gestiona inventarios y liquida fondos en un entorno financiero cerrado y unificado.
-                </p>
-
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="border-l-2 border-[#FFC300] pl-4">
-                        <h4 class="text-white font-bold text-sm mb-1">Cifrado B2B</h4>
-                        <p class="text-gray-500 text-xs leading-relaxed">Protección integral en cada transacción del ecosistema.</p>
-                    </div>
-                    <div class="border-l-2 border-emerald-500 pl-4">
-                        <h4 class="text-white font-bold text-sm mb-1">Escrow Logístico</h4>
-                        <p class="text-gray-500 text-xs leading-relaxed">Liquidaciones automáticas de fondos tras entrega.</p>
-                    </div>
-                </div>
+            <!-- 🍎 ZONA IZQUIERDA: CARRUSEL MARKETING (SOLO PC) -->
+            <div class="hidden lg:flex flex-col pr-8 relative h-[450px] w-full justify-center">
+                <!-- Contenedor Dinámico -->
+                <div id="desktop-promo-container" class="relative w-full h-[350px]"></div>
+                <!-- Puntos de Navegación -->
+                <div id="desktop-promo-dots" class="absolute bottom-0 left-0 flex gap-3"></div>
             </div>
 
-            <!-- Formulario de Acceso (Cupertino Box) -->
+            <!-- FORMULARIO DE ACCESO (SIEMPRE VISIBLE) -->
             <div class="w-full max-w-md mx-auto relative z-20">
                 <div id="login-form" class="bg-[#12121a]/90 backdrop-blur-2xl p-8 md:p-12 rounded-[2.5rem] border border-white/5 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] w-full">
                     
@@ -144,42 +147,44 @@
         </div>
     </main>
 
+    <!-- 🍎 MODAL PROMOCIONAL MÓVIL (Intrusión-Cero) -->
+    <div id="mobile-promo-modal" class="lg:hidden fixed inset-0 z-[150] bg-black/60 backdrop-blur-md flex items-center justify-center p-5 opacity-0 pointer-events-none transition-opacity duration-500">
+        <div class="bg-[#12121a]/95 border border-white/10 w-full max-w-sm rounded-[2.5rem] p-8 relative shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] transform scale-95 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]" id="mobile-promo-card">
+            
+            <button onclick="closeMobilePromo()" class="absolute top-5 right-5 text-gray-500 hover:text-white bg-white/5 p-2 rounded-full transition z-50">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
 
-    <!-- ==================================================================== -->
+            <!-- Contenedor Dinámico Móvil -->
+            <div id="mobile-promo-container" class="relative w-full h-[280px] mt-4"></div>
+            
+            <!-- Puntos de Navegación -->
+            <div id="mobile-promo-dots" class="flex justify-center gap-2 mt-4 relative z-20"></div>
+        </div>
+    </div>
+
     <!-- MODAL: LÍMITE DE SESIONES -->
-    <!-- ==================================================================== -->
     <div id="session-limit-modal" class="fixed inset-0 z-[300] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
         <div class="modal-content bg-[#0a0a0f] border border-white/10 w-full max-w-md rounded-[2.5rem] flex flex-col transform scale-95 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] relative overflow-hidden shadow-2xl">
-            
             <div class="p-8 text-center border-b border-white/5 bg-[#12121a]">
                 <div class="w-16 h-16 bg-[#FFC300]/10 border border-[#FFC300]/20 rounded-full flex items-center justify-center mb-4 mx-auto text-[#FFC300]">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                 </div>
                 <h2 class="text-xl font-[900] tracking-tighter uppercase italic text-white mb-1">Límite Alcanzado</h2>
-                <p class="text-[9px] uppercase tracking-widest text-gray-400 font-black leading-relaxed">Solo permitimos 3 dispositivos conectados. Cierra uno para continuar.</p>
+                <p class="text-[9px] uppercase tracking-widest text-gray-400 font-black leading-relaxed">Solo permitimos 3 dispositivos conectados.</p>
             </div>
-
             <div class="p-6 overflow-y-auto max-h-[50vh] custom-scroll">
-                <div id="active-sessions-list" class="space-y-3">
-                    <!-- Los dispositivos activos se inyectarán aquí mediante JS -->
-                </div>
+                <div id="active-sessions-list" class="space-y-3"></div>
             </div>
-
             <div class="p-6 border-t border-white/5 text-center bg-[#12121a]">
                 <button onclick="closeSessionModal()" class="w-full bg-white/5 text-gray-400 font-black text-[10px] uppercase tracking-widest transition-colors py-3.5 rounded-full hover:bg-white/10 hover:text-white border border-white/5">Cancelar Autenticación</button>
             </div>
         </div>
     </div>
 
-    <!-- ==================================================================== -->
-    <!-- MODAL (OVERLAY): AUDITORÍA KYC / REGISTRO DE COMERCIO -->
-    <!-- ==================================================================== -->
+    <!-- MODAL: AUDITORÍA KYC -->
     <div id="register-modal" class="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-6 opacity-0 transition-opacity duration-300">
-        
-        <!-- 🔥 FIX MÓVIL: overflow-x-hidden vital para que los hijos no rompan el ancho de la pantalla -->
         <div class="modal-content bg-[#0a0a0f] border border-white/10 w-full max-w-3xl rounded-t-[2.5rem] md:rounded-[2.5rem] flex flex-col h-[95vh] md:h-auto md:max-h-[90vh] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] relative overflow-x-hidden mt-auto md:mt-0 shadow-2xl">
-            
-            <!-- HEADER MODAL -->
             <div class="flex items-center justify-between p-6 md:p-8 border-b border-white/5 shrink-0 bg-[#0a0a0f] w-full">
                 <div class="min-w-0 pr-4">
                     <h2 class="text-xl md:text-2xl font-[900] tracking-tighter uppercase italic text-white mb-1 truncate">Auditoría <span class="text-[#FFC300]">KYC</span></h2>
@@ -189,11 +194,8 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-
-            <!-- CUERPO SCROLLABLE DEL MODAL -->
             <div id="modal-scroll-area" class="overflow-y-auto overflow-x-hidden custom-scroll p-6 md:p-8 flex-1 scroll-shadow relative w-full" onscroll="checkScroll()">
                 <form id="form-register-action" class="space-y-6 md:space-y-8 pb-10 w-full">
-                    
                     <div class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-white/5 relative overflow-hidden w-full">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-[#FFC300]/5 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 relative z-10 w-full">
@@ -201,64 +203,50 @@
                                 <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Nombre Comercial Registrado</label>
                                 <input type="text" id="reg-storeName" required class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner min-w-0" placeholder="Ej: Gymenez Performance">
                             </div>
-
                             <div class="min-w-0">
                                 <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">N° Documento / RIF</label>
                                 <div class="flex gap-2 w-full">
                                     <select id="reg-docType" class="w-[70px] shrink-0 bg-[#030305] border border-white/10 rounded-2xl px-2 py-4 text-sm font-bold text-white appearance-none text-center cursor-pointer focus:outline-none focus:border-[#FFC300] transition shadow-inner">
-                                        <option value="V">V</option>
-                                        <option value="E">E</option>
-                                        <option value="J">J</option>
+                                        <option value="V">V</option><option value="E">E</option><option value="J">J</option>
                                     </select>
                                     <input type="text" id="reg-docNumber" required class="flex-1 bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner min-w-0" placeholder="Ej: 31103356">
                                 </div>
                             </div>
-
                             <div class="min-w-0">
                                 <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Correo Institucional</label>
                                 <input type="email" id="reg-email" required class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner min-w-0" placeholder="empresa@correo.com">
                             </div>
-                            
                             <div class="min-w-0">
                                 <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Línea Móvil (WhatsApp)</label>
                                 <input type="text" id="reg-phone" required class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner min-w-0" placeholder="+58...">
                             </div>
-                            
                             <div class="min-w-0">
                                 <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Contraseña Máster</label>
                                 <input type="password" id="reg-password" required class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-mono tracking-widest text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner min-w-0" placeholder="••••••••">
                             </div>
                         </div>
                     </div>
-
                     <div class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-white/5 relative overflow-hidden w-full">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6 relative z-10 w-full">
                             <p class="text-[9px] md:text-[10px] text-emerald-500 uppercase tracking-widest font-black flex items-center gap-2">
-                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                                Requisitos Obligatorios
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg> Requisitos Obligatorios
                             </p>
                             <span class="text-[8px] bg-red-500/10 text-red-400 border border-red-500/20 px-2.5 py-1 rounded-md font-bold tracking-widest uppercase self-start md:self-auto shrink-0">Max: 2MB</span>
                         </div>
-                        
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10 w-full min-w-0">
-                            <!-- Cédula -->
                             <div class="relative w-full min-w-0 border-2 border-dashed border-white/10 hover:border-emerald-500/50 rounded-2xl p-4 flex flex-col items-center justify-center text-center overflow-hidden group cursor-pointer bg-[#030305] transition h-32" onclick="document.getElementById('reg-cedula').click()">
                                 <svg class="w-6 h-6 text-gray-500 group-hover:text-emerald-400 mb-2 transition-transform transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
                                 <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">ID / Cédula</span>
                                 <span id="label-cedula" class="text-[8px] text-gray-500 group-hover:text-emerald-400 truncate w-full mt-1 transition-colors">Tocar para subir...</span>
                                 <input type="file" id="reg-cedula" accept="image/*,.pdf" class="hidden" required onchange="updateFileLabel(this, 'label-cedula')">
                             </div>
-
-                            <!-- RIF -->
                             <div class="relative w-full min-w-0 border-2 border-dashed border-white/10 hover:border-emerald-500/50 rounded-2xl p-4 flex flex-col items-center justify-center text-center overflow-hidden group cursor-pointer bg-[#030305] transition h-32" onclick="document.getElementById('reg-rif').click()">
                                 <svg class="w-6 h-6 text-gray-500 group-hover:text-emerald-400 mb-2 transition-transform transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                 <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">Planilla RIF</span>
                                 <span id="label-rif" class="text-[8px] text-gray-500 group-hover:text-emerald-400 truncate w-full mt-1 transition-colors">Tocar para subir...</span>
                                 <input type="file" id="reg-rif" accept="image/*,.pdf" class="hidden" required onchange="updateFileLabel(this, 'label-rif')">
                             </div>
-
-                            <!-- Logo -->
                             <div class="relative w-full min-w-0 border-2 border-dashed border-white/10 hover:border-[#FFC300]/50 rounded-2xl p-4 flex flex-col items-center justify-center text-center overflow-hidden group cursor-pointer bg-[#030305] transition h-32" onclick="document.getElementById('reg-logo').click()">
                                 <svg class="w-6 h-6 text-gray-500 group-hover:text-[#FFC300] mb-2 transition-transform transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">Logo <span class="text-gray-600">(Opcional)</span></span>
@@ -269,31 +257,21 @@
                     </div>
                 </form>
             </div>
-            
-            <!-- INDICADOR VISUAL DE SCROLL -->
             <div id="scroll-hint" class="absolute bottom-28 md:bottom-32 left-1/2 transform -translate-x-1/2 flex flex-col items-center pointer-events-none transition-opacity duration-500">
                 <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 bg-[#0a0a0f]/90 px-3 py-1.5 rounded-full border border-white/10 shadow-lg">Desliza abajo</span>
                 <svg class="w-4 h-4 text-[#FFC300] animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
             </div>
-
-            <!-- FOOTER MODAL -->
             <div class="p-6 md:p-8 border-t border-white/5 shrink-0 bg-[#0a0a0f] md:rounded-b-[2.5rem] z-10 pb-safe w-full">
                 <button type="submit" form="form-register-action" id="btn-register" class="w-full bg-gradient-to-r from-[#FFD000] to-[#FFC300] text-black font-[900] text-[10px] uppercase tracking-widest py-4 rounded-full shadow-[0_10px_30px_rgba(255,195,0,0.2)] hover:scale-105 active:scale-95 transition-all flex justify-center items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Remitir a Auditoría KYC
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Remitir a Auditoría KYC
                 </button>
             </div>
-
         </div>
     </div>
 
-    <!-- ==================================================================== -->
-    <!-- MODAL: RECUPERACIÓN DE CREDENCIALES (REPARADO: FLOTA EN EL CENTRO) -->
-    <!-- ==================================================================== -->
+    <!-- MODAL: RECUPERACIÓN (CENTRO ABSOLUTO) -->
     <div id="recovery-modal" class="fixed inset-0 z-[400] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <!-- 🔥 FIX: Transform scale centralizado, sin translate-y que lo rompa en móvil -->
         <div class="modal-content bg-[#0a0a0f] border border-white/10 w-full max-w-md rounded-[2.5rem] flex flex-col transform scale-95 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] relative overflow-hidden shadow-2xl">
-            
             <div class="flex items-center justify-between p-6 md:p-8 border-b border-white/5 bg-[#0a0a0f]">
                 <div>
                     <h2 class="text-xl font-[900] tracking-tighter uppercase italic text-white mb-1">Restablecer</h2>
@@ -303,57 +281,159 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-
-            <!-- CONTENEDOR GRID: OTP Steps -->
             <div class="p-6 md:p-8 grid grid-cols-1 grid-rows-1 items-center min-h-[300px] md:min-h-[320px] w-full">
-                
-                <!-- PASO 1: PEDIR CORREO -->
                 <form id="form-recovery-step1" class="col-start-1 row-start-1 space-y-6 transition-all duration-300 w-full">
                     <p class="text-xs text-gray-400 leading-relaxed mb-2">Ingresa tu ID corporativo. Te enviaremos una llave temporal.</p>
                     <div class="w-full min-w-0">
                         <label class="block text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Correo Institucional</label>
                         <input type="email" id="recovery-email" required class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-medium text-white placeholder-gray-600 focus:outline-none focus:border-[#FFC300] transition shadow-inner min-w-0" placeholder="admin@empresa.com">
                     </div>
-                    <button type="submit" id="btn-recovery-step1" class="w-full bg-white text-black font-[900] text-[10px] uppercase tracking-widest py-4 rounded-full hover:bg-gray-200 active:scale-95 transition-all flex justify-center items-center gap-2">
-                        Solicitar Llave
-                    </button>
+                    <button type="submit" id="btn-recovery-step1" class="w-full bg-white text-black font-[900] text-[10px] uppercase tracking-widest py-4 rounded-full hover:bg-gray-200 active:scale-95 transition-all flex justify-center items-center gap-2">Solicitar Llave</button>
                 </form>
-
-                <!-- PASO 2: INGRESAR OTP Y NUEVA CLAVE -->
                 <form id="form-recovery-step2" class="col-start-1 row-start-1 space-y-5 opacity-0 pointer-events-none translate-x-10 transition-all duration-300 w-full">
                     <p class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest text-center mb-2">Código enviado.</p>
-                    
                     <div class="w-full min-w-0">
                         <label class="block text-[8px] md:text-[9px] font-black uppercase tracking-widest text-[#FFC300] mb-2 pl-1 text-center">Código OTP</label>
                         <input type="text" id="recovery-otp" required maxlength="6" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-[#030305] border border-[#FFC300]/30 rounded-2xl px-5 py-4 text-center text-2xl tracking-[0.5em] font-mono font-bold text-[#FFC300] placeholder-gray-700 focus:outline-none focus:border-[#FFC300] transition shadow-inner min-w-0" placeholder="000000">
                     </div>
-                    
                     <div class="w-full min-w-0">
                         <label class="block text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Nueva Contraseña Máster</label>
                         <input type="password" id="recovery-new-password" required minlength="6" maxlength="30" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-mono tracking-widest text-white placeholder-gray-600 focus:outline-none focus:border-[#FFC300] transition shadow-inner min-w-0" placeholder="••••••••">
                     </div>
-                    
-                    <button type="submit" id="btn-recovery-step2" class="w-full bg-gradient-to-r from-[#FFD000] to-[#FFC300] text-black font-[900] text-[10px] uppercase tracking-widest py-4 rounded-full active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,195,0,0.2)] flex justify-center items-center gap-2">
-                        Autorizar Cambio
-                    </button>
+                    <button type="submit" id="btn-recovery-step2" class="w-full bg-gradient-to-r from-[#FFD000] to-[#FFC300] text-black font-[900] text-[10px] uppercase tracking-widest py-4 rounded-full active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,195,0,0.2)] flex justify-center items-center gap-2">Autorizar Cambio</button>
                 </form>
-
             </div>
         </div>
     </div>
-            
-    <!-- SCRIPT CONTROL DE UI AVANZADO -->
+
+    <!-- 🍎 SCRIPT: CARRUSEL DE MARKETING & MODALES -->
     <script>
-        // Funciones de Control KYC
+        const promoData = [
+            {
+                color: "blue", hex: "#3b82f6",
+                icon: `<svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>`,
+                title: `Logística <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Nacional.</span>`,
+                desc: `Integración directa con MRW y ZOOM. Genera guías automatizadas con un clic y expande tu cobertura a todo el país sin esfuerzo logístico.`
+            },
+            {
+                color: "emerald", hex: "#10b981",
+                icon: `<svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>`,
+                title: `Liquidación <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600">Garantizada.</span>`,
+                desc: `Sistema Escrow Zero-Trust. Los fondos se aseguran antes del envío y se liquidan automáticamente a tu bóveda bancaria tras la confirmación de entrega.`
+            },
+            {
+                color: "purple", hex: "#a855f7",
+                icon: `<svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>`,
+                title: `Independencia <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">Absoluta.</span>`,
+                desc: `Sin membresías ocultas. Tú controlas tu inventario y tus precios. Un ecosistema premium diseñado exclusivamente para escalar tu rentabilidad.`
+            },
+            {
+                color: "yellow", hex: "#FFC300",
+                icon: `<svg class="w-8 h-8 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>`,
+                title: `Analíticas <br><span class="text-[#FFC300]">en Tiempo Real.</span>`,
+                desc: `Dashboard de nivel empresarial. Monitorea tu flujo de caja, órdenes en tránsito y métricas de conversión con precisión milimétrica.`
+            }
+        ];
+
+        let currentPromoIndex = Math.floor(Math.random() * promoData.length); // Inicio Aleatorio
+        let promoInterval;
+
+        function buildCarousel() {
+            const deskContainer = document.getElementById('desktop-promo-container');
+            const deskDots = document.getElementById('desktop-promo-dots');
+            const mobContainer = document.getElementById('mobile-promo-container');
+            const mobDots = document.getElementById('mobile-promo-dots');
+
+            promoData.forEach((slide, idx) => {
+                const slideHTML = `
+                    <div class="promo-slide flex flex-col ${idx === currentPromoIndex ? 'active' : ''}" id="slide-${idx}">
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mb-6 md:mb-8 backdrop-blur-md shadow-xl relative z-10">
+                            <div class="icon-glow" style="background-color: ${slide.hex}15;"></div>
+                            ${slide.icon}
+                        </div>
+                        <h1 class="text-4xl md:text-5xl xl:text-6xl font-[900] tracking-tighter uppercase mb-4 md:mb-6 leading-[1.1] text-white">
+                            ${slide.title}
+                        </h1>
+                        <p class="text-gray-400 text-xs md:text-sm font-medium leading-relaxed max-w-md">
+                            ${slide.desc}
+                        </p>
+                    </div>
+                `;
+                
+                const dotHTML = `<button onclick="goToSlide(${idx})" class="w-2 h-2 rounded-full transition-all duration-300 ${idx === currentPromoIndex ? 'w-6 bg-white' : 'bg-white/20 hover:bg-white/50'}"></button>`;
+
+                deskContainer.innerHTML += slideHTML;
+                mobContainer.innerHTML += slideHTML.replace(`id="slide-${idx}"`, `id="mob-slide-${idx}"`);
+                deskDots.innerHTML += dotHTML;
+                mobDots.innerHTML += dotHTML;
+            });
+        }
+
+        function updateCarousel() {
+            promoData.forEach((_, idx) => {
+                const isAct = idx === currentPromoIndex;
+                
+                // Desktop
+                const dSlide = document.getElementById(`slide-${idx}`);
+                const dDot = document.getElementById('desktop-promo-dots').children[idx];
+                dSlide.className = `promo-slide flex flex-col ${isAct ? 'active' : ''}`;
+                dDot.className = `w-2 h-2 rounded-full transition-all duration-300 ${isAct ? 'w-6 bg-white' : 'bg-white/20 hover:bg-white/50'}`;
+
+                // Mobile
+                const mSlide = document.getElementById(`mob-slide-${idx}`);
+                const mDot = document.getElementById('mobile-promo-dots').children[idx];
+                mSlide.className = `promo-slide flex flex-col ${isAct ? 'active' : ''}`;
+                mDot.className = `w-2 h-2 rounded-full transition-all duration-300 ${isAct ? 'w-6 bg-white' : 'bg-white/20 hover:bg-white/50'}`;
+            });
+        }
+
+        function nextSlide() {
+            currentPromoIndex = (currentPromoIndex + 1) % promoData.length;
+            updateCarousel();
+        }
+
+        function goToSlide(idx) {
+            currentPromoIndex = idx;
+            updateCarousel();
+            clearInterval(promoInterval);
+            promoInterval = setInterval(nextSlide, 7000);
+        }
+
+        // Mostrar Promo en Móvil
+        function closeMobilePromo() {
+            const modal = document.getElementById('mobile-promo-modal');
+            const card = document.getElementById('mobile-promo-card');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            card.classList.remove('scale-100');
+            card.classList.add('scale-95');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            buildCarousel();
+            promoInterval = setInterval(nextSlide, 7000); // Rota cada 7 segundos
+
+            // Mostrar el modal móvil suavemente tras 1.5s
+            setTimeout(() => {
+                const mobModal = document.getElementById('mobile-promo-modal');
+                const mobCard = document.getElementById('mobile-promo-card');
+                if (window.innerWidth < 1024 && mobModal) {
+                    mobModal.classList.remove('opacity-0', 'pointer-events-none');
+                    mobCard.classList.remove('scale-95');
+                    mobCard.classList.add('scale-100');
+                }
+            }, 1500);
+        });
+
+        // ==========================================
+        // Funciones de Control de Modales KYC/OTP
+        // ==========================================
         function openRegisterModal() {
             const modal = document.getElementById('register-modal');
             const modalInner = modal.querySelector('.modal-content');
             modal.classList.remove('hidden');
-            
             const scrollArea = document.getElementById('modal-scroll-area');
             scrollArea.scrollTop = 0;
             checkScroll(); 
-
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
                 modalInner.classList.remove('translate-y-full', 'md:scale-95');
@@ -365,7 +445,6 @@
             const modalInner = modal.querySelector('.modal-content');
             modal.classList.add('opacity-0');
             modalInner.classList.add('translate-y-full', 'md:scale-95');
-            
             setTimeout(() => {
                 modal.classList.add('hidden');
                 document.getElementById('form-register-action').reset();
@@ -377,7 +456,6 @@
             }, 500); 
         }
 
-        // 🔥 Funciones Reparadas: Recuperación en el Centro Exacto
         function openRecoveryModal() {
             const modal = document.getElementById('recovery-modal');
             const modalInner = modal.querySelector('.modal-content');
@@ -385,7 +463,7 @@
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
                 modalInner.classList.remove('scale-95');
-                modalInner.classList.add('scale-100'); // Rebote Centro
+                modalInner.classList.add('scale-100');
             }, 10);
         }
 
@@ -400,26 +478,19 @@
             }, 500);
         }
 
-        // Funciones Comunes
         function checkScroll() {
             const scrollArea = document.getElementById('modal-scroll-area');
             const hint = document.getElementById('scroll-hint');
-            
-            if (scrollArea.scrollTop > 20) {
-                hint.classList.add('opacity-0');
-            } else {
-                hint.classList.remove('opacity-0');
-            }
+            if (scrollArea.scrollTop > 20) { hint.classList.add('opacity-0'); } 
+            else { hint.classList.remove('opacity-0'); }
         }
 
         function showFrontendToast(icon, message) {
             const toast = document.getElementById('toast');
             document.getElementById('toast-icon').textContent = icon;
             document.getElementById('toast-msg').textContent = message;
-            
             toast.classList.remove('opacity-0', '-translate-y-10');
             toast.classList.add('opacity-100', 'translate-y-0');
-            
             setTimeout(() => {
                 toast.classList.remove('opacity-100', 'translate-y-0');
                 toast.classList.add('opacity-0', '-translate-y-10');
@@ -429,19 +500,15 @@
         function updateFileLabel(input, labelId) {
             const label = document.getElementById(labelId);
             const MAX_SIZE_MB = 2;
-            const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-                
-                if (file.size > MAX_SIZE_BYTES) {
+                if (file.size > (MAX_SIZE_MB * 1024 * 1024)) {
                     showFrontendToast("❌", `El archivo supera el límite de ${MAX_SIZE_MB}MB.`);
                     input.value = ''; 
                     label.textContent = `Muy pesado (Máx ${MAX_SIZE_MB}MB)`;
                     label.className = 'text-[8px] font-bold text-red-500 truncate w-full mt-1 transition-colors';
                     return;
                 }
-
                 label.textContent = file.name;
                 label.className = `text-[8px] font-bold truncate w-full mt-1 transition-colors ${labelId.includes('logo') ? 'text-[#FFC300]' : 'text-emerald-400'}`;
             } else {
