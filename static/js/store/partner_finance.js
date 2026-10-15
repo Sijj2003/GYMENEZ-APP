@@ -8,6 +8,10 @@ const API_BASE_URL = window.location.hostname === '127.0.0.1' || window.location
 
 const TOKEN_KEY = 'gymenez_partner_token';
 
+// Variable de estado para protección de doble click
+let currentLiquidableUsdEquiv = 0; 
+let isProcessingPayout = false;
+
 document.addEventListener('DOMContentLoaded', () => {
     fetchFinancialData();
 });
@@ -40,13 +44,14 @@ async function fetchFinancialData() {
 // 2. ACTUALIZAR INTERFAZ BIMONETARIA
 function updateFinancialUI(snapshot) {
     // A) Animamos los montos totales equivalentes en USD
-    animateValue("balance-available", 0, snapshot.total_disponible_equivalente_usd, 1200);
+    currentLiquidableUsdEquiv = snapshot.total_disponible_equivalente_usd;
+    animateValue("balance-available", 0, currentLiquidableUsdEquiv, 1200);
     
     // Calculamos el equivalente en USD del Escrow solo para la pantalla (El backend ya mandó los puros)
     const escrowEqUsd = snapshot.escrow_puro_usd + (snapshot.tasa_bcv_hoy > 0 ? (snapshot.escrow_puro_ves / snapshot.tasa_bcv_hoy) : 0);
     animateValue("balance-escrow", 0, escrowEqUsd, 1200);
 
-    // B) Inyectar Subtítulos Desglosados (Asegúrate de agregar estos IDs en tu HTML debajo de los números grandes si deseas mostrarlos)
+    // B) Inyectar Subtítulos Desglosados
     const availableSubtitle = document.getElementById('breakdown-available');
     if (availableSubtitle) {
         availableSubtitle.innerHTML = `$${snapshot.disponible_puro_usd.toFixed(2)} USD + Bs. ${snapshot.disponible_puro_ves.toFixed(2)} (Tasa BCV: ${snapshot.tasa_bcv_hoy})`;
@@ -57,10 +62,10 @@ function updateFinancialUI(snapshot) {
         escrowSubtitle.innerHTML = `$${snapshot.escrow_puro_usd.toFixed(2)} USD + Bs. ${snapshot.escrow_puro_ves.toFixed(2)}`;
     }
 
-    // C) Lógica del Botón de Retiro (Sin mínimos, solo que sea mayor a cero)
+    // C) Lógica del Botón de Retiro (Solo habilita si hay fondos y no está procesando ya)
     const btnPayout = document.getElementById('btn-request-payout');
     if (btnPayout) {
-        if (snapshot.total_disponible_equivalente_usd > 0) {
+        if (currentLiquidableUsdEquiv > 0 && !isProcessingPayout) {
             btnPayout.classList.remove('bg-white/5', 'text-gray-500', 'cursor-not-allowed', 'border-white/10');
             btnPayout.classList.add('bg-[#FFC300]', 'text-black', 'border-[#FFC300]', 'hover:bg-[#e6b000]', 'cursor-pointer');
             btnPayout.disabled = false;
@@ -94,6 +99,7 @@ function renderTransactions(transactions) {
 
         let badge = '';
         let icon = '';
+        let textStyle = 'text-white';
 
         if (tx.status === 'disponible') {
             badge = `<span class="text-[9px] font-black uppercase tracking-widest text-[#FFC300]">Disponible</span>`;
@@ -105,6 +111,7 @@ function renderTransactions(transactions) {
             icon = `<div class="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>`;
+            textStyle = 'text-gray-400 line-through decoration-white/20'; // Visual de dinero que ya no suma
         } else {
             badge = `<span class="text-[9px] font-black uppercase tracking-widest text-gray-500">En Escrow</span>`;
             icon = `<div class="w-10 h-10 rounded-full bg-gray-500/10 border border-white/10 flex items-center justify-center text-gray-500 shrink-0">
@@ -119,12 +126,12 @@ function renderTransactions(transactions) {
                 <div class="flex items-center gap-4">
                     ${icon}
                     <div>
-                        <p class="text-sm font-[900] uppercase italic text-white mb-0.5">Orden #${tx.id}</p>
+                        <p class="text-sm font-[900] uppercase italic ${textStyle} mb-0.5">Orden #${tx.id}</p>
                         <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">${dateStr} • ${tx.buyer_name} • ${monedaStr}</p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <p class="text-lg font-[900] italic text-white tracking-tighter mb-0.5">+$${total}</p>
+                    <p class="text-lg font-[900] italic ${textStyle} tracking-tighter mb-0.5">+$${total}</p>
                     ${badge}
                 </div>
             </div>
@@ -134,16 +141,29 @@ function renderTransactions(transactions) {
 
 // 4. GENERAR TICKET DE LIQUIDACIÓN
 window.requestPayout = async function(event) {
+    // 🛡️ ZERO-TRUST LOCAL: Si está en cero, o ya le dio clic, cortamos de raíz.
+    if (currentLiquidableUsdEquiv <= 0 || isProcessingPayout) {
+        if(navigator.vibrate) navigator.vibrate([100]);
+        return; 
+    }
+
+    const conf = confirm(`¿Estás seguro de solicitar la liquidación de todas tus órdenes disponibles?\n\nEquivalente aproximado a transferir: $${currentLiquidableUsdEquiv.toLocaleString('en-US', {minimumFractionDigits: 2})} USD.`);
+    if (!conf) return;
+
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
 
+    // Bloqueamos el flujo
+    isProcessingPayout = true;
+
     // Feedback visual en el botón
     const btn = event ? event.currentTarget : document.getElementById('btn-request-payout');
-    if (btn.disabled) return;
+    const originalText = btn ? btn.innerHTML : '';
     
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = `<div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>`;
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div> Procesando...`;
+    }
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/partner/finances/payout`, {
@@ -156,17 +176,21 @@ window.requestPayout = async function(event) {
         if (res.ok && data.success) {
             if(navigator.vibrate) navigator.vibrate([50, 50]);
             alert(`✅ ¡Éxito!\n\n${data.message}\nTicket de seguimiento: ${data.ticket_id}`);
-            // Recargamos los fondos para mostrar $0.00 disponibles
+            // Recargamos los fondos para mostrar $0.00 disponibles y pintar las órdenes tachadas
             fetchFinancialData(); 
         } else {
             if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
             alert(`❌ Error al solicitar liquidación: ${data.error}`);
         }
     } catch (error) {
+        console.error("Fallo de red al solicitar payout:", error);
         alert("Fallo de conexión al procesar la solicitud.");
     } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+        isProcessingPayout = false;
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = currentLiquidableUsdEquiv <= 0;
+        }
     }
 };
 
@@ -177,7 +201,7 @@ function animateValue(id, start, end, duration) {
     const obj = document.getElementById(id);
     if (!obj) return;
     
-    obj.classList.remove('skeleton-text'); // Quitar efecto de carga
+    obj.classList.remove('skeleton-text'); 
 
     let startTimestamp = null;
     const step = (timestamp) => {
