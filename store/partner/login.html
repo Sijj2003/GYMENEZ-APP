@@ -2,7 +2,7 @@
 <html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Gymenez Store Partner's | Enterprise Portal</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,142 +11,156 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #000000; 
+            background-color: #030305; 
             color: white; 
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
         }
 
         .ambient-bg {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at 15% 50%, rgba(255, 195, 0, 0.03), transparent 25%),
-                        radial-gradient(circle at 85% 30%, rgba(255, 255, 255, 0.02), transparent 25%);
+            background: radial-gradient(circle at 15% 50%, rgba(255, 195, 0, 0.05), transparent 30%),
+                        radial-gradient(circle at 85% 30%, rgba(255, 255, 255, 0.03), transparent 30%);
             z-index: -2;
+            pointer-events: none;
         }
 
+        /* Cristal Ahumado (Glassmorphism Avanzado) */
         .apple-glass {
-            background: rgba(18, 18, 26, 0.5);
+            background: rgba(18, 18, 26, 0.6);
             backdrop-filter: blur(40px);
             -webkit-backdrop-filter: blur(40px);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6);
         }
 
+        /* Inputs Elegantes */
         .apple-input {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             color: white;
+            appearance: none;
         }
         
         .apple-input:focus {
             background: rgba(255, 255, 255, 0.05);
-            border-color: #FFC300;
-            box-shadow: 0 0 0 1px rgba(255, 195, 0, 0.3);
+            border-color: rgba(255, 195, 0, 0.6);
+            box-shadow: 0 0 0 4px rgba(255, 195, 0, 0.1);
             outline: none;
         }
 
+        /* Botón de Oro Brillante */
         .btn-gold-pro {
             background: linear-gradient(135deg, #FFD000 0%, #FFB300 100%);
             color: #000;
             box-shadow: 0 10px 25px -5px rgba(255, 195, 0, 0.3);
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .btn-gold-pro:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px -5px rgba(255, 195, 0, 0.4);
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 15px 35px -5px rgba(255, 195, 0, 0.4);
+        }
+        .btn-gold-pro:active:not(:disabled) {
+            transform: translateY(1px) scale(0.98);
         }
 
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Sombra interior para indicar scroll */
+        /* Sombra interior para indicar que el modal tiene scroll */
         .scroll-shadow {
             box-shadow: inset 0 -40px 40px -40px rgba(0,0,0,0.9);
         }
     </style>
 </head>
-<body class="selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col relative overflow-hidden">
+<body class="selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col relative overflow-x-hidden md:overflow-hidden">
 
     <div class="ambient-bg"></div>
 
-    <!-- NAVBAR ENTERPRISE -->
-    <nav class="w-full z-40 px-6 py-6 flex justify-between items-center max-w-7xl mx-auto fixed top-0 left-0 right-0 apple-glass border-x-0 border-t-0 border-b border-white/5 h-20">
-        <div class="flex items-center gap-4">
-            <a href="/index.html" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition group">
+    <!-- NAVBAR ENTERPRISE (Fija y minimalista) -->
+    <nav class="w-full z-40 px-5 md:px-8 py-4 md:py-6 flex justify-between items-center max-w-7xl mx-auto fixed top-0 left-0 right-0 apple-glass border-x-0 border-t-0 border-b border-white/5 h-20 shrink-0">
+        <div class="flex items-center gap-3 md:gap-4">
+            <a href="/index.html" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition group shrink-0">
                 <svg class="w-4 h-4 transform group-hover:-translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
             </a>
-            <div class="h-4 w-px bg-white/20"></div>
-            <a href="/store/home.html" class="flex flex-col leading-none group">
-                <span class="text-base md:text-lg font-[900] tracking-tighter uppercase italic text-white group-hover:text-[#FFC300] transition-colors">GYMENEZ STORE PARTNER'S</span>
-                <span class="text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] text-[#FFC300] mt-1">Enterprise Workspace</span>
+            <div class="h-4 w-px bg-white/20 shrink-0"></div>
+            <a href="/store/home.html" class="flex flex-col leading-none group min-w-0">
+                <div class="flex items-center flex-wrap">
+                    <span class="text-sm md:text-lg font-[900] tracking-tighter uppercase italic text-white group-hover:text-[#FFC300] transition-colors truncate">GYMENEZ STORE</span>
+                </div>
+                <span class="text-[7px] md:text-[9px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-[#FFC300] mt-1 truncate">Partner Enterprise</span>
             </a>
         </div>
         
-        <div class="hidden md:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-            <svg class="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-1.998A11.954 11.954 0 0110 1.944zM10 14a4 4 0 100-8 4 4 0 000 8z" clip-rule="evenodd"></path></svg>
-            <span class="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Shield Secured</span>
+        <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-2.5 md:px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.1)] shrink-0">
+            <svg class="w-3 h-3 md:w-3.5 md:h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-1.998A11.954 11.954 0 0110 1.944zM10 14a4 4 0 100-8 4 4 0 000 8z" clip-rule="evenodd"></path></svg>
+            <span class="text-[7px] md:text-[9px] font-black text-emerald-500 uppercase tracking-widest hidden sm:inline">Shield Secured</span>
         </div>
     </nav>
 
-    <!-- TOAST DE NOTIFICACIÓN: Z-Index aumentado a 9999 para superar al Modal -->
+    <!-- TOAST DE NOTIFICACIÓN: Máxima prioridad visual -->
     <div class="fixed top-24 left-0 w-full flex justify-center z-[9999] pointer-events-none">
-        <div id="toast" class="transform -translate-y-10 opacity-0 transition-all duration-500 ease-out bg-white text-black px-6 py-3.5 rounded-full font-bold text-xs shadow-[0_20px_40px_rgba(0,0,0,0.6)] flex items-center gap-3">
+        <div id="toast" class="transform -translate-y-10 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] bg-white text-black px-6 py-3.5 rounded-full font-bold text-xs shadow-[0_20px_40px_rgba(0,0,0,0.6)] flex items-center gap-3">
             <span id="toast-icon" class="text-lg"></span>
             <span id="toast-msg"></span>
         </div>
     </div>
 
-    <!-- LOBBY PRINCIPAL -->
-    <main class="flex-1 flex items-center justify-center p-4 pt-20 relative z-10 w-full max-w-7xl mx-auto h-screen">
-        <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+    <!-- LOBBY PRINCIPAL (Scroll libre en móvil, centrado en PC) -->
+    <main class="flex-1 flex flex-col lg:flex-row items-center justify-center p-5 md:p-8 pt-28 relative z-10 w-full max-w-7xl mx-auto min-h-screen lg:h-screen lg:overflow-hidden pb-12">
+        <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-20 items-center">
             
-            <div class="hidden lg:flex flex-col pr-8">
-                <div class="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md">
-                    <svg class="w-8 h-8 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+            <!-- Zona de Texto (Se oculta en móviles muy pequeños para no abrumar) -->
+            <div class="hidden sm:flex flex-col lg:pr-8">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mb-6 md:mb-8 backdrop-blur-md shadow-lg">
+                    <svg class="w-7 h-7 md:w-8 md:h-8 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                 </div>
-                <h1 class="text-5xl xl:text-6xl font-[900] tracking-tighter uppercase mb-6 leading-[1.1]">
+                <h1 class="text-4xl md:text-5xl xl:text-6xl font-[900] tracking-tighter uppercase mb-4 md:mb-6 leading-[1.1]">
                     El Estándar <br>
                     <span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">Comercial.</span>
                 </h1>
-                <p class="text-gray-400 text-sm font-medium leading-relaxed mb-12 max-w-md">
+                <p class="text-gray-400 text-xs md:text-sm font-medium leading-relaxed mb-8 md:mb-12 max-w-md">
                     Bienvenido al lobby de administración B2B de Gymenez Store. Escala tus ventas, gestiona inventarios globales y liquida fondos mediante nuestro sistema automatizado protegido por Gymenez Shield.
                 </p>
 
-                <div class="grid grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                     <div class="border-l-2 border-[#FFC300] pl-4">
-                        <h4 class="text-white font-bold text-sm mb-1">Cifrado Militar</h4>
-                        <p class="text-gray-500 text-xs leading-relaxed">Protección AES-256 en cada transacción del ecosistema.</p>
+                        <h4 class="text-white font-bold text-xs md:text-sm mb-1">Cifrado Militar</h4>
+                        <p class="text-gray-500 text-[10px] md:text-xs leading-relaxed">Protección AES-256 en cada transacción del ecosistema.</p>
                     </div>
                     <div class="border-l-2 border-emerald-500 pl-4">
-                        <h4 class="text-white font-bold text-sm mb-1">Escrow System</h4>
-                        <p class="text-gray-500 text-xs leading-relaxed">Liquidaciones automáticas de fondos verificados.</p>
+                        <h4 class="text-white font-bold text-xs md:text-sm mb-1">Escrow System</h4>
+                        <p class="text-gray-500 text-[10px] md:text-xs leading-relaxed">Liquidaciones automáticas de fondos verificados.</p>
                     </div>
                 </div>
             </div>
 
-            <div class="w-full max-w-md mx-auto">
-                <div id="login-form" class="apple-glass p-8 md:p-12 rounded-[2.5rem] w-full">
+            <!-- Formulario de Acceso (Siempre visible y central) -->
+            <div class="w-full max-w-md mx-auto relative z-20">
+                <div id="login-form" class="apple-glass p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] w-full">
                     <div class="text-center mb-10">
-                        <h2 class="text-2xl font-[900] tracking-tighter uppercase text-white mb-2">Acceso <span class="text-[#FFC300]">Partner</span></h2>
-                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Identidad Verificada Requerida</p>
+                        <h2 class="text-2xl md:text-3xl font-[900] tracking-tighter uppercase text-white mb-2">Acceso <span class="text-[#FFC300]">Partner</span></h2>
+                        <p class="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase tracking-widest">Identidad Verificada Requerida</p>
                     </div>
 
                     <form id="form-login-action" class="space-y-5">
                         <div>
-                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">ID Corporativo (Correo)</label>
-                            <input type="email" id="login-email" required class="w-full apple-input rounded-2xl px-5 py-4 text-sm font-medium placeholder-gray-600" placeholder="admin@tumarca.com">
+                            <label class="block text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">ID Corporativo (Correo)</label>
+                            <input type="email" id="login-email" required class="w-full apple-input rounded-2xl px-5 py-4 text-sm font-medium placeholder-gray-600 focus:bg-[#12121a]" placeholder="admin@tumarca.com">
                         </div>
                         <div>
                             <div class="flex justify-between items-center mb-2 pl-1 pr-1">
-                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400">Credencial de Acceso</label>
-                                <button type="button" onclick="openRecoveryModal()" class="text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition">¿Recuperar?</button>
+                                <label class="block text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-400">Credencial de Acceso</label>
+                                <button type="button" onclick="openRecoveryModal()" class="text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition">¿Recuperar?</button>
                             </div>
-                            <input type="password" id="login-password" required class="w-full apple-input rounded-2xl px-5 py-4 text-sm font-mono tracking-widest placeholder-gray-600" placeholder="••••••••">
+                            <input type="password" id="login-password" required class="w-full apple-input rounded-2xl px-5 py-4 text-sm font-mono tracking-widest placeholder-gray-600 focus:bg-[#12121a]" placeholder="••••••••">
                         </div>
                         
                         <div class="pt-4">
-                            <button type="submit" id="btn-login" class="w-full btn-gold-pro font-[900] text-[11px] uppercase tracking-widest py-4 rounded-2xl flex justify-center items-center gap-2">
+                            <button type="submit" id="btn-login" class="w-full btn-gold-pro font-[900] text-[10px] md:text-[11px] uppercase tracking-widest py-4 rounded-2xl flex justify-center items-center gap-2">
                                 <span>Autenticar Terminal</span>
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                             </button>
@@ -154,8 +168,8 @@
                     </form>
 
                     <div class="mt-8 pt-8 border-t border-white/5 text-center">
-                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-4">¿Aún no operas en nuestra red?</p>
-                        <button onclick="openRegisterModal()" class="w-full bg-transparent text-white font-bold text-[10px] uppercase tracking-widest py-3.5 rounded-2xl border border-white/10 hover:bg-white/5 transition-all flex items-center justify-center gap-2 group">
+                        <p class="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-4">¿Aún no operas en nuestra red?</p>
+                        <button onclick="openRegisterModal()" class="w-full bg-transparent text-white font-bold text-[9px] md:text-[10px] uppercase tracking-widest py-3.5 md:py-4 rounded-2xl border border-white/10 hover:bg-white/5 transition-all flex items-center justify-center gap-2 group active:scale-95">
                             <svg class="w-4 h-4 text-gray-400 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             Solicitar Cuenta de Comercio
                         </button>
@@ -170,14 +184,14 @@
     <!-- MODAL: LÍMITE DE SESIONES (CIERRE REMOTO) -->
     <!-- ==================================================================== -->
     <div id="session-limit-modal" class="fixed inset-0 z-[300] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="apple-glass w-full max-w-md rounded-[2.5rem] flex flex-col transform scale-95 transition-transform duration-300 relative overflow-hidden">
+        <div class="apple-glass w-full max-w-md rounded-[2.5rem] flex flex-col transform scale-95 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] relative overflow-hidden">
             
             <div class="p-8 text-center border-b border-white/5 bg-[#12121a]/80">
                 <div class="w-16 h-16 bg-[#FFC300]/10 border border-[#FFC300]/20 rounded-full flex items-center justify-center mb-4 mx-auto text-[#FFC300]">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                 </div>
                 <h2 class="text-xl font-[900] tracking-tighter uppercase text-white mb-1">Límite Alcanzado</h2>
-                <p class="text-[9px] uppercase tracking-widest text-gray-400 font-black leading-relaxed">Solo permitimos 3 dispositivos conectados. Cierra uno para continuar.</p>
+                <p class="text-[8px] md:text-[9px] uppercase tracking-widest text-gray-400 font-black leading-relaxed">Solo permitimos 3 dispositivos conectados. Cierra uno para continuar.</p>
             </div>
 
             <div class="p-6">
@@ -186,8 +200,8 @@
                 </div>
             </div>
 
-            <div class="p-6 border-t border-white/5 text-center">
-                <button onclick="closeSessionModal()" class="text-[9px] font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-colors">Cancelar</button>
+            <div class="p-6 border-t border-white/5 text-center bg-[#12121a]/50">
+                <button onclick="closeSessionModal()" class="text-[9px] font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-colors py-2 px-4 rounded-xl hover:bg-white/5">Cancelar</button>
             </div>
         </div>
     </div>
@@ -195,72 +209,73 @@
     <!-- ==================================================================== -->
     <!-- MODAL (OVERLAY): AUDITORÍA KYC / REGISTRO DE COMERCIO -->
     <!-- ==================================================================== -->
-    <div id="register-modal" class="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="apple-glass w-full max-w-3xl rounded-[2.5rem] flex flex-col max-h-[90vh] transform scale-95 transition-transform duration-300 relative overflow-hidden">
+    <div id="register-modal" class="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
+        <!-- 🔥 FIX MÓVIL: Panel inferior tipo "BottomSheet" en móviles, flotante en PC -->
+        <div class="apple-glass w-full max-w-3xl rounded-t-[2.5rem] md:rounded-[2.5rem] flex flex-col h-[95vh] md:h-auto md:max-h-[90vh] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] relative overflow-hidden mt-auto md:mt-0">
             
             <!-- HEADER MODAL -->
             <div class="flex items-center justify-between p-6 md:p-8 border-b border-white/5 shrink-0 bg-[#12121a]/80 backdrop-blur-sm z-10">
-                <div>
-                    <h2 class="text-xl md:text-2xl font-[900] tracking-tighter uppercase text-white mb-1">Auditoría KYC</h2>
-                    <p class="text-[9px] uppercase tracking-widest text-emerald-500 font-black">Incorporación de Nueva Empresa</p>
+                <div class="min-w-0 pr-4">
+                    <h2 class="text-xl md:text-2xl font-[900] tracking-tighter uppercase text-white mb-1 truncate">Auditoría KYC</h2>
+                    <p class="text-[8px] md:text-[9px] uppercase tracking-widest text-emerald-500 font-black truncate">Incorporación de Empresa</p>
                 </div>
-                <button onclick="closeRegisterModal()" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-500 transition">
+                <button onclick="closeRegisterModal()" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500/20 hover:border-red-500/50 transition shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
 
             <!-- CUERPO SCROLLABLE DEL MODAL -->
             <div id="modal-scroll-area" class="overflow-y-auto hide-scroll p-6 md:p-8 flex-1 scroll-shadow relative" onscroll="checkScroll()">
-                <form id="form-register-action" class="space-y-8 pb-10">
+                <form id="form-register-action" class="space-y-6 md:space-y-8 pb-10">
                     
                     <!-- Grid Principal -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
                         <div class="md:col-span-2">
-                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Nombre Comercial Registrado</label>
-                            <input type="text" id="reg-storeName" required class="w-full apple-input rounded-xl px-5 py-4 text-xs font-bold" placeholder="Ej: Gymenez Performance">
+                            <label class="block text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Nombre Comercial Registrado</label>
+                            <input type="text" id="reg-storeName" required class="w-full apple-input rounded-2xl px-5 py-4 text-xs font-bold focus:bg-[#12121a]" placeholder="Ej: Gymenez Performance">
                         </div>
 
                         <div>
-                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">N° Documento / RIF</label>
+                            <label class="block text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">N° Documento / RIF</label>
                             <div class="flex gap-2">
-                                <select id="reg-docType" class="w-20 apple-input rounded-xl px-3 py-4 text-xs font-bold appearance-none text-center cursor-pointer">
+                                <select id="reg-docType" class="w-20 apple-input rounded-2xl px-3 py-4 text-xs font-bold appearance-none text-center cursor-pointer focus:bg-[#12121a]">
                                     <option value="V" class="bg-[#12121a]">V</option>
                                     <option value="E" class="bg-[#12121a]">E</option>
                                     <option value="J" class="bg-[#12121a]">J</option>
                                 </select>
-                                <input type="text" id="reg-docNumber" required class="flex-1 apple-input rounded-xl px-4 py-4 text-xs font-bold" placeholder="Ej: 31103356">
+                                <input type="text" id="reg-docNumber" required class="flex-1 apple-input rounded-2xl px-4 py-4 text-xs font-bold focus:bg-[#12121a]" placeholder="Ej: 31103356">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Correo Institucional</label>
-                            <input type="email" id="reg-email" required class="w-full apple-input rounded-xl px-5 py-4 text-xs font-bold" placeholder="empresa@correo.com">
+                            <label class="block text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Correo Institucional</label>
+                            <input type="email" id="reg-email" required class="w-full apple-input rounded-2xl px-5 py-4 text-xs font-bold focus:bg-[#12121a]" placeholder="empresa@correo.com">
                         </div>
                         
                         <div>
-                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Línea Móvil (WhatsApp)</label>
-                            <input type="text" id="reg-phone" required class="w-full apple-input rounded-xl px-5 py-4 text-xs font-bold" placeholder="+58...">
+                            <label class="block text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Línea Móvil (WhatsApp)</label>
+                            <input type="text" id="reg-phone" required class="w-full apple-input rounded-2xl px-5 py-4 text-xs font-bold focus:bg-[#12121a]" placeholder="+58...">
                         </div>
                         
                         <div>
-                            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Contraseña Máster</label>
-                            <input type="password" id="reg-password" required class="w-full apple-input rounded-xl px-5 py-4 text-xs font-mono tracking-wider" placeholder="••••••••">
+                            <label class="block text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Contraseña Máster</label>
+                            <input type="password" id="reg-password" required class="w-full apple-input rounded-2xl px-5 py-4 text-xs font-mono tracking-wider focus:bg-[#12121a]" placeholder="••••••••">
                         </div>
                     </div>
 
                     <!-- Documentación Legal -->
-                    <div class="pt-6 mt-6 border-t border-white/5 space-y-4">
-                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
-                            <p class="text-[9px] text-emerald-500 uppercase tracking-widest font-black flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                                Requisitos Regulatorios Obligatorios
+                    <div class="pt-6 md:mt-6 border-t border-white/5 space-y-4">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+                            <p class="text-[9px] md:text-[10px] text-emerald-500 uppercase tracking-widest font-black flex items-center gap-2">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                Requisitos Obligatorios
                             </p>
-                            <span class="text-[8px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-1 rounded font-bold tracking-widest uppercase">Límite por archivo: 2MB</span>
+                            <span class="text-[8px] bg-red-500/10 text-red-400 border border-red-500/20 px-2.5 py-1 rounded-md font-bold tracking-widest uppercase self-start md:self-auto">Max: 2MB</span>
                         </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <!-- Cédula -->
-                            <div class="relative w-full border border-dashed border-white/10 hover:border-emerald-500/50 rounded-xl p-4 flex flex-col items-center justify-center text-center overflow-hidden group cursor-pointer bg-black/20 transition h-28" onclick="document.getElementById('reg-cedula').click()">
+                            <div class="relative w-full border border-dashed border-white/10 hover:border-emerald-500/50 rounded-2xl p-4 flex flex-col items-center justify-center text-center overflow-hidden group cursor-pointer bg-black/20 transition h-28" onclick="document.getElementById('reg-cedula').click()">
                                 <svg class="w-6 h-6 text-gray-500 group-hover:text-emerald-400 mb-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
                                 <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">ID / Cédula</span>
                                 <span id="label-cedula" class="text-[8px] text-gray-500 group-hover:text-emerald-400 truncate w-full mt-1 transition-colors">Subir Archivo...</span>
@@ -268,7 +283,7 @@
                             </div>
 
                             <!-- RIF -->
-                            <div class="relative w-full border border-dashed border-white/10 hover:border-emerald-500/50 rounded-xl p-4 flex flex-col items-center justify-center text-center overflow-hidden group cursor-pointer bg-black/20 transition h-28" onclick="document.getElementById('reg-rif').click()">
+                            <div class="relative w-full border border-dashed border-white/10 hover:border-emerald-500/50 rounded-2xl p-4 flex flex-col items-center justify-center text-center overflow-hidden group cursor-pointer bg-black/20 transition h-28" onclick="document.getElementById('reg-rif').click()">
                                 <svg class="w-6 h-6 text-gray-500 group-hover:text-emerald-400 mb-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                 <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">Planilla RIF</span>
                                 <span id="label-rif" class="text-[8px] text-gray-500 group-hover:text-emerald-400 truncate w-full mt-1 transition-colors">Subir Archivo...</span>
@@ -276,7 +291,7 @@
                             </div>
 
                             <!-- Logo -->
-                            <div class="relative w-full border border-dashed border-white/10 hover:border-[#FFC300]/50 rounded-xl p-4 flex flex-col items-center justify-center text-center overflow-hidden group cursor-pointer bg-black/20 transition h-28" onclick="document.getElementById('reg-logo').click()">
+                            <div class="relative w-full border border-dashed border-white/10 hover:border-[#FFC300]/50 rounded-2xl p-4 flex flex-col items-center justify-center text-center overflow-hidden group cursor-pointer bg-black/20 transition h-28" onclick="document.getElementById('reg-logo').click()">
                                 <svg class="w-6 h-6 text-gray-500 group-hover:text-[#FFC300] mb-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 <span class="text-[9px] font-black uppercase tracking-widest text-gray-300">Logo <span class="text-gray-600">(Opcional)</span></span>
                                 <span id="label-logo" class="text-[8px] text-gray-500 group-hover:text-[#FFC300] truncate w-full mt-1 transition-colors">Subir JPG/PNG...</span>
@@ -288,16 +303,16 @@
             </div>
             
             <!-- INDICADOR VISUAL DE SCROLL -->
-            <div id="scroll-hint" class="absolute bottom-28 left-1/2 transform -translate-x-1/2 flex flex-col items-center pointer-events-none transition-opacity duration-500">
-                <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 bg-black/50 px-2 py-0.5 rounded-full backdrop-blur-sm border border-white/10">Desliza para continuar</span>
-                <svg class="w-4 h-4 text-gray-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+            <div id="scroll-hint" class="absolute bottom-28 md:bottom-32 left-1/2 transform -translate-x-1/2 flex flex-col items-center pointer-events-none transition-opacity duration-500">
+                <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 bg-[#0a0a0f]/80 px-3 py-1 rounded-full backdrop-blur-md border border-white/10 shadow-lg">Desliza abajo</span>
+                <svg class="w-4 h-4 text-[#FFC300] animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
             </div>
 
             <!-- FOOTER MODAL (BOTÓN FIJO ABAJO) -->
-            <div class="p-6 md:p-8 border-t border-white/5 shrink-0 bg-[#12121a]/95 backdrop-blur-md rounded-b-[2.5rem] z-10">
+            <div class="p-6 md:p-8 border-t border-white/5 shrink-0 bg-[#12121a]/95 backdrop-blur-md md:rounded-b-[2.5rem] z-10 pb-safe">
                 <button type="submit" form="form-register-action" id="btn-register" class="w-full btn-gold-pro font-[900] text-[10px] uppercase tracking-widest py-4 rounded-2xl flex justify-center items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Remitir al Dept. de Auditoría
+                    Remitir a Auditoría
                 </button>
             </div>
 
@@ -307,74 +322,72 @@
     <!-- ==================================================================== -->
     <!-- MODAL: RECUPERACIÓN DE CREDENCIALES (OTP) -->
     <!-- ==================================================================== -->
-    <div id="recovery-modal" class="fixed inset-0 z-[400] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="apple-glass w-full max-w-md rounded-[2.5rem] flex flex-col transform scale-95 transition-transform duration-300 relative overflow-hidden">
+    <div id="recovery-modal" class="fixed inset-0 z-[400] bg-black/90 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
+        <div class="apple-glass w-full max-w-md rounded-t-[2.5rem] md:rounded-[2.5rem] flex flex-col transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] relative overflow-hidden mt-auto md:mt-0 pb-safe">
             
             <div class="flex items-center justify-between p-6 md:p-8 border-b border-white/5 bg-[#12121a]/80">
                 <div>
                     <h2 class="text-xl font-[900] tracking-tighter uppercase text-white mb-1">Restablecer Acceso</h2>
-                    <p class="text-[9px] uppercase tracking-widest text-[#FFC300] font-black">Zero Trust OTP Auth</p>
+                    <p class="text-[8px] md:text-[9px] uppercase tracking-widest text-[#FFC300] font-black">Zero Trust OTP Auth</p>
                 </div>
                 <button onclick="closeRecoveryModal()" class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
 
-            <!-- CONTENEDOR GRID: Ajusta su altura automáticamente al elemento más grande -->
-            <div class="p-6 md:p-8 grid grid-cols-1 grid-rows-1 items-center min-h-[320px]">
+            <!-- CONTENEDOR GRID -->
+            <div class="p-6 md:p-8 grid grid-cols-1 grid-rows-1 items-center min-h-[300px] md:min-h-[320px]">
                 
                 <!-- PASO 1: PEDIR CORREO -->
-                <!-- 🛡️ col-start-1 row-start-1 los coloca en el mismo espacio exacto -->
                 <form id="form-recovery-step1" class="col-start-1 row-start-1 space-y-5 transition-all duration-300">
-                    <p class="text-xs text-gray-400 leading-relaxed mb-4">Ingresa tu ID corporativo.  enviaremos una llave temporal de un solo uso.</p>
+                    <p class="text-xs text-gray-400 leading-relaxed mb-4">Ingresa tu ID corporativo. Te enviaremos una llave temporal.</p>
                     <div>
-                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Correo Institucional</label>
-                        <input type="email" id="recovery-email" required class="w-full apple-input rounded-2xl px-5 py-4 text-sm font-medium placeholder-gray-600" placeholder="admin@tumarca.com">
+                        <label class="block text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Correo Institucional</label>
+                        <input type="email" id="recovery-email" required class="w-full apple-input rounded-2xl px-5 py-4 text-sm font-medium placeholder-gray-600 focus:bg-[#12121a]" placeholder="admin@tumarca.com">
                     </div>
-                    <button type="submit" id="btn-recovery-step1" class="w-full bg-white text-black font-[900] text-[10px] uppercase tracking-widest py-4 rounded-2xl hover:bg-gray-200 transition-colors flex justify-center items-center gap-2">
+                    <button type="submit" id="btn-recovery-step1" class="w-full bg-white text-black font-[900] text-[10px] uppercase tracking-widest py-4 rounded-2xl hover:bg-gray-200 active:scale-95 transition-all flex justify-center items-center gap-2">
                         Solicitar Llave
                     </button>
                 </form>
 
                 <!-- PASO 2: INGRESAR OTP Y NUEVA CLAVE -->
-                <!-- 🛡️ Se eliminó el 'absolute' y se usa la misma celda de la grilla -->
                 <form id="form-recovery-step2" class="col-start-1 row-start-1 space-y-5 opacity-0 pointer-events-none translate-x-10 transition-all duration-300">
-                    <p class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-4 text-center">Código enviado exitosamente.</p>
+                    <p class="text-[9px] md:text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-2 text-center">Código enviado.</p>
                     
                     <div>
-                        <label class="block text-[9px] font-black uppercase tracking-widest text-[#FFC300] mb-2 pl-1 text-center">Código OTP</label>
-                        <!-- 🛡️ Bloqueo físico de letras y límite estricto de 6 caracteres -->
-                        <input type="text" id="recovery-otp" required maxlength="6" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full apple-input rounded-2xl px-5 py-4 text-center text-2xl tracking-[0.5em] font-mono font-bold text-white placeholder-gray-700" placeholder="000000">
+                        <label class="block text-[8px] md:text-[9px] font-black uppercase tracking-widest text-[#FFC300] mb-2 pl-1 text-center">Código OTP</label>
+                        <input type="text" id="recovery-otp" required maxlength="6" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full apple-input rounded-2xl px-5 py-3 md:py-4 text-center text-2xl tracking-[0.5em] font-mono font-bold text-white placeholder-gray-700 focus:bg-[#12121a]" placeholder="000000">
                     </div>
                     
                     <div>
-                        <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Nueva Contraseña Máster</label>
-                        <!-- 🛡️ Límite estricto de mínimo 6 y máximo 30 caracteres -->
-                        <input type="password" id="recovery-new-password" required minlength="6" maxlength="30" class="w-full apple-input rounded-2xl px-5 py-4 text-sm font-mono tracking-widest placeholder-gray-600" placeholder="••••••••">
+                        <label class="block text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pl-1">Nueva Contraseña Máster</label>
+                        <input type="password" id="recovery-new-password" required minlength="6" maxlength="30" class="w-full apple-input rounded-2xl px-5 py-3.5 md:py-4 text-sm font-mono tracking-widest placeholder-gray-600 focus:bg-[#12121a]" placeholder="••••••••">
                     </div>
                     
-                    <button type="submit" id="btn-recovery-step2" class="w-full btn-gold-pro font-[900] text-[10px] uppercase tracking-widest py-4 rounded-2xl flex justify-center items-center gap-2">
+                    <button type="submit" id="btn-recovery-step2" class="w-full btn-gold-pro font-[900] text-[10px] uppercase tracking-widest py-4 rounded-2xl active:scale-95 transition-all flex justify-center items-center gap-2">
                         Autorizar Cambio
                     </button>
                 </form>
 
             </div>
+        </div>
+    </div>
             
     <!-- SCRIPT CONTROL DE UI AVANZADO -->
     <script>
+        // 🍎 MODIFICADO: Adaptado para Mobile BottomSheet y PC Centered
         function openRegisterModal() {
             const modal = document.getElementById('register-modal');
             const modalInner = modal.querySelector('div');
             modal.classList.remove('hidden');
             
-            // Reiniciar el scroll al abrir
             const scrollArea = document.getElementById('modal-scroll-area');
             scrollArea.scrollTop = 0;
-            checkScroll(); // Verifica inmediatamente si necesita mostrar la flecha
+            checkScroll(); 
 
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
-                modalInner.classList.remove('scale-95');
+                modalInner.classList.remove('translate-y-full', 'md:scale-95'); // Efecto Resorte
             }, 10);
         }
 
@@ -382,7 +395,8 @@
             const modal = document.getElementById('register-modal');
             const modalInner = modal.querySelector('div');
             modal.classList.add('opacity-0');
-            modalInner.classList.add('scale-95');
+            modalInner.classList.add('translate-y-full', 'md:scale-95');
+            
             setTimeout(() => {
                 modal.classList.add('hidden');
                 document.getElementById('form-register-action').reset();
@@ -391,15 +405,34 @@
                     label.textContent = id.includes('logo') ? 'Subir JPG/PNG...' : 'Subir Archivo...';
                     label.className = `text-[8px] text-gray-500 truncate w-full mt-1 transition-colors group-hover:${id.includes('logo') ? 'text-[#FFC300]' : 'text-emerald-400'}`;
                 });
-            }, 300);
+            }, 500); // 500ms acompaña la curva cubic-bezier
         }
 
-        // Detecta si el usuario ya hizo scroll para ocultar la animación
+        // 🍎 MODIFICADO: Idem para Recovery Modal
+        function openRecoveryModal() {
+            const modal = document.getElementById('recovery-modal');
+            const modalInner = modal.querySelector('div');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalInner.classList.remove('translate-y-full', 'md:scale-95');
+            }, 10);
+        }
+
+        function closeRecoveryModal() {
+            const modal = document.getElementById('recovery-modal');
+            const modalInner = modal.querySelector('div');
+            modal.classList.add('opacity-0');
+            modalInner.classList.add('translate-y-full', 'md:scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 500);
+        }
+
         function checkScroll() {
             const scrollArea = document.getElementById('modal-scroll-area');
             const hint = document.getElementById('scroll-hint');
             
-            // Si el scroll supera los 20px, desvanece la flecha
             if (scrollArea.scrollTop > 20) {
                 hint.classList.add('opacity-0');
             } else {
@@ -407,7 +440,6 @@
             }
         }
 
-        // Función mock para el toast visual (si no existe en partner_login.js)
         function showFrontendToast(icon, message) {
             const toast = document.getElementById('toast');
             document.getElementById('toast-icon').textContent = icon;
@@ -422,7 +454,6 @@
             }, 4000);
         }
 
-        // VALIDACIÓN FRONTEND: Evitar envíos pesados
         function updateFileLabel(input, labelId) {
             const label = document.getElementById(labelId);
             const MAX_SIZE_MB = 2;
@@ -431,16 +462,14 @@
             if (input.files && input.files[0]) {
                 const file = input.files[0];
                 
-                // Validación estricta de peso antes del backend
                 if (file.size > MAX_SIZE_BYTES) {
                     showFrontendToast("❌", `El archivo supera el límite de ${MAX_SIZE_MB}MB.`);
-                    input.value = ''; // Limpiamos el input para que no lo envíe
+                    input.value = ''; 
                     label.textContent = `Muy pesado (Máx ${MAX_SIZE_MB}MB)`;
                     label.className = 'text-[8px] font-bold text-red-500 truncate w-full mt-1 transition-colors';
                     return;
                 }
 
-                // Si pasa la validación
                 label.textContent = file.name;
                 label.className = `text-[8px] font-bold truncate w-full mt-1 transition-colors ${labelId.includes('logo') ? 'text-[#FFC300]' : 'text-emerald-400'}`;
             } else {
