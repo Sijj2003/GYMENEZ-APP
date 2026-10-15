@@ -13,10 +13,12 @@
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
     </script>
     <style>
-        body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+        body {
+            -webkit-tap-highlight-color: transparent;
+            /* Permite el scroll suave nativo en iOS y Android */
+        }
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-        
         .skeleton-text { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; border-radius: 4px; color: transparent !important; pointer-events: none; }
         @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
@@ -30,8 +32,8 @@
         }
     </style>
 </head>
-<!-- ESTRUCTURA ORIGINAL RESTAURADA: h-[100dvh] y overflow-hidden previenen el frizado táctil en iOS/Android -->
-<body class="bg-[#030305] text-white selection:bg-[#FFC300] selection:text-black h-[100dvh] flex flex-col md:flex-row relative overflow-hidden">
+<!-- 🔥 FIX SCROLL: overflow-hidden solo en PC (md:), permitiendo scroll nativo en móvil -->
+<body class="bg-[#030305] text-white selection:bg-[#FFC300] selection:text-black min-h-screen md:h-screen flex flex-col md:flex-row relative overflow-x-hidden md:overflow-hidden">
 
     <script>
         const token = localStorage.getItem('gymenez_partner_token');
@@ -39,7 +41,7 @@
     </script>
 
     <!-- ======================================================= -->
-    <!-- SIDEBAR (Exclusivo para PC / Tablet - md:flex) -->
+    <!-- SIDEBAR (Exclusivo para PC - md:flex) -->
     <!-- ======================================================= -->
     <aside class="w-72 border-r border-white/5 bg-[#0a0a0f] hidden md:flex flex-col z-20 h-full shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
         <div class="p-8 border-b border-white/5">
@@ -84,11 +86,10 @@
     </aside>
 
     <!-- ======================================================= -->
-    <!-- BOTTOM DOCK NATIVO (Exclusivo para Móviles - md:hidden) -->
+    <!-- BOTTOM DOCK NATIVO (Móvil y Tablet - md:hidden) -->
     <!-- ======================================================= -->
     <div class="md:hidden fixed bottom-4 left-4 right-4 z-50 pointer-events-none">
         <nav class="native-dock rounded-2xl h-16 px-1 flex items-center justify-around pointer-events-auto">
-            <!-- Activo -->
             <a href="dashboard.html" class="flex flex-col items-center justify-center w-full h-full text-[#FFC300] active:scale-95 transition">
                 <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2zm-10 10a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                 <span class="text-[9px] font-black uppercase tracking-wider">Inicio</span>
@@ -115,12 +116,12 @@
     <!-- ======================================================= -->
     <!-- ÁREA PRINCIPAL -->
     <!-- ======================================================= -->
-    <!-- ESTRUCTURA ORIGINAL RESTAURADA: h-full y overflow-hidden delegan el scroll al div interno -->
-    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+    <!-- 🔥 FIX SCROLL: Eliminado h-screen y overflow-hidden para móvil -->
+    <main class="flex-1 flex flex-col min-h-screen md:h-screen relative md:overflow-hidden">
         
-        <!-- HEADER SUPERIOR (Responsive) -->
+        <!-- HEADER SUPERIOR -->
         <header class="w-full h-20 md:h-24 border-b border-white/5 bg-[#030305]/90 backdrop-blur-md flex items-center justify-between px-5 md:px-8 z-30 shrink-0 sticky top-0">
-            <!-- LOGO MÓVIL CORREGIDO: Unido y con Store -->
+            <!-- LOGO MÓVIL CORREGIDO -->
             <a href="dashboard.html" class="md:hidden flex flex-col leading-none">
                 <div class="flex items-center">
                     <span class="text-xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span><span class="text-xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
@@ -135,36 +136,36 @@
             </div>
             
             <div class="flex items-center gap-3 md:gap-5">
+                <!-- Botón alfanumérico habilitado -->
                 <div class="text-right cursor-pointer" onclick="if(typeof openProfileModal === 'function') openProfileModal()">
-                    <p id="store-name-display" class="text-xs md:text-sm font-bold text-white skeleton-text min-w-[100px] md:min-w-[120px]">Cargando...</p>
+                    <p id="store-name-display" class="text-xs md:text-sm font-bold text-white min-w-[100px] md:min-w-[120px]">Cargando...</p>
                     <p class="text-[8px] md:text-[9px] text-gray-500 uppercase tracking-widest font-bold mt-0.5">Partner Oficial</p>
                 </div>
-                <!-- BOTÓN PERFIL MÓVIL Y PC -->
+                <!-- Botón Perfil -->
                 <button type="button" onclick="if(typeof openProfileModal === 'function') openProfileModal()" class="flex w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/5 border border-white/10 p-[2px] hover:scale-105 active:scale-95 transition transform shadow-[0_0_15px_rgba(255,195,0,0.15)] cursor-pointer">
-                    <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-gray-500 font-black text-sm md:text-lg overflow-hidden skeleton-text">
+                    <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-gray-500 font-black text-sm md:text-lg overflow-hidden">
                         P
                     </div>
                 </button>
             </div>
         </header>
 
-        <!-- ESTRUCTURA ORIGINAL DE SCROLL RESTAURADA: pb-32 asegura espacio para la barra móvil -->
-        <div class="flex-1 overflow-y-auto hide-scroll p-6 md:p-12 pb-32 md:pb-12">
+        <!-- CONTENIDO DASHBOARD (Scroll dinámico) -->
+        <div class="flex-1 md:overflow-y-auto hide-scroll p-5 sm:p-8 md:p-12 pb-28 md:pb-12">
             <div class="max-w-7xl mx-auto">
                 
-                <header class="mb-12">
+                <header class="mb-8 md:mb-12">
                     <h1 class="text-3xl sm:text-4xl md:text-5xl font-[900] tracking-tighter uppercase italic">Métricas de <span class="text-[#FFC300]" id="current-month-title">Este Mes</span></h1>
-                    <p class="text-xs md:text-sm text-gray-400 mt-3 font-medium">Resumen financiero y operativo en tiempo real.</p>
+                    <p class="text-xs md:text-sm text-gray-400 mt-2 md:mt-3 font-medium">Resumen financiero y operativo en tiempo real.</p>
                 </header>
                 
-                <!-- GRILLA DE 4 MÉTRICAS ACCIONABLES (Bordes y Hover refinados, sin skeleton en números) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
                     
                     <div onclick="window.location.href='finance.html'" class="bg-[#12121a] border border-white/5 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] relative overflow-hidden shadow-2xl transition-all hover:-translate-y-2 active:scale-[0.98] hover:border-[#FFC300]/30 hover:shadow-[0_20px_40px_rgba(255,195,0,0.1)] duration-300 group cursor-pointer flex flex-col justify-between min-h-[190px] md:min-h-[220px]">
                         <div class="absolute top-0 right-0 w-40 h-40 bg-[#FFC300]/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-150 duration-700"></div>
                         <div>
-                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 relative z-10">Facturado en el Mes</h3>
-                            <!-- Número limpio para Javascript -->
+                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3 md:mb-4 relative z-10">Facturado en el Mes</h3>
+                            <!-- Número sin Skeleton Text -->
                             <p id="metric-sales" class="text-4xl lg:text-5xl font-[900] text-white italic tracking-tighter drop-shadow-md relative z-10">$0.00</p>
                         </div>
                         <div class="mt-6 flex items-center justify-between border-t border-white/5 pt-4 relative z-10">
@@ -177,7 +178,7 @@
                     <div onclick="window.location.href='finance.html'" class="bg-[#12121a] border border-white/5 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-all hover:-translate-y-2 active:scale-[0.98] hover:border-emerald-500/30 hover:shadow-[0_20px_40px_rgba(16,185,129,0.1)] duration-300 group cursor-pointer flex flex-col justify-between min-h-[190px] md:min-h-[220px]">
                         <div class="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-150 duration-700"></div>
                         <div>
-                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 relative z-10">Retenido (Escrow)</h3>
+                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3 md:mb-4 relative z-10">Retenido (Escrow)</h3>
                             <p id="metric-escrow" class="text-4xl lg:text-5xl font-[900] text-emerald-400 italic tracking-tighter drop-shadow-md relative z-10">$0.00</p>
                         </div>
                         <div class="mt-6 flex items-center justify-between border-t border-white/5 pt-4 relative z-10">
@@ -189,7 +190,7 @@
                     <div onclick="window.location.href='orders.html'" class="bg-[#12121a] border border-white/5 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-all hover:-translate-y-2 active:scale-[0.98] hover:border-blue-500/30 hover:shadow-[0_20px_40px_rgba(59,130,246,0.1)] duration-300 group cursor-pointer flex flex-col justify-between min-h-[190px] md:min-h-[220px]">
                         <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-150 duration-700"></div>
                         <div>
-                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 relative z-10">Guías por Cargar</h3>
+                            <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3 md:mb-4 relative z-10">Guías por Cargar</h3>
                             <p id="metric-orders" class="text-4xl lg:text-5xl font-[900] text-blue-400 italic tracking-tighter drop-shadow-md relative z-10">0</p>
                         </div>
                         <div class="mt-6 flex items-center justify-between border-t border-white/5 pt-4 relative z-10">
@@ -202,7 +203,7 @@
                     <div onclick="window.location.href='inventory.html'" class="bg-[#12121a] border border-red-500/20 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl relative overflow-hidden transition-all hover:-translate-y-2 active:scale-[0.98] hover:border-red-500/50 hover:shadow-[0_20px_40px_rgba(239,68,68,0.15)] duration-300 group cursor-pointer flex flex-col justify-between min-h-[190px] md:min-h-[220px]">
                         <div class="absolute top-0 right-0 w-40 h-40 bg-red-500/10 rounded-full blur-[50px] -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-150 duration-700"></div>
                         <div>
-                            <h3 class="text-[10px] font-black uppercase tracking-widest text-red-400 mb-4 relative z-10 flex items-center gap-2">
+                            <h3 class="text-[10px] font-black uppercase tracking-widest text-red-400 mb-3 md:mb-4 relative z-10 flex items-center gap-2">
                                 <svg class="w-3 h-3 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                 Riesgo de Quiebre
                             </h3>
@@ -220,20 +221,19 @@
     </main>
 
     <!-- ======================================================= -->
-    <!-- MODAL DE PERFIL B2B (Clases Originales 100% Intactas) -->
+    <!-- MODAL DE PERFIL B2B PREMIUM -->
     <!-- ======================================================= -->
-    <!-- ESTRUCTURA ORIGINAL RESTAURADA: Esto garantiza que partner_profile.js remueva las clases correctas en móvil -->
+    <!-- 🔥 FIX MODAL INVISIBLE: Sustituimos translate-y-full por scale-95 para que el modal suba en móvil sin tocar JS -->
     <div id="profile-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-lg rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500">
+        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-lg rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform scale-95 transition-transform duration-500 max-h-[92vh] overflow-y-auto hide-scroll">
             
             <div class="p-8 pb-0 flex items-center justify-between">
-                <!-- Botón de Cerrar Sesión exclusivo para móvil dentro del modal -->
                 <button type="button" onclick="if(typeof logout === 'function') logout()" class="md:hidden flex items-center gap-2 bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                     Cerrar Sesión
                 </button>
                 <div class="hidden md:block"></div>
-                <button onclick="if(typeof closeProfileModal === 'function') closeProfileModal()" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition">
+                <button type="button" onclick="if(typeof closeProfileModal === 'function') closeProfileModal()" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
@@ -244,7 +244,7 @@
                         P
                     </div>
                     <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
                     </div>
                     <input type="file" id="upload-logo-input" class="hidden" accept="image/*" onchange="if(typeof uploadNewLogo === 'function') uploadNewLogo(this)">
                 </div>
@@ -277,7 +277,7 @@
         </div>
     </div>
 
-    <!-- SCRIPTS INTÁCTOS -->
+    <!-- SCRIPTS -->
     <script src="/static/js/store/partner_session.js"></script>
     <script src="/static/js/store/partner_profile.js"></script>
     <script src="/static/js/store/partner_dashboard.js?v=1.4"></script>
