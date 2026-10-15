@@ -145,11 +145,14 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             Saldo Liquidable
                         </h3>
-                        <p class="text-xs text-gray-400 font-bold mb-6">Fondos listos para transferir a tu cuenta.</p>
+                        <p class="text-xs text-gray-400 font-bold mb-6">Equivalente listo para transferir a tu cuenta.</p>
+                        
                         <p id="balance-available" class="text-5xl md:text-6xl font-[900] text-white italic tracking-tighter drop-shadow-md skeleton-text min-w-[150px]">$0.00</p>
+                        <!-- 🔥 ESPACIO AÑADIDO PARA EL DESGLOSE DE BOLÍVARES Y DÓLARES -->
+                        <p id="breakdown-available" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2"></p>
                         
                         <div class="mt-8 pt-4 border-t border-white/5 flex items-center justify-between">
-                            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Mínimo de retiro: $20.00</span>
+                            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Calculado con Tasa BCV Actual</span>
                         </div>
                     </div>
 
@@ -161,7 +164,10 @@
                             Fondos en Escrow
                         </h3>
                         <p class="text-xs text-gray-500 font-bold mb-6">En custodia hasta confirmación de entrega.</p>
+                        
                         <p id="balance-escrow" class="text-4xl md:text-5xl font-[900] text-gray-600 italic tracking-tighter skeleton-text min-w-[120px]">$0.00</p>
+                        <!-- 🔥 ESPACIO AÑADIDO PARA EL DESGLOSE DE BOLÍVARES Y DÓLARES -->
+                        <p id="breakdown-escrow" class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-2"></p>
                         
                         <div class="mt-8 pt-4 border-t border-white/5 flex items-center justify-between">
                             <span class="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Seguridad Zero-Trust Activa</span>
@@ -173,7 +179,7 @@
                 <div class="bg-[#12121a] border border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl">
                     <div class="p-6 md:p-8 border-b border-white/5 flex justify-between items-center bg-[#0a0a0f]">
                         <h3 class="text-lg font-[900] tracking-tighter uppercase italic text-white">Últimos Movimientos</h3>
-                        <span class="bg-white/5 text-gray-400 border border-white/10 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Mes Actual</span>
+                        <span class="bg-white/5 text-gray-400 border border-white/10 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Historial</span>
                     </div>
                     
                     <!-- Estado Vacío -->
@@ -251,7 +257,7 @@
     <!-- ======================================================= -->
     <script src="/static/js/store/partner_session.js"></script>
     <script src="/static/js/store/partner_profile.js"></script>
-    <script src="/static/js/store/partner_finance.js?v=1.1"></script>
+    <script src="/static/js/store/partner_finance.js?v=2.0"></script>
     <script src="/static/js/store/partner_main.js?v=1.0"></script>
     
 </body>
