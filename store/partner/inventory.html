@@ -31,7 +31,7 @@
         }
 
         /* ========================================================================= */
-        /* 🔥 MAGIA CSS: MODO LISTA (PREDETERMINADO E INTELIGENTE)                 */
+        /* 🔥 MAGIA CSS: MODO LISTA PROFESIONAL (IMAGEN DESPEJADA Y FLUIDA)          */
         /* ========================================================================= */
         .view-mode-list {
             display: flex !important;
@@ -39,140 +39,106 @@
             gap: 16px !important;
         }
         
-        /* 1. Tarjeta principal (Rectángulo elástico) */
-        .view-mode-list > div {
+        .view-mode-list .product-card {
+            flex-direction: row !important;
+            height: auto !important;
+            min-height: 140px !important;
+            align-items: stretch !important;
+            border-radius: 1.5rem !important;
+            padding: 0 !important; 
+        }
+
+        /* 1. Contenedor Imagen (Alto completo a la izquierda, libre de textos) */
+        .view-mode-list .card-image-wrapper {
+            width: 140px !important;
+            min-width: 140px !important;
+            aspect-ratio: auto !important;
+            border-b: none !important;
+            border-right: 1px solid rgba(255,255,255,0.05) !important;
+            padding: 16px !important;
+            border-radius: 1.5rem 0 0 1.5rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .view-mode-list .card-image-wrapper img {
+            width: 100% !important;
+            height: auto !important;
+            max-height: 120px !important; 
+            object-fit: contain !important;
+        }
+
+        /* 2. Contenedor Textos (Tolerancia hacia abajo) */
+        .view-mode-list .card-info-wrapper {
+            padding: 20px 24px !important;
             display: flex !important;
             flex-direction: row !important;
-            align-items: flex-start !important; /* Alinear arriba para tolerar texto largo */
-            padding: 20px !important;
-            height: auto !important;
-            min-height: 140px !important; /* Tolerancia hacia abajo */
-            width: 100% !important;
-            gap: 20px !important;
-            text-align: left !important;
-            background: rgba(18,18,26,0.8) !important;
-            border-radius: 1.5rem !important;
-        }
-        
-        /* 2. Contenedor de la Imagen (Izquierda) */
-        .view-mode-list > div > :first-child {
-            display: flex !important;
-            flex-direction: column !important; /* Para apilar los badges debajo de la imagen */
             align-items: center !important;
-            width: 90px !important;
-            min-width: 90px !important;
-            height: auto !important;
-            flex-shrink: 0 !important;
-            margin: 0 !important;
-            position: relative !important;
-            background: transparent !important; /* Elimina fondo cuadrado si lo hay */
-            border: none !important;
-            padding: 0 !important;
-        }
-        
-        /* Imagen limpia */
-        .view-mode-list > div > :first-child img {
-            width: 90px !important;
-            height: 90px !important;
-            object-fit: cover !important;
-            border-radius: 12px !important;
-            position: relative !important;
-            margin-bottom: 8px !important;
-        }
-
-        /* Elementos que flotaban SOBRE la imagen ahora van DEBAJO de ella */
-        .view-mode-list > div > :first-child > *:not(img) {
-            position: static !important; /* Quita la posición absoluta */
-            margin-top: 4px !important; /* Separación visual */
-            width: 100% !important;
-            text-align: center !important;
-            transform: none !important;
-            border-radius: 6px !important;
-            font-size: 0.65rem !important;
-            padding: 4px !important;
-            display: block !important;
-        }
-        
-        /* 3. Contenedor de Información y Controles (Derecha) */
-        .view-mode-list > div > :nth-child(2) {
-            flex: 1 !important;
-            display: flex !important;
-            flex-direction: row !important; /* PC: Textos izquierda, botones derecha */
             justify-content: space-between !important;
-            align-items: center !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            width: 100% !important;
-            gap: 16px !important;
-            min-width: 0 !important; /* Previene overflow horizontal */
+            flex: 1 !important;
         }
 
-        /* Evita que los textos largos rompan la caja */
-        .view-mode-list > div > :nth-child(2) h3, 
-        .view-mode-list > div > :nth-child(2) p {
-            white-space: normal !important;
-            word-break: break-word !important;
-        }
-        
-        /* Ajuste de div interno para titulo y categorias */
-        .view-mode-list > div > :nth-child(2) > :first-child {
+        /* Títulos y Badges (Lado Izquierdo de Info) */
+        .view-mode-list .card-info-wrapper > div:first-child {
             margin-bottom: 0 !important;
             flex: 1 !important;
+            padding-right: 24px !important;
         }
 
-        /* Controles / Botones (El div inferior de la tarjeta original) */
-        .view-mode-list > div > :nth-child(2) > :last-child {
-            display: flex !important;
-            flex-direction: column !important; /* PC: Precios y botones apilados verticalmente */
-            align-items: flex-end !important;
-            gap: 8px !important;
+        /* Precios y Botones (Lado Derecho de Info) */
+        .view-mode-list .card-actions-wrapper {
             margin-top: 0 !important;
-            flex-shrink: 0 !important;
-            min-width: 120px !important;
-            border-top: none !important; /* Elimina la linea separadora */
             padding-top: 0 !important;
+            border-top: none !important;
+            flex-direction: column !important;
+            align-items: flex-end !important;
+            gap: 12px !important;
+            flex-shrink: 0 !important;
         }
-        
-        /* Asegura que los precios se alineen a la derecha en PC */
-        .view-mode-list > div > :nth-child(2) > :last-child > :first-child {
-             text-align: right !important;
-        }
+        .view-mode-list .card-price { text-align: right !important; }
+
+        /* 🔥 MANEJO DE BADGES: Grid vs List */
+        .product-card .list-only-badges { display: none; } /* Oculto en modo Grid por defecto */
+        .view-mode-list .grid-floating-badges { display: none !important; } /* Oculta los de la imagen en Lista */
+        .view-mode-list .list-only-badges { display: flex !important; } /* Muestra los agrupados en Lista */
 
         /* ========================================================================= */
-        /* RESPONSIVE MÓVIL (Optimización de espacio)                              */
+        /* RESPONSIVE MÓVIL (Vista Lista para Celulares)                             */
         /* ========================================================================= */
         @media (max-width: 768px) {
-            .view-mode-list > div {
-                padding: 16px !important;
-                gap: 16px !important;
+            .view-mode-list .product-card { 
+                align-items: stretch !important; 
+                min-height: 120px !important;
             }
-            .view-mode-list > div > :first-child {
-                width: 75px !important;
-                min-width: 75px !important;
+            .view-mode-list .card-image-wrapper {
+                width: 110px !important;
+                min-width: 110px !important;
+                padding: 12px !important;
             }
-            .view-mode-list > div > :first-child img {
-                width: 75px !important;
-                height: 75px !important;
+            .view-mode-list .card-image-wrapper img {
+                max-height: 100px !important;
             }
-            /* En móvil, los textos y los botones se apilan verticalmente */
-            .view-mode-list > div > :nth-child(2) {
+            .view-mode-list .card-info-wrapper {
                 flex-direction: column !important;
                 align-items: flex-start !important;
-                justify-content: flex-start !important;
+                padding: 16px !important;
+                justify-content: center !important;
+                gap: 16px !important;
             }
-            /* Botones en horizontal en móvil para ahorrar espacio vertical */
-            .view-mode-list > div > :nth-child(2) > :last-child {
+            .view-mode-list .card-info-wrapper > div:first-child {
+                padding-right: 0 !important;
+                margin-bottom: 0 !important;
+                width: 100% !important;
+            }
+            .view-mode-list .card-actions-wrapper {
+                width: 100% !important;
                 flex-direction: row !important;
                 align-items: center !important;
-                justify-content: space-between !important;
-                width: 100% !important;
-                margin-top: 12px !important;
                 border-top: 1px solid rgba(255,255,255,0.05) !important;
                 padding-top: 12px !important;
+                justify-content: space-between !important;
             }
-            .view-mode-list > div > :nth-child(2) > :last-child > :first-child {
-                 text-align: left !important;
-            }
+            .view-mode-list .card-price { text-align: left !important; }
         }
     </style>
 </head>
@@ -259,7 +225,6 @@
     <!-- ======================================================= -->
     <main class="flex-1 flex flex-col min-h-screen md:h-screen relative md:overflow-hidden">
         
-        <!-- HEADER SUPERIOR -->
         <header class="w-full h-20 md:h-24 border-b border-white/5 bg-[#030305]/90 backdrop-blur-md flex items-center justify-between px-5 md:px-8 z-30 shrink-0 sticky top-0">
             <a href="dashboard.html" class="md:hidden flex flex-col leading-none">
                 <div class="flex items-center">
@@ -267,11 +232,8 @@
                 </div>
                 <span class="text-[8px] font-black uppercase tracking-[0.3em] text-emerald-500 mt-1">Store • Partner</span>
             </a>
-            
             <div class="hidden md:block">
-                <span class="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-500 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">
-                    Sincronización Activa
-                </span>
+                <span class="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-500 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">Sincronización Activa</span>
             </div>
             
             <div class="flex items-center gap-3 md:gap-5">
@@ -280,9 +242,7 @@
                     <p class="text-[8px] md:text-[9px] text-gray-500 uppercase tracking-widest font-bold mt-0.5">Partner Oficial</p>
                 </div>
                 <button type="button" onclick="if(typeof openProfileModal === 'function') openProfileModal()" class="relative z-40 pointer-events-auto flex w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/5 border border-white/10 p-[2px] hover:scale-105 active:scale-95 transition transform shadow-[0_0_15px_rgba(255,195,0,0.15)] cursor-pointer">
-                    <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-gray-500 font-black text-sm md:text-lg overflow-hidden">
-                        P
-                    </div>
+                    <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-gray-500 font-black text-sm md:text-lg overflow-hidden">P</div>
                 </button>
             </div>
         </header>
@@ -291,7 +251,6 @@
         <div class="flex-1 md:overflow-y-auto hide-scroll p-5 sm:p-8 md:p-12 pb-32 md:pb-12">
             <div class="max-w-7xl mx-auto">
                 
-                <!-- 🍎 CABECERA CON BUSCADOR Y VISTAS -->
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-10 border-b border-white/5 pb-8">
                     <div class="w-full lg:w-auto">
                         <h1 class="text-4xl md:text-5xl font-[900] tracking-tighter uppercase italic">Control de <span class="text-[#FFC300]">Catálogo</span></h1>
@@ -299,13 +258,13 @@
                     </div>
                     
                     <div class="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-3">
-                        <!-- Buscador Moderno 100% Funcional -->
+                        <!-- Buscador Moderno -->
                         <div class="relative w-full sm:w-64 shrink-0">
                             <svg class="w-4 h-4 absolute left-4 top-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             <input type="text" id="search-inventory" oninput="nativeSearchInventory()" placeholder="Buscar producto..." class="w-full bg-[#12121a] border border-white/10 rounded-full pl-11 pr-5 py-3 text-xs font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner">
                         </div>
 
-                        <!-- Selector de Vistas (Grid / Lista) - LISTA PREDETERMINADA -->
+                        <!-- Selector de Vistas (LISTA PREDETERMINADA) -->
                         <div class="flex bg-[#12121a] border border-white/10 rounded-full p-1 w-full sm:w-auto justify-center shrink-0">
                             <button id="view-list-btn" onclick="toggleViewMode('list')" class="bg-white/10 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
@@ -317,7 +276,7 @@
                             </button>
                         </div>
 
-                        <!-- Botón Nuevo Producto -->
+                        <!-- Botón Nuevo -->
                         <button onclick="if(typeof openModal === 'function') openModal()" class="w-full sm:w-auto bg-gradient-to-r from-[#FFD000] to-[#FFC300] text-black px-6 py-3 rounded-full text-[10px] font-[900] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,195,0,0.3)] flex items-center justify-center gap-2 shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                             Nuevo
@@ -336,12 +295,14 @@
 
                 <!-- 🍎 GRILLA DE PRODUCTOS (Inicia con la clase de MODO LISTA) -->
                 <div id="products-grid" class="view-mode-list pb-10 transition-all duration-300">
-                    <!-- Aquí el partner_catalog.js inyectará las tarjetas -->
+                    <!-- Aquí JS inyectará el nuevo código -->
                 </div>
 
             </div>
         </div>
     </main>
+
+    <!-- (Se omiten los modales de Producto y Perfil por brevedad, son idénticos) -->
 
     <!-- ======================================================= -->
     <!-- MODAL: CONSTRUCTOR DE PRODUCTOS (Intacto en IDs) -->
@@ -531,7 +492,6 @@
     <!-- ======================================================= -->
     <div id="profile-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-lg rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform scale-95 transition-transform duration-500 max-h-[92vh] overflow-y-auto hide-scroll">
-            
             <div class="p-8 pb-0 flex items-center justify-between">
                 <button type="button" onclick="if(typeof logout === 'function') logout()" class="md:hidden flex items-center gap-2 bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
@@ -542,7 +502,6 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-
             <div class="p-8 pt-0 flex flex-col items-center">
                 <div class="relative group cursor-pointer mb-6" onclick="document.getElementById('upload-logo-input').click()">
                     <div id="modal-profile-logo" class="w-28 h-28 rounded-full bg-[#12121a] border-2 border-dashed border-white/20 flex items-center justify-center text-4xl font-black text-gray-600 overflow-hidden group-hover:border-[#FFC300] transition-colors shadow-xl">P</div>
@@ -586,34 +545,29 @@
             const listBtn = document.getElementById('view-list-btn');
             const container = document.getElementById('products-grid');
 
-            if (mode === 'grid') { // Opcional
+            if (mode === 'grid') { 
                 gridBtn.classList.replace('text-gray-500', 'text-white');
                 gridBtn.classList.add('bg-white/10');
                 listBtn.classList.replace('text-white', 'text-gray-500');
                 listBtn.classList.remove('bg-white/10');
                 
-                // Pasa a Grid normal
                 container.classList.remove('view-mode-list');
-                container.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-3');
-            } else { // Predeterminado
+                container.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-3', 'gap-6', 'md:gap-8');
+            } else { 
                 listBtn.classList.replace('text-gray-500', 'text-white');
                 listBtn.classList.add('bg-white/10');
                 gridBtn.classList.replace('text-white', 'text-gray-500');
                 gridBtn.classList.remove('bg-white/10');
                 
-                // Fuerza modo lista
-                container.classList.remove('grid', 'grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-3');
+                container.classList.remove('grid', 'grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-3', 'gap-6', 'md:gap-8');
                 container.classList.add('view-mode-list');
             }
         }
 
-        // Buscador Inteligente
         function nativeSearchInventory() {
             const query = document.getElementById('search-inventory').value.toLowerCase();
             const grid = document.getElementById('products-grid');
-            
-            // Toma todas las tarjetas (asumiendo que JS inyecta DIVs)
-            const cards = grid.querySelectorAll(':scope > div:not(#no-search-results)'); 
+            const cards = grid.querySelectorAll('.product-card'); 
             let hasResults = false;
 
             cards.forEach(card => {
@@ -626,14 +580,13 @@
                 }
             });
 
-            // Mensaje vacío
             let noResultsMsg = document.getElementById('no-search-results');
             if (!hasResults && cards.length > 0) {
                 if (!noResultsMsg) {
                     noResultsMsg = document.createElement('div');
                     noResultsMsg.id = 'no-search-results';
                     noResultsMsg.className = 'w-full py-12 text-center text-gray-500 font-bold text-sm bg-[#12121a] rounded-[2rem] border border-white/5 col-span-full';
-                    noResultsMsg.innerHTML = '<span class="text-2xl block mb-2">🔍</span>No se encontraron productos con ese nombre.';
+                    noResultsMsg.innerHTML = '<span class="text-2xl block mb-2">🔍</span>No se encontraron productos.';
                     grid.appendChild(noResultsMsg);
                 } else {
                     noResultsMsg.style.display = 'block';
