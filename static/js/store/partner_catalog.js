@@ -445,89 +445,89 @@ function renderProducts(products) {
         const isOnDemand = (p.is_on_demand === true || p.is_on_demand === 'true' || p.is_on_demand === 'True');
         const hasFreeShipping = (p.free_shipping === true || p.free_shipping === 'true' || p.free_shipping === 'True');
         
-        // 🍎 CARACTERÍSTICAS TÉCNICAS (Peso, Matriz, Envío)
-        let tagsHtml = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[8px] md:text-[9px] font-black uppercase px-2 py-1 rounded-md whitespace-nowrap">${p.weight_kg || 1} Kg</span>`;
+        // 🍎 CARACTERÍSTICAS TÉCNICAS (Peso, Matriz, Envío) - Tamaños compactos
+        let tagsHtml = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 text-[7px] md:text-[8px] font-black uppercase px-1.5 py-0.5 rounded whitespace-nowrap">${p.weight_kg || 1} Kg</span>`;
         if (p.variants_matrix && p.variants_matrix.length > 0) {
-            tagsHtml += `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] md:text-[9px] font-black uppercase px-2 py-1 rounded-md whitespace-nowrap">Matriz Activa</span>`;
+            tagsHtml += `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[7px] md:text-[8px] font-black uppercase px-1.5 py-0.5 rounded whitespace-nowrap">Matriz Activa</span>`;
         }
         if (hasFreeShipping) {
             const threshold = parseFloat(p.free_shipping_threshold) > 0 ? ` > $${p.free_shipping_threshold}` : '';
-            tagsHtml += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] md:text-[9px] font-black uppercase px-2 py-1 rounded-md shadow-[0_0_10px_rgba(16,185,129,0.1)] whitespace-nowrap">🚚 Envío Gratis${threshold}</span>`;
+            tagsHtml += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[7px] md:text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.1)] whitespace-nowrap">🚚 Envío Gratis${threshold}</span>`;
         }
 
-        // 🍎 BADGES DINÁMICOS (Para Modo Cuadrícula vs Modo Lista)
+        // 🍎 BADGES DINÁMICOS (Grid Flotantes vs List En-línea)
         let stockBadgeGrid = '';
         let stockBadgeList = '';
         
         if (isPaused) {
-            stockBadgeGrid = '<span class="absolute top-4 right-4 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-sm z-10 backdrop-blur-md">Pausado</span>';
-            stockBadgeList = '<span class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-[8px] md:text-[9px] font-black uppercase px-2 py-1 rounded-md shadow-sm whitespace-nowrap">Pausado</span>';
+            stockBadgeGrid = '<span class="absolute top-3 right-3 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-[8px] font-black uppercase px-2 py-1 rounded-full shadow-sm z-10 backdrop-blur-md">Pausado</span>';
+            stockBadgeList = '<span class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 text-[7px] md:text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">Pausado</span>';
         } else if (isOnDemand) {
-            stockBadgeGrid = '<span class="absolute top-4 right-4 bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-sm z-10 backdrop-blur-md">⚡ Bajo Pedido</span>';
-            stockBadgeList = '<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] md:text-[9px] font-black uppercase px-2 py-1 rounded-md shadow-sm whitespace-nowrap">⚡ Bajo Pedido</span>';
+            stockBadgeGrid = '<span class="absolute top-3 right-3 bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[8px] font-black uppercase px-2 py-1 rounded-full shadow-sm z-10 backdrop-blur-md">⚡ Bajo Pedido</span>';
+            stockBadgeList = '<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[7px] md:text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">⚡ Bajo Pedido</span>';
         } else if (p.stock > 0) {
-            stockBadgeGrid = `<span class="absolute top-4 right-4 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-sm z-10 backdrop-blur-md">Stock: ${p.stock}</span>`;
-            stockBadgeList = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] md:text-[9px] font-black uppercase px-2 py-1 rounded-md shadow-sm whitespace-nowrap">Stock: ${p.stock}</span>`;
+            stockBadgeGrid = `<span class="absolute top-3 right-3 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-black uppercase px-2 py-1 rounded-full shadow-sm z-10 backdrop-blur-md">Stock: ${p.stock}</span>`;
+            stockBadgeList = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[7px] md:text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">Stock: ${p.stock}</span>`;
         } else {
-            stockBadgeGrid = `<span class="absolute top-4 right-4 bg-red-500/10 text-red-400 border border-red-500/20 text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-sm z-10 backdrop-blur-md">Agotado</span>`;
-            stockBadgeList = `<span class="bg-red-500/10 text-red-400 border border-red-500/20 text-[8px] md:text-[9px] font-black uppercase px-2 py-1 rounded-md shadow-sm whitespace-nowrap">Agotado</span>`;
+            stockBadgeGrid = `<span class="absolute top-3 right-3 bg-red-500/10 text-red-400 border border-red-500/20 text-[8px] font-black uppercase px-2 py-1 rounded-full shadow-sm z-10 backdrop-blur-md">Agotado</span>`;
+            stockBadgeList = `<span class="bg-red-500/10 text-red-400 border border-red-500/20 text-[7px] md:text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">Agotado</span>`;
         }
 
-        let discountGrid = hasDiscount ? `<span class="absolute top-4 left-4 bg-red-600 text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-lg z-10">-${discount}% OFF</span>` : '';
-        let discountList = hasDiscount ? `<span class="bg-red-600/20 text-red-400 border border-red-500/30 text-[8px] md:text-[9px] font-black uppercase px-2 py-1 rounded-md shadow-sm whitespace-nowrap">-${discount}% OFF</span>` : '';
+        let discountGrid = hasDiscount ? `<span class="absolute top-3 left-3 bg-red-600 text-white text-[8px] font-black uppercase px-2 py-1 rounded-full shadow-lg z-10">-${discount}% OFF</span>` : '';
+        let discountList = hasDiscount ? `<span class="bg-red-600/20 text-red-400 border border-red-500/30 text-[7px] md:text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">-${discount}% OFF</span>` : '';
 
         return `
         <div class="product-card flex flex-col bg-[#12121a] rounded-[1.5rem] border border-white/5 group hover:border-[#FFC300]/50 transition-all duration-300 relative shadow-xl overflow-hidden h-full">
             
-            <!-- 🖼️ ZONA IMAGEN: Totalmente limpia en modo lista -->
-            <div class="card-image-wrapper relative aspect-square bg-[#0a0a0f] p-5 flex items-center justify-center border-b border-white/5 shrink-0">
-                <div class="grid-floating-badges">
+            <!-- 🖼️ IMAGEN Y BADGES FLOTANTES (Ocultos en Modo Lista) -->
+            <div class="card-image-wrapper relative aspect-square bg-[#0a0a0f] p-4 flex items-center justify-center border-b border-white/5 shrink-0 rounded-t-[1.5rem]">
+                <div class="grid-floating-badges absolute inset-0 pointer-events-none">
                     ${discountGrid}
                     ${stockBadgeGrid}
                 </div>
                 <img src="${p.image_url}" alt="${p.name}" class="w-full h-full object-contain filter drop-shadow-xl transition-transform duration-700 group-hover:scale-110">
             </div>
             
-            <!-- 📄 ZONA INFORMACIÓN -->
-            <div class="card-info-wrapper p-5 md:p-6 flex-1 flex flex-col justify-between min-w-0">
+            <!-- 📄 INFORMACIÓN Y CONTROLES -->
+            <div class="card-info-wrapper p-4 md:p-5 flex-1 flex flex-col justify-between min-w-0">
                 
-                <div class="mb-4">
-                    <div class="flex items-center gap-2 mb-3 flex-wrap">
-                        <span class="text-[9px] md:text-[10px] text-gray-500 uppercase tracking-widest font-black mr-1">${p.category}</span>
+                <div class="mb-3 info-top-section min-w-0">
+                    <!-- Categoría y Badges (Organizados elegantemente) -->
+                    <div class="flex items-center gap-1.5 flex-wrap mb-2">
+                        <span class="text-[8px] md:text-[9px] text-gray-500 uppercase tracking-widest font-black shrink-0 mr-1">${p.category}</span>
                         
-                        <!-- Badges exclusivos para la Vista de Lista -->
-                        <div class="list-only-badges hidden items-center gap-2 flex-wrap">
+                        <!-- Badges MODO LISTA -->
+                        <div class="list-only-badges hidden items-center gap-1.5 flex-wrap">
                             ${discountList}
                             ${stockBadgeList}
                         </div>
                         
-                        <!-- Características Técnicas -->
-                        <div class="flex items-center gap-2 flex-wrap">
-                            ${tagsHtml}
-                        </div>
+                        <!-- Tags Generales -->
+                        ${tagsHtml}
                     </div>
-                    <h3 class="font-[900] text-sm md:text-lg text-white leading-tight break-words" title="${p.name}">${p.name}</h3>
+                    <h3 class="font-[900] text-sm md:text-base text-white leading-tight break-words pr-2" title="${p.name}">${p.name}</h3>
                 </div>
                 
-                <!-- 🎛️ ZONA ACCIONES Y PRECIO -->
-                <div class="card-actions-wrapper mt-auto pt-4 border-t border-white/5 flex items-center justify-between gap-4">
-                    <div class="card-price">
-                        <p class="text-white font-[900] text-xl md:text-2xl italic leading-none">$${finalPrice}</p>
-                        ${hasDiscount ? `<p class="text-[10px] md:text-xs text-gray-500 font-bold line-through mt-1.5">$${p.price_usd.toFixed(2)}</p>` : ''}
+                <!-- Precios y Botones -->
+                <div class="card-actions-wrapper mt-auto pt-3 md:pt-4 border-t border-white/5 flex items-end justify-between gap-3 w-full">
+                    <div class="card-price shrink-0">
+                        <p class="text-white font-[900] text-lg md:text-xl italic leading-none">$${finalPrice}</p>
+                        ${hasDiscount ? `<p class="text-[9px] md:text-[10px] text-gray-500 font-bold line-through mt-1">$${p.price_usd.toFixed(2)}</p>` : ''}
                     </div>
                     
-                    <div class="flex items-center gap-1.5 bg-white/[0.03] p-1.5 rounded-2xl border border-white/5 shrink-0">
-                        <button onclick="toggleProductStatus('${p.id}', '${p.status || 'active'}')" class="text-gray-400 hover:text-yellow-400 transition p-2.5 rounded-xl hover:bg-yellow-500/10" title="${isPaused ? 'Reactivar Producto' : 'Pausar Producto'}">
+                    <!-- Botones más compactos en móvil para evitar desbordes -->
+                    <div class="flex items-center gap-1 bg-white/[0.03] p-1 rounded-xl border border-white/5 shrink-0">
+                        <button onclick="toggleProductStatus('${p.id}', '${p.status || 'active'}')" class="text-gray-400 hover:text-yellow-400 transition p-1.5 md:p-2 rounded-lg hover:bg-yellow-500/10" title="${isPaused ? 'Reactivar Producto' : 'Pausar Producto'}">
                             ${isPaused 
-                                ? '<svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
-                                : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                                ? '<svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                                : '<svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
                             }
                         </button>
-                        <button onclick="editProduct('${p.id}')" class="text-gray-400 hover:text-blue-400 transition p-2.5 rounded-xl hover:bg-blue-500/10" title="Editar Producto">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <button onclick="editProduct('${p.id}')" class="text-gray-400 hover:text-blue-400 transition p-1.5 md:p-2 rounded-lg hover:bg-blue-500/10" title="Editar Producto">
+                            <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </button>
-                        <button onclick="deleteProduct('${p.id}')" class="text-gray-400 hover:text-red-500 transition p-2.5 rounded-xl hover:bg-red-500/10" title="Retirar de Plataforma">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        <button onclick="deleteProduct('${p.id}')" class="text-gray-400 hover:text-red-500 transition p-1.5 md:p-2 rounded-lg hover:bg-red-500/10" title="Retirar de Plataforma">
+                            <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </div>
                 </div>
