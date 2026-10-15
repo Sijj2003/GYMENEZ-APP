@@ -2,7 +2,7 @@
 <html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Gymenez Partner | Finanzas y Liquidaciones</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,32 +13,43 @@
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
     </script>
     <style>
+        body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
         .skeleton-text { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; border-radius: 4px; color: transparent !important; pointer-events: none; }
         @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        .native-dock {
+            background: rgba(10, 10, 15, 0.90);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+        }
     </style>
 </head>
-<body class="bg-[#030305] text-white selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col md:flex-row relative pb-16 md:pb-0 overflow-hidden">
+<body class="bg-[#030305] text-white selection:bg-[#FFC300] selection:text-black min-h-screen md:h-screen flex flex-col md:flex-row relative overflow-x-hidden md:overflow-hidden">
 
     <script>
         const token = localStorage.getItem('gymenez_partner_token');
         if (!token) window.location.href = '/store/partner/login.html';
     </script>
 
-    <!-- ======================================================= -->
-    <!-- SIDEBAR (PC) -->
-    <!-- ======================================================= -->
-    <aside class="w-72 border-r border-white/5 bg-[#0a0a0f] hidden md:flex flex-col z-20 h-screen shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
+    <!-- SIDEBAR PC -->
+    <aside class="w-72 border-r border-white/5 bg-[#0a0a0f] hidden md:flex flex-col z-20 h-full shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
         <div class="p-8 border-b border-white/5">
-            <a href="dashboard.html" class="flex items-center leading-none">
-                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
-                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+            <a href="dashboard.html" class="flex flex-col leading-none">
+                <div class="flex items-center">
+                    <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span><span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+                </div>
+                <span class="text-[9px] font-black uppercase tracking-[0.3em] text-white/60 mt-1">Store</span>
             </a>
-            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mt-2">Partner Workspace</p>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mt-3">Partner Workspace</p>
         </div>
 
-        <nav class="flex-1 p-6 space-y-3 overflow-y-auto">
+        <nav class="flex-1 p-6 space-y-2.5 overflow-y-auto hide-scroll">
             <a href="dashboard.html" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white border border-transparent transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                 Vista General
@@ -56,6 +67,10 @@
                 <svg class="w-5 h-5 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                 Liquidaciones
             </a>
+            <a href="business.html" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left text-sm font-bold text-gray-500 hover:bg-white/5 hover:text-white border border-transparent transition mt-8">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Centro de Negocios
+            </a>
         </nav>
 
         <div class="p-8 border-t border-white/5">
@@ -66,128 +81,126 @@
         </div>
     </aside>
 
-    <!-- ======================================================= -->
-    <!-- BOTTOM NAV (Móvil) -->
-    <!-- ======================================================= -->
-    <div class="md:hidden fixed bottom-0 left-0 w-full z-50 glass-nav border-t border-white/10 pb-safe">
-        <div class="flex items-center justify-around h-16 px-2">
-            <a href="dashboard.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white transition">
-                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2zm-10 10a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+    <!-- DOCK FLOTANTE MÓVIL -->
+    <div class="md:hidden fixed bottom-4 left-4 right-4 z-50 pointer-events-none">
+        <nav class="native-dock rounded-2xl h-16 px-1 flex items-center justify-around pointer-events-auto">
+            <a href="dashboard.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white active:scale-95 transition">
+                <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2zm-10 10a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span class="text-[9px] font-bold uppercase tracking-wider">Inicio</span>
             </a>
-            <a href="inventory.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white transition">
-                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+            <a href="inventory.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white active:scale-95 transition">
+                <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                <span class="text-[9px] font-bold uppercase tracking-wider">Catálogo</span>
             </a>
-            <a href="orders.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white transition relative">
-                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+            <a href="orders.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white active:scale-95 transition">
+                <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                <span class="text-[9px] font-bold uppercase tracking-wider">Órdenes</span>
             </a>
             <!-- Activo 🍎 -->
-            <a href="finance.html" class="flex flex-col items-center justify-center w-full h-full text-[#FFC300] transition">
-                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            <a href="finance.html" class="flex flex-col items-center justify-center w-full h-full text-[#FFC300] active:scale-95 transition">
+                <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <span class="text-[9px] font-black uppercase tracking-wider">Finanzas</span>
             </a>
-        </div>
+            <a href="business.html" class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-white active:scale-95 transition">
+                <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span class="text-[9px] font-bold uppercase tracking-wider">Negocio</span>
+            </a>
+        </nav>
     </div>
 
-    <!-- ======================================================= -->
     <!-- ÁREA PRINCIPAL -->
-    <!-- ======================================================= -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+    <main class="flex-1 flex flex-col min-h-screen md:h-screen relative md:overflow-hidden">
         
-        <!-- HEADER SUPERIOR -->
-        <header class="w-full h-24 border-b border-white/5 bg-transparent backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0">
-            <div class="md:hidden flex items-center gap-2">
-                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
-                <span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
-            </div>
-            
-            <div class="hidden md:block">
-                <span class="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-500 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">
-                    Sincronización Activa
-                </span>
-            </div>
-            
-            <div class="flex items-center gap-5">
-                <div class="text-right hidden sm:block">
-                    <p id="store-name-display" class="text-sm font-bold text-white skeleton-text min-w-[120px]">Cargando...</p>
-                    <p class="text-[9px] text-gray-500 uppercase tracking-widest font-bold mt-0.5">Partner Oficial</p>
+        <header class="w-full h-20 md:h-24 border-b border-white/5 bg-[#030305]/90 backdrop-blur-md flex items-center justify-between px-5 md:px-8 z-30 shrink-0 sticky top-0">
+            <a href="dashboard.html" class="md:hidden flex flex-col leading-none">
+                <div class="flex items-center">
+                    <span class="text-xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span><span class="text-xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
                 </div>
-                <button onclick="if(typeof openProfileModal === 'function') openProfileModal()" class="hidden md:flex w-12 h-12 rounded-full bg-white/5 border border-white/10 p-[2px] hover:scale-105 transition transform shadow-[0_0_15px_rgba(255,195,0,0.15)] cursor-pointer">
-                    <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-gray-500 font-black text-lg overflow-hidden skeleton-text">
-                        P
-                    </div>
+                <span class="text-[8px] font-black uppercase tracking-[0.3em] text-emerald-500 mt-1">Store • Partner</span>
+            </a>
+            <div class="hidden md:block">
+                <span class="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-500 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">Sincronización Activa</span>
+            </div>
+            
+            <div class="flex items-center gap-3 md:gap-5">
+                <div class="text-right cursor-pointer" onclick="if(typeof openProfileModal === 'function') openProfileModal()">
+                    <p id="store-name-display" class="text-xs md:text-sm font-bold text-white min-w-[100px] md:min-w-[120px]">Cargando...</p>
+                    <p class="text-[8px] md:text-[9px] text-gray-500 uppercase tracking-widest font-bold mt-0.5">Partner Oficial</p>
+                </div>
+                <button type="button" onclick="if(typeof openProfileModal === 'function') openProfileModal()" class="relative z-40 pointer-events-auto flex w-11 h-11 md:w-12 md:h-12 rounded-full bg-white/5 border border-white/10 p-[2px] hover:scale-105 active:scale-95 transition transform shadow-[0_0_15px_rgba(255,195,0,0.15)] cursor-pointer">
+                    <div id="header-logo" class="w-full h-full bg-[#0a0a0f] rounded-full flex items-center justify-center text-gray-500 font-black text-sm md:text-lg overflow-hidden">P</div>
                 </button>
             </div>
         </header>
 
-        <!-- CONTENIDO DE FINANZAS -->
-        <div class="flex-1 overflow-y-auto hide-scroll p-6 md:p-12">
-            <div class="max-w-4xl mx-auto pb-24 md:pb-10">
+        <!-- CONTENIDO FINANZAS -->
+        <div class="flex-1 md:overflow-y-auto hide-scroll p-5 sm:p-8 md:p-12 pb-32 md:pb-12">
+            <div class="max-w-4xl mx-auto">
                 
                 <header class="mb-10 border-b border-white/5 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                         <h1 class="text-4xl md:text-5xl font-[900] tracking-tighter uppercase italic">Control <span class="text-[#FFC300]">Financiero</span></h1>
-                        <p class="text-sm text-gray-400 mt-3 font-medium max-w-lg">Gestiona tus liquidaciones, monitorea fondos retenidos y solicita retiros a tu cuenta.</p>
+                        <p class="text-sm text-gray-400 mt-2 md:mt-3 font-medium max-w-lg">Gestiona tus liquidaciones, monitorea fondos retenidos y solicita retiros a tu cuenta.</p>
                     </div>
                     
                     <!-- Botón de Retiro Principal -->
-                    <button id="btn-request-payout" onclick="requestPayout()" class="bg-white/5 text-gray-500 border border-white/10 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest cursor-not-allowed transition-all shadow-lg w-full md:w-auto text-center flex items-center justify-center gap-2">
+                    <button id="btn-request-payout" onclick="requestPayout()" class="bg-white/5 text-gray-500 border border-white/10 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest cursor-not-allowed transition-all shadow-lg w-full md:w-auto text-center flex items-center justify-center gap-2 shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Solicitar Retiro
                     </button>
                 </header>
 
                 <!-- PANELES DE SALDO -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-12">
                     
                     <!-- Saldo Disponible -->
-                    <div class="bg-[#12121a] border border-[#FFC300]/30 p-8 rounded-[2.5rem] relative overflow-hidden shadow-[0_20px_40px_rgba(255,195,0,0.05)]">
+                    <div class="bg-[#12121a] border border-[#FFC300]/30 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] relative overflow-hidden shadow-[0_20px_40px_rgba(255,195,0,0.05)]">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-[#FFC300]/10 rounded-full blur-[40px] -mr-8 -mt-8 pointer-events-none"></div>
-                        <h3 class="text-[10px] font-black uppercase tracking-widest text-[#FFC300] mb-2 flex items-center gap-2">
+                        <h3 class="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#FFC300] mb-2 flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             Saldo Liquidable
                         </h3>
-                        <p class="text-xs text-gray-400 font-bold mb-6">Equivalente listo para transferir a tu cuenta.</p>
+                        <p class="text-[10px] md:text-xs text-gray-400 font-bold mb-6">Equivalente listo para transferir a tu cuenta.</p>
                         
-                        <p id="balance-available" class="text-5xl md:text-6xl font-[900] text-white italic tracking-tighter drop-shadow-md skeleton-text min-w-[150px]">$0.00</p>
-                        <!-- 🔥 ESPACIO AÑADIDO PARA EL DESGLOSE DE BOLÍVARES Y DÓLARES -->
-                        <p id="breakdown-available" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2"></p>
+                        <p id="balance-available" class="text-4xl sm:text-5xl md:text-6xl font-[900] text-white italic tracking-tighter drop-shadow-md">$0.00</p>
+                        <p id="breakdown-available" class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2"></p>
                         
-                        <div class="mt-8 pt-4 border-t border-white/5 flex items-center justify-between">
-                            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Calculado con Tasa BCV Actual</span>
+                        <div class="mt-6 md:mt-8 pt-4 border-t border-white/5 flex items-center justify-between">
+                            <span class="text-[8px] md:text-[9px] font-bold text-gray-500 uppercase tracking-widest">Calculado con Tasa BCV Actual</span>
                         </div>
                     </div>
 
                     <!-- Saldo en Escrow -->
-                    <div class="bg-[#030305] border border-white/5 p-8 rounded-[2.5rem] relative overflow-hidden shadow-inner">
+                    <div class="bg-[#030305] border border-white/5 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] relative overflow-hidden shadow-inner">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-gray-500/10 rounded-full blur-[40px] -mr-8 -mt-8 pointer-events-none"></div>
-                        <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 flex items-center gap-2">
+                        <h3 class="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                             Fondos en Escrow
                         </h3>
-                        <p class="text-xs text-gray-500 font-bold mb-6">En custodia hasta confirmación de entrega.</p>
+                        <p class="text-[10px] md:text-xs text-gray-500 font-bold mb-6">En custodia hasta confirmación de entrega.</p>
                         
-                        <p id="balance-escrow" class="text-4xl md:text-5xl font-[900] text-gray-600 italic tracking-tighter skeleton-text min-w-[120px]">$0.00</p>
-                        <!-- 🔥 ESPACIO AÑADIDO PARA EL DESGLOSE DE BOLÍVARES Y DÓLARES -->
-                        <p id="breakdown-escrow" class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-2"></p>
+                        <p id="balance-escrow" class="text-3xl sm:text-4xl md:text-5xl font-[900] text-gray-600 italic tracking-tighter">$0.00</p>
+                        <p id="breakdown-escrow" class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-2"></p>
                         
-                        <div class="mt-8 pt-4 border-t border-white/5 flex items-center justify-between">
-                            <span class="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Seguridad Zero-Trust Activa</span>
+                        <div class="mt-6 md:mt-8 pt-4 border-t border-white/5 flex items-center justify-between">
+                            <span class="text-[8px] md:text-[9px] font-bold text-gray-600 uppercase tracking-widest">Seguridad Zero-Trust Activa</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- HISTORIAL DE ÓRDENES Y TRANSACCIONES -->
-                <div class="bg-[#12121a] border border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl">
+                <div class="bg-[#12121a] border border-white/5 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl">
                     <div class="p-6 md:p-8 border-b border-white/5 flex justify-between items-center bg-[#0a0a0f]">
-                        <h3 class="text-lg font-[900] tracking-tighter uppercase italic text-white">Últimos Movimientos</h3>
-                        <span class="bg-white/5 text-gray-400 border border-white/10 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Historial</span>
+                        <h3 class="text-base md:text-lg font-[900] tracking-tighter uppercase italic text-white">Últimos Movimientos</h3>
+                        <span class="bg-white/5 text-gray-400 border border-white/10 px-3 py-1 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shrink-0">Historial</span>
                     </div>
                     
                     <!-- Estado Vacío -->
-                    <div id="finance-empty-state" class="hidden p-12 flex flex-col items-center justify-center text-center">
-                        <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 text-gray-600 border border-white/10">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <div id="finance-empty-state" class="hidden p-8 md:p-12 flex flex-col items-center justify-center text-center">
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 text-gray-600 border border-white/10">
+                            <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
-                        <p class="text-sm text-gray-400 font-medium">No hay registros financieros para mostrar aún.</p>
+                        <p class="text-xs md:text-sm text-gray-400 font-medium">No hay registros financieros para mostrar aún.</p>
                     </div>
 
                     <!-- Lista de Transacciones -->
@@ -200,32 +213,28 @@
         </div>
     </main>
 
-    <!-- ======================================================= -->
-    <!-- MODAL DE PERFIL B2B PREMIUM -->
-    <!-- ======================================================= -->
+    <!-- MODAL DE PERFIL B2B -->
     <div id="profile-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-end md:items-center justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-lg rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-500">
-            
-            <div class="p-8 pb-0 text-right">
-                <button onclick="if(typeof closeProfileModal === 'function') closeProfileModal()" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition">
+        <div class="bg-[#0a0a0f] border border-white/10 w-full max-w-lg rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] transform scale-95 transition-transform duration-500 max-h-[92vh] overflow-y-auto hide-scroll">
+            <div class="p-8 pb-0 flex items-center justify-between">
+                <button type="button" onclick="if(typeof logout === 'function') logout()" class="md:hidden flex items-center gap-2 bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Cerrar Sesión
+                </button>
+                <div class="hidden md:block"></div>
+                <button type="button" onclick="if(typeof closeProfileModal === 'function') closeProfileModal()" class="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-
             <div class="p-8 pt-0 flex flex-col items-center">
-                <!-- Avatar Upload -->
                 <div class="relative group cursor-pointer mb-6" onclick="document.getElementById('upload-logo-input').click()">
-                    <div id="modal-profile-logo" class="w-28 h-28 rounded-full bg-[#12121a] border-2 border-dashed border-white/20 flex items-center justify-center text-4xl font-black text-gray-600 overflow-hidden group-hover:border-[#FFC300] transition-colors shadow-xl">
-                        P
-                    </div>
+                    <div id="modal-profile-logo" class="w-28 h-28 rounded-full bg-[#12121a] border-2 border-dashed border-white/20 flex items-center justify-center text-4xl font-black text-gray-600 overflow-hidden group-hover:border-[#FFC300] transition-colors shadow-xl">P</div>
                     <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
                     </div>
                     <input type="file" id="upload-logo-input" class="hidden" accept="image/*" onchange="if(typeof uploadNewLogo === 'function') uploadNewLogo(this)">
                 </div>
-
                 <h2 class="text-2xl font-[900] tracking-tighter uppercase italic text-white mb-8">Datos <span class="text-[#FFC300]">Corporativos</span></h2>
-
                 <div class="w-full space-y-4">
                     <div>
                         <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Razón Social / Tienda</label>
@@ -246,19 +255,16 @@
                         <input type="text" id="prof-email" class="w-full bg-[#030305] border border-white/5 rounded-2xl px-5 py-4 text-sm font-bold text-emerald-400 focus:outline-none" readonly>
                     </div>
                 </div>
-                
                 <p class="text-[9px] text-gray-600 font-bold mt-8 mb-4 text-center">Para modificar datos fiscales o el correo máster de acceso, debes emitir un ticket al departamento de Soporte de Gymenez.</p>
             </div>
         </div>
     </div>
 
-    <!-- ======================================================= -->
-    <!-- MOTOR JAVASCRIPT MODULAR B2B -->
-    <!-- ======================================================= -->
     <script src="/static/js/store/partner_session.js"></script>
+    <script src="/static/js/store/partner_ui.js"></script>
     <script src="/static/js/store/partner_profile.js"></script>
     <script src="/static/js/store/partner_finance.js?v=2.2"></script>
     <script src="/static/js/store/partner_main.js?v=1.0"></script>
-    
+
 </body>
 </html>
