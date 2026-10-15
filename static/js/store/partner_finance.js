@@ -8,7 +8,6 @@ const API_BASE_URL = window.location.hostname === '127.0.0.1' || window.location
 
 const TOKEN_KEY = 'gymenez_partner_token';
 
-// Variable de estado para protección de doble click
 let currentLiquidableUsdEquiv = 0; 
 let isProcessingPayout = false;
 
@@ -16,13 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchFinancialData();
 });
 
-// 1. OBTENER EL SNAPSHOT FINANCIERO SEGURO
 async function fetchFinancialData() {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
 
     try {
-        // Hacemos ping a la nueva ruta segura que audita los fondos
         const res = await fetch(`${API_BASE_URL}/api/partner/finances`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -35,23 +32,39 @@ async function fetchFinancialData() {
         } else {
             console.error("Error del servidor:", data.error);
         }
-
     } catch (error) {
         console.error("Error de red al obtener finanzas:", error);
     }
 }
 
-// 2. ACTUALIZAR INTERFAZ BIMONETARIA
+// 🛡️ REGLA B2B: Jueves 7:00 AM a Viernes 11:59 AM
+function isPayoutWindowOpen() {
+    const now = new Date();
+    // Ajuste simple para zona horaria local. 
+    // day: 0=Dom, 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab
+    const day = now.getDay(); 
+    const hour = now.getHours();
+
+    if (day === 4 && hour >= 7) return true; // Jueves desde las 7:00 AM hasta las 23:59
+    if (day === 5 && hour < 12) return true; // Viernes desde las 00:00 hasta las 11:59 AM
+    
+    return false;
+}
+
+// Utilidad para cambiar estilos del botón rápidamente
+function setButtonState(btn, enabled, text, colorClasses) {
+    btn.disabled = !enabled;
+    btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> ${text}`;
+    btn.className = `${colorClasses} border px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all w-full md:w-auto text-center flex items-center justify-center gap-2 ${!enabled ? 'cursor-not-allowed' : 'cursor-pointer shadow-lg hover:scale-[1.02]'}`;
+}
+
 function updateFinancialUI(snapshot) {
-    // A) Animamos los montos totales equivalentes en USD
     currentLiquidableUsdEquiv = snapshot.total_disponible_equivalente_usd;
     animateValue("balance-available", 0, currentLiquidableUsdEquiv, 1200);
     
-    // Calculamos el equivalente en USD del Escrow solo para la pantalla (El backend ya mandó los puros)
     const escrowEqUsd = snapshot.escrow_puro_usd + (snapshot.tasa_bcv_hoy > 0 ? (snapshot.escrow_puro_ves / snapshot.tasa_bcv_hoy) : 0);
     animateValue("balance-escrow", 0, escrowEqUsd, 1200);
 
-    // B) Inyectar Subtítulos Desglosados
     const availableSubtitle = document.getElementById('breakdown-available');
     if (availableSubtitle) {
         availableSubtitle.innerHTML = `$${snapshot.disponible_puro_usd.toFixed(2)} USD + Bs. ${snapshot.disponible_puro_ves.toFixed(2)} (Tasa BCV: ${snapshot.tasa_bcv_hoy})`;
@@ -62,22 +75,31 @@ function updateFinancialUI(snapshot) {
         escrowSubtitle.innerHTML = `$${snapshot.escrow_puro_usd.toFixed(2)} USD + Bs. ${snapshot.escrow_puro_ves.toFixed(2)}`;
     }
 
-    // C) Lógica del Botón de Retiro (Solo habilita si hay fondos y no está procesando ya)
     const btnPayout = document.getElementById('btn-request-payout');
-    if (btnPayout) {
-        if (currentLiquidableUsdEquiv > 0 && !isProcessingPayout) {
-            btnPayout.classList.remove('bg-white/5', 'text-gray-500', 'cursor-not-allowed', 'border-white/10');
-            btnPayout.classList.add('bg-[#FFC300]', 'text-black', 'border-[#FFC300]', 'hover:bg-[#e6b000]', 'cursor-pointer');
-            btnPayout.disabled = false;
-        } else {
-            btnPayout.classList.add('bg-white/5', 'text-gray-500', 'cursor-not-allowed', 'border-white/10');
-            btnPayout.classList.remove('bg-[#FFC300]', 'text-black', 'border-[#FFC300]', 'hover:bg-[#e6b000]', 'cursor-pointer');
-            btnPayout.disabled = true;
-        }
+    if (!btnPayout) return;
+
+    // 🛡️ VALIDACIÓN ESTRICTA: Ventana de tiempo y Límite de 1 por semana
+    const windowOpen = isPayoutWindowOpen();
+    const hasActiveTicket = snapshot.transactions.some(tx => tx.status === 'payout_requested');
+
+    if (hasActiveTicket) {
+        // Bloqueo: Ya tiene un ticket en proceso esta semana
+        setButtonState(btnPayout, false, 'Liquidación en Proceso', 'bg-white/5 text-blue-400 border-blue-500/30');
+    } 
+    else if (!windowOpen) {
+        // Bloqueo: Fuera de horario
+        setButtonState(btnPayout, false, 'Abre Jueves 7:00 AM', 'bg-white/5 text-gray-500 border-white/10');
+    } 
+    else if (currentLiquidableUsdEquiv <= 0) {
+        // Bloqueo: Sin fondos
+        setButtonState(btnPayout, false, 'Sin Fondos Disponibles', 'bg-white/5 text-gray-500 border-white/10');
+    } 
+    else if (!isProcessingPayout) {
+        // Permitido
+        setButtonState(btnPayout, true, 'Solicitar Retiro', 'bg-[#FFC300] text-black border-[#FFC300] hover:bg-[#e6b000]');
     }
 }
 
-// 3. RENDERIZAR HISTORIAL DE TRANSACCIONES AUDITADO
 function renderTransactions(transactions) {
     const list = document.getElementById('transactions-list');
     const emptyState = document.getElementById('finance-empty-state');
@@ -111,7 +133,7 @@ function renderTransactions(transactions) {
             icon = `<div class="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>`;
-            textStyle = 'text-gray-400 line-through decoration-white/20'; // Visual de dinero que ya no suma
+            textStyle = 'text-gray-400 line-through decoration-white/20'; 
         } else {
             badge = `<span class="text-[9px] font-black uppercase tracking-widest text-gray-500">En Escrow</span>`;
             icon = `<div class="w-10 h-10 rounded-full bg-gray-500/10 border border-white/10 flex items-center justify-center text-gray-500 shrink-0">
@@ -139,26 +161,20 @@ function renderTransactions(transactions) {
     });
 }
 
-// 4. GENERAR TICKET DE LIQUIDACIÓN
 window.requestPayout = async function(event) {
-    // 🛡️ ZERO-TRUST LOCAL: Si está en cero, o ya le dio clic, cortamos de raíz.
-    if (currentLiquidableUsdEquiv <= 0 || isProcessingPayout) {
+    if (currentLiquidableUsdEquiv <= 0 || isProcessingPayout || !isPayoutWindowOpen()) {
         if(navigator.vibrate) navigator.vibrate([100]);
         return; 
     }
 
-    const conf = confirm(`¿Estás seguro de solicitar la liquidación de todas tus órdenes disponibles?\n\nEquivalente aproximado a transferir: $${currentLiquidableUsdEquiv.toLocaleString('en-US', {minimumFractionDigits: 2})} USD.`);
+    const conf = confirm(`¿Estás seguro de solicitar tu corte semanal?\n\nEquivalente aproximado: $${currentLiquidableUsdEquiv.toLocaleString('en-US', {minimumFractionDigits: 2})} USD.\n\nRecuerda: Solo se procesa 1 retiro por semana.`);
     if (!conf) return;
 
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
 
-    // Bloqueamos el flujo
     isProcessingPayout = true;
-
-    // Feedback visual en el botón
     const btn = event ? event.currentTarget : document.getElementById('btn-request-payout');
-    const originalText = btn ? btn.innerHTML : '';
     
     if (btn) {
         btn.disabled = true;
@@ -175,28 +191,21 @@ window.requestPayout = async function(event) {
         
         if (res.ok && data.success) {
             if(navigator.vibrate) navigator.vibrate([50, 50]);
-            alert(`✅ ¡Éxito!\n\n${data.message}\nTicket de seguimiento: ${data.ticket_id}`);
-            // Recargamos los fondos para mostrar $0.00 disponibles y pintar las órdenes tachadas
+            alert(`✅ ¡Ticket Generado!\n\n${data.message}\nID: ${data.ticket_id}`);
             fetchFinancialData(); 
         } else {
             if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            alert(`❌ Error al solicitar liquidación: ${data.error}`);
+            alert(`❌ Error: ${data.error}`);
+            isProcessingPayout = false;
+            fetchFinancialData(); // Restaurar botón
         }
     } catch (error) {
-        console.error("Fallo de red al solicitar payout:", error);
         alert("Fallo de conexión al procesar la solicitud.");
-    } finally {
         isProcessingPayout = false;
-        if (btn) {
-            btn.innerHTML = originalText;
-            btn.disabled = currentLiquidableUsdEquiv <= 0;
-        }
+        fetchFinancialData(); // Restaurar botón
     }
 };
 
-// ==========================================
-// UTILIDADES: ANIMACIÓN FLUIDA DE NÚMEROS
-// ==========================================
 function animateValue(id, start, end, duration) {
     const obj = document.getElementById(id);
     if (!obj) return;
