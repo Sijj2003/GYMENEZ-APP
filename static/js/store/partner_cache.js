@@ -1,120 +1,104 @@
 /**
  * ====================================================================
- * 🧠 GYMENEZ SMART CACHE MANAGER (Zero-Trust Data Layer)
+ * 🧠 GYMENEZ SMART CACHE INTERCEPTOR (Automático)
  * ====================================================================
- * Motor de caché en RAM (sessionStorage). 
- * Protege la base de datos de consultas redundantes y volatiliza
- * la información confidencial al cerrar la pestaña del navegador.
+ * Se invoca desde el HTML y secuestra (intercepta) todas las llamadas
+ * 'fetch' del sistema sin necesidad de modificar el resto del código JS.
  */
 
 const GymenezCache = {
-    // Tiempos de vida (TTL) base en minutos
     TTL: {
-        profile: 1440,    // 24 horas (Prácticamente permanente en la sesión activa)
-        business: 1440,   // 24 horas (Cambios en contratos son raros)
-        catalog: 1440,    // 24 horas (Sincronización por eventos: solo se borra si editan/crean)
-        orders: 30,       // 30 minutos (Equilibrio de recursos)
-        dashboard: 30     // 30 minutos (Espejo de órdenes y finanzas)
+        profile: 1440,
+        business: 1440,
+        catalog: 1440,
+        orders: 30,
+        finance: 180, // Por defecto 3h. Se ajusta abajo en días de corte.
+        dashboard: 30
     },
 
-    // ⏱️ Motor Lógico Financiero: Sincronización acelerada en días de corte
     getFinanceTTL: function() {
-        const today = new Date().getDay(); 
-        // JavaScript Date: 0 = Domingo, 4 = Jueves, 5 = Viernes
-        if (today === 4 || today === 5) {
-            return 60; // 1 hora de vigencia en días de liquidación
-        }
-        return 180; // 3 horas el resto de la semana
+        const today = new Date().getDay();
+        return (today === 4 || today === 5) ? 60 : 180; // Jueves/Viernes 1h, resto 3h
     },
 
-    // 1. Guardar en Caché con marca de tiempo
-    set: function(key, data, ttlMinutes) {
-        const expiry = new Date().getTime() + (ttlMinutes * 60000);
-        const payload = { data, expiry };
-        sessionStorage.setItem(`gym_b2b_${key}`, JSON.stringify(payload));
+    getKeyFromUrl: function(url) {
+        // Extrae el módulo de la URL (ej: de "/api/partner/finance" extrae "finance")
+        const match = url.match(/\/api\/partner\/([a-zA-Z0-9_-]+)/);
+        return match ? match[1] : null;
     },
 
-    // 2. Extraer de Caché (Retorna null si está vencido o no existe)
-    get: function(key) {
-        const raw = sessionStorage.getItem(`gym_b2b_${key}`);
-        if (!raw) return null;
-        
-        try {
-            const payload = JSON.parse(raw);
-            const now = new Date().getTime();
-            
-            if (now > payload.expiry) {
-                this.invalidate(key); // Destrucción silente al caducar
-                return null;
-            }
-            return payload.data;
-        } catch (e) {
-            return null;
-        }
-    },
-
-    // 3. Destrucción Selectiva (Invocado tras un POST, PUT o DELETE)
-    invalidate: function(keys) {
-        if (typeof keys === 'string') keys = [keys];
-        keys.forEach(k => sessionStorage.removeItem(`gym_b2b_${k}`));
-        console.log(`🧹 [Cache Cleared] Módulos invalidados: ${keys.join(', ')}`);
-    },
-
-    // 4. Limpieza Absoluta (Invocado obligatoriamente en el Logout)
-    clearAll: function() {
+    invalidateAll: function() {
         Object.keys(sessionStorage).forEach(k => {
             if (k.startsWith('gym_b2b_')) sessionStorage.removeItem(k);
         });
-    },
+        console.log("🧹 [Cache] Memoria invalidada por actualización de datos.");
+    }
+};
 
-    // 5. FETCH INTELIGENTE: El puente seguro hacia el Backend
-    fetchSmart: async function(url, cacheKey, customTtl) {
-        // A. Consultar Memoria Interna
-        const cachedData = this.get(cacheKey);
-        if (cachedData) {
-            console.log(`⚡ [Cache Hit] Cargando ${cacheKey} desde RAM local.`);
-            return cachedData;
+// ==========================================
+// 🛡️ SECUESTRO GLOBAL DE LA FUNCIÓN FETCH
+// ==========================================
+const originalFetch = window.fetch;
+
+window.fetch = async function(resource, config) {
+    const url = typeof resource === 'string' ? resource : resource.url;
+    const method = (config && config.method) ? config.method.toUpperCase() : 'GET';
+
+    // Solo intervenimos si la petición va a la API del Partner B2B
+    if (url.includes('/api/partner/')) {
+        const cacheKey = GymenezCache.getKeyFromUrl(url);
+
+        // 1. SI ESTÁN MODIFICANDO DATOS (Guardar, Eliminar, Editar)
+        if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+            // Borramos toda la caché para forzar datos frescos en el próximo click
+            GymenezCache.invalidateAll();
+            // Dejamos pasar la petición original al backend
+            return originalFetch.apply(this, arguments);
         }
 
-        // B. Consultar Servidor
-        console.log(`📡 [API Call] Interrogando base de datos remota para ${cacheKey}...`);
-        const token = localStorage.getItem('gymenez_partner_token');
-        
-        try {
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            
-            if (response.status === 401 || response.status === 403) {
-                // Token expirado o inválido: Volatizar datos y expulsar
-                this.clearAll();
-                window.location.href = '/store/partner/login.html';
-                return null;
-            }
+        // 2. SI ESTÁN LEYENDO DATOS (Carga de página normal)
+        if (method === 'GET' && cacheKey && GymenezCache.TTL[cacheKey]) {
+            const storageKey = `gym_b2b_${cacheKey}`;
+            const rawData = sessionStorage.getItem(storageKey);
 
-            const data = await response.json();
-
-            // C. Guardar en memoria solo bajo respuesta exitosa
-            if (response.ok && data.success) {
-                let finalTtl = customTtl;
-                
-                // Asignación automática de TTL si no se declara explícitamente
-                if (!finalTtl) {
-                    if (cacheKey === 'finance') {
-                        finalTtl = this.getFinanceTTL();
+            // Verificar si hay memoria válida
+            if (rawData) {
+                try {
+                    const payload = JSON.parse(rawData);
+                    if (new Date().getTime() < payload.expiry) {
+                        console.log(`⚡ [Cache Hit] Cargando '${cacheKey}' al instante.`);
+                        // Simulamos una respuesta real de fetch con los datos cacheados
+                        return new Response(JSON.stringify(payload.data), {
+                            status: 200,
+                            headers: { 'Content-Type': 'application/json' }
+                        });
                     } else {
-                        finalTtl = this.TTL[cacheKey] || 15; // Fallback de seguridad de 15 mins
+                        sessionStorage.removeItem(storageKey); // Caducó
                     }
+                } catch (e) {
+                    sessionStorage.removeItem(storageKey);
                 }
-                
-                this.set(cacheKey, data, finalTtl);
             }
+
+            // Si no hay caché, dejamos que el fetch original vaya al backend
+            console.log(`📡 [API Call] Descargando '${cacheKey}' del servidor...`);
+            const response = await originalFetch.apply(this, arguments);
             
-            return data;
-        } catch (error) {
-            console.error(`Error crítico en fetchSmart para ${cacheKey}:`, error);
-            throw error;
+            // Si el backend responde bien, lo clonamos y guardamos en caché
+            if (response.ok) {
+                const resClone = response.clone();
+                resClone.json().then(data => {
+                    if (data.success || data.orders || data.products) {
+                        let ttl = cacheKey === 'finance' ? GymenezCache.getFinanceTTL() : GymenezCache.TTL[cacheKey];
+                        const expiry = new Date().getTime() + (ttl * 60000);
+                        sessionStorage.setItem(storageKey, JSON.stringify({ data, expiry }));
+                    }
+                }).catch(() => {});
+            }
+            return response;
         }
     }
+
+    // Si es una ruta externa o de otra cosa, el fetch funciona normal
+    return originalFetch.apply(this, arguments);
 };
