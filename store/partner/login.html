@@ -96,7 +96,7 @@
     <main class="flex-1 flex flex-col lg:flex-row items-center justify-center p-6 md:p-8 pt-28 md:pt-32 relative z-10 w-full max-w-7xl mx-auto min-h-screen lg:h-screen lg:overflow-hidden pb-12">
         <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center h-full">
             
-            <!-- 🍎 ZONA IZQUIERDA: CARRUSEL MARKETING (SOLO PC) -->
+            <!-- ZONA IZQUIERDA: CARRUSEL MARKETING (SOLO PC) -->
             <div class="hidden lg:flex flex-col pr-8 relative h-[450px] w-full justify-center">
                 <div id="desktop-promo-container" class="relative w-full h-[350px]"></div>
                 <div id="desktop-promo-dots" class="absolute bottom-0 left-0 flex gap-3"></div>
@@ -144,19 +144,20 @@
         </div>
     </main>
 
-    <!-- 🍎 MODAL PROMOCIONAL MÓVIL (CORREGIDO: pointer-events-none al cerrar) -->
-    <div id="mobile-promo-modal" class="lg:hidden fixed inset-0 z-[150] bg-black/70 backdrop-blur-md flex items-center justify-center p-5 opacity-0 pointer-events-none transition-opacity duration-500">
-        <div class="bg-[#12121a] border border-white/10 w-full max-w-sm rounded-[2.5rem] p-8 relative shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] transform scale-95 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]" id="mobile-promo-card">
+    <!-- 🍎 MODAL PROMOCIONAL MÓVIL (CORREGIDO OVERFLOW Y CLICS BLOQUEADOS) -->
+    <!-- Agregado 'hidden' inicialmente para que no interfiera en la UI hasta que sea invocado -->
+    <div id="mobile-promo-modal" class="hidden lg:hidden fixed inset-0 z-[150] bg-black/80 backdrop-blur-md flex items-center justify-center p-5 opacity-0 transition-opacity duration-500">
+        <div class="bg-[#12121a]/95 border border-white/10 w-full max-w-sm rounded-[2.5rem] p-6 sm:p-8 relative shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] transform scale-95 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]" id="mobile-promo-card">
             
             <button onclick="closeMobilePromo()" class="absolute top-5 right-5 text-gray-400 hover:text-white bg-white/5 p-2 rounded-full transition z-50 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
             <!-- Contenedor Dinámico Móvil -->
-            <div id="mobile-promo-container" class="relative w-full h-[280px] mt-4"></div>
+            <div id="mobile-promo-container" class="relative w-full h-[260px] sm:h-[280px] mt-4 flex items-center"></div>
             
             <!-- Puntos de Navegación -->
-            <div id="mobile-promo-dots" class="flex justify-center gap-2 mt-4 relative z-20"></div>
+            <div id="mobile-promo-dots" class="flex justify-center gap-2 mt-2 relative z-20"></div>
         </div>
     </div>
 
@@ -266,7 +267,7 @@
         </div>
     </div>
 
-    <!-- MODAL: RECUPERACIÓN (CENTRO ABSOLUTO) -->
+    <!-- MODAL: RECUPERACIÓN -->
     <div id="recovery-modal" class="fixed inset-0 z-[400] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
         <div class="modal-content bg-[#0a0a0f] border border-white/10 w-full max-w-md rounded-[2.5rem] flex flex-col transform scale-95 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] relative overflow-hidden shadow-2xl">
             <div class="flex items-center justify-between p-6 md:p-8 border-b border-white/5 bg-[#0a0a0f]">
@@ -303,20 +304,20 @@
         </div>
     </div>
 
-    <!-- 🍎 SCRIPT: CARRUSEL DE MARKETING AMPLIADO (6 VARIANTES) & MODALES -->
+    <!-- 🍎 SCRIPT: CARRUSEL DE MARKETING & MODALES (CORREGIDO POINTER-EVENTS) -->
     <script>
         const promoData = [
             {
                 color: "yellow", hex: "#FFC300",
                 icon: `<svg class="w-8 h-8 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
-                title: `Empieza gratis, <br><span class="text-[#FFC300]">Máxima Rentabilidad.</span>`,
-                desc: `Opera sin costos fijos de incorporación y vende tus productos a la tasa y rentabilidad más alta del mercado comercial venezolano.`
+                title: `Empieza Gratis, <br><span class="text-[#FFC300]">Máxima Rentabilidad.</span>`,
+                desc: `Abre tu tienda sin costos de incorporación y vende tus productos obteniendo la rentabilidad más alta del mercado comercial venezolano.`
             },
             {
                 color: "emerald", hex: "#10b981",
                 icon: `<svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>`,
-                title: `Ventas 100% <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600">Automatizadas.</span>`,
-                desc: `Disfruta de verificación automática de pagos móviles y transferencias sin necesidad de reportar comprobantes manualmente.`
+                title: `Ventas y Pagos <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600">100% Automáticos.</span>`,
+                desc: `El sistema verifica automáticamente los pagos móviles y transferencias en tiempo real. Tú solo te encargas de enviar.`
             },
             {
                 color: "blue", hex: "#3b82f6",
@@ -354,16 +355,33 @@
             const mobDots = document.getElementById('mobile-promo-dots');
 
             promoData.forEach((slide, idx) => {
-                const slideHTML = `
-                    <div class="promo-slide flex flex-col ${idx === currentPromoIndex ? 'active' : ''}" id="slide-${idx}">
-                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mb-6 md:mb-8 backdrop-blur-md shadow-xl relative z-10">
+                // Generar Slide para PC (Letras grandes)
+                const dSlideHTML = `
+                    <div class="promo-slide ${idx === currentPromoIndex ? 'active' : ''}" id="slide-${idx}">
+                        <div class="w-14 h-14 md:w-16 md:h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mb-6 md:mb-8 backdrop-blur-md shadow-xl relative z-10 shrink-0">
                             <div class="icon-glow" style="background-color: ${slide.hex}15;"></div>
                             ${slide.icon}
                         </div>
-                        <h1 class="text-4xl md:text-5xl xl:text-6xl font-[900] tracking-tighter uppercase mb-4 md:mb-6 leading-[1.1] text-white">
+                        <h1 class="text-4xl md:text-5xl xl:text-6xl font-[900] tracking-tighter uppercase mb-4 md:mb-6 leading-[1.1] text-white shrink-0">
                             ${slide.title}
                         </h1>
-                        <p class="text-gray-400 text-xs md:text-sm font-medium leading-relaxed max-w-md">
+                        <p class="text-gray-400 text-xs md:text-sm font-medium leading-relaxed max-w-md shrink-0">
+                            ${slide.desc}
+                        </p>
+                    </div>
+                `;
+                
+                // Generar Slide para Móvil (Letras compactas para no desbordar)
+                const mSlideHTML = `
+                    <div class="promo-slide items-center text-center ${idx === currentPromoIndex ? 'active' : ''}" id="mob-slide-${idx}">
+                        <div class="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-md shadow-xl relative z-10 shrink-0">
+                            <div class="icon-glow" style="background-color: ${slide.hex}15;"></div>
+                            ${slide.icon.replace('w-8 h-8', 'w-6 h-6')}
+                        </div>
+                        <h1 class="text-2xl font-[900] tracking-tighter uppercase mb-3 leading-[1.1] text-white shrink-0 w-full">
+                            ${slide.title}
+                        </h1>
+                        <p class="text-gray-400 text-[10px] sm:text-xs font-medium leading-relaxed max-w-xs shrink-0 mx-auto w-full">
                             ${slide.desc}
                         </p>
                     </div>
@@ -371,8 +389,8 @@
                 
                 const dotHTML = `<button onclick="goToSlide(${idx})" class="w-2 h-2 rounded-full transition-all duration-300 ${idx === currentPromoIndex ? 'w-6 bg-white' : 'bg-white/20 hover:bg-white/50'}"></button>`;
 
-                deskContainer.innerHTML += slideHTML;
-                mobContainer.innerHTML += slideHTML.replace(`id="slide-${idx}"`, `id="mob-slide-${idx}"`);
+                deskContainer.innerHTML += dSlideHTML;
+                mobContainer.innerHTML += mSlideHTML;
                 deskDots.innerHTML += dotHTML;
                 mobDots.innerHTML += dotHTML;
             });
@@ -384,12 +402,12 @@
                 
                 const dSlide = document.getElementById(`slide-${idx}`);
                 const dDot = document.getElementById('desktop-promo-dots').children[idx];
-                dSlide.className = `promo-slide flex flex-col ${isAct ? 'active' : ''}`;
+                dSlide.className = `promo-slide ${isAct ? 'active' : ''}`;
                 dDot.className = `w-2 h-2 rounded-full transition-all duration-300 ${isAct ? 'w-6 bg-white' : 'bg-white/20 hover:bg-white/50'}`;
 
                 const mSlide = document.getElementById(`mob-slide-${idx}`);
                 const mDot = document.getElementById('mobile-promo-dots').children[idx];
-                mSlide.className = `promo-slide flex flex-col ${isAct ? 'active' : ''}`;
+                mSlide.className = `promo-slide items-center text-center ${isAct ? 'active' : ''}`;
                 mDot.className = `w-2 h-2 rounded-full transition-all duration-300 ${isAct ? 'w-6 bg-white' : 'bg-white/20 hover:bg-white/50'}`;
             });
         }
@@ -406,13 +424,18 @@
             promoInterval = setInterval(nextSlide, 7000);
         }
 
-        // 🍎 CORREGIDO: pointer-events-none garantizado al cerrar para que no bloquee los clics
+        // 🔥 FIX TÁCTIL: Eliminación física del flujo para que no bloquee clics
         function closeMobilePromo() {
             const modal = document.getElementById('mobile-promo-modal');
             const card = document.getElementById('mobile-promo-card');
-            modal.classList.add('opacity-0', 'pointer-events-none');
+            
+            modal.classList.add('opacity-0');
             card.classList.remove('scale-100');
             card.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden'); // Elimina completamente el bloqueo táctil
+            }, 500); // 500ms coincide con la transición CSS
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -423,9 +446,12 @@
                 const mobModal = document.getElementById('mobile-promo-modal');
                 const mobCard = document.getElementById('mobile-promo-card');
                 if (window.innerWidth < 1024 && mobModal) {
-                    mobModal.classList.remove('opacity-0', 'pointer-events-none');
-                    mobCard.classList.remove('scale-95');
-                    mobCard.classList.add('scale-100');
+                    mobModal.classList.remove('hidden'); // Lo integramos al flujo
+                    setTimeout(() => {
+                        mobModal.classList.remove('opacity-0'); // Lo mostramos suavemente
+                        mobCard.classList.remove('scale-95');
+                        mobCard.classList.add('scale-100');
+                    }, 10);
                 }
             }, 1500);
         });
