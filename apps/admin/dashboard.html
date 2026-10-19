@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Gymenez Admin | Overview</title>
+    <title>Gerencia Gymenez | Support Center</title>
     
     <link rel="icon" type="image/svg+xml" href="/static/img/logos/mini_logo.svg">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,9 +12,10 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #030305; 
+            background-color: #030305; /* Negro absoluto Gymenez */
             color: #E5E7EB;
             -webkit-font-smoothing: antialiased;
+            overflow: hidden; /* Todo el scroll se maneja internamente */
         }
         
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
@@ -22,281 +23,320 @@
 
         /* 💎 IDENTIDAD DE MARCA (Degradado fluido) */
         .logo-gradient {
-            background: linear-gradient(90deg, #FFC300 0%, #FFC300 45%, #FFFFFF 55%, #FFFFFF 100%);
+            background: linear-gradient(90deg, #FFC300 0%, #FFC300 40%, #FFFFFF 60%, #FFFFFF 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             display: inline-block;
         }
 
-        /* 🔎 COMMAND PALETTE (Buscador Premium) */
-        .search-pill {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .search-pill:focus-within {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 195, 0, 0.4);
-            box-shadow: 0 0 0 4px rgba(255, 195, 0, 0.05);
-        }
-        .search-input {
-            background: transparent; color: white; outline: none; width: 100%;
-        }
-        .search-input::placeholder { color: #6B7280; font-weight: 500; }
-
-        /* 📱 BOTTOM BAR (iOS Style Glassmorphism) */
+        /* 📱 BOTTOM BAR MÓVIL (Fija abajo) */
         .ios-bottom-bar {
-            background: rgba(5, 5, 8, 0.85);
+            background: rgba(3, 3, 5, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             padding-bottom: env(safe-area-inset-bottom);
         }
-        .tab-icon {
-            color: #6B7280; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .tab-item.active .tab-icon {
-            color: #FFC300; transform: translateY(-2px);
-        }
-        .tab-indicator {
-            opacity: 0; transform: scale(0); transition: all 0.3s ease;
-        }
-        .tab-item.active .tab-indicator {
-            opacity: 1; transform: scale(1);
-        }
+        .nav-icon { color: #6B7280; transition: all 0.3s ease; }
+        .nav-item.active .nav-icon { color: #FFC300; transform: translateY(-2px); }
 
         /* 💻 SIDEBAR DESKTOP */
         .sidebar-item {
             color: #9CA3AF; font-size: 0.8125rem; font-weight: 600;
-            padding: 0.6rem 0.8rem; border-radius: 0.5rem;
+            padding: 0.75rem 1rem; border-radius: 0.75rem;
             transition: all 0.2s; display: flex; align-items: center; gap: 0.75rem;
+            cursor: pointer;
         }
         .sidebar-item:hover { color: white; background: rgba(255,255,255,0.03); }
         .sidebar-item.active { color: #FFC300; background: rgba(255, 195, 0, 0.08); }
 
-        /* 📈 CARDS INTERACTIVAS */
-        .b-card {
-            background: #0A0A0F; border: 1px solid rgba(255,255,255,0.04);
-            border-radius: 1rem; transition: transform 0.2s, border-color 0.2s;
+        /* 🎧 PULSE WIDGET (Sistema Flotante de Soporte) */
+        #pulse-widget-container {
+            position: fixed;
+            bottom: calc(1.5rem + env(safe-area-inset-bottom));
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 1rem;
+            pointer-events: none; /* Permite clickear el fondo */
         }
-        .b-card:hover { border-color: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+        
+        /* Ajuste móvil para que la burbuja suba por encima del bottom bar */
+        @media (max-width: 768px) {
+            #pulse-widget-container {
+                bottom: calc(5rem + env(safe-area-inset-bottom));
+                right: 1rem;
+            }
+        }
+
+        .pulse-bubble {
+            width: 3.5rem; height: 3.5rem;
+            background: linear-gradient(135deg, #FFC300 0%, #eab308 100%);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 10px 25px -5px rgba(255, 195, 0, 0.4);
+            cursor: pointer; pointer-events: auto;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .pulse-bubble:hover { transform: scale(1.05); }
+
+        .pulse-window {
+            width: 380px;
+            height: 600px;
+            max-height: calc(100vh - 8rem);
+            background: #0A0A0F;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex; flex-direction: column; overflow: hidden;
+            pointer-events: auto;
+            transform-origin: bottom right;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0; transform: scale(0.95) translateY(20px); pointer-events: none;
+        }
+        .pulse-window.open {
+            opacity: 1; transform: scale(1) translateY(0); pointer-events: auto;
+        }
+        
+        /* Adaptación de la ventana de chat para móviles */
+        @media (max-width: 768px) {
+            .pulse-window {
+                width: calc(100vw - 2rem);
+                height: 60vh;
+            }
+        }
+
+        /* 🎛️ INPUT DEL CHAT */
+        .chat-input {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: white; border-radius: 1rem; outline: none;
+            transition: all 0.2s;
+        }
+        .chat-input:focus { border-color: #FFC300; background: rgba(0,0,0,0.5); }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-[#FFC300] selection:text-black">
 
-    <!-- 🖥️ SIDEBAR DESKTOP -->
+    <!-- FEEDBACK TOAST GLOBAL -->
+    <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-2xl z-[99999] opacity-0 transition-all duration-300 pointer-events-none text-center bg-[#0a0a0f]/95 border border-white/10 backdrop-blur-md"></div>
+
+    <!-- 🖥️ SIDEBAR DESKTOP (Navegación del SPA) -->
     <aside class="hidden md:flex flex-col w-[260px] bg-[#050508] border-r border-white/5 h-full shrink-0 z-30">
-        <!-- Branding Header -->
         <div class="h-20 flex items-center px-8 border-b border-white/5 shrink-0">
-            <a href="/apps/admin/dashboard" class="logo-gradient font-[900] text-[1.7rem] italic tracking-tighter leading-none hover:scale-105 transition-transform">
-                GYMENEZ
-            </a>
-            <span class="text-[8px] font-black text-gray-500 uppercase tracking-widest ml-2 mt-2">Admin</span>
+            <div class="logo-gradient font-[900] text-2xl italic tracking-tighter leading-none cursor-default">
+                GERENCIA GYMENEZ
+            </div>
         </div>
 
-        <!-- Navegación -->
-        <nav class="flex-1 overflow-y-auto hide-scroll px-4 py-6 space-y-8">
+        <nav class="flex-1 overflow-y-auto hide-scroll px-4 py-8 space-y-8" id="desktop-nav">
             <div>
-                <p class="px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest mb-3">Core</p>
-                <div class="space-y-0.5">
-                    <a href="/apps/admin/dashboard" class="sidebar-item active">
+                <p class="px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest mb-3">Operaciones B2C</p>
+                <div class="space-y-1">
+                    <div class="sidebar-item active" data-module="dashboard">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                        Dashboard
-                    </a>
-                </div>
-            </div>
-
-            <div>
-                <p class="px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest mb-3">Ecosistema B2C</p>
-                <div class="space-y-0.5">
-                    <a href="/apps/admin/users.html" class="sidebar-item">
+                        Overview
+                    </div>
+                    <div class="sidebar-item" data-module="users">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        Atletas (Expedientes)
-                    </a>
-                    <a href="/apps/admin/inbox" class="sidebar-item justify-between group">
-                        <div class="flex items-center gap-3">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                            Soporte Pulse
-                        </div>
-                        <span class="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(239,68,68,0.4)]">3</span>
-                    </a>
+                        Atletas (Directorio)
+                    </div>
                 </div>
             </div>
 
             <div>
                 <p class="px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest mb-3">Comercio B2B</p>
-                <div class="space-y-0.5">
-                    <a href="/apps/admin/orders" class="sidebar-item">
+                <div class="space-y-1">
+                    <div class="sidebar-item" data-module="partners">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        Gestión Partners
+                    </div>
+                    <div class="sidebar-item" data-module="store">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                        Gymenez Store
-                    </a>
-                    <a href="/apps/admin/billing" class="sidebar-item">
+                        Store & Despachos
+                    </div>
+                    <div class="sidebar-item" data-module="billing">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Tesorería Fiscal
-                    </a>
+                        Tesorería
+                    </div>
                 </div>
             </div>
             
             <div>
-                <p class="px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest mb-3">CMS Bóvedas</p>
-                <div class="space-y-0.5">
-                    <a href="/apps/admin/routines" class="sidebar-item"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Laboratorio Físico</a>
-                    <a href="/apps/admin/eats" class="sidebar-item"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> Eats & Macros</a>
-                    <a href="/apps/admin/on" class="sidebar-item"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> ON Network</a>
+                <p class="px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest mb-3">CMS Central</p>
+                <div class="space-y-1">
+                    <div class="sidebar-item" data-module="vault"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg> Bóvedas (Eats/ON)</div>
                 </div>
             </div>
         </nav>
         
-        <!-- User Profile Dropdown Simulator -->
-        <div class="p-5 border-t border-white/5 shrink-0 hover:bg-white/[0.02] cursor-pointer transition-colors flex items-center justify-between group">
+        <div class="p-6 border-t border-white/5 shrink-0 flex items-center justify-between group">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-xs font-bold text-gray-300 border border-white/10 group-hover:bg-[#FFC300]/10 group-hover:text-[#FFC300] group-hover:border-[#FFC300]/30 transition-colors">SJ</div>
+                <div class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-xs font-bold text-gray-300 border border-white/10 group-hover:border-[#FFC300]/30 transition-colors">AD</div>
                 <div>
                     <p class="text-[11px] font-bold text-white leading-none mb-1">Sebastián Jiménez</p>
                     <p class="text-[8px] text-[#FFC300] uppercase font-black tracking-widest">Master Admin</p>
                 </div>
             </div>
-            <svg class="w-4 h-4 text-gray-500 group-hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
         </div>
     </aside>
 
-    <!-- 🌐 CONTENIDO PRINCIPAL -->
-    <main class="flex-1 flex flex-col min-w-0 bg-[#030305] relative z-10">
+    <!-- 🌐 CONTENEDOR PRINCIPAL (El Router de la SPA) -->
+    <main class="flex-1 flex flex-col min-w-0 bg-[#030305] relative z-10 h-full pb-[4.5rem] md:pb-0">
         
-        <!-- 📱 HEADER UNIVERSAL -->
-        <header class="h-16 md:h-20 px-5 md:px-8 border-b border-white/5 flex items-center justify-between gap-4 sticky top-0 bg-[#030305]/95 backdrop-blur-xl z-30">
-            
-            <!-- Logo Móvil / Título Desktop -->
-            <div class="flex-shrink-0 flex items-center gap-3">
-                <!-- Móvil: Identidad Gráfica -->
-                <a href="/apps/admin/dashboard" class="md:hidden logo-gradient font-[900] text-2xl italic tracking-tighter leading-none">
-                    GYMENEZ
-                </a>
-                <!-- Desktop: Título de sección -->
-                <h2 class="hidden md:block text-sm font-bold text-gray-300 uppercase tracking-widest">Dashboard General</h2>
+        <!-- 📱 HEADER MÓVIL (Solo visible en pantallas pequeñas) -->
+        <header class="md:hidden h-16 px-5 border-b border-white/5 flex items-center justify-between shrink-0 sticky top-0 bg-[#030305]/95 backdrop-blur-xl z-30">
+            <div class="logo-gradient font-[900] text-xl italic tracking-tighter leading-none cursor-default">
+                GERENCIA GYMENEZ
             </div>
-
-            <!-- Command Palette (Buscador Expandible Inteligente) -->
-            <div class="flex flex-1 justify-end">
-                <div class="search-pill flex items-center px-3 md:px-4 py-2 md:py-2.5 rounded-full w-10 h-10 md:w-full md:max-w-md overflow-hidden focus-within:w-full focus-within:max-w-full md:focus-within:max-w-md cursor-text group relative">
-                    <svg class="w-4 h-4 text-gray-400 shrink-0 group-focus-within:text-[#FFC300] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    <!-- En móvil, el input está oculto hasta que haces focus -->
-                    <input type="text" placeholder="Buscar expedientes, órdenes..." class="search-input hidden md:block group-focus-within:block ml-2 md:ml-3 text-sm">
-                    <div class="hidden md:flex shrink-0 gap-1 ml-auto">
-                        <kbd class="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-[9px] text-gray-500 font-mono font-bold">⌘</kbd>
-                        <kbd class="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-[9px] text-gray-500 font-mono font-bold">K</kbd>
-                    </div>
-                </div>
-            </div>
+            <!-- Botón de búsqueda rápida -->
+            <button class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </button>
         </header>
 
-        <!-- ÁREA DE PÁGINA (Interactive Dashboard) -->
-        <div class="flex-1 overflow-y-auto hide-scroll p-5 md:p-8 pb-24 md:pb-8">
-            <div class="max-w-6xl mx-auto space-y-8">
+        <!-- 🚀 ÁREA DE INYECCIÓN DINÁMICA DE MÓDULOS -->
+        <div id="main-view" class="flex-1 overflow-y-auto hide-scroll relative">
+            
+            <!-- CONTENIDO PLACEHOLDER (Para ver el diseño mientras armamos el JS) -->
+            <div class="p-5 md:p-10 max-w-6xl mx-auto w-full animate-[fadeIn_0.4s_ease-out]">
+                <div>
+                    <h2 class="text-3xl font-[900] text-white tracking-tight">Bienvenido al Centro de Soporte</h2>
+                    <p class="text-xs text-gray-500 font-medium mt-1">Navega por los módulos en el menú. La página no se recargará.</p>
+                </div>
                 
-                <div>
-                    <h2 class="text-2xl md:text-3xl font-[900] text-white tracking-tight">Visión Operativa</h2>
-                    <p class="text-xs text-gray-500 font-medium mt-1">Lunes, 19 de Octubre de 2026</p>
+                <div class="mt-10 p-8 bg-[#0A0A0F] border border-white/5 rounded-2xl text-center">
+                    <div class="w-16 h-16 mx-auto bg-[#FFC300]/10 rounded-full flex items-center justify-center border border-[#FFC300]/20 mb-4">
+                        <svg class="w-8 h-8 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <h3 class="text-white font-bold text-lg">El ecosistema está en línea</h3>
+                    <p class="text-gray-500 text-xs mt-2 max-w-md mx-auto">Selecciona "Atletas" en el menú para gestionar expedientes, o prueba a abrir el widget de soporte flotante en la esquina inferior derecha.</p>
                 </div>
-
-                <!-- 📊 GRID KPI -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
-                    <div class="b-card p-4 md:p-5 flex flex-col justify-between h-28 md:h-32">
-                        <p class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">MRR Global</p>
-                        <div>
-                            <h3 class="text-xl md:text-2xl font-[900] text-white tracking-tight">$14,250<span class="text-sm text-gray-500">.00</span></h3>
-                            <p class="text-[9px] md:text-[10px] text-emerald-400 font-bold mt-1">↑ 12% vs mes anterior</p>
-                        </div>
-                    </div>
-                    <div class="b-card p-4 md:p-5 flex flex-col justify-between h-28 md:h-32">
-                        <p class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Atletas (Ultra)</p>
-                        <div>
-                            <h3 class="text-xl md:text-2xl font-[900] text-white tracking-tight">842</h3>
-                            <p class="text-[9px] md:text-[10px] text-emerald-400 font-bold mt-1">↑ 48 nuevas suscripciones</p>
-                        </div>
-                    </div>
-                    <div class="b-card p-4 md:p-5 flex flex-col justify-between h-28 md:h-32 border-red-500/20 bg-red-500/5">
-                        <p class="text-[9px] md:text-[10px] font-bold text-red-400 uppercase tracking-widest">Tickets Críticos</p>
-                        <div>
-                            <h3 class="text-xl md:text-2xl font-[900] text-red-500 tracking-tight">3</h3>
-                            <p class="text-[9px] md:text-[10px] text-red-400/80 font-bold mt-1">Requieren intervención</p>
-                        </div>
-                    </div>
-                    <div class="b-card p-4 md:p-5 flex flex-col justify-between h-28 md:h-32">
-                        <p class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Auditoría Fiscal</p>
-                        <div>
-                            <h3 class="text-xl md:text-2xl font-[900] text-[#FFC300] tracking-tight">12</h3>
-                            <p class="text-[9px] md:text-[10px] text-gray-500 font-bold mt-1">Pagos pendientes por firmar</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ⚡ CENTRO DE ACCIÓN (Tarjetas Resolutivas) -->
-                <div>
-                    <h3 class="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-[#FFC300] animate-pulse"></span> Centro de Acción
-                    </h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="b-card p-5 flex items-center justify-between group cursor-pointer">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
-                                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-bold text-white">Roberto Sánchez</p>
-                                    <p class="text-[10px] text-gray-400 font-medium mt-0.5 line-clamp-1">"No me carga el video de recovery..."</p>
-                                </div>
-                            </div>
-                            <button class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-[9px] font-bold text-white uppercase tracking-widest transition-colors shrink-0">Atender</button>
-                        </div>
-
-                        <div class="b-card p-5 flex items-center justify-between group cursor-pointer">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full bg-[#FFC300]/10 flex items-center justify-center border border-[#FFC300]/20">
-                                    <svg class="w-5 h-5 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-bold text-white">Pago Banco Central</p>
-                                    <p class="text-[10px] text-gray-400 font-medium mt-0.5">Ref: #88921 • $150.00 USD (Plan Ultra)</p>
-                                </div>
-                            </div>
-                            <button class="px-4 py-2 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-colors shrink-0">Auditar</button>
-                        </div>
-                    </div>
-                </div>
-
             </div>
+            <!-- FIN PLACEHOLDER -->
+
         </div>
     </main>
 
-    <!-- 📱 BOTTOM TAB BAR (Nivel TikTok/Instagram) -->
-    <nav class="md:hidden fixed bottom-0 w-full ios-bottom-bar flex justify-around items-center h-[4.5rem] z-40 px-2 pb-2">
-        <a href="/apps/admin/dashboard" class="tab-item active flex flex-col items-center justify-center w-16 h-full relative cursor-pointer">
-            <svg class="w-6 h-6 tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+    <!-- 📱 BOTTOM TAB BAR (Navegación Móvil SPA) -->
+    <nav class="md:hidden fixed bottom-0 w-full ios-bottom-bar flex justify-around items-center h-[4.5rem] z-40 px-2 pb-2" id="mobile-nav">
+        <div class="nav-item active flex flex-col items-center justify-center w-16 h-full relative cursor-pointer" data-module="dashboard">
+            <svg class="w-6 h-6 nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
             <span class="text-[9px] font-bold mt-1 text-gray-500">Panel</span>
-            <div class="tab-indicator absolute bottom-2 w-1 h-1 rounded-full bg-[#FFC300]"></div>
-        </a>
-        <a href="/apps/admin/users" class="tab-item flex flex-col items-center justify-center w-16 h-full relative cursor-pointer">
-            <svg class="w-6 h-6 tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        </div>
+        <div class="nav-item flex flex-col items-center justify-center w-16 h-full relative cursor-pointer" data-module="users">
+            <svg class="w-6 h-6 nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
             <span class="text-[9px] font-bold mt-1 text-gray-500">Atletas</span>
-            <div class="tab-indicator absolute bottom-2 w-1 h-1 rounded-full bg-[#FFC300]"></div>
-        </a>
-        <a href="/apps/admin/inbox" class="tab-item flex flex-col items-center justify-center w-16 h-full relative cursor-pointer group">
-            <div class="relative">
-                <svg class="w-6 h-6 tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                <span class="absolute -top-1 -right-1.5 bg-red-500 text-white text-[8px] font-black w-3.5 h-3.5 flex items-center justify-center rounded-full border-2 border-[#0A0A0F]">3</span>
-            </div>
-            <span class="text-[9px] font-bold mt-1 text-gray-500">Inbox</span>
-            <div class="tab-indicator absolute bottom-2 w-1 h-1 rounded-full bg-[#FFC300]"></div>
-        </a>
-        <a href="/apps/admin/orders" class="tab-item flex flex-col items-center justify-center w-16 h-full relative cursor-pointer">
-            <svg class="w-6 h-6 tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+        </div>
+        <div class="nav-item flex flex-col items-center justify-center w-16 h-full relative cursor-pointer" data-module="partners">
+            <svg class="w-6 h-6 nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            <span class="text-[9px] font-bold mt-1 text-gray-500">Partners</span>
+        </div>
+        <div class="nav-item flex flex-col items-center justify-center w-16 h-full relative cursor-pointer" data-module="store">
+            <svg class="w-6 h-6 nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
             <span class="text-[9px] font-bold mt-1 text-gray-500">Store</span>
-            <div class="tab-indicator absolute bottom-2 w-1 h-1 rounded-full bg-[#FFC300]"></div>
-        </a>
+        </div>
     </nav>
+
+    <!-- 🎧 PULSE WIDGET (El chat ininterrumpido en modo SPA) -->
+    <div id="pulse-widget-container">
+        
+        <!-- Ventana Expandida (Inbox / Chat) -->
+        <div id="pulse-window" class="pulse-window">
+            
+            <!-- Header del Widget -->
+            <div class="px-5 py-4 border-b border-white/5 bg-[#0A0A0F] flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-2 min-w-0">
+                    <svg class="w-4 h-4 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                    <h3 class="text-sm font-[900] text-white uppercase tracking-tight truncate">Inbox Soporte</h3>
+                </div>
+                <div class="flex items-center gap-1">
+                    <!-- Botón mágico: Minimizar chat y abrir perfil -->
+                    <button class="hidden w-7 h-7 rounded-full bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors" title="Inspeccionar Expediente" id="btn-inspect-profile">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z"></path></svg>
+                    </button>
+                    <!-- Minimizar -->
+                    <button onclick="togglePulseWidget()" class="w-7 h-7 rounded-full bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Listado de Colas (Se oculta al entrar a un chat) -->
+            <div id="pulse-list-view" class="flex-1 overflow-y-auto hide-scroll p-2 space-y-1">
+                <div class="p-4 text-center text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-10">Cargando Colas...</div>
+            </div>
+
+            <!-- Sala de Chat Activa (Oculta por defecto) -->
+            <div id="pulse-chat-view" class="hidden flex-1 flex-col overflow-hidden bg-[#050505]">
+                <div id="pulse-messages" class="flex-1 overflow-y-auto p-4 hide-scroll space-y-4">
+                    <!-- Mensajes aquí -->
+                </div>
+                <div class="p-3 bg-[#0A0A0F] border-t border-white/5">
+                    <form id="pulse-form" class="relative">
+                        <input type="text" class="chat-input w-full py-3 pl-4 pr-12 text-xs" placeholder="Responder al ticket..." disabled>
+                        <button type="button" class="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white text-black rounded-lg flex items-center justify-center">
+                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Burbuja Flotante (Botón Principal) -->
+        <div class="pulse-bubble relative" onclick="togglePulseWidget()">
+            <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+            <!-- Badge de Notificación Rojo -->
+            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-[#030305] shadow-lg">3</span>
+        </div>
+
+    </div>
+
+    <!-- 🚀 LÓGICA BASE DEL SPA Y WIDGET (Fase 1) -->
+    <script>
+        // 1. Simulación de Navegación SPA (Menús UI)
+        function setupNavigation() {
+            const items = document.querySelectorAll('.sidebar-item, .nav-item');
+            items.forEach(item => {
+                item.addEventListener('click', () => {
+                    const moduleName = item.getAttribute('data-module');
+                    if(!moduleName) return;
+
+                    // Desmarcar todos y marcar el activo
+                    items.forEach(i => i.classList.remove('active'));
+                    document.querySelectorAll(`[data-module="${moduleName}"]`).forEach(i => i.classList.add('active'));
+
+                    // Aquí es donde el JS hará el fetch del HTML del módulo y lo inyectará en #main-view.
+                    // Por ahora, simulamos una carga fluida.
+                    const mainView = document.getElementById('main-view');
+                    mainView.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full text-center p-6 animate-[fadeIn_0.3s_ease-out]">
+                            <div class="w-8 h-8 border-2 border-[#FFC300] border-t-transparent rounded-full animate-spin mb-4"></div>
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">Cargando Módulo: ${moduleName}</p>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        // 2. Control del Widget Pulse
+        function togglePulseWidget() {
+            const win = document.getElementById('pulse-window');
+            if (win.classList.contains('open')) {
+                win.classList.remove('open');
+            } else {
+                win.classList.add('open');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupNavigation();
+        });
+    </script>
 
 </body>
 </html>
