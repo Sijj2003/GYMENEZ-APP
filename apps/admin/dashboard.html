@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gymenez Admin | Overview</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Gerencia Gymenez | Overview</title>
     
     <link rel="icon" type="image/svg+xml" href="/static/img/logos/mini_logo.svg">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,220 +12,249 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #050505; 
+            background-color: #030305; /* Negro puro de la marca */
             color: #E5E7EB;
             -webkit-font-smoothing: antialiased;
         }
         
-        /* Ocultar barras de desplazamiento nativas para un look limpio */
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         .hide-scroll::-webkit-scrollbar { display: none; }
 
-        /* Estilos base para inputs del sistema */
-        .admin-input {
-            background-color: #11111A;
-            border: 1px solid rgba(255,255,255,0.08);
-            color: white;
-            transition: border-color 0.2s, box-shadow 0.2s;
+        /* 🔎 COMMAND PALETTE (Buscador Premium) */
+        .search-pill {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
         }
-        .admin-input:focus {
-            border-color: #FFC300;
-            box-shadow: 0 0 0 1px rgba(255,195,0,0.5);
-            outline: none;
+        .search-pill:focus-within {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 195, 0, 0.4);
+            box-shadow: 0 0 0 4px rgba(255, 195, 0, 0.05);
+        }
+        .search-input {
+            background: transparent; color: white; outline: none; width: 100%;
+        }
+        .search-input::placeholder { color: #6B7280; font-weight: 500; }
+
+        /* 📱 BOTTOM BAR (iOS Style Glassmorphism) */
+        .ios-bottom-bar {
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: env(safe-area-inset-bottom); /* Adaptación para iPhone Notch */
+        }
+        .tab-icon {
+            color: #6B7280; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .tab-item.active .tab-icon {
+            color: #FFC300; transform: translateY(-2px);
+        }
+        .tab-indicator {
+            opacity: 0; transform: scale(0); transition: all 0.3s ease;
+        }
+        .tab-item.active .tab-indicator {
+            opacity: 1; transform: scale(1);
         }
 
-        /* Enlaces del Sidebar Desktop */
-        .sidebar-link {
-            display: flex; align-items: center; gap: 0.75rem;
-            padding: 0.5rem 0.75rem; border-radius: 0.5rem;
-            color: #9CA3AF; font-size: 0.875rem; font-weight: 500;
-            transition: all 0.2s;
+        /* 💻 SIDEBAR DESKTOP */
+        .sidebar-item {
+            color: #9CA3AF; font-size: 0.8125rem; font-weight: 600;
+            padding: 0.6rem 0.8rem; border-radius: 0.5rem;
+            transition: all 0.2s; display: flex; align-items: center; gap: 0.75rem;
         }
-        .sidebar-link:hover { background-color: rgba(255,255,255,0.05); color: white; }
-        .sidebar-link.active { background-color: rgba(255,195,0,0.1); color: #FFC300; font-weight: 600; }
-        
-        /* Barra de Navegación Inferior (Móvil) */
-        .bottom-bar-link {
-            display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
-            color: #6B7280; transition: color 0.2s;
+        .sidebar-item:hover { color: white; background: rgba(255,255,255,0.03); }
+        .sidebar-item.active { color: #FFC300; background: rgba(255, 195, 0, 0.08); }
+
+        /* 📈 CARDS INTERACTIVAS */
+        .b-card {
+            background: #0A0A0F; border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 1rem; transition: transform 0.2s, border-color 0.2s;
         }
-        .bottom-bar-link.active { color: #FFC300; }
+        .b-card:hover { border-color: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-[#FFC300] selection:text-black">
 
-    <!-- 🖥️ SIDEBAR DESKTOP (Oculto en móviles) -->
-    <aside class="hidden md:flex flex-col w-64 bg-[#0A0A0F] border-r border-white/5 h-full shrink-0">
-        <!-- Logo -->
-        <div class="h-16 flex items-center px-6 border-b border-white/5 shrink-0">
-            <span class="font-[900] tracking-tight uppercase text-lg text-white">
-                <span class="text-[#FFC300] italic">GYM</span>ENEZ <span class="text-xs text-gray-500 ml-1 font-bold">ADMIN</span>
-            </span>
+    <!-- 🖥️ SIDEBAR DESKTOP -->
+    <aside class="hidden md:flex flex-col w-[260px] bg-[#050508] border-r border-white/5 h-full shrink-0 z-30">
+        <!-- Branding Header -->
+        <div class="h-20 flex items-center px-8 border-b border-white/5 shrink-0">
+            <h1 class="text-xl font-[900] tracking-tighter uppercase text-white leading-none">
+                Gerencia<br><span class="text-[#FFC300] italic">Gymenez</span>
+            </h1>
         </div>
 
-        <!-- Menú de Navegación -->
-        <nav class="flex-1 overflow-y-auto hide-scroll p-4 space-y-8">
-            
-            <!-- Grupo 1 -->
+        <!-- Navegación -->
+        <nav class="flex-1 overflow-y-auto hide-scroll px-4 py-6 space-y-8">
             <div>
-                <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">General</p>
-                <div class="space-y-1">
-                    <a href="/admin/dashboard" class="sidebar-link active">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                        Overview
+                <p class="px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest mb-3">Core</p>
+                <div class="space-y-0.5">
+                    <a href="/admin/dashboard" class="sidebar-item active">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        Dashboard
                     </a>
                 </div>
             </div>
 
-            <!-- Grupo 2 -->
             <div>
-                <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Operaciones B2C</p>
-                <div class="space-y-1">
-                    <a href="/admin/users" class="sidebar-link">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        Directorio Atletas
+                <p class="px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest mb-3">Ecosistema B2C</p>
+                <div class="space-y-0.5">
+                    <a href="/admin/users" class="sidebar-item">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        Atletas (Omni-Dossier)
                     </a>
-                    <a href="/admin/inbox" class="sidebar-link justify-between">
+                    <a href="/admin/inbox" class="sidebar-item justify-between group">
                         <div class="flex items-center gap-3">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                            Bandeja Soporte
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                            Soporte Pulse
                         </div>
-                        <span class="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md">3</span>
+                        <span class="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(239,68,68,0.4)]">3</span>
                     </a>
                 </div>
             </div>
 
-            <!-- Grupo 3 -->
             <div>
-                <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Comercio B2B</p>
-                <div class="space-y-1">
-                    <a href="/admin/orders" class="sidebar-link">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                        Órdenes & Envíos
+                <p class="px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest mb-3">Comercio B2B</p>
+                <div class="space-y-0.5">
+                    <a href="/admin/orders" class="sidebar-item">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        Gymenez Store
                     </a>
-                    <a href="/admin/billing" class="sidebar-link">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Tesorería Partners
+                    <a href="/admin/billing" class="sidebar-item">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Tesorería
                     </a>
                 </div>
             </div>
-
-            <!-- Grupo 4 -->
+            
             <div>
-                <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Catálogo CMS</p>
-                <div class="space-y-1">
-                    <a href="/admin/routines" class="sidebar-link"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Fitness</a>
-                    <a href="/admin/eats" class="sidebar-link"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> Eats</a>
-                    <a href="/admin/on" class="sidebar-link"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> ON</a>
+                <p class="px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest mb-3">CMS Bóvedas</p>
+                <div class="space-y-0.5">
+                    <a href="/admin/routines" class="sidebar-item"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Laboratorio Físico</a>
+                    <a href="/admin/eats" class="sidebar-item"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg> Eats & Macros</a>
+                    <a href="/admin/on" class="sidebar-item"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> ON Network</a>
                 </div>
             </div>
         </nav>
-
-        <!-- Perfil Administrativo -->
-        <div class="p-4 border-t border-white/5 shrink-0">
-            <button id="btn-logout" class="w-full flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors group">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">SJ</div>
-                    <div class="text-left">
-                        <p class="text-xs font-bold text-white leading-tight">Admin System</p>
-                        <p class="text-[10px] text-gray-500">Cerrar Sesión</p>
-                    </div>
+        
+        <!-- User Profile Dropdown Simulator -->
+        <div class="p-5 border-t border-white/5 shrink-0 hover:bg-white/[0.02] cursor-pointer transition-colors flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white border border-white/5">SJ</div>
+                <div>
+                    <p class="text-xs font-bold text-white leading-none mb-1">Sebastián Jiménez</p>
+                    <p class="text-[9px] text-[#FFC300] uppercase font-bold tracking-widest">Master Admin</p>
                 </div>
-                <svg class="w-4 h-4 text-gray-500 group-hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-            </button>
+            </div>
+            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
         </div>
     </aside>
 
     <!-- 🌐 CONTENIDO PRINCIPAL -->
-    <main class="flex-1 flex flex-col min-w-0 bg-[#050505]">
+    <main class="flex-1 flex flex-col min-w-0 bg-[#030305] relative z-10">
         
-        <!-- HEADER (Buscador Global Command Palette) -->
-        <header class="h-16 border-b border-white/5 flex items-center justify-between px-4 sm:px-8 bg-[#050505] shrink-0 z-20 sticky top-0">
-            <!-- Título / Breadcrumbs -->
-            <div class="hidden sm:block">
-                <h2 class="text-sm font-bold text-white tracking-wide">Overview</h2>
-            </div>
+        <!-- HEADER UNIVERSAL (Intocable) -->
+        <header class="h-16 md:h-20 px-4 md:px-8 border-b border-white/5 flex items-center justify-between gap-4 sticky top-0 bg-[#030305]/90 backdrop-blur-xl z-30">
             
-            <!-- Logo Móvil -->
-            <div class="sm:hidden font-[900] tracking-tight uppercase text-lg text-white">
-                <span class="text-[#FFC300] italic">G</span><span class="text-xs text-gray-500 ml-1 font-bold">ADMIN</span>
+            <!-- Branding Móvil y Título Desktop -->
+            <div class="flex-shrink-0 flex items-center gap-3">
+                <!-- Solo en móvil -->
+                <h1 class="md:hidden text-lg font-[900] tracking-tighter uppercase text-white leading-none">
+                    Gerencia <span class="text-[#FFC300] italic">Gymenez</span>
+                </h1>
+                <!-- Solo en Desktop (Contexto) -->
+                <h2 class="hidden md:block text-sm font-bold text-gray-300 uppercase tracking-widest">Dashboard General</h2>
             </div>
 
-            <!-- Buscador Global -->
-            <div class="flex-1 max-w-md ml-4 sm:ml-0">
-                <div class="relative">
-                    <svg class="w-4 h-4 text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    <input type="text" placeholder="Buscar atleta, orden, partner..." class="w-full admin-input pl-10 pr-4 py-2 rounded-lg text-xs">
-                    <div class="hidden sm:flex absolute right-2 top-1/2 transform -translate-y-1/2 gap-1">
-                        <kbd class="px-1.5 py-0.5 bg-white/10 rounded text-[9px] text-gray-400 font-mono">⌘</kbd>
-                        <kbd class="px-1.5 py-0.5 bg-white/10 rounded text-[9px] text-gray-400 font-mono">K</kbd>
+            <!-- Command Palette (Buscador Expandible) -->
+            <div class="flex-1 max-w-lg flex justify-end md:justify-center w-full">
+                <div class="search-pill flex items-center px-4 py-2 md:py-2.5 rounded-full w-10 h-10 md:w-full md:h-auto overflow-hidden focus-within:w-full focus-within:h-auto cursor-text group">
+                    <svg class="w-4 h-4 md:w-4 md:h-4 text-gray-400 shrink-0 group-focus-within:text-[#FFC300] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" placeholder="Buscar expedientes, órdenes o pagos..." class="search-input hidden md:block group-focus-within:block ml-3 text-xs md:text-sm">
+                    <div class="hidden md:flex shrink-0 gap-1 ml-3">
+                        <kbd class="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-[9px] text-gray-500 font-mono font-bold">⌘</kbd>
+                        <kbd class="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-[9px] text-gray-500 font-mono font-bold">K</kbd>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- ÁREA DE PÁGINA (Aquí se inyectará el contenido de cada módulo) -->
-        <div class="flex-1 overflow-y-auto hide-scroll p-4 sm:p-8 pb-24 sm:pb-8">
-            
-            <!-- Ejemplo de Dashboard Overview Limpio -->
-            <div class="max-w-6xl mx-auto space-y-6">
+        <!-- ÁREA DE PÁGINA (Interactive Dashboard) -->
+        <div class="flex-1 overflow-y-auto hide-scroll p-4 md:p-8 pb-24 md:pb-8">
+            <div class="max-w-6xl mx-auto space-y-8">
                 
-                <h1 class="text-2xl font-bold text-white">Buenos días, Administrador</h1>
+                <!-- Saludo Ejecutivo -->
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-[900] text-white tracking-tight">Visión Operativa</h2>
+                    <p class="text-xs text-gray-500 font-medium mt-1">Lunes, 19 de Octubre de 2026</p>
+                </div>
 
-                <!-- Tarjetas de Métricas Rápidas (KPIs) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-[#11111A] border border-white/5 p-5 rounded-xl">
-                        <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">MRR Retenido</p>
-                        <h3 class="text-2xl font-[900] text-white">$12,450.00</h3>
-                        <p class="text-[10px] text-emerald-400 mt-2 font-medium">↑ +14% este mes</p>
+                <!-- 📊 GRID KPI -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
+                    <div class="b-card p-4 md:p-5 flex flex-col justify-between h-28 md:h-32">
+                        <p class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">MRR Global</p>
+                        <div>
+                            <h3 class="text-xl md:text-2xl font-[900] text-white tracking-tight">$14,250<span class="text-sm text-gray-500">.00</span></h3>
+                            <p class="text-[9px] md:text-[10px] text-emerald-400 font-bold mt-1">↑ 12% vs mes anterior</p>
+                        </div>
                     </div>
-                    <div class="bg-[#11111A] border border-white/5 p-5 rounded-xl">
-                        <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Atletas Activos</p>
-                        <h3 class="text-2xl font-[900] text-white">1,204</h3>
-                        <p class="text-[10px] text-emerald-400 mt-2 font-medium">↑ +52 nuevos</p>
+                    <div class="b-card p-4 md:p-5 flex flex-col justify-between h-28 md:h-32">
+                        <p class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Atletas (Ultra)</p>
+                        <div>
+                            <h3 class="text-xl md:text-2xl font-[900] text-white tracking-tight">842</h3>
+                            <p class="text-[9px] md:text-[10px] text-emerald-400 font-bold mt-1">↑ 48 nuevas suscripciones</p>
+                        </div>
                     </div>
-                    <div class="bg-[#11111A] border border-white/5 p-5 rounded-xl">
-                        <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Tickets Soporte</p>
-                        <h3 class="text-2xl font-[900] text-red-500">3</h3>
-                        <p class="text-[10px] text-gray-500 mt-2 font-medium">Requieren atención</p>
+                    <div class="b-card p-4 md:p-5 flex flex-col justify-between h-28 md:h-32 border-red-500/20 bg-red-500/5">
+                        <p class="text-[9px] md:text-[10px] font-bold text-red-400 uppercase tracking-widest">Tickets Críticos</p>
+                        <div>
+                            <h3 class="text-xl md:text-2xl font-[900] text-red-500 tracking-tight">3</h3>
+                            <p class="text-[9px] md:text-[10px] text-red-400/80 font-bold mt-1">Requieren intervención</p>
+                        </div>
                     </div>
-                    <div class="bg-[#11111A] border border-white/5 p-5 rounded-xl">
-                        <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Órdenes Tienda (Pendientes)</p>
-                        <h3 class="text-2xl font-[900] text-[#FFC300]">12</h3>
-                        <p class="text-[10px] text-gray-500 mt-2 font-medium">Listas para despacho</p>
+                    <div class="b-card p-4 md:p-5 flex flex-col justify-between h-28 md:h-32">
+                        <p class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">Auditoría Fiscal</p>
+                        <div>
+                            <h3 class="text-xl md:text-2xl font-[900] text-[#FFC300] tracking-tight">12</h3>
+                            <p class="text-[9px] md:text-[10px] text-gray-500 font-bold mt-1">Pagos pendientes por firmar</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Lista Reciente Clean -->
-                <div class="bg-[#11111A] border border-white/5 rounded-xl overflow-hidden mt-8">
-                    <div class="px-6 py-4 border-b border-white/5 flex justify-between items-center">
-                        <h3 class="text-sm font-bold text-white">Actividad Reciente</h3>
-                        <a href="/admin/users" class="text-[11px] font-semibold text-[#FFC300] hover:text-yellow-400">Ver todo</a>
-                    </div>
-                    <div class="divide-y divide-white/5">
-                        <div class="px-6 py-4 flex justify-between items-center hover:bg-white/5 transition-colors cursor-pointer">
+                <!-- ⚡ CENTRO DE ACCIÓN (Tarjetas Resolutivas) -->
+                <div>
+                    <h3 class="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-[#FFC300] animate-pulse"></span> Centro de Acción Inmediata
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Tarea 1: Ticket de Soporte -->
+                        <div class="b-card p-5 flex items-center justify-between group cursor-pointer">
                             <div class="flex items-center gap-4">
-                                <div class="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
                                 </div>
                                 <div>
-                                    <p class="text-sm font-bold text-white">Nueva Suscripción ULTRA</p>
-                                    <p class="text-[11px] text-gray-500">Carlos Mendoza</p>
+                                    <p class="text-sm font-bold text-white">Roberto Sánchez</p>
+                                    <p class="text-[10px] text-gray-400 font-medium mt-0.5 line-clamp-1">"No me carga el video del protocolo de recovery en iOS..."</p>
                                 </div>
                             </div>
-                            <span class="text-[11px] text-gray-500 font-mono">Hace 10 min</span>
+                            <button class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-[9px] font-bold text-white uppercase tracking-widest transition-colors shrink-0">Atender</button>
                         </div>
-                        <div class="px-6 py-4 flex justify-between items-center hover:bg-white/5 transition-colors cursor-pointer">
+
+                        <!-- Tarea 2: Verificación de Pago -->
+                        <div class="b-card p-5 flex items-center justify-between group cursor-pointer">
                             <div class="flex items-center gap-4">
-                                <div class="w-8 h-8 rounded-full bg-[#FFC300]/10 flex items-center justify-center text-[#FFC300]">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                                <div class="w-10 h-10 rounded-full bg-[#FFC300]/10 flex items-center justify-center border border-[#FFC300]/20">
+                                    <svg class="w-5 h-5 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </div>
                                 <div>
-                                    <p class="text-sm font-bold text-white">Compra en Gymenez Store</p>
-                                    <p class="text-[11px] text-gray-500">Orden #8372 - $120.00</p>
+                                    <p class="text-sm font-bold text-white">Pago Banco Central</p>
+                                    <p class="text-[10px] text-gray-400 font-medium mt-0.5">Ref: #88921 • $150.00 USD (Plan Ultra)</p>
                                 </div>
                             </div>
-                            <span class="text-[11px] text-gray-500 font-mono">Hace 45 min</span>
+                            <button class="px-4 py-2 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-colors shrink-0">Auditar</button>
                         </div>
                     </div>
                 </div>
@@ -234,24 +263,31 @@
         </div>
     </main>
 
-    <!-- 📱 BOTTOM TAB BAR (Solo visible en móviles) -->
-    <nav class="md:hidden fixed bottom-0 w-full bg-[#0A0A0F] border-t border-white/5 h-16 flex justify-around items-center px-2 z-50 pb-safe">
-        <a href="/admin/dashboard" class="bottom-bar-link active">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-            <span class="text-[9px] font-bold">Inicio</span>
+    <!-- 📱 BOTTOM TAB BAR (Nivel TikTok/Instagram) -->
+    <nav class="md:hidden fixed bottom-0 w-full ios-bottom-bar flex justify-around items-center h-16 z-40 px-2">
+        <a href="/admin/dashboard" class="tab-item active flex flex-col items-center justify-center w-16 h-full relative cursor-pointer">
+            <svg class="w-6 h-6 tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+            <span class="text-[8px] font-bold mt-1 text-gray-500">Panel</span>
+            <div class="tab-indicator absolute bottom-2 w-1 h-1 rounded-full bg-[#FFC300]"></div>
         </a>
-        <a href="/admin/users" class="bottom-bar-link">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-            <span class="text-[9px] font-bold">Atletas</span>
+        <a href="/admin/users" class="tab-item flex flex-col items-center justify-center w-16 h-full relative cursor-pointer">
+            <svg class="w-6 h-6 tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <span class="text-[8px] font-bold mt-1 text-gray-500">Atletas</span>
+            <div class="tab-indicator absolute bottom-2 w-1 h-1 rounded-full bg-[#FFC300]"></div>
         </a>
-        <a href="/admin/inbox" class="bottom-bar-link relative">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-            <span class="absolute top-0 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#0A0A0F]"></span>
-            <span class="text-[9px] font-bold">Soporte</span>
+        <a href="/admin/inbox" class="tab-item flex flex-col items-center justify-center w-16 h-full relative cursor-pointer group">
+            <div class="relative">
+                <svg class="w-6 h-6 tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                <!-- Badge de Notificación -->
+                <span class="absolute -top-1 -right-1.5 bg-red-500 text-white text-[8px] font-black w-3.5 h-3.5 flex items-center justify-center rounded-full border-2 border-[#0A0A0F]">3</span>
+            </div>
+            <span class="text-[8px] font-bold mt-1 text-gray-500">Inbox</span>
+            <div class="tab-indicator absolute bottom-2 w-1 h-1 rounded-full bg-[#FFC300]"></div>
         </a>
-        <a href="/admin/orders" class="bottom-bar-link">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-            <span class="text-[9px] font-bold">Store</span>
+        <a href="/admin/orders" class="tab-item flex flex-col items-center justify-center w-16 h-full relative cursor-pointer">
+            <svg class="w-6 h-6 tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+            <span class="text-[8px] font-bold mt-1 text-gray-500">Store</span>
+            <div class="tab-indicator absolute bottom-2 w-1 h-1 rounded-full bg-[#FFC300]"></div>
         </a>
     </nav>
 
