@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Gerencia Gymenez | Overview</title>
+    <title>Gymenez Admin | Overview</title>
     
     <link rel="icon" type="image/svg+xml" href="/static/img/logos/mini_logo.svg">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,7 +12,7 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #030305; /* Negro puro de la marca */
+            background-color: #030305; 
             color: #E5E7EB;
             -webkit-font-smoothing: antialiased;
         }
@@ -20,11 +20,20 @@
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         .hide-scroll::-webkit-scrollbar { display: none; }
 
+        /* 💎 IDENTIDAD DE MARCA (Degradado fluido) */
+        .logo-gradient {
+            background: linear-gradient(90deg, #FFC300 0%, #FFC300 45%, #FFFFFF 55%, #FFFFFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: inline-block;
+        }
+
         /* 🔎 COMMAND PALETTE (Buscador Premium) */
         .search-pill {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .search-pill:focus-within {
             background: rgba(255, 255, 255, 0.06);
@@ -38,11 +47,11 @@
 
         /* 📱 BOTTOM BAR (iOS Style Glassmorphism) */
         .ios-bottom-bar {
-            background: rgba(10, 10, 15, 0.85);
+            background: rgba(5, 5, 8, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-top: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: env(safe-area-inset-bottom); /* Adaptación para iPhone Notch */
+            padding-bottom: env(safe-area-inset-bottom);
         }
         .tab-icon {
             color: #6B7280; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -80,9 +89,10 @@
     <aside class="hidden md:flex flex-col w-[260px] bg-[#050508] border-r border-white/5 h-full shrink-0 z-30">
         <!-- Branding Header -->
         <div class="h-20 flex items-center px-8 border-b border-white/5 shrink-0">
-            <h1 class="text-xl font-[900] tracking-tighter uppercase text-white leading-none">
-                Gerencia<br><span class="text-[#FFC300] italic">Gymenez</span>
-            </h1>
+            <a href="/admin/dashboard" class="logo-gradient font-[900] text-[1.7rem] italic tracking-tighter leading-none hover:scale-105 transition-transform">
+                GYMENEZ
+            </a>
+            <span class="text-[8px] font-black text-gray-500 uppercase tracking-widest ml-2 mt-2">Admin</span>
         </div>
 
         <!-- Navegación -->
@@ -102,7 +112,7 @@
                 <div class="space-y-0.5">
                     <a href="/admin/users" class="sidebar-item">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        Atletas (Omni-Dossier)
+                        Atletas (Expedientes)
                     </a>
                     <a href="/admin/inbox" class="sidebar-item justify-between group">
                         <div class="flex items-center gap-3">
@@ -123,7 +133,7 @@
                     </a>
                     <a href="/admin/billing" class="sidebar-item">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Tesorería
+                        Tesorería Fiscal
                     </a>
                 </div>
             </div>
@@ -139,40 +149,41 @@
         </nav>
         
         <!-- User Profile Dropdown Simulator -->
-        <div class="p-5 border-t border-white/5 shrink-0 hover:bg-white/[0.02] cursor-pointer transition-colors flex items-center justify-between">
+        <div class="p-5 border-t border-white/5 shrink-0 hover:bg-white/[0.02] cursor-pointer transition-colors flex items-center justify-between group">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white border border-white/5">SJ</div>
+                <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-xs font-bold text-gray-300 border border-white/10 group-hover:bg-[#FFC300]/10 group-hover:text-[#FFC300] group-hover:border-[#FFC300]/30 transition-colors">SJ</div>
                 <div>
-                    <p class="text-xs font-bold text-white leading-none mb-1">Sebastián Jiménez</p>
-                    <p class="text-[9px] text-[#FFC300] uppercase font-bold tracking-widest">Master Admin</p>
+                    <p class="text-[11px] font-bold text-white leading-none mb-1">Sebastián Jiménez</p>
+                    <p class="text-[8px] text-[#FFC300] uppercase font-black tracking-widest">Master Admin</p>
                 </div>
             </div>
-            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            <svg class="w-4 h-4 text-gray-500 group-hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
         </div>
     </aside>
 
     <!-- 🌐 CONTENIDO PRINCIPAL -->
     <main class="flex-1 flex flex-col min-w-0 bg-[#030305] relative z-10">
         
-        <!-- HEADER UNIVERSAL (Intocable) -->
-        <header class="h-16 md:h-20 px-4 md:px-8 border-b border-white/5 flex items-center justify-between gap-4 sticky top-0 bg-[#030305]/90 backdrop-blur-xl z-30">
+        <!-- 📱 HEADER UNIVERSAL -->
+        <header class="h-16 md:h-20 px-5 md:px-8 border-b border-white/5 flex items-center justify-between gap-4 sticky top-0 bg-[#030305]/95 backdrop-blur-xl z-30">
             
-            <!-- Branding Móvil y Título Desktop -->
+            <!-- Logo Móvil / Título Desktop -->
             <div class="flex-shrink-0 flex items-center gap-3">
-                <!-- Solo en móvil -->
-                <h1 class="md:hidden text-lg font-[900] tracking-tighter uppercase text-white leading-none">
-                    Gerencia <span class="text-[#FFC300] italic">Gymenez</span>
-                </h1>
-                <!-- Solo en Desktop (Contexto) -->
+                <!-- Móvil: Identidad Gráfica -->
+                <a href="/admin/dashboard" class="md:hidden logo-gradient font-[900] text-2xl italic tracking-tighter leading-none">
+                    GYMENEZ
+                </a>
+                <!-- Desktop: Título de sección -->
                 <h2 class="hidden md:block text-sm font-bold text-gray-300 uppercase tracking-widest">Dashboard General</h2>
             </div>
 
-            <!-- Command Palette (Buscador Expandible) -->
-            <div class="flex-1 max-w-lg flex justify-end md:justify-center w-full">
-                <div class="search-pill flex items-center px-4 py-2 md:py-2.5 rounded-full w-10 h-10 md:w-full md:h-auto overflow-hidden focus-within:w-full focus-within:h-auto cursor-text group">
-                    <svg class="w-4 h-4 md:w-4 md:h-4 text-gray-400 shrink-0 group-focus-within:text-[#FFC300] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    <input type="text" placeholder="Buscar expedientes, órdenes o pagos..." class="search-input hidden md:block group-focus-within:block ml-3 text-xs md:text-sm">
-                    <div class="hidden md:flex shrink-0 gap-1 ml-3">
+            <!-- Command Palette (Buscador Expandible Inteligente) -->
+            <div class="flex flex-1 justify-end">
+                <div class="search-pill flex items-center px-3 md:px-4 py-2 md:py-2.5 rounded-full w-10 h-10 md:w-full md:max-w-md overflow-hidden focus-within:w-full focus-within:max-w-full md:focus-within:max-w-md cursor-text group relative">
+                    <svg class="w-4 h-4 text-gray-400 shrink-0 group-focus-within:text-[#FFC300] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <!-- En móvil, el input está oculto hasta que haces focus -->
+                    <input type="text" placeholder="Buscar expedientes, órdenes..." class="search-input hidden md:block group-focus-within:block ml-2 md:ml-3 text-sm">
+                    <div class="hidden md:flex shrink-0 gap-1 ml-auto">
                         <kbd class="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-[9px] text-gray-500 font-mono font-bold">⌘</kbd>
                         <kbd class="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-[9px] text-gray-500 font-mono font-bold">K</kbd>
                     </div>
@@ -181,10 +192,9 @@
         </header>
 
         <!-- ÁREA DE PÁGINA (Interactive Dashboard) -->
-        <div class="flex-1 overflow-y-auto hide-scroll p-4 md:p-8 pb-24 md:pb-8">
+        <div class="flex-1 overflow-y-auto hide-scroll p-5 md:p-8 pb-24 md:pb-8">
             <div class="max-w-6xl mx-auto space-y-8">
                 
-                <!-- Saludo Ejecutivo -->
                 <div>
                     <h2 class="text-2xl md:text-3xl font-[900] text-white tracking-tight">Visión Operativa</h2>
                     <p class="text-xs text-gray-500 font-medium mt-1">Lunes, 19 de Octubre de 2026</p>
@@ -225,11 +235,10 @@
                 <!-- ⚡ CENTRO DE ACCIÓN (Tarjetas Resolutivas) -->
                 <div>
                     <h3 class="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-[#FFC300] animate-pulse"></span> Centro de Acción Inmediata
+                        <span class="w-2 h-2 rounded-full bg-[#FFC300] animate-pulse"></span> Centro de Acción
                     </h3>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Tarea 1: Ticket de Soporte -->
                         <div class="b-card p-5 flex items-center justify-between group cursor-pointer">
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
@@ -237,13 +246,12 @@
                                 </div>
                                 <div>
                                     <p class="text-sm font-bold text-white">Roberto Sánchez</p>
-                                    <p class="text-[10px] text-gray-400 font-medium mt-0.5 line-clamp-1">"No me carga el video del protocolo de recovery en iOS..."</p>
+                                    <p class="text-[10px] text-gray-400 font-medium mt-0.5 line-clamp-1">"No me carga el video de recovery..."</p>
                                 </div>
                             </div>
                             <button class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-[9px] font-bold text-white uppercase tracking-widest transition-colors shrink-0">Atender</button>
                         </div>
 
-                        <!-- Tarea 2: Verificación de Pago -->
                         <div class="b-card p-5 flex items-center justify-between group cursor-pointer">
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-full bg-[#FFC300]/10 flex items-center justify-center border border-[#FFC300]/20">
@@ -264,29 +272,28 @@
     </main>
 
     <!-- 📱 BOTTOM TAB BAR (Nivel TikTok/Instagram) -->
-    <nav class="md:hidden fixed bottom-0 w-full ios-bottom-bar flex justify-around items-center h-16 z-40 px-2">
+    <nav class="md:hidden fixed bottom-0 w-full ios-bottom-bar flex justify-around items-center h-[4.5rem] z-40 px-2 pb-2">
         <a href="/admin/dashboard" class="tab-item active flex flex-col items-center justify-center w-16 h-full relative cursor-pointer">
             <svg class="w-6 h-6 tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-            <span class="text-[8px] font-bold mt-1 text-gray-500">Panel</span>
+            <span class="text-[9px] font-bold mt-1 text-gray-500">Panel</span>
             <div class="tab-indicator absolute bottom-2 w-1 h-1 rounded-full bg-[#FFC300]"></div>
         </a>
         <a href="/admin/users" class="tab-item flex flex-col items-center justify-center w-16 h-full relative cursor-pointer">
             <svg class="w-6 h-6 tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-            <span class="text-[8px] font-bold mt-1 text-gray-500">Atletas</span>
+            <span class="text-[9px] font-bold mt-1 text-gray-500">Atletas</span>
             <div class="tab-indicator absolute bottom-2 w-1 h-1 rounded-full bg-[#FFC300]"></div>
         </a>
         <a href="/admin/inbox" class="tab-item flex flex-col items-center justify-center w-16 h-full relative cursor-pointer group">
             <div class="relative">
                 <svg class="w-6 h-6 tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                <!-- Badge de Notificación -->
                 <span class="absolute -top-1 -right-1.5 bg-red-500 text-white text-[8px] font-black w-3.5 h-3.5 flex items-center justify-center rounded-full border-2 border-[#0A0A0F]">3</span>
             </div>
-            <span class="text-[8px] font-bold mt-1 text-gray-500">Inbox</span>
+            <span class="text-[9px] font-bold mt-1 text-gray-500">Inbox</span>
             <div class="tab-indicator absolute bottom-2 w-1 h-1 rounded-full bg-[#FFC300]"></div>
         </a>
         <a href="/admin/orders" class="tab-item flex flex-col items-center justify-center w-16 h-full relative cursor-pointer">
             <svg class="w-6 h-6 tab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-            <span class="text-[8px] font-bold mt-1 text-gray-500">Store</span>
+            <span class="text-[9px] font-bold mt-1 text-gray-500">Store</span>
             <div class="tab-indicator absolute bottom-2 w-1 h-1 rounded-full bg-[#FFC300]"></div>
         </a>
     </nav>
