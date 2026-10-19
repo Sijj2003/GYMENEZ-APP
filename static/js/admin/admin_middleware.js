@@ -46,16 +46,35 @@ function ejecutarPurgaAdmin(mensaje) {
     window.top.location.href = '/apps/admin/login.html';
 }
 
-// 4. Verificación de Perímetro al cargar cualquier pantalla protegida
+
+// 4. Decodificador JWT (Lado Cliente)
+function parseAdminJwt(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) { return null; }
+}
+
+// 5. Verificación de Perímetro Estricto (Zero-Trust)
 window.addEventListener('DOMContentLoaded', () => {
-    // Si la pantalla actual NO es el login, verificamos que exista sesión local
     if (!window.location.pathname.includes('login.html')) {
-        const storedSession = localStorage.getItem('adminSession');
         const token = localStorage.getItem(ADMIN_TOKEN_KEY);
         
-        if (!storedSession || !token) {
-            // Usamos window.top aquí también
+        if (!token) {
             window.top.location.href = '/apps/admin/login.html';
+            return;
+        }
+
+        const decoded = parseAdminJwt(token);
+        
+        // Validamos lectura, caducidad y rol corporativo
+        const isExpired = decoded && (decoded.exp * 1000 < Date.now());
+        const isSuperAdmin = decoded && (decoded.role === 'superadmin' || decoded.role === 'admin');
+
+        if (!decoded || isExpired || !isSuperAdmin) {
+            ejecutarPurgaAdmin("Violación de perímetro. Token inválido, expirado o sin credenciales de SuperAdmin.");
         }
     }
 });
