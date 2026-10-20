@@ -90,14 +90,12 @@ async function activateRadar() {
         if (res.ok && data.success) {
             await signInWithCustomToken(auth, data.firebase_token);
             
-            // 🔥 OMNICANAL: Escuchamos pulse_threads
             onSnapshot(doc(db, "pulse_threads", userId), (docSnap) => {
                 if (!docSnap.exists()) return;
                 const thread = docSnap.data();
                 
                 if (isInitialLoad) { isInitialLoad = false; return; }
 
-                // Si el Admin nos responde (unread_client > 0)
                 if (thread.unread_client > 0) {
                     const msgTime = thread.updated_at ? thread.updated_at.toMillis().toString() : "0";
                     const lastNotifiedTime = localStorage.getItem('gymen_last_radar_time');
