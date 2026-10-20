@@ -70,13 +70,11 @@ async function authenticateWithFirebase() {
 }
 
 function listenToChatStatus() {
-    // 🔥 OMNICANAL: Escuchamos pulse_threads
     onSnapshot(doc(db, "pulse_threads", currentUserId), (docSnap) => {
         if(docSnap.exists()) {
             const data = docSnap.data();
             currentChatStatus = data.status || "inactivo";
             
-            // Si el chat está abierto, limpiamos la bandera de mensajes no leídos del cliente
             if (currentChatStatus === "activo" && data.unread_client > 0) {
                 setDoc(doc(db, "pulse_threads", currentUserId), { unread_client: 0 }, { merge: true });
             }
@@ -118,11 +116,10 @@ ui.btnRequest?.addEventListener('click', async () => {
     ui.btnRequest.textContent = "Procesando..."; ui.btnRequest.disabled = true;
     try {
         const session = JSON.parse(localStorage.getItem('userSession'));
-        // 🔥 OMNICANAL: Estructura estándar global
         await setDoc(doc(db, "pulse_threads", currentUserId), {
             participant_id: currentUserId,
             participant_name: `${session.name || ''} ${session.last_name || ''}`.trim() || 'Usuario',
-            participant_role: session.role || 'athlete', // Se adapta si es partner
+            participant_role: session.role || 'athlete', 
             status: "espera", 
             updated_at: serverTimestamp(),
             last_message: "🔴 Ticket abierto.",
@@ -134,7 +131,6 @@ ui.btnRequest?.addEventListener('click', async () => {
 });
 
 function listenToMessages() {
-    // 🔥 OMNICANAL: Subcolección messages, ordenado por timestamp
     onSnapshot(query(collection(db, "pulse_threads", currentUserId, "messages"), orderBy("timestamp", "asc")), (snapshot) => {
         if(!ui.messagesArea) return;
         const systemMsg = ui.messagesArea.children[0] ? ui.messagesArea.children[0].outerHTML : '';
@@ -144,6 +140,14 @@ function listenToMessages() {
         snapshot.forEach((docSnap) => {
             currentCount++;
             const msg = docSnap.data();
+
+            // 🔥 CORRECCIÓN: Filtro Estético para Mensajes del Sistema (Aperturas/Cierres)
+            if (msg.sender_type === 'system') {
+                const sysHTML = `<p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center my-4 border-b border-white/5 pb-4">${escapeHTML(msg.text)}</p>`;
+                ui.messagesArea.insertAdjacentHTML('beforeend', sysHTML);
+                return; // Corta la ejecución aquí para este mensaje
+            }
+
             const isMe = msg.sender_type !== "admin";
             let timeString = msg.timestamp ? msg.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
