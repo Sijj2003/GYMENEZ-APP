@@ -1,15 +1,14 @@
-// Configuración de API
+// ====================================================================
+// ⚙️ CONFIGURACIÓN DE RED Y ESTADO
+// ====================================================================
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
+const ADMIN_TOKEN_KEY = 'gymen_admin_token';
 
-// Estado en RAM
 let allUsersData = [];
 let activeUserId = null; 
 let targetCertifyUserId = null; 
 
-// ==========================================
-// 🧠 DICCIONARIO ALGORÍTMICO DE MÉTRICAS
-// ==========================================
 const MEASURABLE_METRICS = [
     { id: "weight", label: "Peso Corporal Base", unit: "kg" },
     { id: "fat_percent", label: "% Grasa Estimada", unit: "%" },
@@ -25,7 +24,7 @@ const MEASURABLE_METRICS = [
 // 📢 UTILIDADES UI
 // ==========================================
 function getSecureHeaders() {
-    const token = localStorage.getItem('gymen_admin_token'); 
+    const token = localStorage.getItem(ADMIN_TOKEN_KEY); 
     return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 }
 
@@ -33,7 +32,7 @@ function showUIFeedback(message, type = 'success') {
     const box = document.getElementById('message-box');
     if(!box) return;
     box.textContent = message;
-    box.className = `fixed top-4 left-1/2 transform -translate-x-1/2 px-5 py-2 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] transition-all duration-300 text-center border backdrop-blur-md ${type === 'success' ? 'bg-emerald-950/90 text-emerald-400 border-emerald-500/30' : 'bg-red-950/90 text-red-400 border-red-500/30'}`;
+    box.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] transition-all duration-300 text-center border backdrop-blur-md ${type === 'success' ? 'bg-emerald-950/90 text-emerald-400 border-emerald-500/30' : 'bg-red-950/90 text-red-400 border-red-500/30'}`;
     box.style.opacity = '1'; box.style.transform = 'translate(-50%, 0)';
     setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 3000);
 }
@@ -49,35 +48,45 @@ function getDefaultExpirationDate() {
     return d.toISOString().split('T')[0];
 }
 
-window.switchDossierTab = function(tabName) {
-    const tabs = ['identity', 'biolab', 'diet'];
-    
-    tabs.forEach(t => {
-        const btn = document.getElementById(`d-tab-${t}`);
-        const content = document.getElementById(`d-content-${t}`);
-        
-        if (t === tabName) {
-            // Colores dinámicos por pestaña
-            if(t === 'identity') btn.className = "py-3 border-b-2 border-[#FFC300] text-[#FFC300] font-black text-[10px] uppercase tracking-widest transition-colors";
-            if(t === 'biolab') btn.className = "py-3 border-b-2 border-sky-400 text-sky-400 font-black text-[10px] uppercase tracking-widest transition-colors";
-            if(t === 'diet') btn.className = "py-3 border-b-2 border-emerald-500 text-emerald-500 font-black text-[10px] uppercase tracking-widest transition-colors flex items-center gap-1.5";
+// Lógica de Pestañas (Tabs)
+function setupTabs() {
+    document.querySelectorAll('.d-tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetId = btn.getAttribute('data-target');
             
-            content.classList.remove('hidden'); 
-            content.classList.add('block');
-        } else {
-            if(t === 'diet') {
-                btn.className = "py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors flex items-center gap-1.5";
-            } else {
-                btn.className = "py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors";
-            }
-            content.classList.add('hidden'); 
-            content.classList.remove('block');
-        }
+            // Limpiar estilos de todas las pestañas
+            document.querySelectorAll('.d-tab-btn').forEach(b => {
+                b.classList.remove('active', 'border-[#FFC300]', 'text-[#FFC300]', 'border-sky-400', 'text-sky-400', 'border-emerald-500', 'text-emerald-500');
+                b.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            // Ocultar todos los contenidos
+            document.querySelectorAll('.d-tab-content').forEach(c => {
+                c.classList.add('hidden');
+                c.classList.remove('block');
+            });
+
+            // Activar la seleccionada
+            btn.classList.add('active');
+            btn.classList.remove('border-transparent', 'text-gray-500');
+            document.getElementById(targetId).classList.remove('hidden');
+            document.getElementById(targetId).classList.add('block');
+
+            // Colores temáticos
+            if(targetId === 'd-content-identity') btn.classList.add('border-[#FFC300]', 'text-[#FFC300]');
+            if(targetId === 'd-content-biolab') btn.classList.add('border-sky-400', 'text-sky-400');
+            if(targetId === 'd-content-diet') btn.classList.add('border-emerald-500', 'text-emerald-500');
+        });
     });
 }
 
+function forceSwitchTab(targetId) {
+    const btn = document.querySelector(`[data-target="${targetId}"]`);
+    if(btn) btn.click();
+}
+
 // ==========================================
-// 📡 CARGA Y RENDERIZADO DE LA LISTA (RAM)
+// 📡 CARGA Y RENDERIZADO DE LA LISTA
 // ==========================================
 async function fetchAllUsers() {
     try {
@@ -89,7 +98,7 @@ async function fetchAllUsers() {
             renderUsersList(allUsersData);
         } else throw new Error(data.error);
     } catch (error) {
-        document.getElementById('users-list').innerHTML = `<div class="p-4 text-center text-red-500 font-bold text-[10px] uppercase tracking-widest">Error conectando al Core</div>`;
+        document.getElementById('users-list').innerHTML = `<div class="p-4 text-center text-red-500 font-bold text-[10px] uppercase tracking-widest">Error conectando al Servidor</div>`;
     }
 }
 
@@ -126,6 +135,7 @@ function renderUsersList(users) {
     });
 }
 
+// Búsqueda en tiempo real
 let searchTimeout;
 document.getElementById('search-input').addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
@@ -138,14 +148,13 @@ document.getElementById('search-input').addEventListener('input', (e) => {
 });
 
 // ==========================================
-// 🧮 MOTOR DE BIOMETRÍA AUTOMATIZADA
+// 🧮 MOTOR DE BIOMETRÍA
 // ==========================================
 function autoCalculateBiometrics() {
     const weight = parseFloat(document.getElementById('m-weight').value);
     const heightCm = parseFloat(document.getElementById('m-height').value);
     let age = parseInt(document.getElementById('m-age').value);
     const sex = document.getElementById('f-sex').value;
-
     const fatInput = document.getElementById('m-fat');
     const muscleInput = document.getElementById('m-muscle');
 
@@ -185,7 +194,10 @@ function autoCalculateBiometrics() {
 // ==========================================
 async function loadUserDossier(userId) {
     activeUserId = userId;
-    renderUsersList(document.getElementById('search-input').value ? allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(document.getElementById('search-input').value.toLowerCase().trim())) : allUsersData);
+    
+    // Refrescar estado visual de la lista
+    const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+    renderUsersList(searchTerm ? allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(searchTerm)) : allUsersData);
 
     const user = allUsersData.find(u => u.id === userId);
     if (!user) return;
@@ -195,25 +207,25 @@ async function loadUserDossier(userId) {
     dossier.classList.remove('hidden'); dossier.classList.add('flex');
 
     // Desbloquear pestañas de UI
-    document.getElementById('d-tab-biolab').classList.remove('pointer-events-none', 'opacity-50');
-    document.getElementById('d-tab-diet').classList.remove('pointer-events-none', 'opacity-50');
+    document.getElementById('tab-biolab').classList.remove('pointer-events-none', 'opacity-50');
+    document.getElementById('tab-diet').classList.remove('pointer-events-none', 'opacity-50');
 
     // 1. LLENAR IDENTIDAD Y HEADERS
     document.getElementById('d-name').textContent = user.full_name || 'N/A';
-    document.getElementById('d-name').className = `text-3xl font-black uppercase tracking-tighter ${user.is_blocked ? 'text-red-500 line-through' : 'text-white'}`;
+    document.getElementById('d-name').className = `text-3xl lg:text-4xl font-[900] uppercase tracking-tighter leading-none truncate w-full ${user.is_blocked ? 'text-red-500 line-through' : 'text-white'}`;
     document.getElementById('d-email').textContent = user.email || 'N/A';
     
     const statusEl = document.getElementById('d-status');
     statusEl.textContent = user.is_blocked ? 'BLOQUEADO' : 'ACTIVO';
-    statusEl.className = `px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${user.is_blocked ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`;
+    statusEl.className = `px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest ${user.is_blocked ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`;
     
     const tier = String(user.subscription_level || 'BASICO').toUpperCase();
     const tierEl = document.getElementById('d-tier');
     tierEl.textContent = tier;
-    let tierColorClass = 'bg-gray-500/10 text-gray-400 border-gray-500/20';
-    if(tier === 'PLUS') tierColorClass = 'bg-sky-500/10 text-sky-400 border-sky-500/20';
-    if(tier === 'ULTRA') tierColorClass = 'bg-[#FFC300]/10 text-[#FFC300] border-[#FFC300]/20';
-    tierEl.className = `px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${tierColorClass}`;
+    let tierColorClass = 'bg-gray-500/10 text-gray-400 border border-gray-500/20';
+    if(tier === 'PLUS') tierColorClass = 'bg-sky-500/10 text-sky-400 border border-sky-500/20';
+    if(tier === 'ULTRA') tierColorClass = 'bg-[#FFC300]/10 text-[#FFC300] border border-[#FFC300]/20';
+    tierEl.className = `px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest ${tierColorClass}`;
 
     document.getElementById('f-id').value = user.id;
     document.getElementById('f-is-edit').value = 'true';
@@ -230,22 +242,14 @@ async function loadUserDossier(userId) {
     document.getElementById('f-expires').value = user.subscription_expires_at ? String(user.subscription_expires_at).split('T')[0] : getDefaultExpirationDate();
     document.getElementById('f-sex').value = user.sex || 'Otro';
     if(user.dob) document.getElementById('f-dob').value = user.dob.split('/').reverse().join('-');
-
-    if (user.phone_number && user.phone_number.includes('-')) {
-        const [prefix, number] = user.phone_number.split('-');
-        document.getElementById('f-phone-pre').value = prefix || '0414';
-        document.getElementById('f-phone-num').value = number || '';
-    } else {
-        document.getElementById('f-phone-num').value = user.phone_number || '';
-    }
+    document.getElementById('f-phone-num').value = user.phone_number ? user.phone_number.split('-').pop() : '';
 
     const btnBlock = document.getElementById('btn-block');
     btnBlock.textContent = user.is_blocked ? 'Desbloquear' : 'Bloquear';
-    btnBlock.className = `px-4 py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-colors ${user.is_blocked ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500 hover:text-black' : 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white'}`;
+    btnBlock.className = `flex-1 md:flex-none px-4 py-2 rounded-lg border text-[9px] font-bold uppercase tracking-widest transition-colors ${user.is_blocked ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500 hover:text-black' : 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white'}`;
     btnBlock.onclick = () => handleBlockUser(user.id, user.is_blocked);
 
-    const btnCertify = document.getElementById('btn-certify');
-    btnCertify.onclick = () => requestUserCertification(user.id, user.email);
+    document.getElementById('btn-certify').onclick = () => requestUserCertification(user.id, user.email);
 
     // 2. LLENAR BIOLAB
     try {
@@ -258,24 +262,12 @@ async function loadUserDossier(userId) {
             document.getElementById('m-height').value = m.height || '';
             document.getElementById('m-age').value = m.age || '--';
             
-            document.getElementById('m-neck').value = m.neck || '';
-            document.getElementById('m-back').value = m.back || '';
-            document.getElementById('m-thorax').value = m.thorax || '';
-            document.getElementById('m-abdomen').value = m.abdomen || '';
-            document.getElementById('m-bicep-l').value = m.bicep_left || '';
-            document.getElementById('m-bicep-r').value = m.bicep_right || '';
-            document.getElementById('m-forearm-l').value = m.forearm_left || '';
-            document.getElementById('m-forearm-r').value = m.forearm_right || '';
-            
-            document.getElementById('m-waist').value = m.waist || '';
-            document.getElementById('m-femur-l').value = m.femur_left || '';
-            document.getElementById('m-femur-r').value = m.femur_right || '';
-            document.getElementById('m-tibia-l').value = m.tibia_left || '';
-            document.getElementById('m-tibia-r').value = m.tibia_right || '';
-            
-            document.getElementById('m-push').value = m.rm_push || '';
-            document.getElementById('m-pull').value = m.rm_pull || '';
-            document.getElementById('m-legs').value = m.rm_legs || '';
+            ['neck','back','thorax','abdomen','waist'].forEach(k => document.getElementById(`m-${k}`).value = m[k] || '');
+            ['bicep','forearm','femur','tibia'].forEach(k => {
+                document.getElementById(`m-${k}-l`).value = m[`${k}_left`] || '';
+                document.getElementById(`m-${k}-r`).value = m[`${k}_right`] || '';
+            });
+            ['push','pull','legs'].forEach(k => document.getElementById(`m-${k}`).value = m[`rm_${k}`] || '');
 
             document.getElementById('m-allergies').value = m.allergies || '';
             document.getElementById('m-diseases').value = m.chronic_diseases || '';
@@ -283,15 +275,12 @@ async function loadUserDossier(userId) {
 
             autoCalculateBiometrics();
 
-            // Objetivos
             const g = data.goals || {};
             document.getElementById('g-focus').value = g.focus || 'Masa Muscular';
             
-            document.getElementById('st-goals-container').innerHTML = '';
-            document.getElementById('mt-goals-container').innerHTML = '';
-            document.getElementById('lt-goals-container').innerHTML = '';
-
+            ['st','mt','lt'].forEach(t => document.getElementById(`${t}-goals-container`).innerHTML = '');
             const normalize = (val) => Array.isArray(val) ? val : (val && val.description ? [val] : []);
+            
             normalize(g.short_term).forEach(goal => addGoalRow('st-goals-container', goal));
             normalize(g.medium_term).forEach(goal => addGoalRow('mt-goals-container', goal));
             normalize(g.long_term).forEach(goal => addGoalRow('lt-goals-container', goal));
@@ -303,14 +292,10 @@ async function loadUserDossier(userId) {
     const dietEditor = document.getElementById('diet-editor');
 
     if (tier !== 'ULTRA') {
-        dietLocked.classList.remove('hidden');
-        dietEditor.classList.add('hidden');
+        dietLocked.classList.remove('hidden'); dietEditor.classList.add('hidden');
     } else {
-        dietLocked.classList.add('hidden');
-        dietEditor.classList.remove('hidden');
-        
-        document.getElementById('d-title').value = "";
-        document.getElementById('d-text').value = "";
+        dietLocked.classList.add('hidden'); dietEditor.classList.remove('hidden');
+        document.getElementById('d-title').value = ""; document.getElementById('d-text').value = "";
 
         try {
             const resDiet = await fetch(`${API_BASE_URL}/api/admin/diet/${userId}`, { headers: getSecureHeaders() });
@@ -322,24 +307,26 @@ async function loadUserDossier(userId) {
         } catch(e) { console.warn("Error leyendo dieta: ", e); }
     }
 
-    switchDossierTab('identity');
+    forceSwitchTab('d-content-identity');
 }
 
-window.openCreateMode = function() {
+function openCreateMode() {
     activeUserId = null;
-    renderUsersList(document.getElementById('search-input').value ? allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(document.getElementById('search-input').value.toLowerCase().trim())) : allUsersData);
+    const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+    renderUsersList(searchTerm ? allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(searchTerm)) : allUsersData);
 
     document.getElementById('empty-state').classList.add('hidden');
     const dossier = document.getElementById('active-dossier');
     dossier.classList.remove('hidden'); dossier.classList.add('flex');
 
     document.getElementById('d-name').textContent = "Nuevo Atleta";
-    document.getElementById('d-name').className = "text-3xl font-black uppercase tracking-tighter text-[#FFC300]";
+    document.getElementById('d-name').className = "text-3xl lg:text-4xl font-[900] uppercase tracking-tighter text-[#FFC300] leading-none";
     document.getElementById('d-email').textContent = "Llenar formulario inferior";
     document.getElementById('d-status').className = "hidden";
     document.getElementById('d-tier').className = "hidden";
     document.getElementById('btn-block').className = "hidden";
     document.getElementById('btn-certify').className = "hidden";
+    document.getElementById('btn-open-chat').className = "hidden";
 
     document.getElementById('user-form').reset();
     document.getElementById('f-id').value = '';
@@ -354,46 +341,43 @@ window.openCreateMode = function() {
     document.getElementById('f-expires').value = getDefaultExpirationDate();
     
     // Al ser nuevo, bloqueamos Biolab y Nutrición
-    document.getElementById('d-tab-biolab').classList.add('pointer-events-none', 'opacity-50');
-    document.getElementById('d-tab-diet').classList.add('pointer-events-none', 'opacity-50');
+    document.getElementById('tab-biolab').classList.add('pointer-events-none', 'opacity-50');
+    document.getElementById('tab-diet').classList.add('pointer-events-none', 'opacity-50');
     
-    switchDossierTab('identity');
+    forceSwitchTab('d-content-identity');
 }
 
 // ==========================================
 // 🍎 GESTIÓN DE DIETAS
 // ==========================================
-window.saveDiet = async function() {
+async function saveDiet() {
     const title = document.getElementById('d-title').value.trim();
     const text = document.getElementById('d-text').value.trim();
     const btn = document.getElementById('btn-save-diet');
 
     if (!title || !text) { showUIFeedback("El título y el menú son obligatorios", "error"); return; }
-
     btn.disabled = true; btn.textContent = 'Guardando...';
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/diet/${activeUserId}`, {
-            method: 'POST',
-            headers: getSecureHeaders(),
-            body: JSON.stringify({ title: title, menu_text: text })
+            method: 'POST', headers: getSecureHeaders(), body: JSON.stringify({ title: title, menu_text: text })
         });
         const data = await res.json();
         if (data.success) showUIFeedback("Plan nutricional publicado al atleta.");
         else showUIFeedback("Error al publicar", "error");
     } catch(e) { showUIFeedback("Falla de red.", "error"); }
-    btn.disabled = false; btn.textContent = 'Publicar Dieta al Atleta';
+    
+    btn.disabled = false; btn.textContent = 'Publicar en App';
 }
 
-window.deleteDiet = async function() {
+async function deleteDiet() {
     if (!confirm("⚠️ ¿Revocar plan nutricional del atleta?")) return;
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/diet/${activeUserId}`, { method: 'DELETE', headers: getSecureHeaders() });
         const data = await res.json();
         if (data.success) { 
             showUIFeedback("Plan nutricional revocado."); 
-            document.getElementById('d-title').value = "";
-            document.getElementById('d-text').value = "";
+            document.getElementById('d-title').value = ""; document.getElementById('d-text').value = "";
         }
     } catch(e) {}
 }
@@ -417,36 +401,35 @@ function addGoalRow(containerId, data = null) {
     row.innerHTML = `
         <div class="w-full md:w-1/5">
             <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Variable Base</label>
-            <select class="goal-metric-key glass-input rounded-lg p-2 text-[10px] font-bold text-white w-full">
-                ${metricOptions}
-            </select>
+            <select class="goal-metric-key executive-input rounded-lg p-2 text-[10px] font-bold text-white w-full">${metricOptions}</select>
         </div>
         <div class="w-full md:w-[12%]">
             <label class="block text-[8px] text-gray-400 uppercase font-black mb-1">V. Inicial</label>
-            <input type="text" class="goal-start glass-input p-2 text-xs font-mono w-full" placeholder="Base" value="${data ? (data.start_value || '') : ''}">
+            <input type="text" class="goal-start executive-input p-2 text-xs font-mono w-full" placeholder="Base" value="${data ? (data.start_value || '') : ''}">
         </div>
         <div class="w-full md:w-[12%]">
             <label class="block text-[8px] text-[#FFC300] uppercase font-black mb-1">Target</label>
-            <input type="text" class="goal-target glass-input p-2 text-xs font-mono w-full !text-[#FFC300]" placeholder="Meta" value="${data ? (data.target_value || '') : ''}">
+            <input type="text" class="goal-target executive-input p-2 text-xs font-mono w-full !text-[#FFC300]" placeholder="Meta" value="${data ? (data.target_value || '') : ''}">
         </div>
         <div class="w-full md:flex-grow">
             <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Descripción SMART</label>
-            <input type="text" class="goal-desc glass-input p-2 text-xs w-full" placeholder="Describe la meta..." value="${data ? (data.description || '') : ''}">
+            <input type="text" class="goal-desc executive-input p-2 text-xs w-full" placeholder="Describe la meta..." value="${data ? (data.description || '') : ''}">
         </div>
         <div class="w-full md:w-[15%]">
             <label class="block text-[8px] text-gray-500 uppercase font-black mb-1">Estatus</label>
-            <select class="goal-status glass-input rounded-lg p-2 text-[9px] font-black uppercase ${isDone ? 'text-emerald-400' : 'text-gray-300'} w-full">
+            <select class="goal-status executive-input rounded-lg p-2 text-[9px] font-black uppercase ${isDone ? 'text-emerald-400' : 'text-gray-300'} w-full">
                 <option value="En progreso" ${!isDone ? 'selected' : ''}>En progreso</option>
                 <option value="Cumplido" ${isDone ? 'selected' : ''}>Cumplido</option>
             </select>
         </div>
-        <button type="button" onclick="document.getElementById('${rowId}').remove()" class="w-full md:w-auto px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-[10px] font-black uppercase transition shrink-0">
-            X
-        </button>
+        <button type="button" class="btn-remove-goal w-full md:w-auto px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-[10px] font-black uppercase transition shrink-0">X</button>
     `;
 
     container.appendChild(row);
 
+    // Eventos locales de la fila
+    row.querySelector('.btn-remove-goal').addEventListener('click', () => row.remove());
+    
     const selectEl = row.querySelector('.goal-metric-key');
     const startEl = row.querySelector('.goal-start');
     const targetEl = row.querySelector('.goal-target');
@@ -484,100 +467,6 @@ function extractGoalsArray(containerId) {
 }
 
 // ==========================================
-// 💾 GESTIÓN DE GUARDADO (IDENTIDAD, MÉTRICAS, METAS)
-// ==========================================
-document.getElementById('user-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('f-submit-btn');
-    const isEdit = document.getElementById('f-is-edit').value === 'true';
-    const userId = document.getElementById('f-id').value;
-
-    const name = formatToUpperCase(document.getElementById('f-name').value);
-    const lastName = formatToUpperCase(document.getElementById('f-lastname').value);
-    const fullPhoneNumber = document.getElementById('f-phone-pre').value + '-' + document.getElementById('f-phone-num').value.replace(/\D/g, '');
-
-    const payload = {
-        name: name, last_name: lastName, full_name: `${name} ${lastName}`,
-        email: document.getElementById('f-email').value, 
-        password: document.getElementById('f-password').value,
-        phone_number: fullPhoneNumber, sex: document.getElementById('f-sex').value, 
-        subscription_level: document.getElementById('f-tier').value,
-        subscription_expires_at: document.getElementById('f-expires').value,
-        dob: formatDateForBackend(document.getElementById('f-dob').value)
-    };
-    
-    if (isEdit) { delete payload.email; delete payload.password; }
-
-    btn.disabled = true; btn.textContent = "Guardando...";
-    const url = isEdit ? `${API_BASE_URL}/api/admin/user/${userId}` : `${API_BASE_URL}/api/admin/user`;
-    
-    try {
-        const res = await fetch(url, { method: isEdit ? 'PUT' : 'POST', headers: getSecureHeaders(), body: JSON.stringify(payload) });
-        const data = await res.json();
-        
-        if (res.ok && data.success) {
-            showUIFeedback(`Expediente actualizado exitosamente.`, 'success');
-            await fetchAllUsers();
-            if (!isEdit) {
-                const newU = allUsersData.find(u => u.email === payload.email);
-                if (newU) loadUserDossier(newU.id);
-            } else { loadUserDossier(userId); }
-        } else { showUIFeedback(data.error || "Fallo en la base de datos.", "error"); }
-    } catch (err) { showUIFeedback("Falla de conexión de red.", "error"); }
-    btn.disabled = false; btn.textContent = "Guardar Cambios";
-});
-
-document.getElementById('metrics-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if(!activeUserId) return;
-    const btn = document.getElementById('btn-submit-metrics');
-    
-    const payload = {
-        weight: document.getElementById('m-weight').value, height: document.getElementById('m-height').value,
-        fat_percent: document.getElementById('m-fat').value, muscle_percent: document.getElementById('m-muscle').value,
-        neck: document.getElementById('m-neck').value, back: document.getElementById('m-back').value,
-        thorax: document.getElementById('m-thorax').value, abdomen: document.getElementById('m-abdomen').value,
-        bicep_left: document.getElementById('m-bicep-l').value, bicep_right: document.getElementById('m-bicep-r').value,
-        forearm_left: document.getElementById('m-forearm-l').value, forearm_right: document.getElementById('m-forearm-r').value,
-        waist: document.getElementById('m-waist').value, femur_left: document.getElementById('m-femur-l').value,
-        femur_right: document.getElementById('m-femur-r').value, tibia_left: document.getElementById('m-tibia-l').value,
-        tibia_right: document.getElementById('m-tibia-r').value, rm_push: document.getElementById('m-push').value,
-        rm_pull: document.getElementById('m-pull').value, rm_legs: document.getElementById('m-legs').value,
-        allergies: document.getElementById('m-allergies').value, chronic_diseases: document.getElementById('m-diseases').value,
-        medical_notes: document.getElementById('m-medical-notes').value
-    };
-
-    btn.disabled = true; btn.textContent = 'Guardando...';
-    try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/metrics/${activeUserId}`, { method: 'POST', headers: getSecureHeaders(), body: JSON.stringify(payload) });
-        const data = await res.json();
-        if(data.success) showUIFeedback("Telemetría corporal actualizada.");
-    } catch (e) { showUIFeedback("Error de red.", "error"); }
-    btn.disabled = false; btn.textContent = 'Guardar Biometría';
-});
-
-document.getElementById('goals-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if(!activeUserId) return;
-    const btn = document.getElementById('btn-submit-goals');
-
-    const payload = {
-        focus: document.getElementById('g-focus').value,
-        short_term: extractGoalsArray('st-goals-container'),
-        medium_term: extractGoalsArray('mt-goals-container'),
-        long_term: extractGoalsArray('lt-goals-container')
-    };
-
-    btn.disabled = true; btn.textContent = 'Guardando...';
-    try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/goals/${activeUserId}`, { method: 'POST', headers: getSecureHeaders(), body: JSON.stringify(payload) });
-        const data = await res.json();
-        if(data.success) showUIFeedback("Matriz de objetivos guardada.");
-    } catch (e) { showUIFeedback("Error de red.", "error"); }
-    btn.disabled = false; btn.textContent = 'Fijar Matriz Estratégica';
-});
-
-// ==========================================
 // 🛡️ BLOQUEO DE ACCESOS Y OTP
 // ==========================================
 async function handleBlockUser(userId, isBlocked) {
@@ -607,7 +496,7 @@ async function requestUserCertification(userId, email) {
     } catch (e) { showUIFeedback("Falla de red.", 'error'); }
 }
 
-window.verifyUserCode = async function() {
+async function verifyUserCode() {
     const code = document.getElementById('otp-input').value.trim();
     if(code.length !== 6) { showUIFeedback("El código debe tener 6 dígitos.", "error"); return; }
     try {
@@ -619,18 +508,18 @@ window.verifyUserCode = async function() {
     } catch (e) { showUIFeedback("Error verificando.", 'error'); }
 }
 
-window.forcePasswordReset = async function() {
+async function forcePasswordReset() {
     const newPass = document.getElementById('new-password-input').value;
     if(newPass.length < 6) { showUIFeedback("La contraseña debe tener mínimo 6 caracteres.", "error"); return; }
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/user/${targetCertifyUserId}/force-password`, { method: 'PUT', headers: getSecureHeaders(), body: JSON.stringify({ new_password: newPass }) });
         const data = await response.json();
-        if(data.success) { showUIFeedback("Contraseña forzada con éxito."); window.closeCertifyModal(); } 
+        if(data.success) { showUIFeedback("Contraseña forzada con éxito."); closeCertifyModal(); } 
         else { showUIFeedback(data.error, 'error'); }
     } catch (e) { showUIFeedback("Error de red.", 'error'); }
 }
 
-window.closeCertifyModal = function() { 
+function closeCertifyModal() { 
     const modal = document.getElementById('otp-modal'); const content = document.getElementById('otp-content');
     modal.classList.add('opacity-0'); content.classList.add('scale-95');
     setTimeout(() => { modal.classList.remove('flex'); modal.classList.add('hidden'); }, 300);
@@ -638,9 +527,143 @@ window.closeCertifyModal = function() {
 }
 
 // ==========================================
-// 🚀 INICIALIZACIÓN BLINDADA
+// 🚀 INICIALIZACIÓN BLINDADA Y WIRING DE EVENTOS
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
+    // 1. Configurar Tabs
+    setupTabs();
+
+    // 2. Conectar Botones a Funciones (Evitando Onclick Inline)
+    document.getElementById('btn-create-user')?.addEventListener('click', openCreateMode);
+    
+    document.getElementById('btn-close-dossier')?.addEventListener('click', () => {
+        document.getElementById('active-dossier').classList.add('hidden');
+        document.getElementById('active-dossier').classList.remove('flex');
+        document.getElementById('empty-state').classList.remove('hidden');
+    });
+
+    document.getElementById('btn-add-st')?.addEventListener('click', () => addGoalRow('st-goals-container'));
+    document.getElementById('btn-add-mt')?.addEventListener('click', () => addGoalRow('mt-goals-container'));
+    document.getElementById('btn-add-lt')?.addEventListener('click', () => addGoalRow('lt-goals-container'));
+
+    document.getElementById('btn-save-diet')?.addEventListener('click', saveDiet);
+    document.getElementById('btn-delete-diet')?.addEventListener('click', deleteDiet);
+
+    document.getElementById('btn-verify-otp')?.addEventListener('click', verifyUserCode);
+    document.getElementById('btn-force-reset')?.addEventListener('click', forcePasswordReset);
+    document.getElementById('btn-close-otp')?.addEventListener('click', closeCertifyModal);
+
+    // 🔥 LA MAGIA OMNICANAL: Conectar este Iframe con el Pulse Center del Dashboard Padre
+    document.getElementById('btn-open-chat')?.addEventListener('click', () => {
+        if(!activeUserId) return;
+        const userName = document.getElementById('d-name').textContent;
+        
+        if (window.parent && typeof window.parent.openThread === 'function') {
+            window.parent.openThread(activeUserId, userName);
+            const pulseWindow = window.parent.document.getElementById('pulse-window');
+            if (pulseWindow && !pulseWindow.classList.contains('open')) {
+                pulseWindow.classList.add('open');
+            }
+        } else {
+            showUIFeedback("Módulo Pulse no detectado en el entorno padre.", "error");
+        }
+    });
+
+    // 3. Eventos de Formularios
+    document.getElementById('user-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('f-submit-btn');
+        const isEdit = document.getElementById('f-is-edit').value === 'true';
+        const userId = document.getElementById('f-id').value;
+
+        const name = formatToUpperCase(document.getElementById('f-name').value);
+        const lastName = formatToUpperCase(document.getElementById('f-lastname').value);
+        
+        // Asumiendo prefijo venezolano por defecto para simplificar
+        const fullPhoneNumber = '0414-' + document.getElementById('f-phone-num').value.replace(/\D/g, '');
+
+        const payload = {
+            name: name, last_name: lastName, full_name: `${name} ${lastName}`,
+            email: document.getElementById('f-email').value, 
+            password: document.getElementById('f-password').value,
+            phone_number: fullPhoneNumber, sex: document.getElementById('f-sex').value, 
+            subscription_level: document.getElementById('f-tier').value,
+            subscription_expires_at: document.getElementById('f-expires').value,
+            dob: formatDateForBackend(document.getElementById('f-dob').value)
+        };
+        
+        if (isEdit) { delete payload.email; delete payload.password; }
+
+        btn.disabled = true; btn.textContent = "Guardando...";
+        const url = isEdit ? `${API_BASE_URL}/api/admin/user/${userId}` : `${API_BASE_URL}/api/admin/user`;
+        
+        try {
+            const res = await fetch(url, { method: isEdit ? 'PUT' : 'POST', headers: getSecureHeaders(), body: JSON.stringify(payload) });
+            const data = await res.json();
+            
+            if (res.ok && data.success) {
+                showUIFeedback(`Expediente actualizado exitosamente.`, 'success');
+                await fetchAllUsers();
+                if (!isEdit) {
+                    const newU = allUsersData.find(u => u.email === payload.email);
+                    if (newU) loadUserDossier(newU.id);
+                } else { loadUserDossier(userId); }
+            } else { showUIFeedback(data.error || "Fallo en la base de datos.", "error"); }
+        } catch (err) { showUIFeedback("Falla de conexión de red.", "error"); }
+        btn.disabled = false; btn.textContent = "Actualizar Expediente";
+    });
+
+    document.getElementById('metrics-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if(!activeUserId) return;
+        const btn = document.getElementById('btn-submit-metrics');
+        
+        const payload = {
+            weight: document.getElementById('m-weight').value, height: document.getElementById('m-height').value,
+            fat_percent: document.getElementById('m-fat').value, muscle_percent: document.getElementById('m-muscle').value,
+            neck: document.getElementById('m-neck').value, back: document.getElementById('m-back').value,
+            thorax: document.getElementById('m-thorax').value, abdomen: document.getElementById('m-abdomen').value,
+            bicep_left: document.getElementById('m-bicep-l').value, bicep_right: document.getElementById('m-bicep-r').value,
+            forearm_left: document.getElementById('m-forearm-l').value, forearm_right: document.getElementById('m-forearm-r').value,
+            waist: document.getElementById('m-waist').value, femur_left: document.getElementById('m-femur-l').value,
+            femur_right: document.getElementById('m-femur-r').value, tibia_left: document.getElementById('m-tibia-l').value,
+            tibia_right: document.getElementById('m-tibia-r').value, rm_push: document.getElementById('m-push').value,
+            rm_pull: document.getElementById('m-pull').value, rm_legs: document.getElementById('m-legs').value,
+            allergies: document.getElementById('m-allergies').value, chronic_diseases: document.getElementById('m-diseases').value,
+            medical_notes: document.getElementById('m-medical-notes').value
+        };
+
+        btn.disabled = true; btn.textContent = 'Guardando...';
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/metrics/${activeUserId}`, { method: 'POST', headers: getSecureHeaders(), body: JSON.stringify(payload) });
+            const data = await res.json();
+            if(data.success) showUIFeedback("Telemetría corporal actualizada.");
+        } catch (e) { showUIFeedback("Error de red.", "error"); }
+        btn.disabled = false; btn.textContent = 'Guardar Biometría';
+    });
+
+    document.getElementById('goals-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if(!activeUserId) return;
+        const btn = document.getElementById('btn-submit-goals');
+
+        const payload = {
+            focus: document.getElementById('g-focus').value,
+            short_term: extractGoalsArray('st-goals-container'),
+            medium_term: extractGoalsArray('mt-goals-container'),
+            long_term: extractGoalsArray('lt-goals-container')
+        };
+
+        btn.disabled = true; btn.textContent = 'Guardando...';
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/goals/${activeUserId}`, { method: 'POST', headers: getSecureHeaders(), body: JSON.stringify(payload) });
+            const data = await res.json();
+            if(data.success) showUIFeedback("Matriz de objetivos guardada.");
+        } catch (e) { showUIFeedback("Error de red.", "error"); }
+        btn.disabled = false; btn.textContent = 'Fijar Matriz Estratégica';
+    });
+
+    // 4. Eventos de UI Menores
     const otpInput = document.getElementById('otp-input');
     if (otpInput) {
         otpInput.addEventListener('input', function() { 
@@ -648,14 +671,15 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    document.getElementById('m-weight').addEventListener('input', autoCalculateBiometrics);
-    document.getElementById('m-height').addEventListener('input', autoCalculateBiometrics);
-    document.getElementById('f-sex').addEventListener('change', autoCalculateBiometrics);
+    document.getElementById('m-weight')?.addEventListener('input', autoCalculateBiometrics);
+    document.getElementById('m-height')?.addEventListener('input', autoCalculateBiometrics);
+    document.getElementById('f-sex')?.addEventListener('change', autoCalculateBiometrics);
     
-    document.getElementById('f-dob').addEventListener('input', () => {
+    document.getElementById('f-dob')?.addEventListener('input', () => {
         document.getElementById('m-age').value = ''; 
         autoCalculateBiometrics();
     });
 
+    // 5. Arrancar Motor de Datos
     fetchAllUsers();
 });
