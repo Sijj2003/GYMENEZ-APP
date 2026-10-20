@@ -1,86 +1,85 @@
 // ====================================================================
-// ⚙️ CONFIGURACIÓN DE API E IDENTIDAD DE RED
+// ⚙️ CONFIGURACIÓN DE RED (ADMIN_TOKEN_KEY viene del middleware)
 // ====================================================================
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Referencias al DOM
+    // Referencias al DOM (App Shell)
     const frame = document.getElementById('os-frame');
     const loader = document.getElementById('os-loader');
     const navLinks = document.querySelectorAll('.os-nav-link');
-    const btnLogout = document.getElementById('btn-logout');
-
-    // Referencias para Gestor de Dispositivos (NUEVO)
+    
+    // Referencias de Seguridad
+    const btnLogoutMobile = document.getElementById('btn-logout');
+    const btnLogoutDesktop = document.getElementById('btn-logout-desktop');
     const btnDevices = document.getElementById('btn-devices'); 
     const modalDevices = document.getElementById('devices-modal'); 
     const listDevices = document.getElementById('devices-list');
 
-    // 1. Lógica de Navegación "App Shell"
+    // ====================================================================
+    // 1. LÓGICA DE NAVEGACIÓN "APP SHELL"
+    // ====================================================================
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const targetUrl = link.getAttribute('data-url');
             
-            // Si ya estamos en esa app, no hacemos nada
             if (frame.src.includes(targetUrl)) return;
 
-            // Actualización Visual del Menú Activo
+            // Limpiar visualmente todos los botones
             navLinks.forEach(l => {
                 l.classList.remove('bg-white/10', 'border-white/10', 'active');
                 l.classList.add('border-transparent');
                 
                 const icon = l.querySelector('svg');
                 const text = l.querySelector('span:not(.bg-gradient-to-br)');
-                if(icon) icon.classList.remove('text-white');
-                if(icon) icon.classList.add('text-gray-500');
+                if(icon) { icon.classList.remove('text-white'); icon.classList.add('text-gray-500'); }
                 if(text) text.classList.remove('text-white');
             });
 
-            // Resaltar el botón clickeado
+            // Resaltar el botón activo
             link.classList.add('bg-white/10', 'border-white/10', 'active');
             link.classList.remove('border-transparent');
             const activeIcon = link.querySelector('svg');
             const activeText = link.querySelector('span');
-            if(activeIcon) activeIcon.classList.add('text-white');
-            if(activeIcon) activeIcon.classList.remove('text-gray-500');
+            if(activeIcon) { activeIcon.classList.add('text-white'); activeIcon.classList.remove('text-gray-500'); }
             if(activeText) activeText.classList.add('text-white');
 
-            // 2. Transición Cinematográfica
+            // Transición Cinematográfica
             frame.classList.add('opacity-0'); 
             loader.classList.remove('hidden'); 
             
-            requestAnimationFrame(() => {
-                loader.classList.remove('opacity-0');
-            });
+            requestAnimationFrame(() => loader.classList.remove('opacity-0'));
 
-            setTimeout(() => {
-                frame.src = targetUrl;
-            }, 300);
+            setTimeout(() => frame.src = targetUrl, 300);
         });
     });
 
-    // 3. Receptor de Carga Exitosa del Iframe
     frame.addEventListener('load', () => {
         if (frame.src && frame.src !== window.location.href) {
             loader.classList.add('opacity-0');
             frame.classList.remove('opacity-0');
-            
-            setTimeout(() => {
-                loader.classList.add('hidden');
-            }, 500);
+            setTimeout(() => loader.classList.add('hidden'), 500);
         }
     });
 
-    // 4. Lógica de Cierre de Sesión Seguro (Zero-Trust Base de Datos)
-    btnLogout.addEventListener('click', async () => {
+    // Arranque inicial automático
+    if (navLinks.length > 0) {
+        setTimeout(() => navLinks[0].click(), 100);
+    }
+
+    // ====================================================================
+    // 2. LÓGICA DE CIERRE DE SESIÓN SEGURO (Móvil y Desktop)
+    // ====================================================================
+    async function executeLogout(btnElement) {
         if(confirm('¿Cerrar la sesión administrativa de este dispositivo?')) {
             const token = localStorage.getItem(ADMIN_TOKEN_KEY);
-            const originalHTML = btnLogout.innerHTML;
             
-            // UI Feedback
-            btnLogout.innerHTML = `<div class="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>`;
-            btnLogout.disabled = true;
+            if(btnElement) {
+                btnElement.innerHTML = `<div class="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>`;
+                btnElement.disabled = true;
+            }
 
             try {
                 if (token) {
@@ -90,30 +89,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
             } catch (e) {
-                console.warn("Falla de red al notificar logout al backend. Limpiando localmente.");
+                console.warn("Falla de red. Limpiando caché localmente.");
             } finally {
                 localStorage.removeItem('adminSession'); 
                 localStorage.removeItem(ADMIN_TOKEN_KEY); 
                 window.top.location.href = '/apps/admin/login.html'; 
             }
         }
-    });
-
-    // 5. Arranque inicial seguro (Remplaza el frame.onload defectuoso)
-    if (navLinks.length > 0) {
-        setTimeout(() => {
-            // Simulamos el clic en "Directorio 360" para arrancar el sistema
-            navLinks[0].click();
-        }, 100);
     }
 
+    if (btnLogoutMobile) btnLogoutMobile.addEventListener('click', () => executeLogout(btnLogoutMobile));
+    if (btnLogoutDesktop) btnLogoutDesktop.addEventListener('click', () => executeLogout(btnLogoutDesktop));
+
     // ====================================================================
-    // 🛡️ NUEVO: GESTOR DE DISPOSITIVOS (SESIONES ACTIVAS)
+    // 🛡️ 3. GESTOR DE DISPOSITIVOS (SESIONES ACTIVAS)
     // ====================================================================
-    
-    if (btnDevices) {
-        btnDevices.addEventListener('click', loadActiveSessions);
-    }
+    if (btnDevices) btnDevices.addEventListener('click', loadActiveSessions);
 
     window.closeDevicesModal = function() {
         if (modalDevices) {
@@ -139,11 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
 
-            if (res.ok && data.success) {
-                renderSessions(data.devices);
-            } else {
-                listDevices.innerHTML = `<p class="text-center text-red-500 font-bold text-xs uppercase tracking-widest py-4">Error cargando sesiones</p>`;
-            }
+            if (res.ok && data.success) renderSessions(data.devices);
+            else listDevices.innerHTML = `<p class="text-center text-red-500 font-bold text-xs uppercase tracking-widest py-4">Error cargando sesiones</p>`;
         } catch (e) {
             listDevices.innerHTML = `<p class="text-center text-red-500 font-bold text-xs uppercase tracking-widest py-4">Falla de conexión de red</p>`;
         }
@@ -152,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderSessions(devices) {
         listDevices.innerHTML = '';
         
-        // Decodificamos el token actual en vivo para saber cuál es "este" dispositivo y no dejarte expulsarte a ti mismo sin querer
         let currentSid = '';
         try {
             const token = localStorage.getItem(ADMIN_TOKEN_KEY);
@@ -165,18 +152,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         devices.forEach((dev) => {
             const isCurrent = dev.session_id === currentSid;
-            
-            // Formatear Fecha
             const dateObj = new Date(dev.date);
             const dateStr = !isNaN(dateObj) ? dateObj.toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' }) : 'Fecha desconocida';
             
-            // Extraer el SO/Navegador del User-Agent de forma amigable a la vista
             let deviceName = "Dispositivo Desconocido";
             if (dev.device.includes("iPhone") || dev.device.includes("iPad")) deviceName = "Apple iOS";
             else if (dev.device.includes("Mac OS")) deviceName = "Apple macOS";
             else if (dev.device.includes("Windows")) deviceName = "PC Windows";
             else if (dev.device.includes("Android")) deviceName = "Android Device";
-            else if (dev.device.includes("Linux")) deviceName = "Linux System";
 
             const bgClass = isCurrent ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-white/[0.02] border-white/10';
             const badge = isCurrent ? `<span class="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-emerald-500 text-black ml-2 shadow-[0_0_10px_rgba(16,185,129,0.4)]">Actual</span>` : '';
@@ -213,11 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             
-            if (res.ok && data.success) {
-                loadActiveSessions(); // Recargar la lista visual al instante
-            } else {
-                alert(data.error || "Error al intentar expulsar el dispositivo.");
-            }
+            if (res.ok && data.success) loadActiveSessions(); 
+            else alert(data.error || "Error al intentar expulsar el dispositivo.");
         } catch (e) {
             alert("Falla de conexión de red.");
         }
