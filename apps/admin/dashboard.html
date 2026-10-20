@@ -12,16 +12,15 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #030305; /* Negro absoluto Gymenez */
+            background-color: #030305;
             color: #E5E7EB;
             -webkit-font-smoothing: antialiased;
-            overflow: hidden; /* Todo el scroll se maneja internamente */
+            overflow: hidden;
         }
         
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         .hide-scroll::-webkit-scrollbar { display: none; }
 
-        /* 💎 IDENTIDAD DE MARCA (Degradado fluido) */
         .logo-gradient {
             background: linear-gradient(90deg, #FFC300 0%, #FFC300 40%, #FFFFFF 60%, #FFFFFF 100%);
             -webkit-background-clip: text;
@@ -30,7 +29,6 @@
             display: inline-block;
         }
 
-        /* 📱 BOTTOM BAR MÓVIL (Fija abajo) */
         .ios-bottom-bar {
             background: rgba(3, 3, 5, 0.85);
             backdrop-filter: blur(20px);
@@ -41,7 +39,6 @@
         .nav-icon { color: #6B7280; transition: all 0.3s ease; }
         .nav-item.active .nav-icon { color: #FFC300; transform: translateY(-2px); }
 
-        /* 💻 SIDEBAR DESKTOP */
         .sidebar-item {
             color: #9CA3AF; font-size: 0.8125rem; font-weight: 600;
             padding: 0.75rem 1rem; border-radius: 0.75rem;
@@ -51,7 +48,6 @@
         .sidebar-item:hover { color: white; background: rgba(255,255,255,0.03); }
         .sidebar-item.active { color: #FFC300; background: rgba(255, 195, 0, 0.08); }
 
-        /* 🎧 PULSE WIDGET (Sistema Flotante de Soporte) */
         #pulse-widget-container {
             position: fixed;
             bottom: calc(1.5rem + env(safe-area-inset-bottom));
@@ -107,7 +103,6 @@
             }
         }
 
-        /* 🎛️ INPUT DEL CHAT */
         .chat-input {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -119,10 +114,9 @@
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-[#FFC300] selection:text-black">
 
-    <!-- FEEDBACK TOAST GLOBAL -->
     <div id="message-box" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-2xl z-[99999] opacity-0 transition-all duration-300 pointer-events-none text-center bg-[#0a0a0f]/95 border border-white/10 backdrop-blur-md"></div>
 
-    <!-- 🖥️ SIDEBAR DESKTOP (Navegación del SPA) -->
+    <!-- 🖥️ SIDEBAR DESKTOP -->
     <aside class="hidden md:flex flex-col w-[260px] bg-[#050508] border-r border-white/5 h-full shrink-0 z-30">
         <div class="h-20 flex items-center px-8 border-b border-white/5 shrink-0">
             <div class="logo-gradient font-[900] text-2xl italic tracking-tighter leading-none cursor-default">
@@ -134,11 +128,8 @@
             <div>
                 <p class="px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest mb-3">Operaciones B2C</p>
                 <div class="space-y-1">
-                    <div class="sidebar-item os-nav-link active" data-url="/apps/admin/metrics.html">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                        Overview
-                    </div>
-                    <div class="sidebar-item os-nav-link" data-url="/apps/admin/users.html">
+                    <!-- Atletas ahora es el primero y tiene la clase 'active' -->
+                    <div class="sidebar-item os-nav-link active" data-url="/apps/admin/users.html">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         Atletas (Directorio)
                     </div>
@@ -193,15 +184,14 @@
         </div>
     </aside>
 
-    <!-- 🌐 CONTENEDOR PRINCIPAL (El Router de la SPA) -->
+    <!-- 🌐 CONTENEDOR PRINCIPAL -->
     <main class="flex-1 flex flex-col min-w-0 bg-[#030305] relative z-10 h-full pb-[4.5rem] md:pb-0">
         
-        <!-- 📱 HEADER MÓVIL (Solo visible en pantallas pequeñas) -->
+        <!-- 📱 HEADER MÓVIL -->
         <header class="md:hidden h-16 px-5 border-b border-white/5 flex items-center justify-between shrink-0 sticky top-0 bg-[#030305]/95 backdrop-blur-xl z-30">
             <div class="logo-gradient font-[900] text-xl italic tracking-tighter leading-none cursor-default">
                 GERENCIA GYMENEZ
             </div>
-            <!-- Botón de logout móvil -->
             <button id="btn-logout" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
             </button>
@@ -217,13 +207,10 @@
         </div>
     </main>
 
-    <!-- 📱 BOTTOM TAB BAR (Navegación Móvil SPA) -->
+    <!-- 📱 BOTTOM TAB BAR -->
     <nav class="md:hidden fixed bottom-0 w-full ios-bottom-bar flex justify-around items-center h-[4.5rem] z-40 px-2 pb-2" id="mobile-nav">
-        <div class="os-nav-link nav-item active flex flex-col items-center justify-center w-16 h-full relative cursor-pointer" data-url="/apps/admin/metrics.html">
-            <svg class="w-6 h-6 nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-            <span class="text-[9px] font-bold mt-1 text-gray-500">Panel</span>
-        </div>
-        <div class="os-nav-link nav-item flex flex-col items-center justify-center w-16 h-full relative cursor-pointer" data-url="/apps/admin/users.html">
+        <!-- Atletas pasa a ser el primero en móvil -->
+        <div class="os-nav-link nav-item active flex flex-col items-center justify-center w-16 h-full relative cursor-pointer" data-url="/apps/admin/users.html">
             <svg class="w-6 h-6 nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
             <span class="text-[9px] font-bold mt-1 text-gray-500">Atletas</span>
         </div>
@@ -237,36 +224,27 @@
         </div>
     </nav>
 
-    <!-- 🎧 PULSE WIDGET (El chat ininterrumpido en modo SPA) -->
+    <!-- 🎧 PULSE WIDGET -->
     <div id="pulse-widget-container">
-        
-        <!-- Ventana Expandida (Inbox / Chat) -->
         <div id="pulse-window" class="pulse-window">
-            
-            <!-- Header del Widget -->
             <div class="px-5 py-4 border-b border-white/5 bg-[#0A0A0F] flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2 min-w-0">
                     <svg class="w-4 h-4 text-[#FFC300]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
                     <h3 class="text-sm font-[900] text-white uppercase tracking-tight truncate">Inbox Soporte</h3>
                 </div>
                 <div class="flex items-center gap-1">
-                    <!-- Minimizar -->
                     <button onclick="togglePulseWidget()" class="w-7 h-7 rounded-full bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                 </div>
             </div>
 
-            <!-- Listado de Colas (Se oculta al entrar a un chat) -->
             <div id="pulse-list-view" class="flex-1 overflow-y-auto hide-scroll p-2 space-y-1">
                 <div class="p-4 text-center text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-10">Cargando Colas...</div>
             </div>
 
-            <!-- Sala de Chat Activa (Oculta por defecto) -->
             <div id="pulse-chat-view" class="hidden flex-1 flex-col overflow-hidden bg-[#050505]">
-                <div id="pulse-messages" class="flex-1 overflow-y-auto p-4 hide-scroll space-y-4">
-                    <!-- Mensajes aquí -->
-                </div>
+                <div id="pulse-messages" class="flex-1 overflow-y-auto p-4 hide-scroll space-y-4"></div>
                 <div class="p-3 bg-[#0A0A0F] border-t border-white/5">
                     <form id="pulse-form" class="relative">
                         <input type="text" class="chat-input w-full py-3 pl-4 pr-12 text-xs" placeholder="Responder al ticket..." disabled>
@@ -276,20 +254,16 @@
                     </form>
                 </div>
             </div>
-
         </div>
 
-        <!-- Burbuja Flotante (Botón Principal) -->
         <div class="pulse-bubble relative" onclick="togglePulseWidget()">
             <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
         </div>
-
     </div>
 
-    <!-- 💻 MODAL: GESTOR DE DISPOSITIVOS (ZERO-TRUST) -->
+    <!-- 💻 MODAL: GESTOR DE DISPOSITIVOS -->
     <div id="devices-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[99999] hidden flex justify-center items-center p-4 opacity-0 transition-opacity duration-300">
         <div class="w-full max-w-md bg-[#0A0A0F] border border-white/10 rounded-[32px] p-6 shadow-2xl relative transform scale-95 transition-transform duration-300">
-            
             <div class="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
                 <div>
                     <h3 class="text-lg font-[900] text-white uppercase tracking-tight">Sesiones Activas</h3>
@@ -297,12 +271,7 @@
                 </div>
                 <button onclick="closeDevicesModal()" class="w-8 h-8 rounded-full bg-white/5 text-gray-400 hover:text-white flex items-center justify-center transition-colors">&times;</button>
             </div>
-
-            <!-- Contenedor Dinámico de Dispositivos -->
-            <div id="devices-list" class="space-y-3 max-h-[350px] overflow-y-auto hide-scroll pr-1">
-                <!-- Se llena vía JS -->
-            </div>
-
+            <div id="devices-list" class="space-y-3 max-h-[350px] overflow-y-auto hide-scroll pr-1"></div>
             <div class="mt-6 pt-4 border-t border-white/5 flex justify-between items-center">
                 <div></div>
                 <button onclick="closeDevicesModal()" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-[9px] font-black uppercase tracking-widest transition-colors">Cerrar Ventana</button>
@@ -310,7 +279,6 @@
         </div>
     </div>
 
-    <!-- 🚀 LÓGICA BASE DEL SPA Y WIDGET -->
     <script>
         function togglePulseWidget() {
             const win = document.getElementById('pulse-window');
