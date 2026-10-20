@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, addDoc, setDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // ==========================================
 // CONFIGURACIÓN GLOBAL
@@ -118,11 +118,6 @@ async function activateAdminRadar() {
                         }
                     }
                     lastNotifiedTimestamps[thread.thread_id] = currentMsgTime;
-
-                    // Actualizar botones de acción si estamos viendo este chat
-                    if (window.currentActiveThreadId === thread.thread_id) {
-                        window.updateChatActions(thread.thread_id, thread.status);
-                    }
                 });
 
                 isInitialLoad = false;
@@ -179,7 +174,7 @@ function renderInbox(threads) {
 }
 
 // ==========================================
-// 💬 GESTIÓN DE SALA DE CHAT Y TICKET
+// 💬 GESTIÓN DE SALA DE CHAT Y TICKET FORZADO
 // ==========================================
 window.updateChatActions = function(threadId, status) {
     const actionsBar = document.getElementById('pulse-chat-actions');
@@ -191,12 +186,13 @@ window.updateChatActions = function(threadId, status) {
     if (!actionsBar) return;
     actionsBar.classList.remove('hidden');
 
-    // Desvincular eventos viejos
     btnAccept.onclick = null;
     btnClose.onclick = null;
 
     if (status === 'espera') {
         btnAccept.classList.remove('hidden'); btnClose.classList.remove('hidden');
+        btnAccept.textContent = "Atender Ticket";
+        btnAccept.className = "flex-1 py-2 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500 hover:text-black text-[9px] font-bold uppercase tracking-widest transition-colors shadow-sm";
         chatInput.disabled = true; chatBtn.disabled = true;
         chatInput.placeholder = "Acepta el ticket para responder...";
     } else if (status === 'activo') {
@@ -204,9 +200,13 @@ window.updateChatActions = function(threadId, status) {
         chatInput.disabled = false; chatBtn.disabled = false;
         chatInput.placeholder = "Responder al ticket...";
     } else {
-        actionsBar.classList.add('hidden');
+        // INACTIVO O CERRADO: Modo Ejecutivo
+        actionsBar.classList.remove('hidden');
+        btnAccept.classList.remove('hidden'); btnClose.classList.add('hidden');
+        btnAccept.textContent = "Forzar Apertura";
+        btnAccept.className = "flex-1 py-2 rounded-lg bg-[#FFC300]/10 text-[#FFC300] border border-[#FFC300]/20 hover:bg-[#FFC300] hover:text-black text-[9px] font-bold uppercase tracking-widest transition-colors shadow-sm";
         chatInput.disabled = true; chatBtn.disabled = true;
-        chatInput.placeholder = "Ticket finalizado.";
+        chatInput.placeholder = "Inicia el ticket para escribir...";
     }
 
     btnAccept.onclick = () => window.changeThreadStatus(threadId, 'activo');
@@ -215,13 +215,23 @@ window.updateChatActions = function(threadId, status) {
 
 window.changeThreadStatus = async function(threadId, newStatus) {
     try {
-        await updateDoc(doc(db, "pulse_threads", threadId), {
-            status: newStatus, updated_at: serverTimestamp()
-        });
+        const threadName = document.querySelector('#pulse-window h3').textContent;
+        
+        // Usamos setDoc con merge para que funcione incluso si el hilo no existía antes
+        await setDoc(doc(db, "pulse_threads", threadId), {
+            participant_id: threadId,
+            participant_name: threadName,
+            status: newStatus, 
+            updated_at: serverTimestamp()
+        }, { merge: true });
         
         if(newStatus === 'cerrado') {
             await addDoc(collection(db, `pulse_threads/${threadId}/messages`), {
                 sender_type: 'system', text: 'Ticket cerrado por el Administrador.', timestamp: serverTimestamp()
+            });
+        } else if (newStatus === 'activo') {
+            await addDoc(collection(db, `pulse_threads/${threadId}/messages`), {
+                sender_type: 'system', text: 'El Administrador ha forzado la apertura de un canal de soporte.', timestamp: serverTimestamp()
             });
         }
     } catch (e) { console.error("Error al cambiar estado:", e); }
@@ -246,8 +256,18 @@ window.openThread = function(threadId, participantName, status = 'inactivo') {
     const messagesContainer = document.getElementById('pulse-messages');
     messagesContainer.innerHTML = `<div class="flex justify-center py-10"><div class="w-5 h-5 border-2 border-[#FFC300] border-t-transparent rounded-full animate-spin"></div></div>`;
     
-    window.updateChatActions(threadId, status);
-    updateDoc(doc(db, "pulse_threads", threadId), { unread_admin: 0 }).catch(e => {});
+    // Escuchar el documento del hilo para mantener el estado de los botones UI en tiempo real
+    if (window.unsubscribeThreadDoc) window.unsubscribeThreadDoc();
+    window.unsubscribeThreadDoc = onSnapshot(doc(db, "pulse_threads", threadId), (docSnap) => {
+        if(docSnap.exists()) {
+            window.updateChatActions(threadId, docSnap.data().status || 'inactivo');
+        } else {
+            window.updateChatActions(threadId, 'inactivo');
+        }
+    });
+
+    // Usamos setDoc para no crashear si el doc no existía
+    setDoc(doc(db, "pulse_threads", threadId), { unread_admin: 0 }, { merge: true }).catch(e => {});
 
     if (unsubscribeMessages) unsubscribeMessages();
     const q = query(collection(db, `pulse_threads/${threadId}/messages`), orderBy("timestamp", "asc"));
@@ -264,6 +284,7 @@ function renderMessages(messages) {
     container.innerHTML = '';
 
     messages.forEach(msg => {
+        // Filtro para Mensajes del Sistema
         if (msg.sender_type === 'system') {
             container.insertAdjacentHTML('beforeend', `<p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center my-4 border-b border-white/5 pb-4">${msg.text}</p>`);
             return;
@@ -290,6 +311,7 @@ function renderMessages(messages) {
 window.backToInbox = function() {
     window.currentActiveThreadId = null;
     if (unsubscribeMessages) { unsubscribeMessages(); unsubscribeMessages = null; }
+    if (window.unsubscribeThreadDoc) { window.unsubscribeThreadDoc(); window.unsubscribeThreadDoc = null; }
     
     document.getElementById('pulse-chat-view').classList.add('hidden');
     document.getElementById('pulse-chat-view').classList.remove('flex');
@@ -316,9 +338,9 @@ window.sendAdminReply = async function() {
             sender_type: 'admin', text: text, timestamp: serverTimestamp()
         });
         
-        await updateDoc(doc(db, "pulse_threads", window.currentActiveThreadId), {
+        await setDoc(doc(db, "pulse_threads", window.currentActiveThreadId), {
             last_message: "Tú: " + text, updated_at: serverTimestamp(), unread_client: 1
-        });
+        }, { merge: true });
     } catch (e) {
         alert("Error al enviar mensaje");
     }
