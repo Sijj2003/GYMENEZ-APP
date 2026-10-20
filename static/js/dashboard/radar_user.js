@@ -2,16 +2,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebas
 import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-// ==========================================
-// CONFIGURACIÓN GLOBAL
-// ==========================================
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC7ESvLhYTydAn_ZjHVSkebTC-BhvnbzIw",
-  authDomain: "gymenezapp.firebaseapp.com",
-  projectId: "gymenezapp"
+    apiKey: "AIzaSyC7ESvLhYTydAn_ZjHVSkebTC-BhvnbzIw",
+    authDomain: "gymenezapp.firebaseapp.com",
+    projectId: "gymenezapp"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -21,9 +18,7 @@ const db = getFirestore(app);
 let audioCtx = null;
 let isInitialLoad = true;
 
-// ==========================================
 // 🎵 AUDIO PROFESIONAL
-// ==========================================
 function playNotificationSound() {
     try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -32,25 +27,17 @@ function playNotificationSound() {
         const gainNode = audioCtx.createGain();
         osc.connect(gainNode); gainNode.connect(audioCtx.destination);
         
-        // Sonido suave tipo iPhone "Tri-tone" rápido
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
-        osc.frequency.exponentialRampToValueAtTime(1108, audioCtx.currentTime + 0.1); // C#6
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.type = 'sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(1108, audioCtx.currentTime + 0.1); 
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.02); gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
         osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.3);
     } catch(e) {}
 }
 
-// ==========================================
-// 📱 INYECCIÓN DE UI ESTILO iOS (DYNAMIC BANNER)
-// ==========================================
+// 📱 INYECCIÓN DE UI ESTILO iOS
 function injectIOSContainer() {
     if (!document.getElementById('ios-notification-container')) {
         const container = document.createElement('div');
         container.id = 'ios-notification-container';
-        // Fijo arriba al centro
         container.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 z-[99999] flex flex-col gap-2 pointer-events-none items-center w-full max-w-[95vw] sm:max-w-[400px]';
         document.body.appendChild(container);
     }
@@ -59,11 +46,9 @@ function injectIOSContainer() {
 function showIOSNotification(title, text) {
     injectIOSContainer();
     const container = document.getElementById('ios-notification-container');
-
     const toast = document.createElement('div');
-    // Estilos exactos tipo Notificación de Apple
+
     toast.className = `pointer-events-auto w-full bg-[#1c1c1e]/80 backdrop-blur-2xl border border-white/10 rounded-[24px] p-3.5 shadow-2xl flex items-center gap-3 transform -translate-y-20 opacity-0 transition-all duration-500 ease-out cursor-pointer`;
-    
     toast.onclick = () => window.location.href = '/apps/user/pulse.html';
 
     toast.innerHTML = `
@@ -79,34 +64,24 @@ function showIOSNotification(title, text) {
         </div>
     `;
 
-    // Apilar por arriba
     container.prepend(toast);
-
-    // Animar entrada
-    requestAnimationFrame(() => {
-        toast.style.transform = 'translateY(0)';
-        toast.style.opacity = '1';
-    });
-
+    requestAnimationFrame(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; });
     playNotificationSound();
 
-    // Auto-cierre
     setTimeout(() => {
-        toast.style.transform = 'translateY(-20px)';
-        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)'; toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 500);
     }, 5000);
 }
 
-// ==========================================
-// 📡 LÓGICA DEL RADAR ATLETA
-// ==========================================
+// 📡 LÓGICA DEL RADAR OMNICANAL
 async function activateRadar() {
     const token = localStorage.getItem('gymen_auth_token') || localStorage.getItem('user_token');
     const sessionStr = localStorage.getItem('userSession');
     if (!token || !sessionStr) return;
     
-    const userId = JSON.parse(sessionStr).id || JSON.parse(sessionStr)._id;
+    const sessionObj = JSON.parse(sessionStr);
+    const userId = sessionObj.id || sessionObj._id;
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/pulse/token`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -115,33 +90,29 @@ async function activateRadar() {
         if (res.ok && data.success) {
             await signInWithCustomToken(auth, data.firebase_token);
             
-            onSnapshot(doc(db, "chats", userId), (docSnap) => {
+            // 🔥 OMNICANAL: Escuchamos pulse_threads
+            onSnapshot(doc(db, "pulse_threads", userId), (docSnap) => {
                 if (!docSnap.exists()) return;
-                const chat = docSnap.data();
+                const thread = docSnap.data();
                 
-                if (isInitialLoad) { 
-                    isInitialLoad = false; 
-                    return; 
-                }
+                if (isInitialLoad) { isInitialLoad = false; return; }
 
-                // Si el mensaje es para el usuario
-                if (chat.unread_user === true) {
-                    const msgTime = chat.actualizado ? chat.actualizado.toMillis().toString() : "0";
+                // Si el Admin nos responde (unread_client > 0)
+                if (thread.unread_client > 0) {
+                    const msgTime = thread.updated_at ? thread.updated_at.toMillis().toString() : "0";
                     const lastNotifiedTime = localStorage.getItem('gymen_last_radar_time');
 
-                    // Prevenir duplicados matemáticamente
                     if (msgTime === lastNotifiedTime) return; 
                     localStorage.setItem('gymen_last_radar_time', msgTime);
 
-                    // CONTEXT AWARENESS: Si está en el chat, no mostrar popup (ya lo está leyendo)
                     if (window.location.href.includes('pulse.html')) return; 
 
-                    const sanitizedMsg = (chat.ultimo_mensaje || "").replace("Tú: ", "").trim();
+                    const sanitizedMsg = (thread.last_message || "").replace("Tú: ", "").trim();
                     showIOSNotification("Soporte Gymenez", sanitizedMsg || "Nuevo mensaje recibido");
                 }
             });
         }
-    } catch (e) { console.warn("Radar del Atleta inactivo."); }
+    } catch (e) { console.warn("Radar de Usuario inactivo."); }
 }
 
 window.addEventListener('DOMContentLoaded', activateRadar);
