@@ -1,5 +1,5 @@
 // ====================================================================
-// ⚙️ CONFIGURACIÓN DE RED Y ESTADO
+// ⚙️ CONFIGURACIÓN DE RED Y ESTADO (Zero-Trust)
 // ====================================================================
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
@@ -23,7 +23,8 @@ const MEASURABLE_METRICS = [
 // 📢 UTILIDADES UI
 // ==========================================
 function getSecureHeaders() {
-    const token = localStorage.getItem(ADMIN_TOKEN_KEY); 
+    // Tomamos el token directamente de localStorage para no chocar con el middleware
+    const token = localStorage.getItem('gymen_admin_token'); 
     return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 }
 
@@ -47,41 +48,45 @@ function getDefaultExpirationDate() {
     return d.toISOString().split('T')[0];
 }
 
-// Lógica de Pestañas (Tabs)
-function setupTabs() {
-    document.querySelectorAll('.d-tab-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const targetId = btn.getAttribute('data-target');
+// Lógica de Pestañas compatible con todas las versiones de tu HTML
+window.switchDossierTab = function(tabName) {
+    const tabs = ['identity', 'biolab', 'diet'];
+    tabs.forEach(t => {
+        const btn = document.getElementById(`d-tab-${t}`) || document.getElementById(`tab-${t}`);
+        const content = document.getElementById(`d-content-${t}`);
+        if (!btn || !content) return;
+        
+        if (t === tabName) {
+            if(t === 'identity') btn.className = "d-tab-btn active py-3 border-b-2 border-[#FFC300] text-[#FFC300] font-black text-[10px] uppercase tracking-widest transition-colors";
+            if(t === 'biolab') btn.className = "d-tab-btn active py-3 border-b-2 border-sky-400 text-sky-400 font-black text-[10px] uppercase tracking-widest transition-colors";
+            if(t === 'diet') btn.className = "d-tab-btn active py-3 border-b-2 border-emerald-500 text-emerald-500 font-black text-[10px] uppercase tracking-widest transition-colors flex items-center gap-1.5";
             
-            // Limpiar estilos de todas las pestañas
-            document.querySelectorAll('.d-tab-btn').forEach(b => {
-                b.classList.remove('active', 'border-[#FFC300]', 'text-[#FFC300]', 'border-sky-400', 'text-sky-400', 'border-emerald-500', 'text-emerald-500');
-                b.classList.add('border-transparent', 'text-gray-500');
-            });
-            
-            // Ocultar todos los contenidos
-            document.querySelectorAll('.d-tab-content').forEach(c => {
-                c.classList.add('hidden');
-                c.classList.remove('block');
-            });
-
-            // Activar la seleccionada
-            btn.classList.add('active');
-            btn.classList.remove('border-transparent', 'text-gray-500');
-            document.getElementById(targetId).classList.remove('hidden');
-            document.getElementById(targetId).classList.add('block');
-
-            // Colores temáticos
-            if(targetId === 'd-content-identity') btn.classList.add('border-[#FFC300]', 'text-[#FFC300]');
-            if(targetId === 'd-content-biolab') btn.classList.add('border-sky-400', 'text-sky-400');
-            if(targetId === 'd-content-diet') btn.classList.add('border-emerald-500', 'text-emerald-500');
-        });
+            content.classList.remove('hidden'); 
+            content.classList.add('block');
+        } else {
+            if(t === 'diet') {
+                btn.className = "d-tab-btn py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors flex items-center gap-1.5";
+            } else {
+                btn.className = "d-tab-btn py-3 border-b-2 border-transparent text-gray-500 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors";
+            }
+            content.classList.add('hidden'); 
+            content.classList.remove('block');
+        }
     });
 }
 
-function forceSwitchTab(targetId) {
-    const btn = document.querySelector(`[data-target="${targetId}"]`);
-    if(btn) btn.click();
+function setupTabs() {
+    document.querySelectorAll('.d-tab-btn').forEach(btn => {
+        if(btn.hasAttribute('data-target')) {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                let name = 'identity';
+                if (targetId.includes('biolab')) name = 'biolab';
+                if (targetId.includes('diet')) name = 'diet';
+                window.switchDossierTab(name);
+            });
+        }
+    });
 }
 
 // ==========================================
@@ -103,6 +108,7 @@ async function fetchAllUsers() {
 
 function renderUsersList(users) {
     const container = document.getElementById('users-list');
+    if(!container) return;
     container.innerHTML = ''; 
 
     if (users.length === 0) {
@@ -136,7 +142,7 @@ function renderUsersList(users) {
 
 // Búsqueda en tiempo real
 let searchTimeout;
-document.getElementById('search-input').addEventListener('input', (e) => {
+document.getElementById('search-input')?.addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
         const term = e.target.value.toLowerCase().trim();
@@ -150,27 +156,26 @@ document.getElementById('search-input').addEventListener('input', (e) => {
 // 🧮 MOTOR DE BIOMETRÍA
 // ==========================================
 function autoCalculateBiometrics() {
-    const weight = parseFloat(document.getElementById('m-weight').value);
-    const heightCm = parseFloat(document.getElementById('m-height').value);
-    let age = parseInt(document.getElementById('m-age').value);
-    const sex = document.getElementById('f-sex').value;
+    const weight = parseFloat(document.getElementById('m-weight')?.value || 0);
+    const heightCm = parseFloat(document.getElementById('m-height')?.value || 0);
+    let age = parseInt(document.getElementById('m-age')?.value || 0);
+    const sex = document.getElementById('f-sex')?.value || 'Otro';
     const fatInput = document.getElementById('m-fat');
     const muscleInput = document.getElementById('m-muscle');
 
     if (isNaN(age) || age <= 0) {
-        const dobVal = document.getElementById('f-dob').value;
+        const dobVal = document.getElementById('f-dob')?.value;
         if (dobVal) {
             const dob = new Date(dobVal);
             const diff = Date.now() - dob.getTime();
             age = Math.abs(new Date(diff).getUTCFullYear() - 1970);
-            document.getElementById('m-age').value = age;
+            if(document.getElementById('m-age')) document.getElementById('m-age').value = age;
         }
     }
 
     if (weight > 0 && heightCm > 0 && age > 0) {
         const heightM = heightCm / 100; 
         const bmi = weight / (heightM * heightM); 
-        
         const sexFactor = sex === 'Hombre' ? 1 : (sex === 'Mujer' ? 0 : 0.5);
         let fatPercent = (1.20 * bmi) + (0.23 * age) - (10.8 * sexFactor) - 5.4;
         
@@ -180,11 +185,11 @@ function autoCalculateBiometrics() {
         const muscleFactor = sex === 'Hombre' ? 0.52 : (sex === 'Mujer' ? 0.47 : 0.495);
         let musclePercent = (100 - fatPercent) * muscleFactor;
 
-        fatInput.value = fatPercent.toFixed(1);
-        muscleInput.value = musclePercent.toFixed(1);
+        if(fatInput) fatInput.value = fatPercent.toFixed(1);
+        if(muscleInput) muscleInput.value = musclePercent.toFixed(1);
     } else {
-        fatInput.value = '';
-        muscleInput.value = '';
+        if(fatInput) fatInput.value = '';
+        if(muscleInput) muscleInput.value = '';
     }
 }
 
@@ -194,61 +199,81 @@ function autoCalculateBiometrics() {
 async function loadUserDossier(userId) {
     activeUserId = userId;
     
-    // Refrescar estado visual de la lista
-    const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+    // Refrescar estado visual de la lista de forma segura
+    const searchInput = document.getElementById('search-input');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
     renderUsersList(searchTerm ? allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(searchTerm)) : allUsersData);
 
     const user = allUsersData.find(u => u.id === userId);
     if (!user) return;
 
-    document.getElementById('empty-state').classList.add('hidden');
+    document.getElementById('empty-state')?.classList.add('hidden');
     const dossier = document.getElementById('active-dossier');
-    dossier.classList.remove('hidden'); dossier.classList.add('flex');
+    dossier?.classList.remove('hidden'); 
+    dossier?.classList.add('flex');
 
-    // Desbloquear pestañas de UI
-    document.getElementById('tab-biolab').classList.remove('pointer-events-none', 'opacity-50');
-    document.getElementById('tab-diet').classList.remove('pointer-events-none', 'opacity-50');
+    // Desbloquear pestañas a prueba de errores
+    const tabBiolab = document.getElementById('tab-biolab') || document.getElementById('d-tab-biolab');
+    const tabDiet = document.getElementById('tab-diet') || document.getElementById('d-tab-diet');
+    tabBiolab?.classList.remove('pointer-events-none', 'opacity-50');
+    tabDiet?.classList.remove('pointer-events-none', 'opacity-50');
 
     // 1. LLENAR IDENTIDAD Y HEADERS
-    document.getElementById('d-name').textContent = user.full_name || 'N/A';
-    document.getElementById('d-name').className = `text-3xl lg:text-4xl font-[900] uppercase tracking-tighter leading-none truncate w-full ${user.is_blocked ? 'text-red-500 line-through' : 'text-white'}`;
-    document.getElementById('d-email').textContent = user.email || 'N/A';
+    if(document.getElementById('d-name')) {
+        document.getElementById('d-name').textContent = user.full_name || 'N/A';
+        document.getElementById('d-name').className = `text-3xl lg:text-4xl font-[900] uppercase tracking-tighter leading-none truncate w-full ${user.is_blocked ? 'text-red-500 line-through' : 'text-white'}`;
+    }
+    if(document.getElementById('d-email')) document.getElementById('d-email').textContent = user.email || 'N/A';
     
     const statusEl = document.getElementById('d-status');
-    statusEl.textContent = user.is_blocked ? 'BLOQUEADO' : 'ACTIVO';
-    statusEl.className = `px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest ${user.is_blocked ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`;
+    if(statusEl) {
+        statusEl.textContent = user.is_blocked ? 'BLOQUEADO' : 'ACTIVO';
+        statusEl.className = `px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest ${user.is_blocked ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`;
+    }
     
     const tier = String(user.subscription_level || 'BASICO').toUpperCase();
     const tierEl = document.getElementById('d-tier');
-    tierEl.textContent = tier;
-    let tierColorClass = 'bg-gray-500/10 text-gray-400 border border-gray-500/20';
-    if(tier === 'PLUS') tierColorClass = 'bg-sky-500/10 text-sky-400 border border-sky-500/20';
-    if(tier === 'ULTRA') tierColorClass = 'bg-[#FFC300]/10 text-[#FFC300] border border-[#FFC300]/20';
-    tierEl.className = `px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest ${tierColorClass}`;
+    if(tierEl) {
+        tierEl.textContent = tier;
+        let tierColorClass = 'bg-gray-500/10 text-gray-400 border border-gray-500/20';
+        if(tier === 'PLUS') tierColorClass = 'bg-sky-500/10 text-sky-400 border border-sky-500/20';
+        if(tier === 'ULTRA') tierColorClass = 'bg-[#FFC300]/10 text-[#FFC300] border border-[#FFC300]/20';
+        tierEl.className = `px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest ${tierColorClass}`;
+    }
 
-    document.getElementById('f-id').value = user.id;
-    document.getElementById('f-is-edit').value = 'true';
-    document.getElementById('f-name').value = user.name || '';
-    document.getElementById('f-lastname').value = user.last_name || '';
+    if(document.getElementById('f-id')) document.getElementById('f-id').value = user.id;
+    if(document.getElementById('f-is-edit')) document.getElementById('f-is-edit').value = 'true';
+    if(document.getElementById('f-name')) document.getElementById('f-name').value = user.name || '';
+    if(document.getElementById('f-lastname')) document.getElementById('f-lastname').value = user.last_name || '';
     
     const emailEl = document.getElementById('f-email');
-    emailEl.value = user.email || ''; emailEl.disabled = true; 
+    if(emailEl) { emailEl.value = user.email || ''; emailEl.disabled = true; }
     
     const passEl = document.getElementById('f-password');
-    passEl.disabled = true; passEl.required = false; passEl.placeholder = "Cambio exclusivo vía OTP Clave";
+    if(passEl) { passEl.disabled = true; passEl.required = false; passEl.placeholder = "Cambio exclusivo vía OTP Clave"; }
     
-    document.getElementById('f-tier').value = tier;
-    document.getElementById('f-expires').value = user.subscription_expires_at ? String(user.subscription_expires_at).split('T')[0] : getDefaultExpirationDate();
-    document.getElementById('f-sex').value = user.sex || 'Otro';
-    if(user.dob) document.getElementById('f-dob').value = user.dob.split('/').reverse().join('-');
-    document.getElementById('f-phone-num').value = user.phone_number ? user.phone_number.split('-').pop() : '';
+    if(document.getElementById('f-tier')) document.getElementById('f-tier').value = tier;
+    if(document.getElementById('f-expires')) document.getElementById('f-expires').value = user.subscription_expires_at ? String(user.subscription_expires_at).split('T')[0] : getDefaultExpirationDate();
+    if(document.getElementById('f-sex')) document.getElementById('f-sex').value = user.sex || 'Otro';
+    if(user.dob && document.getElementById('f-dob')) document.getElementById('f-dob').value = user.dob.split('/').reverse().join('-');
+    
+    // Soporte para ambos modelos de teléfono en HTML
+    if (user.phone_number && user.phone_number.includes('-')) {
+        const [prefix, number] = user.phone_number.split('-');
+        if(document.getElementById('f-phone-pre')) document.getElementById('f-phone-pre').value = prefix || '0414';
+        if(document.getElementById('f-phone-num')) document.getElementById('f-phone-num').value = number || '';
+    } else {
+        if(document.getElementById('f-phone-num')) document.getElementById('f-phone-num').value = user.phone_number || '';
+    }
 
     const btnBlock = document.getElementById('btn-block');
-    btnBlock.textContent = user.is_blocked ? 'Desbloquear' : 'Bloquear';
-    btnBlock.className = `flex-1 md:flex-none px-4 py-2 rounded-lg border text-[9px] font-bold uppercase tracking-widest transition-colors ${user.is_blocked ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500 hover:text-black' : 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white'}`;
-    btnBlock.onclick = () => handleBlockUser(user.id, user.is_blocked);
+    if(btnBlock) {
+        btnBlock.textContent = user.is_blocked ? 'Desbloquear' : 'Bloquear';
+        btnBlock.className = `flex-1 md:flex-none px-4 py-2 rounded-lg border text-[9px] font-bold uppercase tracking-widest transition-colors ${user.is_blocked ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500 hover:text-black' : 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white'}`;
+        btnBlock.onclick = () => handleBlockUser(user.id, user.is_blocked);
+    }
 
-    document.getElementById('btn-certify').onclick = () => requestUserCertification(user.id, user.email);
+    if(document.getElementById('btn-certify')) document.getElementById('btn-certify').onclick = () => requestUserCertification(user.id, user.email);
 
     // 2. LLENAR BIOLAB
     try {
@@ -257,27 +282,22 @@ async function loadUserDossier(userId) {
         
         if (data.success) {
             const m = data.metrics || {};
-            document.getElementById('m-weight').value = m.weight || '';
-            document.getElementById('m-height').value = m.height || '';
-            document.getElementById('m-age').value = m.age || '--';
+            const setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val || ''; };
             
-            ['neck','back','thorax','abdomen','waist'].forEach(k => document.getElementById(`m-${k}`).value = m[k] || '');
-            ['bicep','forearm','femur','tibia'].forEach(k => {
-                document.getElementById(`m-${k}-l`).value = m[`${k}_left`] || '';
-                document.getElementById(`m-${k}-r`).value = m[`${k}_right`] || '';
-            });
-            ['push','pull','legs'].forEach(k => document.getElementById(`m-${k}`).value = m[`rm_${k}`] || '');
+            setVal('m-weight', m.weight); setVal('m-height', m.height); setVal('m-age', m.age || '--');
+            
+            ['neck','back','thorax','abdomen','waist'].forEach(k => setVal(`m-${k}`, m[k]));
+            ['bicep','forearm','femur','tibia'].forEach(k => { setVal(`m-${k}-l`, m[`${k}_left`]); setVal(`m-${k}-r`, m[`${k}_right`]); });
+            ['push','pull','legs'].forEach(k => setVal(`m-${k}`, m[`rm_${k}`]));
 
-            document.getElementById('m-allergies').value = m.allergies || '';
-            document.getElementById('m-diseases').value = m.chronic_diseases || '';
-            document.getElementById('m-medical-notes').value = m.medical_notes || '';
+            setVal('m-allergies', m.allergies); setVal('m-diseases', m.chronic_diseases); setVal('m-medical-notes', m.medical_notes);
 
             autoCalculateBiometrics();
 
             const g = data.goals || {};
-            document.getElementById('g-focus').value = g.focus || 'Masa Muscular';
+            setVal('g-focus', g.focus || 'Masa Muscular');
             
-            ['st','mt','lt'].forEach(t => document.getElementById(`${t}-goals-container`).innerHTML = '');
+            ['st','mt','lt'].forEach(t => { if(document.getElementById(`${t}-goals-container`)) document.getElementById(`${t}-goals-container`).innerHTML = ''; });
             const normalize = (val) => Array.isArray(val) ? val : (val && val.description ? [val] : []);
             
             normalize(g.short_term).forEach(goal => addGoalRow('st-goals-container', goal));
@@ -291,71 +311,77 @@ async function loadUserDossier(userId) {
     const dietEditor = document.getElementById('diet-editor');
 
     if (tier !== 'ULTRA') {
-        dietLocked.classList.remove('hidden'); dietEditor.classList.add('hidden');
+        dietLocked?.classList.remove('hidden'); dietEditor?.classList.add('hidden');
     } else {
-        dietLocked.classList.add('hidden'); dietEditor.classList.remove('hidden');
-        document.getElementById('d-title').value = ""; document.getElementById('d-text').value = "";
+        dietLocked?.classList.add('hidden'); dietEditor?.classList.remove('hidden');
+        if(document.getElementById('d-title')) document.getElementById('d-title').value = ""; 
+        if(document.getElementById('d-text')) document.getElementById('d-text').value = "";
 
         try {
             const resDiet = await fetch(`${API_BASE_URL}/api/admin/diet/${userId}`, { headers: getSecureHeaders() });
             const dataDiet = await resDiet.json();
             if (dataDiet.success && dataDiet.has_diet) {
-                document.getElementById('d-title').value = dataDiet.diet.title || "";
-                document.getElementById('d-text').value = dataDiet.diet.menu_text || "";
+                if(document.getElementById('d-title')) document.getElementById('d-title').value = dataDiet.diet.title || "";
+                if(document.getElementById('d-text')) document.getElementById('d-text').value = dataDiet.diet.menu_text || "";
             }
         } catch(e) { console.warn("Error leyendo dieta: ", e); }
     }
 
-    forceSwitchTab('d-content-identity');
+    window.switchDossierTab('identity');
 }
 
 function openCreateMode() {
     activeUserId = null;
-    const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+    const searchInput = document.getElementById('search-input');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
     renderUsersList(searchTerm ? allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(searchTerm)) : allUsersData);
 
-    document.getElementById('empty-state').classList.add('hidden');
+    document.getElementById('empty-state')?.classList.add('hidden');
     const dossier = document.getElementById('active-dossier');
-    dossier.classList.remove('hidden'); dossier.classList.add('flex');
+    dossier?.classList.remove('hidden'); dossier?.classList.add('flex');
 
-    document.getElementById('d-name').textContent = "Nuevo Atleta";
-    document.getElementById('d-name').className = "text-3xl lg:text-4xl font-[900] uppercase tracking-tighter text-[#FFC300] leading-none";
-    document.getElementById('d-email').textContent = "Llenar formulario inferior";
-    document.getElementById('d-status').className = "hidden";
-    document.getElementById('d-tier').className = "hidden";
-    document.getElementById('btn-block').className = "hidden";
-    document.getElementById('btn-certify').className = "hidden";
-    document.getElementById('btn-open-chat').className = "hidden";
+    if(document.getElementById('d-name')) {
+        document.getElementById('d-name').textContent = "Nuevo Atleta";
+        document.getElementById('d-name').className = "text-3xl lg:text-4xl font-[900] uppercase tracking-tighter text-[#FFC300] leading-none";
+    }
+    if(document.getElementById('d-email')) document.getElementById('d-email').textContent = "Llenar formulario inferior";
+    
+    if(document.getElementById('d-status')) document.getElementById('d-status').className = "hidden";
+    if(document.getElementById('d-tier')) document.getElementById('d-tier').className = "hidden";
+    if(document.getElementById('btn-block')) document.getElementById('btn-block').className = "hidden";
+    if(document.getElementById('btn-certify')) document.getElementById('btn-certify').className = "hidden";
+    if(document.getElementById('btn-open-chat')) document.getElementById('btn-open-chat').className = "hidden";
 
-    document.getElementById('user-form').reset();
-    document.getElementById('f-id').value = '';
-    document.getElementById('f-is-edit').value = 'false';
+    document.getElementById('user-form')?.reset();
+    if(document.getElementById('f-id')) document.getElementById('f-id').value = '';
+    if(document.getElementById('f-is-edit')) document.getElementById('f-is-edit').value = 'false';
 
     const emailEl = document.getElementById('f-email');
-    emailEl.disabled = false; emailEl.classList.replace('text-gray-400', 'text-white');
+    if(emailEl) { emailEl.disabled = false; emailEl.classList.replace('text-gray-400', 'text-white'); }
 
     const passEl = document.getElementById('f-password');
-    passEl.disabled = false; passEl.required = true; passEl.placeholder = "Mínimo 6 caracteres"; passEl.classList.replace('text-gray-500', 'text-white');
+    if(passEl) { passEl.disabled = false; passEl.required = true; passEl.placeholder = "Mínimo 6 caracteres"; passEl.classList.replace('text-gray-500', 'text-white'); }
 
-    document.getElementById('f-expires').value = getDefaultExpirationDate();
+    if(document.getElementById('f-expires')) document.getElementById('f-expires').value = getDefaultExpirationDate();
     
-    // Al ser nuevo, bloqueamos Biolab y Nutrición
-    document.getElementById('tab-biolab').classList.add('pointer-events-none', 'opacity-50');
-    document.getElementById('tab-diet').classList.add('pointer-events-none', 'opacity-50');
+    const tabBiolab = document.getElementById('tab-biolab') || document.getElementById('d-tab-biolab');
+    const tabDiet = document.getElementById('tab-diet') || document.getElementById('d-tab-diet');
+    tabBiolab?.classList.add('pointer-events-none', 'opacity-50');
+    tabDiet?.classList.add('pointer-events-none', 'opacity-50');
     
-    forceSwitchTab('d-content-identity');
+    window.switchDossierTab('identity');
 }
 
 // ==========================================
 // 🍎 GESTIÓN DE DIETAS
 // ==========================================
 async function saveDiet() {
-    const title = document.getElementById('d-title').value.trim();
-    const text = document.getElementById('d-text').value.trim();
+    const title = document.getElementById('d-title')?.value.trim();
+    const text = document.getElementById('d-text')?.value.trim();
     const btn = document.getElementById('btn-save-diet');
 
     if (!title || !text) { showUIFeedback("El título y el menú son obligatorios", "error"); return; }
-    btn.disabled = true; btn.textContent = 'Guardando...';
+    if(btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/diet/${activeUserId}`, {
@@ -366,7 +392,7 @@ async function saveDiet() {
         else showUIFeedback("Error al publicar", "error");
     } catch(e) { showUIFeedback("Falla de red.", "error"); }
     
-    btn.disabled = false; btn.textContent = 'Publicar en App';
+    if(btn) { btn.disabled = false; btn.textContent = 'Publicar en App'; }
 }
 
 async function deleteDiet() {
@@ -376,7 +402,8 @@ async function deleteDiet() {
         const data = await res.json();
         if (data.success) { 
             showUIFeedback("Plan nutricional revocado."); 
-            document.getElementById('d-title').value = ""; document.getElementById('d-text').value = "";
+            if(document.getElementById('d-title')) document.getElementById('d-title').value = ""; 
+            if(document.getElementById('d-text')) document.getElementById('d-text').value = "";
         }
     } catch(e) {}
 }
@@ -386,6 +413,7 @@ async function deleteDiet() {
 // ==========================================
 function addGoalRow(containerId, data = null) {
     const container = document.getElementById(containerId);
+    if(!container) return;
     const rowId = `goal-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     const metricOptions = MEASURABLE_METRICS.map(m => 
@@ -426,7 +454,6 @@ function addGoalRow(containerId, data = null) {
 
     container.appendChild(row);
 
-    // Eventos locales de la fila
     row.querySelector('.btn-remove-goal').addEventListener('click', () => row.remove());
     
     const selectEl = row.querySelector('.goal-metric-key');
@@ -520,6 +547,7 @@ async function forcePasswordReset() {
 
 function closeCertifyModal() { 
     const modal = document.getElementById('otp-modal'); const content = document.getElementById('otp-content');
+    if(!modal) return;
     modal.classList.add('opacity-0'); content.classList.add('scale-95');
     setTimeout(() => { modal.classList.remove('flex'); modal.classList.add('hidden'); }, 300);
     targetCertifyUserId = null; 
@@ -529,16 +557,14 @@ function closeCertifyModal() {
 // 🚀 INICIALIZACIÓN BLINDADA Y WIRING DE EVENTOS
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
-    // 1. Configurar Tabs
     setupTabs();
 
-    // 2. Conectar Botones a Funciones (Evitando Onclick Inline)
     document.getElementById('btn-create-user')?.addEventListener('click', openCreateMode);
     
     document.getElementById('btn-close-dossier')?.addEventListener('click', () => {
-        document.getElementById('active-dossier').classList.add('hidden');
-        document.getElementById('active-dossier').classList.remove('flex');
-        document.getElementById('empty-state').classList.remove('hidden');
+        document.getElementById('active-dossier')?.classList.add('hidden');
+        document.getElementById('active-dossier')?.classList.remove('flex');
+        document.getElementById('empty-state')?.classList.remove('hidden');
     });
 
     document.getElementById('btn-add-st')?.addEventListener('click', () => addGoalRow('st-goals-container'));
@@ -552,7 +578,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-force-reset')?.addEventListener('click', forcePasswordReset);
     document.getElementById('btn-close-otp')?.addEventListener('click', closeCertifyModal);
 
-    // 🔥 LA MAGIA OMNICANAL: Conectar este Iframe con el Pulse Center del Dashboard Padre
     document.getElementById('btn-open-chat')?.addEventListener('click', () => {
         if(!activeUserId) return;
         const userName = document.getElementById('d-name').textContent;
@@ -560,9 +585,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (window.parent && typeof window.parent.openThread === 'function') {
             window.parent.openThread(activeUserId, userName);
             const pulseWindow = window.parent.document.getElementById('pulse-window');
-            if (pulseWindow && !pulseWindow.classList.contains('open')) {
-                pulseWindow.classList.add('open');
-            }
+            if (pulseWindow && !pulseWindow.classList.contains('open')) pulseWindow.classList.add('open');
         } else {
             showUIFeedback("Módulo Pulse no detectado en el entorno padre.", "error");
         }
@@ -578,8 +601,9 @@ window.addEventListener('DOMContentLoaded', () => {
         const name = formatToUpperCase(document.getElementById('f-name').value);
         const lastName = formatToUpperCase(document.getElementById('f-lastname').value);
         
-        // Asumiendo prefijo venezolano por defecto para simplificar
-        const fullPhoneNumber = '0414-' + document.getElementById('f-phone-num').value.replace(/\D/g, '');
+        const preEl = document.getElementById('f-phone-pre');
+        const numEl = document.getElementById('f-phone-num');
+        const fullPhoneNumber = (preEl ? preEl.value + '-' : '0414-') + (numEl ? numEl.value.replace(/\D/g, '') : '');
 
         const payload = {
             name: name, last_name: lastName, full_name: `${name} ${lastName}`,
@@ -593,7 +617,7 @@ window.addEventListener('DOMContentLoaded', () => {
         
         if (isEdit) { delete payload.email; delete payload.password; }
 
-        btn.disabled = true; btn.textContent = "Guardando...";
+        if(btn) { btn.disabled = true; btn.textContent = "Guardando..."; }
         const url = isEdit ? `${API_BASE_URL}/api/admin/user/${userId}` : `${API_BASE_URL}/api/admin/user`;
         
         try {
@@ -609,7 +633,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 } else { loadUserDossier(userId); }
             } else { showUIFeedback(data.error || "Fallo en la base de datos.", "error"); }
         } catch (err) { showUIFeedback("Falla de conexión de red.", "error"); }
-        btn.disabled = false; btn.textContent = "Actualizar Expediente";
+        if(btn) { btn.disabled = false; btn.textContent = "Actualizar Expediente"; }
     });
 
     document.getElementById('metrics-form')?.addEventListener('submit', async (e) => {
@@ -632,13 +656,13 @@ window.addEventListener('DOMContentLoaded', () => {
             medical_notes: document.getElementById('m-medical-notes').value
         };
 
-        btn.disabled = true; btn.textContent = 'Guardando...';
+        if(btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
         try {
             const res = await fetch(`${API_BASE_URL}/api/admin/metrics/${activeUserId}`, { method: 'POST', headers: getSecureHeaders(), body: JSON.stringify(payload) });
             const data = await res.json();
             if(data.success) showUIFeedback("Telemetría corporal actualizada.");
         } catch (e) { showUIFeedback("Error de red.", "error"); }
-        btn.disabled = false; btn.textContent = 'Guardar Biometría';
+        if(btn) { btn.disabled = false; btn.textContent = 'Guardar Biometría'; }
     });
 
     document.getElementById('goals-form')?.addEventListener('submit', async (e) => {
@@ -653,29 +677,25 @@ window.addEventListener('DOMContentLoaded', () => {
             long_term: extractGoalsArray('lt-goals-container')
         };
 
-        btn.disabled = true; btn.textContent = 'Guardando...';
+        if(btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
         try {
             const res = await fetch(`${API_BASE_URL}/api/admin/goals/${activeUserId}`, { method: 'POST', headers: getSecureHeaders(), body: JSON.stringify(payload) });
             const data = await res.json();
             if(data.success) showUIFeedback("Matriz de objetivos guardada.");
         } catch (e) { showUIFeedback("Error de red.", "error"); }
-        btn.disabled = false; btn.textContent = 'Fijar Matriz Estratégica';
+        if(btn) { btn.disabled = false; btn.textContent = 'Fijar Matriz Estratégica'; }
     });
 
     // 4. Eventos de UI Menores
     const otpInput = document.getElementById('otp-input');
-    if (otpInput) {
-        otpInput.addEventListener('input', function() { 
-            this.value = this.value.replace(/\D/g, ''); 
-        });
-    }
+    if (otpInput) otpInput.addEventListener('input', function() { this.value = this.value.replace(/\D/g, ''); });
 
     document.getElementById('m-weight')?.addEventListener('input', autoCalculateBiometrics);
     document.getElementById('m-height')?.addEventListener('input', autoCalculateBiometrics);
     document.getElementById('f-sex')?.addEventListener('change', autoCalculateBiometrics);
     
     document.getElementById('f-dob')?.addEventListener('input', () => {
-        document.getElementById('m-age').value = ''; 
+        if(document.getElementById('m-age')) document.getElementById('m-age').value = ''; 
         autoCalculateBiometrics();
     });
 
