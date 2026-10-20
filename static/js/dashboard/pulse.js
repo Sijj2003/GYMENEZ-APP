@@ -85,44 +85,53 @@ function listenToChatStatus() {
     });
 }
 
+// 🔥 CORRECCIÓN: Reactividad Absoluta Visual
 function updateUIBasedOnStatus() {
-    if(!ui.overlay) return;
     const submitBtn = ui.chatForm?.querySelector('button');
 
     if (currentChatStatus === "inactivo" || currentChatStatus === "cerrado") {
-        ui.overlay.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
-        ui.inputArea.classList.add('hidden');
+        if (ui.overlay) {
+            ui.overlay.classList.remove('hidden');
+            setTimeout(() => ui.overlay.classList.remove('opacity-0', 'pointer-events-none'), 10);
+        }
+        if (ui.inputArea) ui.inputArea.classList.add('hidden');
         
-        ui.btnRequest.textContent = "Abrir Ticket Seguro";
-        ui.btnRequest.disabled = false;
-        ui.reqMsg.textContent = currentChatStatus === "cerrado" ? "Soporte finalizó el ticket." : "La línea está cerrada. Solicita un ticket.";
-        ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-gray-500 rounded-full"></span> Desconectado`;
+        if (ui.btnRequest) {
+            ui.btnRequest.textContent = "Abrir Ticket Seguro";
+            ui.btnRequest.disabled = false;
+        }
+        if (ui.reqMsg) ui.reqMsg.textContent = currentChatStatus === "cerrado" ? "Soporte finalizó el ticket." : "La línea está cerrada. Solicita un ticket.";
+        if (ui.statusText) ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-gray-500 rounded-full"></span> Desconectado`;
         
         if (ui.chatInput) ui.chatInput.disabled = true;
         if (submitBtn) submitBtn.disabled = true;
     } 
     else if (currentChatStatus === "espera") {
-        ui.overlay.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
-        ui.inputArea.classList.add('hidden');
+        if (ui.overlay) {
+            ui.overlay.classList.remove('hidden');
+            setTimeout(() => ui.overlay.classList.remove('opacity-0', 'pointer-events-none'), 10);
+        }
+        if (ui.inputArea) ui.inputArea.classList.add('hidden');
         
-        ui.btnRequest.textContent = "Ubicando Especialista...";
-        ui.btnRequest.disabled = true;
-        ui.reqMsg.textContent = "Ticket emitido. Mantén esta pantalla abierta.";
-        ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span> En Espera`;
+        if (ui.btnRequest) {
+            ui.btnRequest.textContent = "Ubicando Especialista...";
+            ui.btnRequest.disabled = true;
+        }
+        if (ui.reqMsg) ui.reqMsg.textContent = "Ticket emitido. Mantén esta pantalla abierta.";
+        if (ui.statusText) ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span> En Espera`;
         
         if (ui.chatInput) ui.chatInput.disabled = true;
         if (submitBtn) submitBtn.disabled = true;
     } 
     else if (currentChatStatus === "activo") {
-        ui.overlay.classList.add('hidden'); 
-        ui.inputArea.classList.remove('hidden'); 
-        
-        ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Conectado`;
-        
-        if (ui.chatInput && ui.chatInput.disabled) {
-            ui.chatInput.disabled = false;
-            // Eliminamos el ui.chatInput.focus() automático aquí para evitar los saltos de pantalla
+        if (ui.overlay) {
+            ui.overlay.classList.add('opacity-0', 'pointer-events-none'); 
+            setTimeout(() => { if (currentChatStatus === "activo") ui.overlay.classList.add('hidden'); }, 300);
         }
+        if (ui.inputArea) ui.inputArea.classList.remove('hidden'); 
+        if (ui.statusText) ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Conectado`;
+        
+        if (ui.chatInput) ui.chatInput.disabled = false;
         if (submitBtn) submitBtn.disabled = false;
         
         scrollToBottom();
@@ -148,10 +157,9 @@ ui.btnRequest?.addEventListener('click', async () => {
     } catch (e) { ui.btnRequest.textContent = "Error. Reintentar"; ui.btnRequest.disabled = false; }
 });
 
-// 🔥 CORRECCIÓN: Renderizado inteligente por deltas (DocChanges)
 function listenToMessages() {
     if(!ui.messagesArea) return;
-    ui.messagesArea.innerHTML = ''; // Limpiamos solo una vez al iniciar
+    ui.messagesArea.innerHTML = ''; 
 
     onSnapshot(query(collection(db, "pulse_threads", currentUserId, "messages"), orderBy("timestamp", "asc")), (snapshot) => {
         let hasNewMsg = false;
@@ -195,7 +203,6 @@ function listenToMessages() {
     });
 }
 
-// 🔥 CORRECCIÓN: Prevención de pérdida de foco al hacer submit
 ui.chatForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const texto = ui.chatInput.value.trim();
@@ -203,7 +210,7 @@ ui.chatForm?.addEventListener('submit', async (e) => {
 
     ui.chatInput.value = ''; 
     ui.chatInput.style.height = 'auto';
-    ui.chatInput.focus(); // Retenemos el teclado abierto manualmente tras vaciar la caja
+    ui.chatInput.focus();
 
     try {
         const session = JSON.parse(localStorage.getItem('userSession'));
@@ -224,7 +231,17 @@ ui.chatInput?.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ui.chatForm.dispatchEvent(new Event('submit')); }
 });
 
-function scrollToBottom() { setTimeout(() => { if(ui.messagesArea) ui.messagesArea.scrollTop = ui.messagesArea.scrollHeight; }, 50); }
+// 🔥 CORRECCIÓN: Scroll Inteligente (Adiós saltos a negro)
+function scrollToBottom() { 
+    if(!ui.messagesArea) return;
+    setTimeout(() => { 
+        // Solo aplica el scroll hacia abajo si los mensajes superan la altura de la caja visible
+        if (ui.messagesArea.scrollHeight > ui.messagesArea.clientHeight) {
+            ui.messagesArea.scrollTop = ui.messagesArea.scrollHeight; 
+        }
+    }, 50); 
+}
+
 function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
 
 window.addEventListener('DOMContentLoaded', async () => {
