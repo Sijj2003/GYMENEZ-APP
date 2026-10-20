@@ -85,28 +85,47 @@ function listenToChatStatus() {
     });
 }
 
+// 🔥 CORRECCIÓN: Actualización de Interfaz Draconiana y Absoluta
 function updateUIBasedOnStatus() {
     if(!ui.overlay) return;
+    const submitBtn = ui.chatForm?.querySelector('button');
+
     if (currentChatStatus === "inactivo" || currentChatStatus === "cerrado") {
-        ui.overlay.classList.remove('opacity-0', 'pointer-events-none');
-        ui.inputArea.classList.add('hidden');
+        ui.overlay.classList.remove('hidden', 'opacity-0', 'pointer-events-none'); // Forzar visualización de bloqueo
+        ui.inputArea.classList.add('hidden'); // Desaparecer teclado
+        
         ui.btnRequest.textContent = "Abrir Ticket Seguro";
         ui.btnRequest.disabled = false;
         ui.reqMsg.textContent = currentChatStatus === "cerrado" ? "Soporte finalizó el ticket." : "La línea está cerrada. Solicita un ticket.";
         ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-gray-500 rounded-full"></span> Desconectado`;
+        
+        if (ui.chatInput) ui.chatInput.disabled = true;
+        if (submitBtn) submitBtn.disabled = true;
     } 
     else if (currentChatStatus === "espera") {
-        ui.overlay.classList.remove('opacity-0', 'pointer-events-none');
+        ui.overlay.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
         ui.inputArea.classList.add('hidden');
+        
         ui.btnRequest.textContent = "Ubicando Especialista...";
         ui.btnRequest.disabled = true;
         ui.reqMsg.textContent = "Ticket emitido. Mantén esta pantalla abierta.";
         ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span> En Espera`;
+        
+        if (ui.chatInput) ui.chatInput.disabled = true;
+        if (submitBtn) submitBtn.disabled = true;
     } 
     else if (currentChatStatus === "activo") {
-        ui.overlay.classList.add('opacity-0', 'pointer-events-none');
-        ui.inputArea.classList.remove('hidden');
+        ui.overlay.classList.add('hidden'); // Destruir visualmente el bloqueo
+        ui.inputArea.classList.remove('hidden'); // Encender teclado
+        
         ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Conectado`;
+        
+        if (ui.chatInput) {
+            ui.chatInput.disabled = false;
+            ui.chatInput.focus();
+        }
+        if (submitBtn) submitBtn.disabled = false;
+        
         scrollToBottom();
     }
 }
@@ -141,11 +160,10 @@ function listenToMessages() {
             currentCount++;
             const msg = docSnap.data();
 
-            // 🔥 CORRECCIÓN: Filtro Estético para Mensajes del Sistema (Aperturas/Cierres)
             if (msg.sender_type === 'system') {
                 const sysHTML = `<p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center my-4 border-b border-white/5 pb-4">${escapeHTML(msg.text)}</p>`;
                 ui.messagesArea.insertAdjacentHTML('beforeend', sysHTML);
-                return; // Corta la ejecución aquí para este mensaje
+                return;
             }
 
             const isMe = msg.sender_type !== "admin";
