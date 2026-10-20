@@ -48,7 +48,6 @@ function getDefaultExpirationDate() {
     return d.toISOString().split('T')[0];
 }
 
-// Lógica de Pestañas compatible con todas las versiones de tu HTML
 window.switchDossierTab = function(tabName) {
     const tabs = ['identity', 'biolab', 'diet'];
     tabs.forEach(t => {
@@ -140,7 +139,6 @@ function renderUsersList(users) {
     });
 }
 
-// Búsqueda en tiempo real
 let searchTimeout;
 document.getElementById('search-input')?.addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
@@ -199,7 +197,6 @@ function autoCalculateBiometrics() {
 async function loadUserDossier(userId) {
     activeUserId = userId;
     
-    // Refrescar estado visual de la lista de forma segura
     const searchInput = document.getElementById('search-input');
     const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
     renderUsersList(searchTerm ? allUsersData.filter(u => (u.full_name || '').toLowerCase().includes(searchTerm)) : allUsersData);
@@ -212,7 +209,6 @@ async function loadUserDossier(userId) {
     dossier?.classList.remove('hidden'); 
     dossier?.classList.add('flex');
 
-    // Desbloquear pestañas a prueba de errores
     const tabBiolab = document.getElementById('tab-biolab') || document.getElementById('d-tab-biolab');
     const tabDiet = document.getElementById('tab-diet') || document.getElementById('d-tab-diet');
     tabBiolab?.classList.remove('pointer-events-none', 'opacity-50');
@@ -257,13 +253,9 @@ async function loadUserDossier(userId) {
     if(document.getElementById('f-sex')) document.getElementById('f-sex').value = user.sex || 'Otro';
     if(user.dob && document.getElementById('f-dob')) document.getElementById('f-dob').value = user.dob.split('/').reverse().join('-');
     
-    // Soporte para ambos modelos de teléfono en HTML
-    if (user.phone_number && user.phone_number.includes('-')) {
-        const [prefix, number] = user.phone_number.split('-');
-        if(document.getElementById('f-phone-pre')) document.getElementById('f-phone-pre').value = prefix || '0414';
-        if(document.getElementById('f-phone-num')) document.getElementById('f-phone-num').value = number || '';
-    } else {
-        if(document.getElementById('f-phone-num')) document.getElementById('f-phone-num').value = user.phone_number || '';
+    // 🔥 CORRECCIÓN DEL TELÉFONO: Carga directa y limpia
+    if(document.getElementById('f-phone-num')) {
+        document.getElementById('f-phone-num').value = user.phone_number || '';
     }
 
     const btnBlock = document.getElementById('btn-block');
@@ -513,29 +505,30 @@ async function requestUserCertification(userId, email) {
         const data = await response.json();
         if(data.success) {
             targetCertifyUserId = userId;
-            document.getElementById('otp-input').value = ''; document.getElementById('new-password-input').value = '';
-            document.getElementById('otp-step-1').classList.remove('hidden'); document.getElementById('otp-step-2').classList.add('hidden');
+            if(document.getElementById('otp-input')) document.getElementById('otp-input').value = ''; 
+            if(document.getElementById('new-password-input')) document.getElementById('new-password-input').value = '';
+            document.getElementById('otp-step-1')?.classList.remove('hidden'); document.getElementById('otp-step-2')?.classList.add('hidden');
             const modal = document.getElementById('otp-modal'); const content = document.getElementById('otp-content');
-            modal.classList.remove('hidden'); modal.classList.add('flex');
-            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
+            modal?.classList.remove('hidden'); modal?.classList.add('flex');
+            setTimeout(() => { modal?.classList.remove('opacity-0'); content?.classList.remove('scale-95'); }, 10);
         } else { showUIFeedback(data.error, 'error'); }
     } catch (e) { showUIFeedback("Falla de red.", 'error'); }
 }
 
 async function verifyUserCode() {
-    const code = document.getElementById('otp-input').value.trim();
+    const code = document.getElementById('otp-input')?.value.trim();
     if(code.length !== 6) { showUIFeedback("El código debe tener 6 dígitos.", "error"); return; }
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/user/${targetCertifyUserId}/verify-cert`, { method: 'POST', headers: getSecureHeaders(), body: JSON.stringify({ code: code }) });
         const data = await response.json();
         if(data.success) {
-            document.getElementById('otp-step-1').classList.add('hidden'); document.getElementById('otp-step-2').classList.remove('hidden');
+            document.getElementById('otp-step-1')?.classList.add('hidden'); document.getElementById('otp-step-2')?.classList.remove('hidden');
         } else { showUIFeedback("Código inválido o expirado.", 'error'); }
     } catch (e) { showUIFeedback("Error verificando.", 'error'); }
 }
 
 async function forcePasswordReset() {
-    const newPass = document.getElementById('new-password-input').value;
+    const newPass = document.getElementById('new-password-input')?.value;
     if(newPass.length < 6) { showUIFeedback("La contraseña debe tener mínimo 6 caracteres.", "error"); return; }
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/user/${targetCertifyUserId}/force-password`, { method: 'PUT', headers: getSecureHeaders(), body: JSON.stringify({ new_password: newPass }) });
@@ -548,7 +541,7 @@ async function forcePasswordReset() {
 function closeCertifyModal() { 
     const modal = document.getElementById('otp-modal'); const content = document.getElementById('otp-content');
     if(!modal) return;
-    modal.classList.add('opacity-0'); content.classList.add('scale-95');
+    modal.classList.add('opacity-0'); content?.classList.add('scale-95');
     setTimeout(() => { modal.classList.remove('flex'); modal.classList.add('hidden'); }, 300);
     targetCertifyUserId = null; 
 }
@@ -601,18 +594,18 @@ window.addEventListener('DOMContentLoaded', () => {
         const name = formatToUpperCase(document.getElementById('f-name').value);
         const lastName = formatToUpperCase(document.getElementById('f-lastname').value);
         
-        const preEl = document.getElementById('f-phone-pre');
+        // 🔥 CORRECCIÓN DEL TELÉFONO: Guardado limpio
         const numEl = document.getElementById('f-phone-num');
-        const fullPhoneNumber = (preEl ? preEl.value + '-' : '0414-') + (numEl ? numEl.value.replace(/\D/g, '') : '');
+        const fullPhoneNumber = numEl ? numEl.value.trim() : '';
 
         const payload = {
             name: name, last_name: lastName, full_name: `${name} ${lastName}`,
             email: document.getElementById('f-email').value, 
-            password: document.getElementById('f-password').value,
-            phone_number: fullPhoneNumber, sex: document.getElementById('f-sex').value, 
-            subscription_level: document.getElementById('f-tier').value,
-            subscription_expires_at: document.getElementById('f-expires').value,
-            dob: formatDateForBackend(document.getElementById('f-dob').value)
+            password: document.getElementById('f-password')?.value,
+            phone_number: fullPhoneNumber, sex: document.getElementById('f-sex')?.value, 
+            subscription_level: document.getElementById('f-tier')?.value,
+            subscription_expires_at: document.getElementById('f-expires')?.value,
+            dob: formatDateForBackend(document.getElementById('f-dob')?.value)
         };
         
         if (isEdit) { delete payload.email; delete payload.password; }
@@ -642,18 +635,18 @@ window.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('btn-submit-metrics');
         
         const payload = {
-            weight: document.getElementById('m-weight').value, height: document.getElementById('m-height').value,
-            fat_percent: document.getElementById('m-fat').value, muscle_percent: document.getElementById('m-muscle').value,
-            neck: document.getElementById('m-neck').value, back: document.getElementById('m-back').value,
-            thorax: document.getElementById('m-thorax').value, abdomen: document.getElementById('m-abdomen').value,
-            bicep_left: document.getElementById('m-bicep-l').value, bicep_right: document.getElementById('m-bicep-r').value,
-            forearm_left: document.getElementById('m-forearm-l').value, forearm_right: document.getElementById('m-forearm-r').value,
-            waist: document.getElementById('m-waist').value, femur_left: document.getElementById('m-femur-l').value,
-            femur_right: document.getElementById('m-femur-r').value, tibia_left: document.getElementById('m-tibia-l').value,
-            tibia_right: document.getElementById('m-tibia-r').value, rm_push: document.getElementById('m-push').value,
-            rm_pull: document.getElementById('m-pull').value, rm_legs: document.getElementById('m-legs').value,
-            allergies: document.getElementById('m-allergies').value, chronic_diseases: document.getElementById('m-diseases').value,
-            medical_notes: document.getElementById('m-medical-notes').value
+            weight: document.getElementById('m-weight')?.value, height: document.getElementById('m-height')?.value,
+            fat_percent: document.getElementById('m-fat')?.value, muscle_percent: document.getElementById('m-muscle')?.value,
+            neck: document.getElementById('m-neck')?.value, back: document.getElementById('m-back')?.value,
+            thorax: document.getElementById('m-thorax')?.value, abdomen: document.getElementById('m-abdomen')?.value,
+            bicep_left: document.getElementById('m-bicep-l')?.value, bicep_right: document.getElementById('m-bicep-r')?.value,
+            forearm_left: document.getElementById('m-forearm-l')?.value, forearm_right: document.getElementById('m-forearm-r')?.value,
+            waist: document.getElementById('m-waist')?.value, femur_left: document.getElementById('m-femur-l')?.value,
+            femur_right: document.getElementById('m-femur-r')?.value, tibia_left: document.getElementById('m-tibia-l')?.value,
+            tibia_right: document.getElementById('m-tibia-r')?.value, rm_push: document.getElementById('m-push')?.value,
+            rm_pull: document.getElementById('m-pull')?.value, rm_legs: document.getElementById('m-legs')?.value,
+            allergies: document.getElementById('m-allergies')?.value, chronic_diseases: document.getElementById('m-diseases')?.value,
+            medical_notes: document.getElementById('m-medical-notes')?.value
         };
 
         if(btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
@@ -671,7 +664,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('btn-submit-goals');
 
         const payload = {
-            focus: document.getElementById('g-focus').value,
+            focus: document.getElementById('g-focus')?.value,
             short_term: extractGoalsArray('st-goals-container'),
             medium_term: extractGoalsArray('mt-goals-container'),
             long_term: extractGoalsArray('lt-goals-container')
@@ -686,19 +679,6 @@ window.addEventListener('DOMContentLoaded', () => {
         if(btn) { btn.disabled = false; btn.textContent = 'Fijar Matriz Estratégica'; }
     });
 
-    // 4. Eventos de UI Menores
-    const otpInput = document.getElementById('otp-input');
-    if (otpInput) otpInput.addEventListener('input', function() { this.value = this.value.replace(/\D/g, ''); });
-
-    document.getElementById('m-weight')?.addEventListener('input', autoCalculateBiometrics);
-    document.getElementById('m-height')?.addEventListener('input', autoCalculateBiometrics);
-    document.getElementById('f-sex')?.addEventListener('change', autoCalculateBiometrics);
-    
-    document.getElementById('f-dob')?.addEventListener('input', () => {
-        if(document.getElementById('m-age')) document.getElementById('m-age').value = ''; 
-        autoCalculateBiometrics();
-    });
-
-    // 5. Arrancar Motor de Datos
+    // 4. Arrancar Motor de Datos
     fetchAllUsers();
 });
