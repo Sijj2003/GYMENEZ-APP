@@ -61,10 +61,9 @@
             flex-direction: column;
             align-items: flex-end;
             gap: 1rem;
-            pointer-events: none; /* Permite clickear el fondo */
+            pointer-events: none;
         }
         
-        /* Ajuste móvil para que la burbuja suba por encima del bottom bar */
         @media (max-width: 768px) {
             #pulse-widget-container {
                 bottom: calc(5rem + env(safe-area-inset-bottom));
@@ -101,7 +100,6 @@
             opacity: 1; transform: scale(1) translateY(0); pointer-events: auto;
         }
         
-        /* Adaptación de la ventana de chat para móviles */
         @media (max-width: 768px) {
             .pulse-window {
                 width: calc(100vw - 2rem);
@@ -136,7 +134,6 @@
             <div>
                 <p class="px-4 text-[9px] font-black text-gray-600 uppercase tracking-widest mb-3">Operaciones B2C</p>
                 <div class="space-y-1">
-                    <!-- Ahora usamos data-url para conectar con dashboard.js -->
                     <div class="sidebar-item os-nav-link active" data-url="/apps/admin/metrics.html">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                         Overview
@@ -184,10 +181,15 @@
                     <p class="text-[8px] text-[#FFC300] uppercase font-black tracking-widest">Master Admin</p>
                 </div>
             </div>
-            <!-- 🛡️ BOTÓN DE GESTOR DE DISPOSITIVOS -->
-            <button id="btn-devices" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-[#FFC300]/10 hover:border-[#FFC300]/30 border border-white/10 flex items-center justify-center text-gray-400 hover:text-[#FFC300] transition-all" title="Gestor de Dispositivos (Sesiones)">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-            </button>
+            <!-- 🛡️ CONTENEDOR DE BOTONES DE SEGURIDAD (Desktop) -->
+            <div class="flex items-center gap-1.5">
+                <button id="btn-devices" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-[#FFC300]/10 hover:border-[#FFC300]/30 border border-white/10 flex items-center justify-center text-gray-400 hover:text-[#FFC300] transition-all" title="Gestor de Dispositivos">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                </button>
+                <button id="btn-logout-desktop" class="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/20 flex items-center justify-center text-red-500 transition-all" title="Cerrar Sesión">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                </button>
+            </div>
         </div>
     </aside>
 
@@ -199,7 +201,7 @@
             <div class="logo-gradient font-[900] text-xl italic tracking-tighter leading-none cursor-default">
                 GERENCIA GYMENEZ
             </div>
-            <!-- Botón de logout / devices movil -->
+            <!-- Botón de logout móvil -->
             <button id="btn-logout" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
             </button>
@@ -280,8 +282,6 @@
         <!-- Burbuja Flotante (Botón Principal) -->
         <div class="pulse-bubble relative" onclick="togglePulseWidget()">
             <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-            <!-- Badge de Notificación Rojo -->
-            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-[#030305] shadow-lg">3</span>
         </div>
 
     </div>
@@ -304,8 +304,8 @@
             </div>
 
             <div class="mt-6 pt-4 border-t border-white/5 flex justify-between items-center">
-                <button id="btn-logout" class="text-[9px] font-black text-red-500 uppercase tracking-widest hover:text-red-400 transition-colors">Cerrar mi sesión actual</button>
-                <button onclick="closeDevicesModal()" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-[9px] font-black uppercase tracking-widest transition-colors">Cerrar</button>
+                <div></div>
+                <button onclick="closeDevicesModal()" class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-[9px] font-black uppercase tracking-widest transition-colors">Cerrar Ventana</button>
             </div>
         </div>
     </div>
