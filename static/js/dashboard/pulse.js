@@ -17,7 +17,7 @@ const db = getFirestore(app);
 
 let currentUserId = null;
 let currentChatStatus = "inactivo"; 
-let lastMessageCount = 0;
+let isChatInitialLoad = true;
 
 const ui = {
     overlay: document.getElementById('chat-request-overlay'),
@@ -85,14 +85,13 @@ function listenToChatStatus() {
     });
 }
 
-// 🔥 CORRECCIÓN: Actualización de Interfaz Draconiana y Absoluta
 function updateUIBasedOnStatus() {
     if(!ui.overlay) return;
     const submitBtn = ui.chatForm?.querySelector('button');
 
     if (currentChatStatus === "inactivo" || currentChatStatus === "cerrado") {
-        ui.overlay.classList.remove('hidden', 'opacity-0', 'pointer-events-none'); // Forzar visualización de bloqueo
-        ui.inputArea.classList.add('hidden'); // Desaparecer teclado
+        ui.overlay.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+        ui.inputArea.classList.add('hidden');
         
         ui.btnRequest.textContent = "Abrir Ticket Seguro";
         ui.btnRequest.disabled = false;
@@ -115,14 +114,14 @@ function updateUIBasedOnStatus() {
         if (submitBtn) submitBtn.disabled = true;
     } 
     else if (currentChatStatus === "activo") {
-        ui.overlay.classList.add('hidden'); // Destruir visualmente el bloqueo
-        ui.inputArea.classList.remove('hidden'); // Encender teclado
+        ui.overlay.classList.add('hidden'); 
+        ui.inputArea.classList.remove('hidden'); 
         
         ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Conectado`;
         
-        if (ui.chatInput) {
+        if (ui.chatInput && ui.chatInput.disabled) {
             ui.chatInput.disabled = false;
-            ui.chatInput.focus();
+            // Eliminamos el ui.chatInput.focus() automático aquí para evitar los saltos de pantalla
         }
         if (submitBtn) submitBtn.disabled = false;
         
@@ -149,55 +148,62 @@ ui.btnRequest?.addEventListener('click', async () => {
     } catch (e) { ui.btnRequest.textContent = "Error. Reintentar"; ui.btnRequest.disabled = false; }
 });
 
+// 🔥 CORRECCIÓN: Renderizado inteligente por deltas (DocChanges)
 function listenToMessages() {
+    if(!ui.messagesArea) return;
+    ui.messagesArea.innerHTML = ''; // Limpiamos solo una vez al iniciar
+
     onSnapshot(query(collection(db, "pulse_threads", currentUserId, "messages"), orderBy("timestamp", "asc")), (snapshot) => {
-        if(!ui.messagesArea) return;
-        const systemMsg = ui.messagesArea.children[0] ? ui.messagesArea.children[0].outerHTML : '';
-        ui.messagesArea.innerHTML = systemMsg;
-        let currentCount = 0;
+        let hasNewMsg = false;
 
-        snapshot.forEach((docSnap) => {
-            currentCount++;
-            const msg = docSnap.data();
+        snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") {
+                const msg = change.doc.data();
+                if (!isChatInitialLoad) hasNewMsg = true;
 
-            if (msg.sender_type === 'system') {
-                const sysHTML = `<p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center my-4 border-b border-white/5 pb-4">${escapeHTML(msg.text)}</p>`;
-                ui.messagesArea.insertAdjacentHTML('beforeend', sysHTML);
-                return;
+                if (msg.sender_type === 'system') {
+                    const sysHTML = `<p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center my-4 border-b border-white/5 pb-4">${escapeHTML(msg.text)}</p>`;
+                    ui.messagesArea.insertAdjacentHTML('beforeend', sysHTML);
+                    return;
+                }
+
+                const isMe = msg.sender_type !== "admin";
+                let timeString = msg.timestamp ? msg.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                const msgHTML = isMe ? `
+                    <div class="flex justify-end message-bubble">
+                        <div class="max-w-[75%] bg-[#FFC300] text-black px-4 py-2 rounded-[20px] rounded-br-[4px] shadow-sm relative">
+                            <p class="text-[14px] font-semibold whitespace-pre-wrap leading-tight">${escapeHTML(msg.text)}</p>
+                        </div>
+                    </div>
+                ` : `
+                    <div class="flex justify-start message-bubble">
+                        <div class="max-w-[75%] bg-[#1c1c1e] border border-white/10 text-gray-100 px-4 py-2 rounded-[20px] rounded-bl-[4px] shadow-sm">
+                            <p class="text-[14px] font-medium whitespace-pre-wrap leading-tight">${escapeHTML(msg.text)}</p>
+                            <span class="text-[8px] text-gray-500 block text-left mt-1 font-bold">${timeString}</span>
+                        </div>
+                    </div>
+                `;
+                ui.messagesArea.insertAdjacentHTML('beforeend', msgHTML);
             }
-
-            const isMe = msg.sender_type !== "admin";
-            let timeString = msg.timestamp ? msg.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-
-            const msgHTML = isMe ? `
-                <div class="flex justify-end message-bubble">
-                    <div class="max-w-[75%] bg-[#FFC300] text-black px-4 py-2 rounded-[20px] rounded-br-[4px] shadow-sm relative">
-                        <p class="text-[14px] font-semibold whitespace-pre-wrap leading-tight">${escapeHTML(msg.text)}</p>
-                    </div>
-                </div>
-            ` : `
-                <div class="flex justify-start message-bubble">
-                    <div class="max-w-[75%] bg-[#1c1c1e] border border-white/10 text-gray-100 px-4 py-2 rounded-[20px] rounded-bl-[4px] shadow-sm">
-                        <p class="text-[14px] font-medium whitespace-pre-wrap leading-tight">${escapeHTML(msg.text)}</p>
-                        <span class="text-[8px] text-gray-500 block text-left mt-1 font-bold">${timeString}</span>
-                    </div>
-                </div>
-            `;
-            ui.messagesArea.insertAdjacentHTML('beforeend', msgHTML);
         });
 
-        if (currentCount > lastMessageCount && lastMessageCount !== 0) { playUISound('receive'); }
-        lastMessageCount = currentCount;
-        scrollToBottom();
+        if (hasNewMsg) playUISound('receive');
+        if (isChatInitialLoad || hasNewMsg) scrollToBottom();
+        
+        isChatInitialLoad = false;
     });
 }
 
+// 🔥 CORRECCIÓN: Prevención de pérdida de foco al hacer submit
 ui.chatForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const texto = ui.chatInput.value.trim();
     if (!texto || !currentUserId || currentChatStatus !== "activo") return;
 
-    ui.chatInput.value = ''; ui.chatInput.style.height = 'auto';
+    ui.chatInput.value = ''; 
+    ui.chatInput.style.height = 'auto';
+    ui.chatInput.focus(); // Retenemos el teclado abierto manualmente tras vaciar la caja
 
     try {
         const session = JSON.parse(localStorage.getItem('userSession'));
