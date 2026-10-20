@@ -1,17 +1,14 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, collection, query, orderBy, addDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, doc, onSnapshot, collection, query, orderBy, addDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC7ESvLhYTydAn_ZjHVSkebTC-BhvnbzIw",
-  authDomain: "gymenezapp.firebaseapp.com",
-  projectId: "gymenezapp",
-  storageBucket: "gymenezapp.firebasestorage.app",
-  messagingSenderId: "257686887231",
-  appId: "1:257686887231:web:ca6c5ccabe33a1625b918a"
+    apiKey: "AIzaSyC7ESvLhYTydAn_ZjHVSkebTC-BhvnbzIw",
+    authDomain: "gymenezapp.firebaseapp.com",
+    projectId: "gymenezapp"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -33,7 +30,7 @@ const ui = {
     chatInput: document.getElementById('chat-input')
 };
 
-// 🎵 SINTETIZADOR DE AUDIO (Bloop suave)
+// 🎵 SINTETIZADOR DE AUDIO
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContext();
 
@@ -41,24 +38,15 @@ function playUISound(type) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
+    osc.connect(gainNode); gainNode.connect(audioCtx.destination);
     
-    if (type === 'send') { // Pop agudo
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.05);
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.01);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+    if (type === 'send') { 
+        osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.05);
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.01); gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
         osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.05);
-    } else if (type === 'receive') { // Ding suave
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(500, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.15);
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+    } else if (type === 'receive') { 
+        osc.type = 'sine'; osc.frequency.setValueAtTime(500, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.15);
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime); gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02); gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
         osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.2);
     }
 }
@@ -68,7 +56,8 @@ async function authenticateWithFirebase() {
     const sessionStr = localStorage.getItem('userSession');
     if (!token || !sessionStr) { window.location.href = '/apps/start/login.html'; return false; }
 
-    currentUserId = JSON.parse(sessionStr).id || JSON.parse(sessionStr)._id;
+    const sessionData = JSON.parse(sessionStr);
+    currentUserId = sessionData.id || sessionData._id;
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/pulse/token`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -81,25 +70,37 @@ async function authenticateWithFirebase() {
 }
 
 function listenToChatStatus() {
-    onSnapshot(doc(db, "chats", currentUserId), (docSnap) => {
-        currentChatStatus = docSnap.exists() ? docSnap.data().estado : "inactivo";
+    // 🔥 OMNICANAL: Escuchamos pulse_threads
+    onSnapshot(doc(db, "pulse_threads", currentUserId), (docSnap) => {
+        if(docSnap.exists()) {
+            const data = docSnap.data();
+            currentChatStatus = data.status || "inactivo";
+            
+            // Si el chat está abierto, limpiamos la bandera de mensajes no leídos del cliente
+            if (currentChatStatus === "activo" && data.unread_client > 0) {
+                setDoc(doc(db, "pulse_threads", currentUserId), { unread_client: 0 }, { merge: true });
+            }
+        } else {
+            currentChatStatus = "inactivo";
+        }
         updateUIBasedOnStatus();
     });
 }
 
 function updateUIBasedOnStatus() {
+    if(!ui.overlay) return;
     if (currentChatStatus === "inactivo" || currentChatStatus === "cerrado") {
         ui.overlay.classList.remove('opacity-0', 'pointer-events-none');
         ui.inputArea.classList.add('hidden');
         ui.btnRequest.textContent = "Abrir Ticket Seguro";
         ui.btnRequest.disabled = false;
-        ui.reqMsg.textContent = currentChatStatus === "cerrado" ? "Tu preparador ha cerrado el ticket de asistencia." : "La línea está cerrada. Solicita un ticket para abrir comunicación.";
+        ui.reqMsg.textContent = currentChatStatus === "cerrado" ? "Soporte finalizó el ticket." : "La línea está cerrada. Solicita un ticket.";
         ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-gray-500 rounded-full"></span> Desconectado`;
     } 
     else if (currentChatStatus === "espera") {
         ui.overlay.classList.remove('opacity-0', 'pointer-events-none');
         ui.inputArea.classList.add('hidden');
-        ui.btnRequest.textContent = "Ubicando Preparador...";
+        ui.btnRequest.textContent = "Ubicando Especialista...";
         ui.btnRequest.disabled = true;
         ui.reqMsg.textContent = "Ticket emitido. Mantén esta pantalla abierta.";
         ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span> En Espera`;
@@ -112,43 +113,50 @@ function updateUIBasedOnStatus() {
     }
 }
 
-ui.btnRequest.addEventListener('click', async () => {
+ui.btnRequest?.addEventListener('click', async () => {
     if (!currentUserId) return;
     ui.btnRequest.textContent = "Procesando..."; ui.btnRequest.disabled = true;
     try {
         const session = JSON.parse(localStorage.getItem('userSession'));
-        await setDoc(doc(db, "chats", currentUserId), {
-            estado: "espera", actualizado: serverTimestamp(),
-            atleta_nombre: `${session.name || ''} ${session.last_name || ''}`.trim(),
-            ultimo_mensaje: "🔴 Ticket abierto."
+        // 🔥 OMNICANAL: Estructura estándar global
+        await setDoc(doc(db, "pulse_threads", currentUserId), {
+            participant_id: currentUserId,
+            participant_name: `${session.name || ''} ${session.last_name || ''}`.trim() || 'Usuario',
+            participant_role: session.role || 'athlete', // Se adapta si es partner
+            status: "espera", 
+            updated_at: serverTimestamp(),
+            last_message: "🔴 Ticket abierto.",
+            unread_admin: 1,
+            unread_client: 0
         }, { merge: true });
         playUISound('send');
     } catch (e) { ui.btnRequest.textContent = "Error. Reintentar"; ui.btnRequest.disabled = false; }
 });
 
 function listenToMessages() {
-    onSnapshot(query(collection(db, "chats", currentUserId, "mensajes"), orderBy("fecha", "asc")), (snapshot) => {
-        const systemMsg = Array.from(ui.messagesArea.children)[0].outerHTML;
+    // 🔥 OMNICANAL: Subcolección messages, ordenado por timestamp
+    onSnapshot(query(collection(db, "pulse_threads", currentUserId, "messages"), orderBy("timestamp", "asc")), (snapshot) => {
+        if(!ui.messagesArea) return;
+        const systemMsg = ui.messagesArea.children[0] ? ui.messagesArea.children[0].outerHTML : '';
         ui.messagesArea.innerHTML = systemMsg;
         let currentCount = 0;
 
-        snapshot.forEach((doc) => {
+        snapshot.forEach((docSnap) => {
             currentCount++;
-            const msg = doc.data();
-            const isMe = msg.remitente === "atleta";
-            let timeString = msg.fecha ? msg.fecha.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            const msg = docSnap.data();
+            const isMe = msg.sender_type !== "admin";
+            let timeString = msg.timestamp ? msg.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-            // 🔥 Burbujas estilo iMessage
             const msgHTML = isMe ? `
                 <div class="flex justify-end message-bubble">
                     <div class="max-w-[75%] bg-[#FFC300] text-black px-4 py-2 rounded-[20px] rounded-br-[4px] shadow-sm relative">
-                        <p class="text-[14px] font-semibold whitespace-pre-wrap leading-tight">${escapeHTML(msg.texto)}</p>
+                        <p class="text-[14px] font-semibold whitespace-pre-wrap leading-tight">${escapeHTML(msg.text)}</p>
                     </div>
                 </div>
             ` : `
                 <div class="flex justify-start message-bubble">
                     <div class="max-w-[75%] bg-[#1c1c1e] border border-white/10 text-gray-100 px-4 py-2 rounded-[20px] rounded-bl-[4px] shadow-sm">
-                        <p class="text-[14px] font-medium whitespace-pre-wrap leading-tight">${escapeHTML(msg.texto)}</p>
+                        <p class="text-[14px] font-medium whitespace-pre-wrap leading-tight">${escapeHTML(msg.text)}</p>
                         <span class="text-[8px] text-gray-500 block text-left mt-1 font-bold">${timeString}</span>
                     </div>
                 </div>
@@ -156,13 +164,13 @@ function listenToMessages() {
             ui.messagesArea.insertAdjacentHTML('beforeend', msgHTML);
         });
 
-        if (currentCount > lastMessageCount) { playUISound('receive'); }
+        if (currentCount > lastMessageCount && lastMessageCount !== 0) { playUISound('receive'); }
         lastMessageCount = currentCount;
         scrollToBottom();
     });
 }
 
-ui.chatForm.addEventListener('submit', async (e) => {
+ui.chatForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const texto = ui.chatInput.value.trim();
     if (!texto || !currentUserId || currentChatStatus !== "activo") return;
@@ -170,22 +178,25 @@ ui.chatForm.addEventListener('submit', async (e) => {
     ui.chatInput.value = ''; ui.chatInput.style.height = 'auto';
 
     try {
-        await addDoc(collection(db, "chats", currentUserId, "mensajes"), {
-            texto: texto, remitente: "atleta", fecha: serverTimestamp()
+        const session = JSON.parse(localStorage.getItem('userSession'));
+        const role = session.role || 'athlete';
+        
+        await addDoc(collection(db, "pulse_threads", currentUserId, "messages"), {
+            text: texto, sender_type: role, timestamp: serverTimestamp()
         });
-        await setDoc(doc(db, "chats", currentUserId), {
-            ultimo_mensaje: texto, actualizado: serverTimestamp(), unread_admin: true
+        await setDoc(doc(db, "pulse_threads", currentUserId), {
+            last_message: texto, updated_at: serverTimestamp(), unread_admin: 1
         }, { merge: true });
         
-        playUISound('send'); // 🎵 Sonido de envío de iMessage
+        playUISound('send'); 
     } catch (e) { }
 });
 
-ui.chatInput.addEventListener('keydown', function(e) {
+ui.chatInput?.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ui.chatForm.dispatchEvent(new Event('submit')); }
 });
 
-function scrollToBottom() { setTimeout(() => { ui.messagesArea.scrollTop = ui.messagesArea.scrollHeight; }, 50); }
+function scrollToBottom() { setTimeout(() => { if(ui.messagesArea) ui.messagesArea.scrollTop = ui.messagesArea.scrollHeight; }, 50); }
 function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
 
 window.addEventListener('DOMContentLoaded', async () => {
