@@ -8,10 +8,32 @@ const ADMIN_TOKEN_KEY = 'gymen_admin_token';
 // Variable global para persistir el email entre pasos del login
 let loginEmailTemp = "";
 
+// ====================================================================
+// 🛡️ NÚCLEO ZERO-TRUST: DECODIFICACIÓN Y VALIDACIÓN EN CLIENTE
+// ====================================================================
+function parseAdminJwt(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        return JSON.parse(decodeURIComponent(atob(base64Url.replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+    } catch (e) { return null; }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('loaded');
-    if (localStorage.getItem('adminSession') && localStorage.getItem(ADMIN_TOKEN_KEY)) {
-        window.location.href = '/apps/admin/dashboard.html';
+    const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+    
+    if (token) {
+        const decoded = parseAdminJwt(token);
+        const isExpired = decoded && (decoded.exp * 1000 < Date.now());
+        const isSuperAdmin = decoded && (decoded.role === 'superadmin' || decoded.role === 'admin');
+        
+        if (decoded && !isExpired && isSuperAdmin) {
+            window.location.href = '/apps/admin/dashboard.html';
+        } else {
+            // Si el token es basura, de un Partner, o ya caducó, lo destruimos silenciosamente
+            localStorage.removeItem('adminSession');
+            localStorage.removeItem(ADMIN_TOKEN_KEY);
+        }
     }
 });
 
@@ -25,7 +47,9 @@ function showUIFeedback(message, type = 'error') {
     setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 4000);
 }
 
-// 1. PRIMER PASO: Validar Credenciales
+// ====================================================================
+// 1. PRIMER PASO: Validar Credenciales (Fase 1)
+// ====================================================================
 document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('login-btn');
@@ -65,7 +89,9 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
     }
 });
 
-// 2. SEGUNDO PASO: Verificar Código 2FA con Auto-Cierre
+// ====================================================================
+// 2. SEGUNDO PASO: Verificar Código 2FA con Auto-Cierre (Fase 2)
+// ====================================================================
 document.getElementById('btn-verify-2fa').addEventListener('click', async () => {
     const otpInput = document.getElementById('otp-input');
     const otpCode = otpInput.value.trim();
@@ -112,7 +138,9 @@ document.getElementById('btn-verify-2fa').addEventListener('click', async () => 
     }
 });
 
-// 3. BOTÓN DE CIERRE (X)
+// ====================================================================
+// 3. BOTÓN DE CIERRE (X) Y SANITIZACIÓN
+// ====================================================================
 document.getElementById('btn-close-2fa').addEventListener('click', () => {
     document.getElementById('2fa-modal').classList.add('hidden');
     document.getElementById('otp-input').value = '';
