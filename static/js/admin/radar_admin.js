@@ -64,23 +64,31 @@ function injectAdminIOSContainer() {
     }
 }
 
-function showAdminIOSNotification(userId, userName, text, isTicket = false) {
+function showAdminIOSNotification(threadId, userName, text, role = 'athlete', isTicket = false) {
     injectAdminIOSContainer();
     const container = document.getElementById('ios-admin-notifications');
 
     const toast = document.createElement('div');
-    const accentColor = isTicket ? 'text-amber-400' : 'text-sky-400';
-    const bgAccent = isTicket ? 'bg-amber-500' : 'bg-sky-500';
-    const titleText = isTicket ? 'Solicitud de Soporte' : 'Nuevo Mensaje';
+    
+    // Distintivo visual para Partners B2B vs Atletas B2C
+    const isPartner = role === 'partner';
+    const accentColor = isPartner ? 'text-[#FFC300]' : (isTicket ? 'text-amber-400' : 'text-sky-400');
+    const bgAccent = isPartner ? 'bg-[#FFC300]' : (isTicket ? 'bg-amber-500' : 'bg-sky-500');
+    let titleText = isTicket ? 'Solicitud de Soporte' : 'Nuevo Mensaje';
+    if (isPartner) titleText = 'Soporte Comercial (B2B)';
 
     toast.className = `pointer-events-auto bg-[#1c1c1e]/90 backdrop-blur-2xl border border-white/10 rounded-[20px] p-4 shadow-2xl flex items-start gap-3 transform translate-x-12 opacity-0 transition-all duration-400 ease-out cursor-pointer hover:bg-[#2c2c2e]/90`;
     
-    // Al hacer clic, redirigimos el foco y eliminamos la notificación
+    // Al hacer clic, abre el chat en el Pulse Widget
     toast.onclick = () => {
-        localStorage.setItem('gymen_pending_open_id', userId);
-        localStorage.setItem('gymen_pending_open_name', userName);
-        const pulseNavBtn = document.querySelector('button[data-url*="pulse.html"]');
-        if(pulseNavBtn) pulseNavBtn.click();
+        // En lugar de ir a otra página, abrimos el widget que ya creamos en dashboard.html
+        if (typeof window.openThread === 'function') {
+            window.openThread(threadId, userName);
+            const widgetWindow = document.getElementById('pulse-window');
+            if (widgetWindow && !widgetWindow.classList.contains('open')) {
+                widgetWindow.classList.add('open');
+            }
+        }
         toast.remove();
     };
 
@@ -116,7 +124,7 @@ function showAdminIOSNotification(userId, userName, text, isTicket = false) {
 }
 
 // ==========================================
-// 📡 CEREBRO LÓGICO DEL RADAR (FILTROS DE GRADO MILITAR)
+// 📡 CEREBRO LÓGICO DEL RADAR OMNICANAL
 // ==========================================
 async function activateAdminRadar() {
     const token = localStorage.getItem('gymen_admin_token');
@@ -129,58 +137,62 @@ async function activateAdminRadar() {
         if (res.ok && data.success) {
             await signInWithCustomToken(auth, data.firebase_token);
             
-            onSnapshot(collection(db, "chats"), (snapshot) => {
+            // 🔥 CAMBIO CLAVE: Ahora escuchamos pulse_threads (Omnicanal)
+            onSnapshot(collection(db, "pulse_threads"), (snapshot) => {
                 
                 if (isInitialLoad) { 
                     isInitialLoad = false; 
                     snapshot.forEach(doc => {
-                        const chat = doc.data();
-                        lastNotifiedTimestamps[doc.id] = chat.actualizado ? chat.actualizado.toMillis() : 0;
+                        const thread = doc.data();
+                        lastNotifiedTimestamps[doc.id] = thread.updated_at ? thread.updated_at.toMillis() : 0;
                     });
                     return; 
                 }
 
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "modified" || change.type === "added") {
-                        const chat = change.doc.data();
-                        const userId = change.doc.id;
+                        const thread = change.doc.data();
+                        const threadId = change.doc.id;
                         
-                        const currentMsgTime = chat.actualizado ? chat.actualizado.toMillis() : 0;
-                        const savedTime = lastNotifiedTimestamps[userId] || 0;
+                        const currentMsgTime = thread.updated_at ? thread.updated_at.toMillis() : 0;
+                        const savedTime = lastNotifiedTimestamps[threadId] || 0;
 
                         // 🔒 CANDADO 1: Freno de Duplicados
                         if (currentMsgTime <= savedTime) return; 
 
-                        // 🔒 CANDADO 2: Freno de Auto-Notificación (Ignorar los mensajes enviados por ti)
-                        const ultimoMsj = chat.ultimo_mensaje || "";
-                        if (ultimoMsj.startsWith("Tú: ")) {
-                            lastNotifiedTimestamps[userId] = currentMsgTime; // Lo marcamos como leído en RAM
-                            return; // Destruimos el proceso aquí, NO SUENA.
+                        // 🔒 CANDADO 2: Freno de Auto-Notificación
+                        const ultimoMsj = thread.last_message || "";
+                        // Si fuiste tú quien respondió, no suenes.
+                        if (thread.unread_admin === 0) {
+                            lastNotifiedTimestamps[threadId] = currentMsgTime;
+                            return; 
                         }
 
                         // 🔒 CANDADO 3: Freno de Contexto (Búnker)
-                        // Preguntamos al disco duro del navegador si estás actualmente con ESTE atleta.
-                        const chatAbiertoEnPantalla = localStorage.getItem('gymen_admin_active_chat_id');
-                        if (chatAbiertoEnPantalla === userId) {
-                            lastNotifiedTimestamps[userId] = currentMsgTime; // Lo marcamos como leído en RAM
-                            return; // Destruimos el proceso aquí, NO SUENA.
+                        // Preguntamos al Pulse Widget si este chat está abierto ahorita
+                        const pulseChatWindow = document.getElementById('pulse-chat-view');
+                        const isPulseOpen = pulseChatWindow && !pulseChatWindow.classList.contains('hidden');
+                        
+                        // NOTA: 'currentActiveThreadId' es una variable global en tu dashboard.html (Pulse Widget)
+                        if (isPulseOpen && window.currentActiveThreadId === threadId) {
+                            lastNotifiedTimestamps[threadId] = currentMsgTime; 
+                            return; 
                         }
 
-                        // Si pasó los 3 candados, es un mensaje de un cliente que NO estás viendo. ¡Notificar!
-                        const isTicketWaiting = chat.estado === 'espera';
-                        const isNewMessage = chat.unread_admin === true;
-
-                        if (isNewMessage || isTicketWaiting) {
-                            lastNotifiedTimestamps[userId] = currentMsgTime; // Sellar para no repetir
-                            const text = ultimoMsj.replace("Tú: ", "").trim();
-                            showAdminIOSNotification(userId, chat.atleta_nombre || 'Atleta', text, isTicketWaiting);
-                        }
+                        // Si pasó los 3 candados, ¡Notificar!
+                        const isTicketWaiting = thread.status === 'espera';
+                        
+                        lastNotifiedTimestamps[threadId] = currentMsgTime;
+                        const userName = thread.participant_name || 'Usuario';
+                        const role = thread.participant_role || 'athlete';
+                        
+                        showAdminIOSNotification(threadId, userName, ultimoMsj, role, isTicketWaiting);
                     }
                 });
             });
         }
     } catch (e) {
-        console.warn("Radar Global inactivo.");
+        console.warn("Radar Global inactivo.", e);
     }
 }
 
