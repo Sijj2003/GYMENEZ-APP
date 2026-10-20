@@ -85,16 +85,16 @@ function listenToChatStatus() {
     });
 }
 
-// 🔥 CORRECCIÓN: Reactividad Absoluta Visual
+// 🔥 CORRECCIÓN 1: Reactividad Forzada Inyectando CSS Directo
 function updateUIBasedOnStatus() {
     const submitBtn = ui.chatForm?.querySelector('button');
 
     if (currentChatStatus === "inactivo" || currentChatStatus === "cerrado") {
         if (ui.overlay) {
-            ui.overlay.classList.remove('hidden');
-            setTimeout(() => ui.overlay.classList.remove('opacity-0', 'pointer-events-none'), 10);
+            ui.overlay.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+            ui.overlay.style.display = 'flex'; // Forzar visibilidad
         }
-        if (ui.inputArea) ui.inputArea.classList.add('hidden');
+        if (ui.inputArea) ui.inputArea.style.display = 'none'; // Destruir el área de texto
         
         if (ui.btnRequest) {
             ui.btnRequest.textContent = "Abrir Ticket Seguro";
@@ -108,10 +108,10 @@ function updateUIBasedOnStatus() {
     } 
     else if (currentChatStatus === "espera") {
         if (ui.overlay) {
-            ui.overlay.classList.remove('hidden');
-            setTimeout(() => ui.overlay.classList.remove('opacity-0', 'pointer-events-none'), 10);
+            ui.overlay.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+            ui.overlay.style.display = 'flex';
         }
-        if (ui.inputArea) ui.inputArea.classList.add('hidden');
+        if (ui.inputArea) ui.inputArea.style.display = 'none';
         
         if (ui.btnRequest) {
             ui.btnRequest.textContent = "Ubicando Especialista...";
@@ -124,11 +124,11 @@ function updateUIBasedOnStatus() {
         if (submitBtn) submitBtn.disabled = true;
     } 
     else if (currentChatStatus === "activo") {
-        if (ui.overlay) {
-            ui.overlay.classList.add('opacity-0', 'pointer-events-none'); 
-            setTimeout(() => { if (currentChatStatus === "activo") ui.overlay.classList.add('hidden'); }, 300);
+        if (ui.overlay) ui.overlay.style.display = 'none'; // Desaparece inmediatamente
+        if (ui.inputArea) {
+            ui.inputArea.classList.remove('hidden');
+            ui.inputArea.style.display = 'block'; // Activar el área de texto
         }
-        if (ui.inputArea) ui.inputArea.classList.remove('hidden'); 
         if (ui.statusText) ui.statusText.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Conectado`;
         
         if (ui.chatInput) ui.chatInput.disabled = false;
@@ -210,7 +210,6 @@ ui.chatForm?.addEventListener('submit', async (e) => {
 
     ui.chatInput.value = ''; 
     ui.chatInput.style.height = 'auto';
-    ui.chatInput.focus();
 
     try {
         const session = JSON.parse(localStorage.getItem('userSession'));
@@ -231,15 +230,25 @@ ui.chatInput?.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ui.chatForm.dispatchEvent(new Event('submit')); }
 });
 
-// 🔥 CORRECCIÓN: Scroll Inteligente (Adiós saltos a negro)
+// 🔥 CORRECCIÓN 2: Escuchadores de Teclado y Scroll Agresivo
+ui.chatInput?.addEventListener('focus', () => setTimeout(scrollToBottom, 300));
+ui.chatInput?.addEventListener('click', () => setTimeout(scrollToBottom, 300));
+
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+        if (currentChatStatus === 'activo') scrollToBottom();
+    });
+}
+
 function scrollToBottom() { 
     if(!ui.messagesArea) return;
-    setTimeout(() => { 
-        // Solo aplica el scroll hacia abajo si los mensajes superan la altura de la caja visible
-        if (ui.messagesArea.scrollHeight > ui.messagesArea.clientHeight) {
-            ui.messagesArea.scrollTop = ui.messagesArea.scrollHeight; 
-        }
-    }, 50); 
+    requestAnimationFrame(() => {
+        ui.messagesArea.scrollTop = ui.messagesArea.scrollHeight; 
+        
+        // Esta línea es la clave: obliga al teléfono a encuadrar visualmente el último mensaje
+        const lastMsg = ui.messagesArea.lastElementChild;
+        if(lastMsg) lastMsg.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    });
 }
 
 function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
