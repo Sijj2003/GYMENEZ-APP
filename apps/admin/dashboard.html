@@ -244,11 +244,19 @@
             </div>
 
             <div id="pulse-chat-view" class="hidden flex-1 flex-col overflow-hidden bg-[#050505]">
+                
+                <!-- 🛠️ BOTONES DE CONTROL DE TICKET -->
+                <div id="pulse-chat-actions" class="px-3 py-2 border-b border-white/5 bg-[#0a0a0f] flex gap-2 shrink-0 hidden">
+                    <button id="btn-pulse-accept" class="hidden flex-1 py-2 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500 hover:text-black text-[9px] font-bold uppercase tracking-widest transition-colors shadow-sm">Atender Ticket</button>
+                    <button id="btn-pulse-close" class="hidden flex-1 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white text-[9px] font-bold uppercase tracking-widest transition-colors shadow-sm">Cerrar Ticket</button>
+                </div>
+
                 <div id="pulse-messages" class="flex-1 overflow-y-auto p-4 hide-scroll space-y-4"></div>
+                
                 <div class="p-3 bg-[#0A0A0F] border-t border-white/5">
                     <form id="pulse-form" class="relative">
                         <input type="text" class="chat-input w-full py-3 pl-4 pr-12 text-xs" placeholder="Responder al ticket..." disabled>
-                        <button type="button" class="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white text-black rounded-lg flex items-center justify-center">
+                        <button type="button" class="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white text-black rounded-lg flex items-center justify-center disabled:opacity-50">
                             <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
                         </button>
                     </form>
@@ -291,6 +299,6 @@
     </script>
     <script src="/static/js/admin/admin_middleware.js"></script>
     <script src="/static/js/admin/dashboard.js"></script>
-    <script type="module" src="/static/js/admin/radar_admin.js"></script>
+    <script type="module" src="/static/js/admin/radar_admin.js?=1.6"></script>
 </body>
 </html>
