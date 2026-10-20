@@ -25,7 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const targetUrl = link.getAttribute('data-url');
             
-            if (frame.src.includes(targetUrl)) return;
+            // Si la URL actual del iframe ya es la meta, no hacemos nada
+            try {
+                if (frame.contentWindow && frame.contentWindow.location.href.includes(targetUrl)) return;
+            } catch(err) {}
 
             // Limpiar visualmente todos los botones
             navLinks.forEach(l => {
@@ -52,19 +55,31 @@ document.addEventListener('DOMContentLoaded', () => {
             
             requestAnimationFrame(() => loader.classList.remove('opacity-0'));
 
-            // 🔥 CORRECCIÓN: Prevención del Efecto Inception (Bug del Botón Atrás)
+            // 🔥 CORRECCIÓN 1: Manejo perfecto del Iframe y el Historial
             setTimeout(() => {
-                if (frame.contentWindow) {
-                    frame.contentWindow.location.replace(targetUrl);
-                } else {
+                if (!frame.src || frame.src === window.location.href) {
+                    // Primera carga del sistema: Usamos src para inicializar
                     frame.src = targetUrl;
+                } else if (frame.contentWindow) {
+                    // Cargas siguientes: Usamos replace para no romper el botón "Atrás"
+                    frame.contentWindow.location.replace(targetUrl);
                 }
             }, 300);
         });
     });
 
+    // 🔥 CORRECCIÓN 2: Leemos la URL real viva en la RAM, no el atributo de texto HTML
     frame.addEventListener('load', () => {
-        if (frame.src && frame.src !== window.location.href) {
+        try {
+            const currentUrl = frame.contentWindow.location.href;
+            // Ocultamos si no es la pantalla blanca en blanco inicial del navegador
+            if (currentUrl && !currentUrl.includes('about:blank')) {
+                loader.classList.add('opacity-0');
+                frame.classList.remove('opacity-0');
+                setTimeout(() => loader.classList.add('hidden'), 500);
+            }
+        } catch (e) {
+            // Fallback preventivo
             loader.classList.add('opacity-0');
             frame.classList.remove('opacity-0');
             setTimeout(() => loader.classList.add('hidden'), 500);
