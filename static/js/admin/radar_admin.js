@@ -203,7 +203,7 @@ window.updateChatActions = function(threadId, status) {
         // INACTIVO O CERRADO: Modo Ejecutivo
         actionsBar.classList.remove('hidden');
         btnAccept.classList.remove('hidden'); btnClose.classList.add('hidden');
-        btnAccept.textContent = "Forzar Apertura";
+        btnAccept.textContent = "Abrir Ticket";
         btnAccept.className = "flex-1 py-2 rounded-lg bg-[#FFC300]/10 text-[#FFC300] border border-[#FFC300]/20 hover:bg-[#FFC300] hover:text-black text-[9px] font-bold uppercase tracking-widest transition-colors shadow-sm";
         chatInput.disabled = true; chatBtn.disabled = true;
         chatInput.placeholder = "Inicia el ticket para escribir...";
@@ -231,7 +231,7 @@ window.changeThreadStatus = async function(threadId, newStatus) {
             });
         } else if (newStatus === 'activo') {
             await addDoc(collection(db, `pulse_threads/${threadId}/messages`), {
-                sender_type: 'system', text: 'El Administrador ha forzado la apertura de un canal de soporte.', timestamp: serverTimestamp()
+                sender_type: 'system', text: 'Administrador Abrio Ticket de Soporte.', timestamp: serverTimestamp()
             });
         }
     } catch (e) { console.error("Error al cambiar estado:", e); }
