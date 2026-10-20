@@ -15,7 +15,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Variables de estado
 window.currentActiveThreadId = null;
 let lastNotifiedTimestamps = {}; 
 let isInitialLoad = true;
@@ -99,7 +98,6 @@ async function activateAdminRadar() {
         if (res.ok && data.success) {
             await signInWithCustomToken(auth, data.firebase_token);
             
-            // ESCUCHAMOS EL INBOX DIRECTO DE FIRESTORE
             onSnapshot(collection(db, "pulse_threads"), (snapshot) => {
                 const threads = [];
                 
@@ -111,7 +109,6 @@ async function activateAdminRadar() {
                     const currentMsgTime = thread.updated_at ? thread.updated_at.toMillis() : 0;
                     const savedTime = lastNotifiedTimestamps[thread.thread_id] || 0;
 
-                    // Lógica de Notificaciones Push
                     if (!isInitialLoad && currentMsgTime > savedTime) {
                         if (thread.unread_admin !== 0 && window.currentActiveThreadId !== thread.thread_id) {
                             const userName = thread.participant_name || 'Usuario';
@@ -121,11 +118,15 @@ async function activateAdminRadar() {
                         }
                     }
                     lastNotifiedTimestamps[thread.thread_id] = currentMsgTime;
+
+                    // Actualizar botones de acción si estamos viendo este chat
+                    if (window.currentActiveThreadId === thread.thread_id) {
+                        window.updateChatActions(thread.thread_id, thread.status);
+                    }
                 });
 
                 isInitialLoad = false;
                 
-                // Ordenar por fecha más reciente
                 threads.sort((a, b) => {
                     const timeA = a.updated_at ? a.updated_at.toMillis() : 0;
                     const timeB = b.updated_at ? b.updated_at.toMillis() : 0;
@@ -151,19 +152,21 @@ function renderInbox(threads) {
 
     threads.forEach(thread => {
         const isPartner = thread.participant_role === 'partner';
+        const isWaiting = thread.status === 'espera';
         const badgeColor = isPartner ? 'bg-[#FFC300] text-black' : 'bg-white/10 text-white';
         const roleLabel = isPartner ? 'B2B Partner' : 'Atleta';
         const unreadDot = thread.unread_admin > 0 ? `<div class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"></div>` : '';
         const name = thread.participant_name || 'Desconocido';
+        const statusIcon = isWaiting ? `<span class="inline-block ml-1 w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" title="En espera"></span>` : '';
 
         const itemHTML = `
-            <div onclick="window.openThread('${thread.thread_id}', '${name.replace(/'/g, "\\'")}')" class="p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-colors cursor-pointer flex gap-3 items-center group">
+            <div onclick="window.openThread('${thread.thread_id}', '${name.replace(/'/g, "\\'")}', '${thread.status || 'inactivo'}')" class="p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-colors cursor-pointer flex gap-3 items-center group">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${isPartner ? 'bg-[#FFC300]/10 text-[#FFC300] border border-[#FFC300]/20' : 'bg-white/5 text-gray-300 border border-white/10'}">
                     ${name.substring(0, 2).toUpperCase()}
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-center mb-0.5">
-                        <h4 class="text-xs font-bold text-white truncate pr-2 group-hover:text-[#FFC300] transition-colors">${name}</h4>
+                        <h4 class="text-xs font-bold text-white truncate pr-2 group-hover:text-[#FFC300] transition-colors">${name} ${statusIcon}</h4>
                         ${unreadDot}
                     </div>
                     <p class="text-[10px] text-gray-500 truncate">${thread.last_message || 'Inició un nuevo ticket...'}</p>
@@ -176,9 +179,55 @@ function renderInbox(threads) {
 }
 
 // ==========================================
-// 💬 SALA DE CHAT EN VIVO
+// 💬 GESTIÓN DE SALA DE CHAT Y TICKET
 // ==========================================
-window.openThread = function(threadId, participantName) {
+window.updateChatActions = function(threadId, status) {
+    const actionsBar = document.getElementById('pulse-chat-actions');
+    const btnAccept = document.getElementById('btn-pulse-accept');
+    const btnClose = document.getElementById('btn-pulse-close');
+    const chatInput = document.querySelector('.chat-input');
+    const chatBtn = document.querySelector('#pulse-form button');
+
+    if (!actionsBar) return;
+    actionsBar.classList.remove('hidden');
+
+    // Desvincular eventos viejos
+    btnAccept.onclick = null;
+    btnClose.onclick = null;
+
+    if (status === 'espera') {
+        btnAccept.classList.remove('hidden'); btnClose.classList.remove('hidden');
+        chatInput.disabled = true; chatBtn.disabled = true;
+        chatInput.placeholder = "Acepta el ticket para responder...";
+    } else if (status === 'activo') {
+        btnAccept.classList.add('hidden'); btnClose.classList.remove('hidden');
+        chatInput.disabled = false; chatBtn.disabled = false;
+        chatInput.placeholder = "Responder al ticket...";
+    } else {
+        actionsBar.classList.add('hidden');
+        chatInput.disabled = true; chatBtn.disabled = true;
+        chatInput.placeholder = "Ticket finalizado.";
+    }
+
+    btnAccept.onclick = () => window.changeThreadStatus(threadId, 'activo');
+    btnClose.onclick = () => window.changeThreadStatus(threadId, 'cerrado');
+};
+
+window.changeThreadStatus = async function(threadId, newStatus) {
+    try {
+        await updateDoc(doc(db, "pulse_threads", threadId), {
+            status: newStatus, updated_at: serverTimestamp()
+        });
+        
+        if(newStatus === 'cerrado') {
+            await addDoc(collection(db, `pulse_threads/${threadId}/messages`), {
+                sender_type: 'system', text: 'Ticket cerrado por el Administrador.', timestamp: serverTimestamp()
+            });
+        }
+    } catch (e) { console.error("Error al cambiar estado:", e); }
+};
+
+window.openThread = function(threadId, participantName, status = 'inactivo') {
     window.currentActiveThreadId = threadId;
     
     document.getElementById('pulse-list-view').classList.add('hidden');
@@ -196,13 +245,10 @@ window.openThread = function(threadId, participantName) {
 
     const messagesContainer = document.getElementById('pulse-messages');
     messagesContainer.innerHTML = `<div class="flex justify-center py-10"><div class="w-5 h-5 border-2 border-[#FFC300] border-t-transparent rounded-full animate-spin"></div></div>`;
-    document.querySelector('.chat-input').disabled = false;
-    document.querySelector('.chat-input').focus();
-
-    // Marcar como leído
+    
+    window.updateChatActions(threadId, status);
     updateDoc(doc(db, "pulse_threads", threadId), { unread_admin: 0 }).catch(e => {});
 
-    // Escuchar mensajes en tiempo real
     if (unsubscribeMessages) unsubscribeMessages();
     const q = query(collection(db, `pulse_threads/${threadId}/messages`), orderBy("timestamp", "asc"));
     
@@ -218,6 +264,11 @@ function renderMessages(messages) {
     container.innerHTML = '';
 
     messages.forEach(msg => {
+        if (msg.sender_type === 'system') {
+            container.insertAdjacentHTML('beforeend', `<p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest text-center my-4 border-b border-white/5 pb-4">${msg.text}</p>`);
+            return;
+        }
+
         const isAdmin = msg.sender_type === 'admin';
         const alignment = isAdmin ? 'justify-end' : 'justify-start';
         const bubbleStyle = isAdmin ? 'bg-[#FFC300] text-black rounded-tr-sm' : 'bg-white/10 text-white rounded-tl-sm border border-white/5';
