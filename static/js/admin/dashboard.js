@@ -52,7 +52,14 @@ document.addEventListener('DOMContentLoaded', () => {
             
             requestAnimationFrame(() => loader.classList.remove('opacity-0'));
 
-            setTimeout(() => frame.src = targetUrl, 300);
+            // 🔥 CORRECCIÓN: Prevención del Efecto Inception (Bug del Botón Atrás)
+            setTimeout(() => {
+                if (frame.contentWindow) {
+                    frame.contentWindow.location.replace(targetUrl);
+                } else {
+                    frame.src = targetUrl;
+                }
+            }, 300);
         });
     });
 
