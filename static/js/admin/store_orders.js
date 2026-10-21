@@ -191,6 +191,7 @@ function getStatusUI(status) {
         'CANCELLED': { label: 'Cancelado', color: 'bg-red-500/10 text-red-500 border-red-500/20' },
         'REFUNDED': { label: 'Reembolsado', color: 'bg-orange-500/10 text-orange-500 border-orange-500/20' },
         'ISSUE': { label: 'Contingencia', color: 'bg-red-500/20 text-red-400 border-red-500/50' },
+        'approved': { label: 'Aprobado Manual', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
         'rejected': { label: 'Rechazado', color: 'bg-red-500/20 text-red-400 border-red-500/50' }
     };
     return map[status] || { label: 'Desconocido', color: 'bg-gray-500/10 text-gray-400 border-gray-500/20' };
@@ -289,12 +290,10 @@ function loadOrderDossier(order) {
         cartContainer.insertAdjacentHTML('beforeend', `
             <div class="px-5 py-4 flex justify-between items-center bg-black/20 border-b border-white/5 last:border-0">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-                        📦
-                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">📦</div>
                     <div>
                         <h5 class="text-xs font-bold text-white uppercase truncate max-w-[200px]">${item.name}</h5>
-                        <p class="text-[9px] text-gray-400 font-mono mt-0.5">ID: ${item.real_id || item.id || 'N/A'} | Store: ${item.storeName || 'N/A'}</p>
+                        <p class="text-[9px] text-gray-400 font-mono mt-0.5">ID: ${item.real_id || item.id} | Comision: ${item.commission_model}</p>
                     </div>
                 </div>
                 <div class="text-right flex-shrink-0">
@@ -305,15 +304,25 @@ function loadOrderDossier(order) {
         `);
     });
 
-    // Pasarela y Finanzas B2B
-    const fee = order.global_gymenez_fee || 0;
-    const net = order.global_partner_net || 0;
+    // 🔥 FINANZAS B2B
+    const breakdown = order.global_financial_breakdown || {};
+    const gymenezFee = breakdown.global_gymenez_fee || 0;
+    const gatewayFee = breakdown.global_gateway_fee || 0;
+    const partnerNet = breakdown.global_partner_net || 0;
     const payment = order.payment_details || {};
     
-    document.getElementById('o-pay-method').textContent = (payment.payment_method || 'API').toUpperCase();
+    document.getElementById('o-pay-method').textContent = (payment.payment_method || 'Desconocido').toUpperCase();
     document.getElementById('o-pay-ref').textContent = payment.referencia || `BOT: ${payment.monto_bot || 'N/A'}`;
-    document.getElementById('o-pay-fee').textContent = formatCurrency(fee);
-    document.getElementById('o-pay-net').textContent = formatCurrency(net);
+    
+    document.getElementById('o-pay-fee').innerHTML = `
+        <span class="text-gray-400">Gymenez:</span> ${formatCurrency(gymenezFee)} <br>
+        <span class="text-gray-400">Pasarela:</span> ${formatCurrency(gatewayFee)}
+    `;
+    
+    document.getElementById('o-pay-net').innerHTML = `
+        <span class="text-[#FFC300] text-lg">${formatCurrency(partnerNet)}</span><br>
+        <span class="text-[9px] text-gray-500">Tasa: Bs. ${order.exchange_rate || 0} | Total: Bs. ${order.total_ves || 0}</span>
+    `;
 
     // TAB 2: Logística
     const shipping = order.shipping_info || {};
@@ -322,14 +331,79 @@ function loadOrderDossier(order) {
     document.getElementById('o-shipping-info').value = shippingInfo;
     document.getElementById('o-tracking-number').value = shipping.tracking_number || '';
 
-    // Marcar radio button actual
     const radioBtn = document.querySelector(`input[name="logistics_status"][value="${orderStatus}"]`);
     if(radioBtn) radioBtn.checked = true;
     else document.querySelectorAll('input[name="logistics_status"]').forEach(r => r.checked = false);
 }
 
 // ==========================================
-// 🛠️ ACCIONES DE API (UPDATE, REFUND, CANCEL)
+// 📄 EXPORTACIÓN Y AUDITORÍAS (CSV & PDF)
+// ==========================================
+window.exportAuditCSV = function() {
+    if (allOrders.length === 0) { showUIFeedback("No hay órdenes para exportar", "error"); return; }
+    
+    let csvContent = "ID Orden,Fecha,Cliente,Documento,Total USD,Total VES,Tasa Exchange,Fee Gymenez,Fee Pasarela,Neto Partner,Estado,Partner Involucrado\n";
+    
+    allOrders.forEach(o => {
+        const date = o.created_at?.toDate ? o.created_at.toDate().toLocaleDateString('es-VE') : 'N/A';
+        const bk = o.global_financial_breakdown || {};
+        const partner = o.involved_stores ? o.involved_stores[0] : 'N/A';
+        const status = o.status || o.shipping_info?.status || 'PENDING';
+        
+        const row = [
+            o.id, date, `"${o.buyer_name}"`, o.buyer_doc, o.total_usd, o.total_ves, o.exchange_rate,
+            bk.global_gymenez_fee || 0, bk.global_gateway_fee || 0, bk.global_partner_net || 0,
+            status, `"${partner}"`
+        ];
+        csvContent += row.join(",") + "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Auditoria_Gymenez_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    showUIFeedback("Auditoría CSV generada exitosamente.");
+};
+
+window.exportAuditPDF = function() {
+    if (allOrders.length === 0) { showUIFeedback("No hay órdenes para exportar", "error"); return; }
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('landscape');
+    
+    doc.setFontSize(18);
+    doc.text("Reporte de Auditoría B2B - Gymenez", 14, 20);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generado el: ${new Date().toLocaleString('es-VE')}`, 14, 28);
+
+    const tableBody = allOrders.map(o => {
+        const date = o.created_at?.toDate ? o.created_at.toDate().toLocaleDateString('es-VE') : 'N/A';
+        const bk = o.global_financial_breakdown || {};
+        const status = o.status || o.shipping_info?.status || 'PENDING';
+        
+        return [
+            o.id.substring(0, 8), date, o.buyer_name, 
+            `$${o.total_usd}`, `$${bk.global_gymenez_fee || 0}`, `$${bk.global_partner_net || 0}`, 
+            status
+        ];
+    });
+
+    doc.autoTable({
+        startY: 35,
+        head: [['ID', 'Fecha', 'Cliente', 'Total USD', 'Fee Gymenez', 'Neto Partner', 'Estado']],
+        body: tableBody,
+        theme: 'grid',
+        headStyles: { fillColor: [255, 195, 0], textColor: [0,0,0] }
+    });
+
+    doc.save(`Reporte_PDF_Gymenez_${new Date().toISOString().split('T')[0]}.pdf`);
+    showUIFeedback("Reporte PDF generado exitosamente.");
+};
+
+// ==========================================
+// 🛠️ ACCIONES DE API (UPDATE, REFUND, CANCEL, APPROVE)
 // ==========================================
 async function executeOrderAction(endpointSuffix, payload = {}, successMessage) {
     if (!activeOrderId) return false;
@@ -389,5 +463,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-mark-liquidated')?.addEventListener('click', async () => {
         if(!confirm("💰 FINANZAS: ¿Confirmas que el dinero de esta venta ya fue depositado al Partner Comercial?")) return;
         await executeOrderAction('liquidate', {}, "Orden Liquidada con el Partner.");
+    });
+
+    // 5. Botón Aprobar Manualmente (Botón de Dios)
+    document.getElementById('btn-force-approve')?.addEventListener('click', async () => {
+        if(!confirm("🛡️ AUDITORÍA: ¿Confirmas que verificaste el pago en la cuenta bancaria y deseas APROBAR esta orden manualmente?")) return;
+        await executeOrderAction('approve', {}, "Orden Aprobada y Sancionada Correctamente.");
     });
 });
