@@ -54,7 +54,6 @@ function formatDate(timestamp) {
 function setupTabs() {
     document.querySelectorAll('.o-tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            // Limpiar activos
             document.querySelectorAll('.o-tab-btn').forEach(b => {
                 b.classList.remove('active', 'text-[#FFC300]', 'border-[#FFC300]');
                 if (!b.classList.contains('text-red-500')) b.classList.add('text-gray-500');
@@ -64,7 +63,6 @@ function setupTabs() {
                 c.classList.add('hidden');
             });
 
-            // Activar clickeado
             const targetId = btn.getAttribute('data-target');
             if (!btn.classList.contains('text-red-500')) {
                 btn.classList.remove('text-gray-500');
@@ -86,7 +84,7 @@ function setupTabs() {
         document.getElementById('active-order').classList.remove('flex');
         document.getElementById('empty-state').classList.remove('hidden');
         activeOrderId = null;
-        renderOrdersList(); // Quita el highlight de la lista
+        renderOrdersList(); 
     });
 }
 
@@ -115,7 +113,6 @@ async function initStoreRadar() {
                 calculateKPIs();
                 applyFiltersAndRender();
 
-                // Actualizar dossier en vivo si está abierto
                 if (activeOrderId) {
                     const updatedOrder = allOrders.find(o => o.id === activeOrderId);
                     if (updatedOrder) loadOrderDossier(updatedOrder);
@@ -123,7 +120,7 @@ async function initStoreRadar() {
             });
         }
     } catch (e) {
-        document.getElementById('orders-list').innerHTML = `<div class="p-4 text-center text-red-500 text-[10px] font-bold uppercase tracking-widest mt-10">Error de Conexión</div>`;
+        document.getElementById('orders-list').innerHTML = `<div class="p-4 text-center text-red-500 text-[10px] font-bold uppercase tracking-widest mt-10">Error de Conexión de Seguridad</div>`;
     }
 }
 
@@ -136,24 +133,25 @@ function calculateKPIs() {
     let totalVolume = 0;
 
     allOrders.forEach(order => {
-        if (['PENDING', 'TRANSIT'].includes(order.status)) activeCount++;
-        if (['ISSUE'].includes(order.status)) alertCount++;
-        if (['PENDING', 'TRANSIT', 'DELIVERED', 'LIQUIDATED'].includes(order.status)) {
-            totalVolume += (order.total_amount || 0);
+        const status = order.status || order.shipping_info?.status || 'PENDING';
+        if (['PENDING', 'TRANSIT'].includes(status)) activeCount++;
+        if (['ISSUE', 'rejected'].includes(status)) alertCount++;
+        if (['PENDING', 'TRANSIT', 'DELIVERED', 'LIQUIDATED'].includes(status)) {
+            totalVolume += (order.total_usd || 0);
         }
     });
 
-    document.getElementById('kpi-active').textContent = activeCount;
-    document.getElementById('kpi-alerts').textContent = alertCount;
-    document.getElementById('kpi-volume').textContent = formatCurrency(totalVolume);
+    if(document.getElementById('kpi-active')) document.getElementById('kpi-active').textContent = activeCount;
+    if(document.getElementById('kpi-alerts')) document.getElementById('kpi-alerts').textContent = alertCount;
+    if(document.getElementById('kpi-volume')) document.getElementById('kpi-volume').textContent = formatCurrency(totalVolume);
 }
 
 function updatePartnersFilter() {
     const filterSelect = document.getElementById('filter-partner');
+    if(!filterSelect) return;
     const currentVal = filterSelect.value;
     
-    // Extraer partners únicos
-    const partners = [...new Set(allOrders.map(o => o.partner_name || 'Gymenez Store'))].filter(Boolean);
+    const partners = [...new Set(allOrders.map(o => o.involved_stores ? o.involved_stores[0] : 'Gymenez Store'))].filter(Boolean);
     
     let html = `<option value="ALL">Todos los Partners</option>`;
     partners.forEach(p => { html += `<option value="${p}">${p}</option>`; });
@@ -168,12 +166,15 @@ function applyFiltersAndRender() {
     const partnerFilter = document.getElementById('filter-partner')?.value || 'ALL';
 
     const filtered = allOrders.filter(o => {
+        const orderStatus = o.status || o.shipping_info?.status || 'PENDING';
+        const partnerName = o.involved_stores ? o.involved_stores[0] : 'Gymenez Store';
+
         const matchesSearch = o.id.toLowerCase().includes(searchTerm) || 
-                              (o.customer_name || '').toLowerCase().includes(searchTerm) || 
-                              (o.customer_email || '').toLowerCase().includes(searchTerm);
+                              (o.buyer_name || '').toLowerCase().includes(searchTerm) || 
+                              (o.buyer_doc || '').toLowerCase().includes(searchTerm);
         
-        const matchesStatus = statusFilter === 'ALL' || o.status === statusFilter || (statusFilter === 'ISSUE' && ['CANCELLED', 'REFUNDED', 'ISSUE'].includes(o.status));
-        const matchesPartner = partnerFilter === 'ALL' || (o.partner_name || 'Gymenez Store') === partnerFilter;
+        const matchesStatus = statusFilter === 'ALL' || orderStatus === statusFilter || (statusFilter === 'ISSUE' && ['CANCELLED', 'REFUNDED', 'ISSUE', 'rejected'].includes(orderStatus));
+        const matchesPartner = partnerFilter === 'ALL' || partnerName === partnerFilter;
 
         return matchesSearch && matchesStatus && matchesPartner;
     });
@@ -189,13 +190,15 @@ function getStatusUI(status) {
         'LIQUIDATED': { label: 'Liquidado', color: 'bg-[#FFC300]/10 text-[#FFC300] border-[#FFC300]/20' },
         'CANCELLED': { label: 'Cancelado', color: 'bg-red-500/10 text-red-500 border-red-500/20' },
         'REFUNDED': { label: 'Reembolsado', color: 'bg-orange-500/10 text-orange-500 border-orange-500/20' },
-        'ISSUE': { label: 'Contingencia', color: 'bg-red-500/20 text-red-400 border-red-500/50' }
+        'ISSUE': { label: 'Contingencia', color: 'bg-red-500/20 text-red-400 border-red-500/50' },
+        'rejected': { label: 'Rechazado', color: 'bg-red-500/20 text-red-400 border-red-500/50' }
     };
     return map[status] || { label: 'Desconocido', color: 'bg-gray-500/10 text-gray-400 border-gray-500/20' };
 }
 
 function renderOrdersList(orders = allOrders) {
     const container = document.getElementById('orders-list');
+    if(!container) return;
     container.innerHTML = '';
 
     if (orders.length === 0) {
@@ -205,9 +208,13 @@ function renderOrdersList(orders = allOrders) {
 
     orders.forEach(order => {
         const isActive = order.id === activeOrderId;
-        const uiStatus = getStatusUI(order.status);
-        const partnerName = order.partner_name || 'Gymenez Store';
+        const orderStatus = order.status || order.shipping_info?.status || 'PENDING';
+        const uiStatus = getStatusUI(orderStatus);
+        
+        const partnerName = order.involved_stores ? order.involved_stores[0] : 'Gymenez Store';
         const dateStr = formatDate(order.created_at);
+        const buyerName = order.buyer_name || 'Atleta B2C';
+        const total = order.total_usd || 0;
 
         const itemHTML = `
             <div onclick="window.selectOrder('${order.id}')" class="p-4 rounded-2xl border cursor-pointer transition-all duration-200 flex flex-col gap-2 ${isActive ? 'bg-white/10 border-white/20 shadow-lg' : 'bg-white/[0.02] border-white/5 hover:bg-white/5'}">
@@ -218,12 +225,12 @@ function renderOrdersList(orders = allOrders) {
                 
                 <div class="flex justify-between items-end">
                     <div>
-                        <p class="text-[11px] font-bold text-gray-300 truncate">${order.customer_name || 'Usuario B2C'}</p>
+                        <p class="text-[11px] font-bold text-gray-300 truncate">${buyerName}</p>
                         <p class="text-[9px] font-mono text-gray-500 uppercase mt-0.5">${partnerName}</p>
                     </div>
                     <div class="text-right">
                         <p class="text-[10px] text-gray-500 font-bold mb-0.5">${dateStr.split(',')[0]}</p>
-                        <p class="text-sm font-black text-[#FFC300]">${formatCurrency(order.total_amount)}</p>
+                        <p class="text-sm font-black text-[#FFC300]">${formatCurrency(total)}</p>
                     </div>
                 </div>
             </div>
@@ -232,11 +239,9 @@ function renderOrdersList(orders = allOrders) {
     });
 }
 
-// Eventos de Filtros
 document.getElementById('search-orders')?.addEventListener('input', applyFiltersAndRender);
 document.getElementById('filter-status')?.addEventListener('change', applyFiltersAndRender);
 document.getElementById('filter-partner')?.addEventListener('change', applyFiltersAndRender);
-
 
 // ==========================================
 // 🔍 RADIOGRAFÍA: CARGAR DOSSIER DE ORDEN
@@ -246,7 +251,7 @@ window.selectOrder = function(orderId) {
     const order = allOrders.find(o => o.id === orderId);
     if (!order) return;
 
-    applyFiltersAndRender(); // Actualiza highlights
+    applyFiltersAndRender(); 
 
     document.getElementById('empty-state').classList.add('hidden');
     const dossier = document.getElementById('active-order');
@@ -255,27 +260,26 @@ window.selectOrder = function(orderId) {
 
     loadOrderDossier(order);
     
-    // Forzar pestaña principal
-    document.querySelector('.o-tab-btn[data-target="o-content-details"]').click();
+    document.querySelector('.o-tab-btn[data-target="o-content-details"]')?.click();
 };
 
 function loadOrderDossier(order) {
-    const uiStatus = getStatusUI(order.status);
+    const orderStatus = order.status || order.shipping_info?.status || 'PENDING';
+    const uiStatus = getStatusUI(orderStatus);
     
-    // Headers
     document.getElementById('o-id').textContent = `#${order.id}`;
     document.getElementById('o-date').textContent = formatDate(order.created_at);
-    document.getElementById('o-total').textContent = formatCurrency(order.total_amount);
+    document.getElementById('o-total').textContent = formatCurrency(order.total_usd);
     
     const statusBadge = document.getElementById('o-status-badge');
     statusBadge.textContent = uiStatus.label;
     statusBadge.className = `px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest ${uiStatus.color}`;
     
-    document.getElementById('o-partner-badge').textContent = order.partner_name || 'Gymenez Store';
+    document.getElementById('o-partner-badge').textContent = order.involved_stores ? order.involved_stores[0] : 'Gymenez Store';
 
     // TAB 1: Facturación
-    document.getElementById('o-customer-name').textContent = order.customer_name || 'Atleta Desconocido';
-    document.getElementById('o-customer-email').textContent = order.customer_email || 'Sin correo registrado';
+    document.getElementById('o-customer-name').textContent = order.buyer_name || 'Atleta Desconocido';
+    document.getElementById('o-customer-email').textContent = `CI/RUT: ${order.buyer_doc || 'N/A'}`;
 
     // Render Carrito
     const cartContainer = document.getElementById('o-cart-items');
@@ -283,44 +287,45 @@ function loadOrderDossier(order) {
     const items = order.items || [];
     items.forEach(item => {
         cartContainer.insertAdjacentHTML('beforeend', `
-            <div class="px-5 py-4 flex justify-between items-center bg-black/20">
+            <div class="px-5 py-4 flex justify-between items-center bg-black/20 border-b border-white/5 last:border-0">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-                        ${item.image ? `<img src="${item.image}" class="w-full h-full object-cover">` : '📦'}
+                        📦
                     </div>
                     <div>
-                        <h5 class="text-xs font-bold text-white uppercase">${item.name}</h5>
-                        <p class="text-[9px] text-gray-400 font-mono mt-0.5">Talla: ${item.size || 'N/A'} | SKU: ${item.sku || 'N/A'}</p>
+                        <h5 class="text-xs font-bold text-white uppercase truncate max-w-[200px]">${item.name}</h5>
+                        <p class="text-[9px] text-gray-400 font-mono mt-0.5">ID: ${item.real_id || item.id || 'N/A'} | Store: ${item.storeName || 'N/A'}</p>
                     </div>
                 </div>
-                <div class="text-right">
-                    <p class="text-xs font-black text-white">${item.quantity}x ${formatCurrency(item.price)}</p>
-                    <p class="text-[10px] text-[#FFC300] font-bold mt-0.5">${formatCurrency(item.quantity * item.price)}</p>
+                <div class="text-right flex-shrink-0">
+                    <p class="text-xs font-black text-white">${item.qty}x ${formatCurrency(item.price)}</p>
+                    <p class="text-[10px] text-[#FFC300] font-bold mt-0.5">${formatCurrency(item.qty * item.price)}</p>
                 </div>
             </div>
         `);
     });
 
-    // Pasarela
-    const fee = order.platform_fee || (order.total_amount * 0.05); // Default 5% si no existe
-    const net = order.total_amount - fee;
+    // Pasarela y Finanzas B2B
+    const fee = order.global_gymenez_fee || 0;
+    const net = order.global_partner_net || 0;
+    const payment = order.payment_details || {};
     
-    document.getElementById('o-pay-method').textContent = order.payment_method || 'API Integrada';
-    document.getElementById('o-pay-ref').textContent = order.payment_ref || 'TRX-' + order.id.slice(-8);
+    document.getElementById('o-pay-method').textContent = (payment.payment_method || 'API').toUpperCase();
+    document.getElementById('o-pay-ref').textContent = payment.referencia || `BOT: ${payment.monto_bot || 'N/A'}`;
     document.getElementById('o-pay-fee').textContent = formatCurrency(fee);
     document.getElementById('o-pay-net').textContent = formatCurrency(net);
 
     // TAB 2: Logística
-    const shippingInfo = `Destinatario: ${order.shipping_name || order.customer_name}\nDirección: ${order.shipping_address || 'Retiro en Tienda'}\nTeléfono: ${order.shipping_phone || 'N/A'}\nNotas: ${order.shipping_notes || 'Ninguna'}`;
+    const shipping = order.shipping_info || {};
+    const shippingInfo = `Destinatario: ${order.buyer_name}\nDoc: ${order.buyer_doc}\nCiudad: ${shipping.city || 'N/A'}, ${shipping.state || 'N/A'}\nCourier: ${shipping.courier || 'N/A'}\nMunicipio: ${shipping.municipality || 'N/A'}`;
+    
     document.getElementById('o-shipping-info').value = shippingInfo;
-    document.getElementById('o-tracking-number').value = order.tracking_number || '';
+    document.getElementById('o-tracking-number').value = shipping.tracking_number || '';
 
     // Marcar radio button actual
-    const radioBtn = document.querySelector(`input[name="logistics_status"][value="${order.status}"]`);
+    const radioBtn = document.querySelector(`input[name="logistics_status"][value="${orderStatus}"]`);
     if(radioBtn) radioBtn.checked = true;
-    else {
-        document.querySelectorAll('input[name="logistics_status"]').forEach(r => r.checked = false);
-    }
+    else document.querySelectorAll('input[name="logistics_status"]').forEach(r => r.checked = false);
 }
 
 // ==========================================
@@ -330,7 +335,6 @@ async function executeOrderAction(endpointSuffix, payload = {}, successMessage) 
     if (!activeOrderId) return false;
     
     try {
-        // Ejecutamos la petición hacia tu backend Flask
         const res = await fetch(`${API_BASE_URL}/api/admin/store/order/${activeOrderId}/${endpointSuffix}`, {
             method: 'PUT',
             headers: getSecureHeaders(),
