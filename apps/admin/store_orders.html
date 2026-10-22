@@ -99,7 +99,14 @@
                                     <span id="d-security" class="hidden px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest bg-red-500/10 text-red-500 border border-red-500/20">BLOQUEO ACTIVO</span>
                                 </div>
                                 <h2 id="d-store-name" class="text-3xl lg:text-4xl font-[900] uppercase tracking-tighter text-white leading-none truncate w-full mb-2">Store Name</h2>
-                                <p id="d-email" class="text-xs text-gray-500 font-mono tracking-wide truncate w-full">store@email.com</p>
+                                
+                                <!-- 📧 EDICIÓN DE CORREO -->
+                                <div class="flex items-center gap-2 mt-1 w-full">
+                                    <p id="d-email" class="text-xs text-gray-500 font-mono tracking-wide truncate">store@email.com</p>
+                                    <button onclick="editPartnerEmail()" class="text-[#FFC300] hover:text-white transition-colors flex-shrink-0" title="Editar Correo">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -131,10 +138,15 @@
                                     <span id="d-doc-number">V-00000000</span>
                                 </div>
                             </div>
+                            
+                            <!-- 📞 EDICIÓN DE TELÉFONO -->
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Teléfono de Contacto</label>
-                                <div class="w-full executive-input p-4 rounded-xl text-sm font-mono text-gray-300">
+                                <div class="w-full executive-input p-4 rounded-xl text-sm font-mono text-gray-300 flex justify-between items-center">
                                     <span id="d-phone">0000-0000000</span>
+                                    <button onclick="editPartnerPhone()" class="text-[#FFC300] hover:text-white transition-colors" title="Editar Teléfono">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -226,6 +238,6 @@
     </main>
 
     <script src="/static/js/admin/admin_middleware.js"></script>
-    <script src="/static/js/admin/store_orders.js?v=1.4"></script>
+    <script src="/static/js/admin/store_orders.js?v=1.7"></script>
 </body>
 </html>
