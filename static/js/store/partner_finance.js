@@ -252,6 +252,48 @@ window.closeReceiptModal = function() {
     setTimeout(() => modal.classList.add('hidden'), 300);
 };
 
+// 🍎 DESCARGA DIRECTA DE PDF CORPORATIVO
+window.downloadReceiptPdf = async function() {
+    const ticketId = document.getElementById('rec-id').textContent;
+    if (!ticketId || ticketId.includes('XXXXX')) return;
+    
+    const token = localStorage.getItem(TOKEN_KEY);
+    const btn = document.getElementById('btn-download-pdf');
+    const originalHtml = btn.innerHTML;
+    
+    // UI Feedback de carga
+    btn.innerHTML = `<div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div> Procesando PDF...`;
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/partner/finances/ticket/${ticketId}/pdf`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+            // Conversión de datos binarios a Blob para descarga forzada en navegador
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Liquidacion_Gymenez_${ticketId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } else {
+            const data = await res.json();
+            alert(data.error || 'No se pudo generar el comprobante PDF de liquidación.');
+        }
+    } catch (e) {
+        alert('Falla de red al intentar descargar el PDF.');
+    } finally {
+        // Restaurar estado del botón
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    }
+};
+
 // ==========================================
 // 🚀 SOLICITUD DE RETIRO
 // ==========================================
