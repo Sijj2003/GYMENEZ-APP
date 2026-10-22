@@ -82,22 +82,23 @@
 
                 <div class="p-5 md:p-8 space-y-6 max-w-4xl">
                     
-                    <!-- Desglose Financiero -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div class="bg-[#0a0a0f] border border-white/5 rounded-2xl p-5">
-                            <h4 class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Monto Exacto a Transferir</h4>
-                            <p id="t-total-usd" class="text-2xl font-black text-emerald-400">$0.00</p>
-                            <p id="t-total-ves" class="text-[10px] text-gray-400 mt-1 font-mono">Bs. 0.00</p>
+                    <!-- Desglose Financiero Separado por Moneda -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Bloque USD (Binance) -->
+                        <div class="bg-[#0a0a0f] border border-emerald-500/20 rounded-2xl p-5 relative overflow-hidden">
+                            <h4 class="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mb-1">A Transferir por Binance (USD)</h4>
+                            <p id="t-puro-usd" class="text-2xl font-black text-white">$0.00</p>
+                            <p class="text-[9px] text-gray-500 font-mono mt-1">Fondos captados en moneda extranjera</p>
                         </div>
-                        <div class="bg-[#0a0a0f] border border-white/5 rounded-2xl p-5">
-                            <h4 class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Tasa de Cierre (BCV)</h4>
-                            <p id="t-bcv" class="text-lg font-black text-white">Bs. 0.00</p>
-                        </div>
-                        <div class="bg-[#0a0a0f] border border-white/5 rounded-2xl p-5">
-                            <h4 class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Volumen de Órdenes</h4>
-                            <p id="t-orders-count" class="text-lg font-black text-white">0 Entregas</p>
+                        
+                        <!-- Bloque VES (Banco Nacional) -->
+                        <div class="bg-[#0a0a0f] border border-sky-500/20 rounded-2xl p-5 relative overflow-hidden">
+                            <h4 class="text-[9px] font-bold text-sky-500 uppercase tracking-widest mb-1">A Transferir por Banco (VES)</h4>
+                            <p id="t-puro-ves" class="text-2xl font-black text-white">Bs. 0.00</p>
+                            <p id="t-bcv-ref" class="text-[9px] text-gray-500 font-mono mt-1">Tasa BCV Cierre: Bs. 0.00</p>
                         </div>
                     </div>
+                    <p id="t-orders-count" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center">0 Entregas procesadas</p>
 
                     <!-- Datos Bancarios (Bóveda del Partner) -->
                     <div class="bg-[#050508] border border-white/5 rounded-2xl p-6">
@@ -125,9 +126,12 @@
                         <h4 class="text-sm font-black text-emerald-500 uppercase tracking-widest mb-2">Liquidación Manual</h4>
                         <p class="text-xs text-gray-400 mb-5">Transfiere el monto exacto a la bóveda destino e ingresa el código de referencia para sellar el ticket.</p>
                         
-                        <div class="flex flex-col sm:flex-row gap-3">
-                            <input type="text" id="input-ref" placeholder="Nro. Referencia (Ej: 192837)" class="flex-1 executive-input px-4 py-3 rounded-xl text-sm font-mono font-bold">
-                            <button onclick="executePayment()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition shadow-sm whitespace-nowrap">
+                        <div class="flex flex-col sm:flex-row gap-3 items-start">
+                            <div class="flex-1 w-full flex flex-col gap-2">
+                                <input type="text" id="input-ref-usd" placeholder="Ref. Binance Pay (Ej: 192837)" class="hidden w-full executive-input px-4 py-3 rounded-xl text-sm font-mono font-bold">
+                                <input type="text" id="input-ref-ves" placeholder="Ref. Transferencia/Pago Móvil" class="hidden w-full executive-input px-4 py-3 rounded-xl text-sm font-mono font-bold">
+                            </div>
+                            <button onclick="executePayment()" class="px-6 py-3 mt-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition shadow-sm whitespace-nowrap h-full">
                                 💸 Sellar Pago
                             </button>
                         </div>
