@@ -4,6 +4,9 @@ const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https:/
 let allTickets = [];
 let activeTicketId = null;
 
+// ==========================================
+// 📢 UTILIDADES UI Y SEGURIDAD
+// ==========================================
 function getSecureHeaders() {
     const token = localStorage.getItem('gymen_admin_token');
     return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
@@ -18,6 +21,9 @@ function showUIFeedback(message, type = 'success') {
     setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 3000);
 }
 
+// ==========================================
+// 📡 FETCH Y RENDERIZADO DE TICKETS
+// ==========================================
 window.fetchTickets = async function() {
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/b2b/treasury/tickets`, { headers: getSecureHeaders() });
@@ -25,6 +31,8 @@ window.fetchTickets = async function() {
         if (res.ok && data.success) {
             allTickets = data.tickets;
             renderList();
+            
+            // Refrescar el dossier si hay un ticket activo
             if (activeTicketId) {
                 const t = allTickets.find(x => x.ticket_id === activeTicketId);
                 if (t) loadTicketDossier(t);
@@ -79,6 +87,9 @@ function renderList() {
     });
 }
 
+// ==========================================
+// 🔍 DOSSIER DEL TICKET Y PAGOS
+// ==========================================
 window.selectTicket = function(id) {
     activeTicketId = id;
     const ticket = allTickets.find(t => t.ticket_id === id);
@@ -97,22 +108,42 @@ window.selectTicket = function(id) {
 };
 
 function loadTicketDossier(t) {
+    // 1. Header
     document.getElementById('t-id').textContent = t.ticket_id;
     document.getElementById('t-store-name').textContent = t.store_name;
     
     const reqDate = new Date(t.requested_at).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short' });
     document.getElementById('t-date').textContent = `Solicitado el: ${reqDate}`;
 
+    // 2. Extraer montos y dependencias visuales
+    const puroUsd = t.financials?.puro_usd || 0;
+    const puroVes = t.financials?.puro_ves || 0;
+    const rate = t.financials?.tasa_bcv_cierre || 0;
+
+    // 3. Manejo de Estados y Cajas de Acción
     const statusB = document.getElementById('t-status');
     const actionBox = document.getElementById('payment-action-box');
     const receiptBox = document.getElementById('payment-receipt-box');
+    
+    const inputUsd = document.getElementById('input-ref-usd');
+    const inputVes = document.getElementById('input-ref-ves');
 
     if (t.status === 'pending_transfer') {
         statusB.textContent = 'Pendiente por Pagar';
         statusB.className = 'px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest bg-amber-500/10 text-amber-500 border border-amber-500/30';
         actionBox.classList.remove('hidden');
         receiptBox.classList.add('hidden');
-        document.getElementById('input-ref').value = ''; 
+        
+        inputUsd.value = ''; 
+        inputVes.value = '';
+
+        // Ocultar/Mostrar cajas de input de referencia dinámicamente
+        if (puroUsd > 0) inputUsd.classList.remove('hidden');
+        else inputUsd.classList.add('hidden');
+
+        if (puroVes > 0) inputVes.classList.remove('hidden');
+        else inputVes.classList.add('hidden');
+
     } else {
         statusB.textContent = 'Liquidado';
         statusB.className = 'px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
@@ -124,32 +155,61 @@ function loadTicketDossier(t) {
         document.getElementById('t-receipt-date').textContent = `Pagado el: ${execDate}`;
     }
 
-    const usd = t.financials?.total_equivalente_usd || 0;
-    const ves = t.financials?.puro_ves || 0;
-    const rate = t.financials?.tasa_bcv_cierre || 0;
+    // 4. Inyectar Desglose Matemático
+    document.getElementById('t-puro-usd').textContent = `$${puroUsd.toFixed(2)}`;
+    
+    const vesEl = document.getElementById('t-puro-ves');
+    if (puroVes > 0) {
+        vesEl.textContent = `Bs. ${puroVes.toFixed(2)}`;
+        vesEl.classList.replace('text-gray-600', 'text-white');
+    } else {
+        vesEl.textContent = `Bs. 0.00`;
+        vesEl.classList.replace('text-white', 'text-gray-600');
+    }
+    
+    document.getElementById('t-bcv-ref').textContent = `Tasa BCV Cierre: Bs. ${rate.toFixed(2)}`;
+    document.getElementById('t-orders-count').textContent = `${t.orders_count} Entregas procesadas`;
 
-    document.getElementById('t-total-usd').textContent = `$${usd.toFixed(2)}`;
-    document.getElementById('t-total-ves').textContent = ves > 0 ? `Incluye Bs. ${ves.toFixed(2)}` : 'Sin transacciones VES';
-    document.getElementById('t-bcv').textContent = `Bs. ${rate.toFixed(2)}`;
-    document.getElementById('t-orders-count').textContent = `${t.orders_count} Entregas`;
-
+    // 5. Inyectar Datos de Bóveda
     document.getElementById('t-binance').textContent = t.wallet_binance || 'N/A';
     document.getElementById('t-bank-name').textContent = t.wallet_bank_name || 'N/A';
     document.getElementById('t-bank-account').textContent = t.wallet_bank_account || 'N/A';
 }
 
+// ==========================================
+// 🛡️ ACCIONES DE LIQUIDACIÓN
+// ==========================================
 window.executePayment = async function() {
-    const refCode = document.getElementById('input-ref').value.trim();
-    if (!refCode) {
-        showUIFeedback("Ingresa el código de referencia bancaria.", "error");
+    const t = allTickets.find(x => x.ticket_id === activeTicketId);
+    if (!t) return;
+
+    const puroUsd = t.financials?.puro_usd || 0;
+    const puroVes = t.financials?.puro_ves || 0;
+
+    let refUsd = document.getElementById('input-ref-usd').value.trim();
+    let refVes = document.getElementById('input-ref-ves').value.trim();
+
+    // Validar que se ingresen las referencias según las monedas adeudadas
+    if (puroUsd > 0 && !refUsd) {
+        showUIFeedback("Ingresa la referencia de Binance.", "error");
         return;
     }
+    if (puroVes > 0 && !refVes) {
+        showUIFeedback("Ingresa la referencia del Banco.", "error");
+        return;
+    }
+
+    let finalRefs = [];
+    if (puroUsd > 0) finalRefs.push(`BIN: ${refUsd}`);
+    if (puroVes > 0) finalRefs.push(`VES: ${refVes}`);
+    
+    const combinedReference = finalRefs.join(' | ');
 
     if (!confirm("💰 ¿Confirmas que los fondos han sido enviados y deseas sellar este ticket como PAGADO?")) return;
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/b2b/treasury/ticket/${activeTicketId}/pay`, {
-            method: 'PUT', headers: getSecureHeaders(), body: JSON.stringify({ payment_reference: refCode })
+            method: 'PUT', headers: getSecureHeaders(), body: JSON.stringify({ payment_reference: combinedReference })
         });
         const data = await res.json();
         
@@ -164,6 +224,9 @@ window.executePayment = async function() {
     }
 };
 
+// ==========================================
+// 🚀 INICIALIZACIÓN
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     window.fetchTickets();
     document.getElementById('search-input')?.addEventListener('input', renderList);
