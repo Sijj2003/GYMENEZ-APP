@@ -296,6 +296,75 @@
         </div>
     </div>
 
+    <!-- MODAL DE RECIBO PREMIUM B2B -->
+    <div id="receipt-modal" class="fixed inset-0 z-[110] bg-black/90 backdrop-blur-xl hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-[#050508] border border-white/10 w-full max-w-md rounded-[2rem] shadow-[0_0_80px_rgba(255,195,0,0.1)] transform scale-95 transition-transform duration-500 overflow-hidden relative">
+            
+            <!-- Gymenez Header -->
+            <div class="bg-gradient-to-b from-[#12121a] to-[#050508] border-b border-white/5 p-8 text-center relative">
+                <button type="button" onclick="closeReceiptModal()" class="absolute top-6 right-6 text-gray-500 hover:text-white bg-white/5 p-2 rounded-full transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                
+                <div class="flex items-center justify-center mb-2">
+                    <span class="text-2xl font-[900] tracking-tighter uppercase italic text-[#FFC300]">Gym</span>
+                    <span class="text-2xl font-[900] tracking-tighter uppercase italic text-white">enez</span>
+                </div>
+                <h3 class="text-[9px] font-black uppercase tracking-[0.3em] text-gray-500 mb-6">Comprobante de Liquidación B2B</h3>
+                
+                <p class="text-[10px] text-gray-400 font-mono tracking-widest uppercase mb-1" id="rec-id">PAY-XXXXXX</p>
+                <p class="text-[9px] text-emerald-500 font-bold uppercase tracking-widest bg-emerald-500/10 inline-block px-3 py-1 rounded-md border border-emerald-500/20">FONDOS LIBERADOS</p>
+            </div>
+
+            <!-- Desglose Matemático -->
+            <div class="p-8 space-y-6">
+                
+                <div id="rec-usd-box" class="flex justify-between items-center border-b border-white/5 pb-4">
+                    <div>
+                        <p class="text-[10px] font-black uppercase text-gray-500 tracking-widest">Liquidación Dólares</p>
+                        <p class="text-[9px] text-gray-600 font-mono mt-0.5">Vía Binance Pay</p>
+                    </div>
+                    <p class="text-xl font-black text-white italic" id="rec-usd-val">$0.00</p>
+                </div>
+
+                <div id="rec-ves-box" class="flex justify-between items-center border-b border-white/5 pb-4">
+                    <div>
+                        <p class="text-[10px] font-black uppercase text-gray-500 tracking-widest">Liquidación Bolívares</p>
+                        <p class="text-[9px] text-gray-600 font-mono mt-0.5">Vía Banco Nacional</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xl font-black text-white italic" id="rec-ves-val">Bs. 0.00</p>
+                        <p class="text-[9px] text-emerald-400 font-bold mt-1" id="rec-ves-ref">~ $0.00 USD (Ref)</p>
+                    </div>
+                </div>
+
+                <!-- Resumen Operativo -->
+                <div class="bg-[#0a0a0f] border border-white/5 p-5 rounded-2xl space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Tasa BCV Aplicada</span>
+                        <span class="text-[10px] font-mono text-white" id="rec-bcv">Bs. 0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Órdenes Pagadas</span>
+                        <span class="text-[10px] font-bold text-white" id="rec-orders">0 Entregas</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Fecha de Pago</span>
+                        <span class="text-[10px] font-mono text-white" id="rec-date">--</span>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-[9px] font-black uppercase text-gray-500 tracking-widest mb-2">Referencia Bancaria</p>
+                    <div class="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-center">
+                        <p class="text-xs font-mono font-bold text-[#FFC300] break-words" id="rec-ref">N/A</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- 🍎 SCRIPT NATIVO: BUSCADOR INSTANTÁNEO EN EL HISTORIAL -->
     <script>
         function searchFinanceHistory() {
@@ -338,8 +407,8 @@
     <script src="/static/js/store/partner_session.js"></script>
     <script src="/static/js/store/partner_ui.js"></script>
     <script src="/static/js/store/partner_profile.js"></script>
-    <script src="/static/js/store/partner_finance.js?v=2.2"></script>
-    <script src="/static/js/store/partner_main.js?v=1.1"></script>
+    <script src="/static/js/store/partner_finance.js?v=3.1"></script>
+    <script src="/static/js/store/partner_main.js?v=1.6"></script>
 
 </body>
 </html>
