@@ -1,473 +1,233 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+const API_BASE = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
 
-// ====================================================================
-// ⚙️ CONFIGURACIÓN DE RED Y ESTADO
-// ====================================================================
-const isLocalHostEnvironment = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-const API_BASE_URL = isLocalHostEnvironment ? 'http://127.0.0.1:5000' : 'https://sijj2003.pythonanywhere.com';
+let allPartners = [];
+let activePartnerId = null;
 
-const firebaseConfig = {
-    apiKey: "AIzaSyC7ESvLhYTydAn_ZjHVSkebTC-BhvnbzIw",
-    authDomain: "gymenezapp.firebaseapp.com",
-    projectId: "gymenezapp"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-let allOrders = [];
-let activeOrderId = null;
-
-// ==========================================
-// 📢 UTILIDADES UI Y SEGURIDAD
-// ==========================================
-function getSecureHeaders() {
-    const token = localStorage.getItem('gymen_admin_token'); 
+function getAuthHeaders() {
+    const token = localStorage.getItem('gymen_admin_token');
     return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 }
 
-function showUIFeedback(message, type = 'success') {
+function showFeedback(msg, type = 'success') {
     const box = document.getElementById('message-box');
-    if(!box) return;
-    box.textContent = message;
+    box.textContent = msg;
     box.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full text-[10px] font-black tracking-widest uppercase shadow-2xl z-[9999] transition-all duration-300 text-center border backdrop-blur-md ${type === 'success' ? 'bg-emerald-950/90 text-emerald-400 border-emerald-500/30' : 'bg-red-950/90 text-red-400 border-red-500/30'}`;
     box.style.opacity = '1'; box.style.transform = 'translate(-50%, 0)';
     setTimeout(() => { box.style.opacity = '0'; box.style.transform = 'translate(-50%, -20px)'; }, 3000);
 }
 
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);
-}
-
-function formatDate(timestamp) {
-    if (!timestamp) return 'Fecha Desconocida';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleString('es-VE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).toUpperCase();
-}
-
-// ==========================================
-// 🗂️ LÓGICA DE PESTAÑAS (DOSSIER)
-// ==========================================
-function setupTabs() {
-    document.querySelectorAll('.o-tab-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.o-tab-btn').forEach(b => {
-                b.classList.remove('active', 'text-[#FFC300]', 'border-[#FFC300]');
-                if (!b.classList.contains('text-red-500')) b.classList.add('text-gray-500');
-            });
-            document.querySelectorAll('.o-tab-content').forEach(c => {
-                c.classList.remove('block');
-                c.classList.add('hidden');
-            });
-
-            const targetId = btn.getAttribute('data-target');
-            if (!btn.classList.contains('text-red-500')) {
-                btn.classList.remove('text-gray-500');
-                btn.classList.add('active', 'text-[#FFC300]', 'border-[#FFC300]');
-            } else {
-                btn.classList.add('active', 'border-red-500');
-            }
-            
-            const targetContent = document.getElementById(targetId);
-            if (targetContent) {
-                targetContent.classList.remove('hidden');
-                targetContent.classList.add('block');
-            }
-        });
-    });
-
-    document.getElementById('btn-close-order')?.addEventListener('click', () => {
-        document.getElementById('active-order').classList.add('hidden');
-        document.getElementById('active-order').classList.remove('flex');
-        document.getElementById('empty-state').classList.remove('hidden');
-        activeOrderId = null;
-        renderOrdersList(); 
-    });
-}
-
-// ==========================================
-// 📡 RADAR B2B: CONEXIÓN FIREBASE
-// ==========================================
-async function initStoreRadar() {
-    const token = localStorage.getItem('gymen_admin_token');
-    if (!token) return;
-
+// 1. CARGA INICIAL
+async function fetchPartners() {
     try {
-        const res = await fetch(`${API_BASE_URL}/api/pulse/token`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(`${API_BASE}/api/admin/b2b/partners`, { headers: getAuthHeaders() });
         const data = await res.json();
-        
         if (res.ok && data.success) {
-            await signInWithCustomToken(auth, data.firebase_token);
-            
-            const q = query(collection(db, "store_orders"), orderBy("created_at", "desc"));
-            onSnapshot(q, (snapshot) => {
-                allOrders = [];
-                snapshot.forEach(doc => {
-                    allOrders.push({ id: doc.id, ...doc.data() });
-                });
-                
-                updatePartnersFilter();
-                calculateKPIs();
-                applyFiltersAndRender();
-
-                if (activeOrderId) {
-                    const updatedOrder = allOrders.find(o => o.id === activeOrderId);
-                    if (updatedOrder) loadOrderDossier(updatedOrder);
-                }
-            });
+            allPartners = data.partners;
+            updateKPIs();
+            renderList();
         }
     } catch (e) {
-        document.getElementById('orders-list').innerHTML = `<div class="p-4 text-center text-red-500 text-[10px] font-bold uppercase tracking-widest mt-10">Error de Conexión de Seguridad</div>`;
+        showFeedback("Error conectando con el servidor CRM.", "error");
     }
 }
 
-// ==========================================
-// 📊 RENDERIZADO, FILTROS Y KPIs
-// ==========================================
-function calculateKPIs() {
-    let activeCount = 0;
-    let alertCount = 0;
-    let totalVolume = 0;
+function updateKPIs() {
+    let pending = 0, active = 0, blocked = 0;
+    allPartners.forEach(p => {
+        if (p.is_blocked) blocked++;
+        if (p.status === 'pending_approval') pending++;
+        if (p.status === 'active') active++;
+    });
+    document.getElementById('kpi-pending').textContent = pending;
+    document.getElementById('kpi-active').textContent = active;
+    document.getElementById('kpi-blocked').textContent = blocked;
+}
 
-    allOrders.forEach(order => {
-        const status = order.status || order.shipping_info?.status || 'PENDING';
-        if (['PENDING', 'TRANSIT'].includes(status)) activeCount++;
-        if (['ISSUE', 'rejected'].includes(status)) alertCount++;
-        if (['PENDING', 'TRANSIT', 'DELIVERED', 'LIQUIDATED'].includes(status)) {
-            totalVolume += (order.total_usd || 0);
-        }
+// 2. RENDERIZADO DE LISTA
+function renderList() {
+    const container = document.getElementById('partners-list');
+    const searchTerm = document.getElementById('search-partner').value.toLowerCase();
+    const statusFilter = document.getElementById('filter-status').value;
+
+    const filtered = allPartners.filter(p => {
+        const searchMatch = p.store_name.toLowerCase().includes(searchTerm) || p.email.toLowerCase().includes(searchTerm) || p.doc_number.toLowerCase().includes(searchTerm);
+        let statusMatch = true;
+        if (statusFilter === 'blocked') statusMatch = p.is_blocked;
+        else if (statusFilter !== 'ALL') statusMatch = (p.status === statusFilter && !p.is_blocked);
+        return searchMatch && statusMatch;
     });
 
-    if(document.getElementById('kpi-active')) document.getElementById('kpi-active').textContent = activeCount;
-    if(document.getElementById('kpi-alerts')) document.getElementById('kpi-alerts').textContent = alertCount;
-    if(document.getElementById('kpi-volume')) document.getElementById('kpi-volume').textContent = formatCurrency(totalVolume);
-}
-
-function updatePartnersFilter() {
-    const filterSelect = document.getElementById('filter-partner');
-    if(!filterSelect) return;
-    const currentVal = filterSelect.value;
-    
-    const partners = [...new Set(allOrders.map(o => o.involved_stores ? o.involved_stores[0] : 'Gymenez Store'))].filter(Boolean);
-    
-    let html = `<option value="ALL">Todos los Partners</option>`;
-    partners.forEach(p => { html += `<option value="${p}">${p}</option>`; });
-    
-    filterSelect.innerHTML = html;
-    filterSelect.value = partners.includes(currentVal) ? currentVal : 'ALL';
-}
-
-function applyFiltersAndRender() {
-    const searchTerm = (document.getElementById('search-orders')?.value || '').toLowerCase();
-    const statusFilter = document.getElementById('filter-status')?.value || 'ALL';
-    const partnerFilter = document.getElementById('filter-partner')?.value || 'ALL';
-
-    const filtered = allOrders.filter(o => {
-        const orderStatus = o.status || o.shipping_info?.status || 'PENDING';
-        const partnerName = o.involved_stores ? o.involved_stores[0] : 'Gymenez Store';
-
-        const matchesSearch = o.id.toLowerCase().includes(searchTerm) || 
-                              (o.buyer_name || '').toLowerCase().includes(searchTerm) || 
-                              (o.buyer_doc || '').toLowerCase().includes(searchTerm);
-        
-        const matchesStatus = statusFilter === 'ALL' || orderStatus === statusFilter || (statusFilter === 'ISSUE' && ['CANCELLED', 'REFUNDED', 'ISSUE', 'rejected'].includes(orderStatus));
-        const matchesPartner = partnerFilter === 'ALL' || partnerName === partnerFilter;
-
-        return matchesSearch && matchesStatus && matchesPartner;
-    });
-
-    renderOrdersList(filtered);
-}
-
-function getStatusUI(status) {
-    const map = {
-        'PENDING': { label: 'Preparando', color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
-        'TRANSIT': { label: 'En Tránsito', color: 'bg-sky-500/10 text-sky-400 border-sky-500/20' },
-        'DELIVERED': { label: 'Entregado', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-        'LIQUIDATED': { label: 'Liquidado', color: 'bg-[#FFC300]/10 text-[#FFC300] border-[#FFC300]/20' },
-        'CANCELLED': { label: 'Cancelado', color: 'bg-red-500/10 text-red-500 border-red-500/20' },
-        'REFUNDED': { label: 'Reembolsado', color: 'bg-orange-500/10 text-orange-500 border-orange-500/20' },
-        'ISSUE': { label: 'Contingencia', color: 'bg-red-500/20 text-red-400 border-red-500/50' },
-        'approved': { label: 'Aprobado Manual', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-        'rejected': { label: 'Rechazado', color: 'bg-red-500/20 text-red-400 border-red-500/50' }
-    };
-    return map[status] || { label: 'Desconocido', color: 'bg-gray-500/10 text-gray-400 border-gray-500/20' };
-}
-
-function renderOrdersList(orders = allOrders) {
-    const container = document.getElementById('orders-list');
-    if(!container) return;
     container.innerHTML = '';
-
-    if (orders.length === 0) {
-        container.innerHTML = `<div class="p-4 text-center text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-10">Sin coincidencias</div>`;
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="text-center p-10 text-gray-500 font-bold text-xs uppercase">Sin coincidencias</div>';
         return;
     }
 
-    orders.forEach(order => {
-        const isActive = order.id === activeOrderId;
-        const orderStatus = order.status || order.shipping_info?.status || 'PENDING';
-        const uiStatus = getStatusUI(orderStatus);
-        
-        const partnerName = order.involved_stores ? order.involved_stores[0] : 'Gymenez Store';
-        const dateStr = formatDate(order.created_at);
-        const buyerName = order.buyer_name || 'Atleta B2C';
-        const total = order.total_usd || 0;
+    filtered.forEach(p => {
+        const isActive = p.id === activePartnerId;
+        let badge = '';
+        if (p.is_blocked) badge = '<span class="px-2 py-0.5 rounded border text-[8px] font-black uppercase tracking-widest bg-red-500/10 text-red-500 border-red-500/20">Bloqueado</span>';
+        else if (p.status === 'pending_approval') badge = '<span class="px-2 py-0.5 rounded border text-[8px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500 border-amber-500/20">Auditoría</span>';
+        else badge = '<span class="px-2 py-0.5 rounded border text-[8px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border-emerald-500/20">Activo</span>';
 
-        const itemHTML = `
-            <div onclick="window.selectOrder('${order.id}')" class="p-4 rounded-2xl border cursor-pointer transition-all duration-200 flex flex-col gap-2 ${isActive ? 'bg-white/10 border-white/20 shadow-lg' : 'bg-white/[0.02] border-white/5 hover:bg-white/5'}">
-                <div class="flex justify-between items-start">
-                    <span class="font-black text-sm uppercase tracking-tight text-white truncate pr-2">#${order.id.slice(-6)}</span>
-                    <span class="px-2 py-0.5 rounded border text-[8px] font-black uppercase tracking-widest ${uiStatus.color}">${uiStatus.label}</span>
+        container.insertAdjacentHTML('beforeend', `
+            <div onclick="selectPartner('${p.id}')" class="p-4 rounded-xl border cursor-pointer transition-all ${isActive ? 'bg-white/10 border-white/20' : 'bg-white/5 border-white/10 hover:bg-white/10'}">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-bold text-sm text-white truncate max-w-[150px]">${p.store_name}</h4>
+                    ${badge}
                 </div>
-                
-                <div class="flex justify-between items-end">
-                    <div>
-                        <p class="text-[11px] font-bold text-gray-300 truncate">${buyerName}</p>
-                        <p class="text-[9px] font-mono text-gray-500 uppercase mt-0.5">${partnerName}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[10px] text-gray-500 font-bold mb-0.5">${dateStr.split(',')[0]}</p>
-                        <p class="text-sm font-black text-[#FFC300]">${formatCurrency(total)}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', itemHTML);
-    });
-}
-
-document.getElementById('search-orders')?.addEventListener('input', applyFiltersAndRender);
-document.getElementById('filter-status')?.addEventListener('change', applyFiltersAndRender);
-document.getElementById('filter-partner')?.addEventListener('change', applyFiltersAndRender);
-
-// ==========================================
-// 🔍 RADIOGRAFÍA: CARGAR DOSSIER DE ORDEN
-// ==========================================
-window.selectOrder = function(orderId) {
-    activeOrderId = orderId;
-    const order = allOrders.find(o => o.id === orderId);
-    if (!order) return;
-
-    applyFiltersAndRender(); 
-
-    document.getElementById('empty-state').classList.add('hidden');
-    const dossier = document.getElementById('active-order');
-    dossier.classList.remove('hidden');
-    dossier.classList.add('flex');
-
-    loadOrderDossier(order);
-    
-    document.querySelector('.o-tab-btn[data-target="o-content-details"]')?.click();
-};
-
-function loadOrderDossier(order) {
-    const orderStatus = order.status || order.shipping_info?.status || 'PENDING';
-    const uiStatus = getStatusUI(orderStatus);
-    
-    document.getElementById('o-id').textContent = `#${order.id}`;
-    document.getElementById('o-date').textContent = formatDate(order.created_at);
-    document.getElementById('o-total').textContent = formatCurrency(order.total_usd);
-    
-    const statusBadge = document.getElementById('o-status-badge');
-    statusBadge.textContent = uiStatus.label;
-    statusBadge.className = `px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest ${uiStatus.color}`;
-    
-    document.getElementById('o-partner-badge').textContent = order.involved_stores ? order.involved_stores[0] : 'Gymenez Store';
-
-    // TAB 1: Facturación
-    document.getElementById('o-customer-name').textContent = order.buyer_name || 'Atleta Desconocido';
-    document.getElementById('o-customer-email').textContent = `CI/RUT: ${order.buyer_doc || 'N/A'}`;
-
-    // Render Carrito
-    const cartContainer = document.getElementById('o-cart-items');
-    cartContainer.innerHTML = '';
-    const items = order.items || [];
-    items.forEach(item => {
-        cartContainer.insertAdjacentHTML('beforeend', `
-            <div class="px-5 py-4 flex justify-between items-center bg-black/20 border-b border-white/5 last:border-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">📦</div>
-                    <div>
-                        <h5 class="text-xs font-bold text-white uppercase truncate max-w-[200px]">${item.name}</h5>
-                        <p class="text-[9px] text-gray-400 font-mono mt-0.5">ID: ${item.real_id || item.id} | Comision: ${item.commission_model}</p>
-                    </div>
-                </div>
-                <div class="text-right flex-shrink-0">
-                    <p class="text-xs font-black text-white">${item.qty}x ${formatCurrency(item.price)}</p>
-                    <p class="text-[10px] text-[#FFC300] font-bold mt-0.5">${formatCurrency(item.qty * item.price)}</p>
-                </div>
+                <p class="text-[10px] text-gray-400 font-mono truncate">${p.email}</p>
+                <p class="text-[10px] text-gray-500 font-bold mt-1 uppercase">${p.doc_type}-${p.doc_number}</p>
             </div>
         `);
     });
-
-    // 🔥 FINANZAS B2B
-    const breakdown = order.global_financial_breakdown || {};
-    const gymenezFee = breakdown.global_gymenez_fee || 0;
-    const gatewayFee = breakdown.global_gateway_fee || 0;
-    const partnerNet = breakdown.global_partner_net || 0;
-    const payment = order.payment_details || {};
-    
-    document.getElementById('o-pay-method').textContent = (payment.payment_method || 'Desconocido').toUpperCase();
-    document.getElementById('o-pay-ref').textContent = payment.referencia || `BOT: ${payment.monto_bot || 'N/A'}`;
-    
-    document.getElementById('o-pay-fee').innerHTML = `
-        <span class="text-gray-400">Gymenez:</span> ${formatCurrency(gymenezFee)} <br>
-        <span class="text-gray-400">Pasarela:</span> ${formatCurrency(gatewayFee)}
-    `;
-    
-    document.getElementById('o-pay-net').innerHTML = `
-        <span class="text-[#FFC300] text-lg">${formatCurrency(partnerNet)}</span><br>
-        <span class="text-[9px] text-gray-500">Tasa: Bs. ${order.exchange_rate || 0} | Total: Bs. ${order.total_ves || 0}</span>
-    `;
-
-    // TAB 2: Logística
-    const shipping = order.shipping_info || {};
-    const shippingInfo = `Destinatario: ${order.buyer_name}\nDoc: ${order.buyer_doc}\nCiudad: ${shipping.city || 'N/A'}, ${shipping.state || 'N/A'}\nCourier: ${shipping.courier || 'N/A'}\nMunicipio: ${shipping.municipality || 'N/A'}`;
-    
-    document.getElementById('o-shipping-info').value = shippingInfo;
-    document.getElementById('o-tracking-number').value = shipping.tracking_number || '';
-
-    const radioBtn = document.querySelector(`input[name="logistics_status"][value="${orderStatus}"]`);
-    if(radioBtn) radioBtn.checked = true;
-    else document.querySelectorAll('input[name="logistics_status"]').forEach(r => r.checked = false);
 }
 
-// ==========================================
-// 📄 EXPORTACIÓN Y AUDITORÍAS (CSV & PDF)
-// ==========================================
-window.exportAuditCSV = function() {
-    if (allOrders.length === 0) { showUIFeedback("No hay órdenes para exportar", "error"); return; }
+// 3. SELECCIÓN DE PARTNER (DOSSIER)
+window.selectPartner = function(id) {
+    activePartnerId = id;
+    renderList();
+    const p = allPartners.find(x => x.id === id);
+    if (!p) return;
+
+    document.getElementById('empty-state').classList.add('hidden');
+    document.getElementById('active-partner').classList.remove('hidden');
+    document.getElementById('active-partner').classList.add('flex');
+
+    // Header
+    document.getElementById('p-store-name').textContent = p.store_name;
+    document.getElementById('p-email').textContent = p.email;
+    document.getElementById('p-doc').textContent = `${p.doc_type}-${p.doc_number}`;
     
-    let csvContent = "ID Orden,Fecha,Cliente,Documento,Total USD,Total VES,Tasa Exchange,Fee Gymenez,Fee Pasarela,Neto Partner,Estado,Partner Involucrado\n";
-    
-    allOrders.forEach(o => {
-        const date = o.created_at?.toDate ? o.created_at.toDate().toLocaleDateString('es-VE') : 'N/A';
-        const bk = o.global_financial_breakdown || {};
-        const partner = o.involved_stores ? o.involved_stores[0] : 'N/A';
-        const status = o.status || o.shipping_info?.status || 'PENDING';
-        
-        const row = [
-            o.id, date, `"${o.buyer_name}"`, o.buyer_doc, o.total_usd, o.total_ves, o.exchange_rate,
-            bk.global_gymenez_fee || 0, bk.global_gateway_fee || 0, bk.global_partner_net || 0,
-            status, `"${partner}"`
-        ];
-        csvContent += row.join(",") + "\n";
-    });
+    const logoHtml = p.logo_url ? `<img src="${p.logo_url}" class="w-full h-full object-cover">` : '🏢';
+    document.getElementById('p-logo-container').innerHTML = logoHtml;
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `Auditoria_Gymenez_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    showUIFeedback("Auditoría CSV generada exitosamente.");
-};
-
-window.exportAuditPDF = function() {
-    if (allOrders.length === 0) { showUIFeedback("No hay órdenes para exportar", "error"); return; }
-    
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('landscape');
-    
-    doc.setFontSize(18);
-    doc.text("Reporte de Auditoría B2B - Gymenez", 14, 20);
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Generado el: ${new Date().toLocaleString('es-VE')}`, 14, 28);
-
-    const tableBody = allOrders.map(o => {
-        const date = o.created_at?.toDate ? o.created_at.toDate().toLocaleDateString('es-VE') : 'N/A';
-        const bk = o.global_financial_breakdown || {};
-        const status = o.status || o.shipping_info?.status || 'PENDING';
-        
-        return [
-            o.id.substring(0, 8), date, o.buyer_name, 
-            `$${o.total_usd}`, `$${bk.global_gymenez_fee || 0}`, `$${bk.global_partner_net || 0}`, 
-            status
-        ];
-    });
-
-    doc.autoTable({
-        startY: 35,
-        head: [['ID', 'Fecha', 'Cliente', 'Total USD', 'Fee Gymenez', 'Neto Partner', 'Estado']],
-        body: tableBody,
-        theme: 'grid',
-        headStyles: { fillColor: [255, 195, 0], textColor: [0,0,0] }
-    });
-
-    doc.save(`Reporte_PDF_Gymenez_${new Date().toISOString().split('T')[0]}.pdf`);
-    showUIFeedback("Reporte PDF generado exitosamente.");
-};
-
-// ==========================================
-// 🛠️ ACCIONES DE API (UPDATE, REFUND, CANCEL, APPROVE)
-// ==========================================
-async function executeOrderAction(endpointSuffix, payload = {}, successMessage) {
-    if (!activeOrderId) return false;
-    
-    try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/store/order/${activeOrderId}/${endpointSuffix}`, {
-            method: 'PUT',
-            headers: getSecureHeaders(),
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        
-        if (res.ok && data.success) {
-            showUIFeedback(successMessage, 'success');
-            return true;
-        } else {
-            showUIFeedback(data.error || "Operación denegada", "error");
-            return false;
-        }
-    } catch (e) {
-        showUIFeedback("Falla en la red o servidor", "error");
-        return false;
+    // Badges
+    const statusB = document.getElementById('p-status-badge');
+    if(p.status === 'pending_approval') {
+        statusB.textContent = 'En Auditoría';
+        statusB.className = 'px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500 border border-amber-500/30';
+        document.getElementById('kyc-action-box').classList.remove('hidden');
+    } else {
+        statusB.textContent = p.status === 'active' ? 'Activo' : 'Rechazado';
+        statusB.className = p.status === 'active' ? 'px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/30' : 'px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-gray-500/10 text-gray-500 border border-gray-500/30';
+        document.getElementById('kyc-action-box').classList.add('hidden');
     }
-}
 
-// Wire-up Botones
-document.addEventListener('DOMContentLoaded', () => {
-    setupTabs();
-    initStoreRadar();
+    const secB = document.getElementById('p-security-badge');
+    const unlockBox = document.getElementById('security-unlock-box');
+    if (p.is_blocked) {
+        secB.classList.remove('hidden');
+        unlockBox.classList.remove('hidden');
+    } else {
+        secB.classList.add('hidden');
+        unlockBox.classList.add('hidden');
+    }
 
-    // 1. Botón Actualizar Logística B2B
-    document.getElementById('btn-update-logistics')?.addEventListener('click', async (e) => {
-        const btn = e.target;
-        const selectedStatus = document.querySelector('input[name="logistics_status"]:checked')?.value;
-        const tracking = document.getElementById('o-tracking-number').value.trim();
+    // KYC Links
+    document.getElementById('p-cedula-link').href = p.cedula_url || '#';
+    document.getElementById('p-cedula-link').textContent = p.cedula_url ? 'Ver Documento ↗' : 'No Disponible';
+    document.getElementById('p-rif-link').href = p.rif_url || '#';
+    document.getElementById('p-rif-link').textContent = p.rif_url ? 'Ver RIF ↗' : 'No Disponible';
 
-        if (!selectedStatus) { showUIFeedback("Selecciona un estado logístico", "error"); return; }
-        
-        btn.textContent = "Procesando..."; btn.disabled = true;
-        await executeOrderAction('logistics', { status: selectedStatus, tracking_number: tracking }, "Logística actualizada con éxito.");
-        btn.textContent = "Actualizar Logística"; btn.disabled = false;
-    });
+    // Sesiones
+    document.getElementById('p-session-count').textContent = p.active_sessions.length;
+    const sList = document.getElementById('p-sessions-list');
+    sList.innerHTML = '';
+    if (p.active_sessions.length === 0) {
+        sList.innerHTML = '<p class="text-xs text-gray-500">Ningún dispositivo conectado.</p>';
+    } else {
+        p.active_sessions.forEach(s => {
+            sList.insertAdjacentHTML('beforeend', `
+                <div class="flex justify-between items-center bg-black/40 border border-white/5 p-3 rounded-lg">
+                    <div>
+                        <p class="text-xs font-bold text-white">${s.device_name || 'Dispositivo'}</p>
+                        <p class="text-[9px] text-gray-500 font-mono mt-0.5">IP: ${s.ip_address} | Expira: ${new Date(s.expires_at).toLocaleDateString()}</p>
+                    </div>
+                    <button onclick="killSession('${s.session_id}')" class="px-3 py-1 bg-red-500/20 hover:bg-red-500/40 text-red-500 text-[9px] font-black uppercase rounded border border-red-500/30 transition">Matar Sesión</button>
+                </div>
+            `);
+        });
+    }
 
-    // 2. Botón Forzar Cancelación
-    document.getElementById('btn-force-cancel')?.addEventListener('click', async () => {
-        if(!confirm("⚠️ ATENCIÓN: Se cancelará la orden. El partner será notificado y no preparará el paquete. ¿Continuar?")) return;
-        await executeOrderAction('cancel', {}, "Orden Cancelada Correctamente.");
-    });
+    // Finanzas
+    document.getElementById('p-contract-model').textContent = p.commission_model || 'No Firmado';
+    const wStatus = document.getElementById('p-wallet-status');
+    const wBtn = document.getElementById('btn-reset-wallet');
+    
+    if (p.has_wallet) {
+        wStatus.innerHTML = '<span class="text-emerald-400 font-bold">Sellada (Activa)</span>';
+        wBtn.classList.remove('hidden');
+    } else {
+        wStatus.innerHTML = '<span class="text-gray-500">Sin configurar / Abierta</span>';
+        wBtn.classList.add('hidden');
+    }
 
-    // 3. Botón Marcar Refund
-    document.getElementById('btn-force-refund')?.addEventListener('click', async () => {
-        if(!confirm("⚠️ AUDITORÍA: ¿Confirmas que los fondos ya fueron devueltos al cliente por la pasarela?")) return;
-        await executeOrderAction('refund', {}, "Estado marcado como Reembolsado.");
-    });
+    // Volver al tab 1
+    document.querySelector('.p-tab-btn[data-target="p-tab-kyc"]').click();
+};
 
-    // 4. Botón Liquidar B2B
-    document.getElementById('btn-mark-liquidated')?.addEventListener('click', async () => {
-        if(!confirm("💰 FINANZAS: ¿Confirmas que el dinero de esta venta ya fue depositado al Partner Comercial?")) return;
-        await executeOrderAction('liquidate', {}, "Orden Liquidada con el Partner.");
-    });
+// 4. ACCIONES DE SEGURIDAD Y CONTROL
+window.executeAudit = async function(action) {
+    if(!confirm(`¿Estás seguro de ${action === 'approve' ? 'APROBAR' : 'RECHAZAR'} este comercio?`)) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/b2b/partner/${activePartnerId}/audit`, {
+            method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ action })
+        });
+        if(res.ok) { showFeedback("Auditoría procesada."); fetchPartners(); }
+        else showFeedback("Fallo en la auditoría.", "error");
+    } catch(e) { showFeedback("Error de red.", "error"); }
+};
 
-    // 5. Botón Aprobar Manualmente (Botón de Dios)
-    document.getElementById('btn-force-approve')?.addEventListener('click', async () => {
-        if(!confirm("🛡️ AUDITORÍA: ¿Confirmas que verificaste el pago en la cuenta bancaria y deseas APROBAR esta orden manualmente?")) return;
-        await executeOrderAction('approve', {}, "Orden Aprobada y Sancionada Correctamente.");
+window.unlockPartner = async function() {
+    if(!confirm("¿Levantar bloqueo de seguridad por fuerza bruta?")) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/b2b/partner/${activePartnerId}/unlock`, {
+            method: 'PUT', headers: getAuthHeaders()
+        });
+        if(res.ok) { showFeedback("Cuenta desbloqueada."); fetchPartners(); }
+    } catch(e) { showFeedback("Error de red.", "error"); }
+};
+
+window.killSession = async function(sessionId) {
+    if(!confirm("¿Destruir remotamente esta sesión? El partner será expulsado del dispositivo.")) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/b2b/partner/${activePartnerId}/session/${sessionId}`, {
+            method: 'DELETE', headers: getAuthHeaders()
+        });
+        if(res.ok) { showFeedback("Sesión destruida exitosamente."); fetchPartners(); }
+    } catch(e) { showFeedback("Error de red.", "error"); }
+};
+
+window.resetWallet = async function() {
+    if(!confirm("⚠️ PELIGRO: Esto romperá el sello de la bóveda bancaria. El partner tendrá que ingresar sus datos de cobro de nuevo. ¿Continuar?")) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/b2b/partner/${activePartnerId}/reset-wallet`, {
+            method: 'PUT', headers: getAuthHeaders()
+        });
+        if(res.ok) { showFeedback("Sello de bóveda roto."); fetchPartners(); }
+    } catch(e) { showFeedback("Error de red.", "error"); }
+};
+
+// Tabs Logic & Listeners
+document.querySelectorAll('.p-tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.p-tab-btn').forEach(b => { b.classList.remove('active', 'text-[#FFC300]', 'border-[#FFC300]'); b.classList.add('text-gray-500', 'border-transparent'); });
+        document.querySelectorAll('.p-tab-content').forEach(c => { c.classList.remove('block'); c.classList.add('hidden'); });
+        btn.classList.remove('text-gray-500', 'border-transparent'); btn.classList.add('active', 'text-[#FFC300]', 'border-[#FFC300]');
+        document.getElementById(btn.getAttribute('data-target')).classList.remove('hidden');
+        document.getElementById(btn.getAttribute('data-target')).classList.add('block');
     });
 });
+
+document.getElementById('search-partner').addEventListener('input', renderList);
+document.getElementById('filter-status').addEventListener('change', renderList);
+document.getElementById('btn-close-partner')?.addEventListener('click', () => {
+    document.getElementById('active-partner').classList.add('hidden');
+    document.getElementById('empty-state').classList.remove('hidden');
+    activePartnerId = null;
+    renderList();
+});
+
+// INIT
+fetchPartners();
