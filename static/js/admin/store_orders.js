@@ -283,7 +283,7 @@ function loadPartnerDossier(p) {
 }
 
 // ==========================================
-// 🛡️ ACCIONES DE SEGURIDAD (LLAMADAS API)
+// 🛡️ ACCIONES DE SEGURIDAD Y EDICIÓN (LLAMADAS API)
 // ==========================================
 window.executeAudit = async function(action) {
     let actionWord = action === 'approve' ? 'APROBAR' : action === 'suspend' ? 'SUSPENDER' : action === 'reactivate' ? 'REACTIVAR' : 'RECHAZAR';
@@ -332,6 +332,56 @@ window.resetWallet = async function() {
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/b2b/partner/${activePartnerId}/reset-wallet`, { method: 'PUT', headers: getSecureHeaders() });
         if(res.ok) { showUIFeedback("Sello de bóveda roto correctamente."); window.fetchPartners(); }
+    } catch(e) { showUIFeedback("Falla de red.", "error"); }
+};
+
+// 📞 Edición de Teléfono
+window.editPartnerPhone = async function() {
+    const currentPhone = document.getElementById('d-phone').textContent;
+    const newPhone = prompt("Ingresa el nuevo número de teléfono para esta tienda:", currentPhone);
+    
+    if (newPhone === null || newPhone.trim() === "" || newPhone === currentPhone) return;
+
+    if(!confirm(`¿Estás seguro de actualizar el teléfono a ${newPhone}?`)) return;
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/b2b/partner/${activePartnerId}/phone`, {
+            method: 'PUT', headers: getSecureHeaders(), body: JSON.stringify({ phone: newPhone })
+        });
+        if(res.ok) { 
+            showUIFeedback("Teléfono actualizado con éxito."); 
+            window.fetchPartners(); 
+        } else {
+            showUIFeedback("Error al actualizar el teléfono.", "error");
+        }
+    } catch(e) { showUIFeedback("Falla de red.", "error"); }
+};
+
+// 📧 Edición de Correo
+window.editPartnerEmail = async function() {
+    const currentEmail = document.getElementById('d-email').textContent;
+    const newEmail = prompt("Ingresa el nuevo correo electrónico para esta tienda:", currentEmail);
+    
+    if (newEmail === null || newEmail.trim() === "" || newEmail === currentEmail) return;
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+        showUIFeedback("Formato de correo inválido.", "error");
+        return;
+    }
+
+    if(!confirm(`¿Estás seguro de actualizar el correo a ${newEmail}?`)) return;
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/b2b/partner/${activePartnerId}/email`, {
+            method: 'PUT', headers: getSecureHeaders(), body: JSON.stringify({ email: newEmail })
+        });
+        if(res.ok) { 
+            showUIFeedback("Correo actualizado con éxito."); 
+            window.fetchPartners(); 
+        } else {
+            showUIFeedback("Error al actualizar el correo.", "error");
+        }
     } catch(e) { showUIFeedback("Falla de red.", "error"); }
 };
 
