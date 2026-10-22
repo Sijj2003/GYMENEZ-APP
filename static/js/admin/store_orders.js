@@ -54,7 +54,7 @@ function setupTabs() {
 // ==========================================
 // 📡 CORE B2B: FETCH Y RENDERIZADO
 // ==========================================
-async function fetchPartners() {
+window.fetchPartners = async function() {
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/b2b/partners`, { headers: getSecureHeaders() });
         const data = await res.json();
@@ -101,6 +101,7 @@ function renderList() {
         let badgeUI = '';
         if (p.is_blocked) badgeUI = `<span class="px-2 py-0.5 rounded border text-[8px] font-black uppercase tracking-widest bg-red-500/10 text-red-500 border-red-500/20">Bloqueado</span>`;
         else if (p.status === 'pending_approval') badgeUI = `<span class="px-2 py-0.5 rounded border text-[8px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500 border-amber-500/20">Auditoría</span>`;
+        else if (p.status === 'suspended') badgeUI = `<span class="px-2 py-0.5 rounded border text-[8px] font-black uppercase tracking-widest bg-gray-500/10 text-gray-400 border-gray-500/30">Suspendida</span>`;
         else badgeUI = `<span class="px-2 py-0.5 rounded border text-[8px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border-emerald-500/20">Activa</span>`;
 
         const html = `
@@ -135,7 +136,7 @@ window.selectPartner = function(id) {
     dossier.classList.add('flex');
 
     loadPartnerDossier(partner);
-    document.querySelector('.d-tab-btn[data-target="d-content-kyc"]').click(); // Forzar tab 1
+    document.querySelector('.d-tab-btn[data-target="d-content-kyc"]')?.click(); // Forzar tab 1
 };
 
 function loadPartnerDossier(p) {
@@ -144,18 +145,47 @@ function loadPartnerDossier(p) {
     document.getElementById('d-email').textContent = p.email;
     document.getElementById('d-logo').innerHTML = p.logo_url ? `<img src="${p.logo_url}" class="w-full h-full object-cover">` : '🏢';
     
-    // Status Badges
+    // Status Badges & Action Box Dinámico
     const statusB = document.getElementById('d-status');
-    const actionBox = document.getElementById('kyc-action-box');
+    const actBox = document.getElementById('kyc-action-box');
+    const actTitle = document.getElementById('action-box-title');
+    const actDesc = document.getElementById('action-box-desc');
+    const actBtns = document.getElementById('action-box-buttons');
     
+    actBox.className = 'border rounded-xl p-5 mb-6'; // Reset base classes
+    actBox.classList.remove('hidden');
+
     if(p.status === 'pending_approval') {
-        statusB.textContent = 'Auditoría KYC';
-        statusB.className = 'px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest bg-amber-500/10 text-amber-500 border border-amber-500/30';
-        actionBox.classList.remove('hidden');
+        statusB.textContent = 'En Auditoría'; statusB.className = 'px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest bg-amber-500/10 text-amber-500 border border-amber-500/30';
+        actBox.classList.add('bg-amber-500/10', 'border-amber-500/30');
+        actTitle.className = 'text-xs font-black uppercase tracking-widest mb-2 text-amber-500';
+        actTitle.textContent = 'Aprobación Pendiente';
+        actDesc.textContent = 'Verifica minuciosamente los documentos legales antes de permitir a esta tienda operar en el catálogo global de Gymenez.';
+        actBtns.innerHTML = `
+            <button onclick="window.executeAudit('approve')" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition shadow-sm">✅ Aprobar Comercio</button>
+            <button onclick="window.executeAudit('reject')" class="px-6 py-3 bg-red-600/20 hover:bg-red-500/40 border border-red-500/30 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-xl transition">❌ Rechazar</button>
+        `;
+    } else if (p.status === 'active') {
+        statusB.textContent = 'Activa'; statusB.className = 'px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+        actBox.classList.add('bg-emerald-500/5', 'border-emerald-500/20');
+        actTitle.className = 'text-xs font-black uppercase tracking-widest mb-2 text-emerald-500';
+        actTitle.textContent = 'Tienda Operativa';
+        actDesc.textContent = 'Este comercio está activo y visible. Puedes suspenderlo temporalmente si viola políticas comerciales.';
+        actBtns.innerHTML = `<button onclick="window.executeAudit('suspend')" class="px-6 py-3 bg-orange-600/20 hover:bg-orange-600 border border-orange-500/30 text-orange-500 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition">⚠️ Suspender Tienda</button>`;
+    } else if (p.status === 'suspended') {
+        statusB.textContent = 'Suspendida'; statusB.className = 'px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest bg-gray-500/10 text-gray-400 border border-gray-500/20';
+        actBox.classList.add('bg-gray-500/10', 'border-gray-500/30');
+        actTitle.className = 'text-xs font-black uppercase tracking-widest mb-2 text-gray-400';
+        actTitle.textContent = 'Tienda Suspendida';
+        actDesc.textContent = 'La tienda no puede operar actualmente. Puedes reactivarla cuando se solucionen los inconvenientes operacionales.';
+        actBtns.innerHTML = `<button onclick="window.executeAudit('reactivate')" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition">✅ Reactivar Tienda</button>`;
     } else {
-        statusB.textContent = p.status === 'active' ? 'ACTIVA' : 'RECHAZADA';
-        statusB.className = p.status === 'active' ? 'px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest bg-gray-500/10 text-gray-400 border border-gray-500/20';
-        actionBox.classList.add('hidden');
+        statusB.textContent = 'Rechazada'; statusB.className = 'px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest bg-red-500/10 text-red-500 border border-red-500/20';
+        actBox.classList.add('bg-red-500/5', 'border-red-500/20');
+        actTitle.className = 'text-xs font-black uppercase tracking-widest mb-2 text-red-500';
+        actTitle.textContent = 'Solicitud Rechazada';
+        actDesc.textContent = 'La documentación de esta tienda fue denegada.';
+        actBtns.innerHTML = `<button onclick="window.executeAudit('approve')" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition">✅ Reevaluar y Aprobar</button>`;
     }
 
     const secB = document.getElementById('d-security');
@@ -168,11 +198,11 @@ function loadPartnerDossier(p) {
         secBox.classList.add('hidden');
     }
 
-    // 2. Tab: KYC
+    // 2. Tab: KYC Links
     document.getElementById('d-doc-number').textContent = `${p.doc_type}-${p.doc_number}`;
     document.getElementById('d-phone').textContent = p.phone || 'Sin registro';
     
-    const setLink = (id, url, defaultText) => {
+    const setLink = (id, url) => {
         const el = document.getElementById(id);
         el.href = url || '#';
         el.style.pointerEvents = url ? 'auto' : 'none';
@@ -203,10 +233,16 @@ function loadPartnerDossier(p) {
         });
     }
 
-    // 4. Tab: Finanzas y Bóveda
-    document.getElementById('d-contract-model').textContent = p.commission_model || 'No Firmado';
-    
-    const wStatus = document.getElementById('d-wallet-status');
+    // 4. Tab: Finanzas, Bóveda y Contrato
+    document.getElementById('p-contract-model').textContent = p.commission_model || 'No Firmado';
+    const btnRevoke = document.getElementById('btn-revoke-contract');
+    if(p.commission_model && p.commission_model !== 'No Firmado') {
+        btnRevoke.classList.remove('hidden');
+    } else {
+        btnRevoke.classList.add('hidden');
+    }
+
+    const wStatus = document.getElementById('p-wallet-status');
     const wBtn = document.getElementById('btn-reset-wallet');
     if (p.has_wallet) {
         wStatus.innerHTML = '<span class="text-emerald-400 font-bold">Bóveda Sellada (Activa)</span>';
@@ -215,27 +251,71 @@ function loadPartnerDossier(p) {
         wStatus.innerHTML = '<span class="text-gray-500">Bóveda sin configurar / Sello roto</span>';
         wBtn.classList.add('hidden');
     }
+
+    // 📜 RENDERIZAR HISTORIAL DE CONTRATOS REVOCADOS
+    const historyList = document.getElementById('p-contract-history-list');
+    historyList.innerHTML = '';
+    const history = p.contract_history || [];
+    
+    if(history.length === 0) {
+        historyList.innerHTML = '<p class="text-xs text-gray-500 font-bold uppercase tracking-widest text-center py-4">No hay historial legal archivado.</p>';
+    } else {
+        // Revertimos el array para mostrar los más recientes arriba
+        [...history].reverse().forEach(h => {
+            const dateStr = new Date(h.revoked_at).toLocaleString('es-VE', {
+                day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit'
+            }).toUpperCase();
+            
+            historyList.insertAdjacentHTML('beforeend', `
+                <div class="flex justify-between items-center bg-white/5 border border-white/10 p-4 rounded-xl">
+                    <div>
+                        <p class="text-xs font-black text-gray-300 uppercase tracking-widest">${h.model}</p>
+                        <p class="text-[9px] text-gray-500 font-mono mt-1">ID Contrato: ${h.contract_id || 'Desconocido'} | Revocado por: ${h.revoked_by || 'Sistema'}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="px-2 py-1 bg-red-500/10 text-red-500 border border-red-500/20 rounded text-[8px] font-black uppercase tracking-widest">Dado de Baja</span>
+                        <p class="text-[9px] text-gray-400 font-mono mt-1.5">${dateStr}</p>
+                    </div>
+                </div>
+            `);
+        });
+    }
 }
 
 // ==========================================
 // 🛡️ ACCIONES DE SEGURIDAD (LLAMADAS API)
 // ==========================================
 window.executeAudit = async function(action) {
-    if(!confirm(`⚖️ AUDITORÍA: ¿Estás seguro de ${action === 'approve' ? 'APROBAR' : 'RECHAZAR'} a este comercio para operar en Gymenez?`)) return;
+    let actionWord = action === 'approve' ? 'APROBAR' : action === 'suspend' ? 'SUSPENDER' : action === 'reactivate' ? 'REACTIVAR' : 'RECHAZAR';
+    if(!confirm(`⚖️ AUDITORÍA: ¿Estás seguro de ${actionWord} a este comercio para operar en Gymenez?`)) return;
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/b2b/partner/${activePartnerId}/audit`, {
             method: 'PUT', headers: getSecureHeaders(), body: JSON.stringify({ action })
         });
-        if(res.ok) { showUIFeedback(`Tienda ${action === 'approve' ? 'aprobada' : 'rechazada'} exitosamente.`); fetchPartners(); }
-        else showUIFeedback("Operación denegada.", "error");
+        if(res.ok) { 
+            showUIFeedback(`Operación exitosa.`); 
+            fetchPartners(); 
+        } else {
+            showUIFeedback("Operación denegada.", "error");
+        }
     } catch(e) { showUIFeedback("Falla de red.", "error"); }
+};
+
+window.revokeContract = async function() {
+    if(!confirm("📜 LEGAL: Estás a punto de revocar el contrato B2B actual. El historial se guardará de forma inmutable, pero el partner tendrá que firmar un modelo nuevo. ¿Continuar?")) return;
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/b2b/partner/${activePartnerId}/revoke-contract`, {
+            method: 'PUT', headers: getSecureHeaders()
+        });
+        if(res.ok) { showUIFeedback("Contrato revocado y archivado exitosamente."); window.fetchPartners(); }
+    } catch(e) { showUIFeedback("Error de red.", "error"); }
 };
 
 window.unlockPartner = async function() {
     if(!confirm("🛡️ PARTNER SHIELD: ¿Deseas levantar el bloqueo de seguridad impuesto a esta tienda?")) return;
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/b2b/partner/${activePartnerId}/unlock`, { method: 'PUT', headers: getSecureHeaders() });
-        if(res.ok) { showUIFeedback("Bloqueo de seguridad levantado."); fetchPartners(); }
+        if(res.ok) { showUIFeedback("Bloqueo de seguridad levantado."); window.fetchPartners(); }
     } catch(e) { showUIFeedback("Falla de red.", "error"); }
 };
 
@@ -243,7 +323,7 @@ window.killSession = async function(sessionId) {
     if(!confirm("⚠️ CIBERSEGURIDAD: ¿Destruir remotamente la sesión? El comercio será desconectado de ese dispositivo de inmediato.")) return;
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/b2b/partner/${activePartnerId}/session/${sessionId}`, { method: 'DELETE', headers: getSecureHeaders() });
-        if(res.ok) { showUIFeedback("Sesión destruida con éxito."); fetchPartners(); }
+        if(res.ok) { showUIFeedback("Sesión destruida con éxito."); window.fetchPartners(); }
     } catch(e) { showUIFeedback("Falla de red.", "error"); }
 };
 
@@ -251,7 +331,7 @@ window.resetWallet = async function() {
     if(!confirm("💰 FINANZAS: Estás a punto de ROMPER EL SELLO BANCARIO. El partner tendrá que registrar sus datos de cobro de nuevo. ¿Continuar?")) return;
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/b2b/partner/${activePartnerId}/reset-wallet`, { method: 'PUT', headers: getSecureHeaders() });
-        if(res.ok) { showUIFeedback("Sello de bóveda roto correctamente."); fetchPartners(); }
+        if(res.ok) { showUIFeedback("Sello de bóveda roto correctamente."); window.fetchPartners(); }
     } catch(e) { showUIFeedback("Falla de red.", "error"); }
 };
 
@@ -260,7 +340,7 @@ window.resetWallet = async function() {
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     setupTabs();
-    fetchPartners();
+    window.fetchPartners();
 
     document.getElementById('search-input')?.addEventListener('input', renderList);
     document.getElementById('filter-status')?.addEventListener('change', renderList);
