@@ -205,9 +205,14 @@ window.openReceiptModal = function(ticketId) {
     const usd = ticket.financials.puro_usd || 0;
     const ves = ticket.financials.puro_ves || 0;
     const bcv = ticket.financials.tasa_bcv_cierre || 0;
+    
+    // 🍎 NUEVO: Extraer reintegro y total
+    const reintegro = ticket.financials.reintegro_aplicado_usd || 0;
+    const totalEqUsd = ticket.financials.total_equivalente_usd || 0;
 
     const usdBox = document.getElementById('rec-usd-box');
     const vesBox = document.getElementById('rec-ves-box');
+    const reintegroBox = document.getElementById('rec-reintegro-box'); // 🍎 NUEVO CONTENEDOR
 
     if (usd > 0) {
         usdBox.classList.remove('hidden');
@@ -226,6 +231,24 @@ window.openReceiptModal = function(ticketId) {
     } else {
         vesBox.classList.add('hidden');
         vesBox.classList.remove('flex');
+    }
+
+    // 🍎 NUEVO: Mostrar el Reintegro solo si aplica
+    if (reintegroBox) {
+        if (reintegro > 0) {
+            reintegroBox.classList.remove('hidden');
+            reintegroBox.classList.add('flex');
+            document.getElementById('rec-reintegro-val').textContent = `+$${reintegro.toFixed(2)} USD`;
+        } else {
+            reintegroBox.classList.add('hidden');
+            reintegroBox.classList.remove('flex');
+        }
+    }
+
+    // 🍎 NUEVO: Pintar el Total Final Consolidado
+    const totalEl = document.getElementById('rec-total-val');
+    if (totalEl) {
+        totalEl.textContent = `$${totalEqUsd.toFixed(2)} USD`;
     }
 
     document.getElementById('rec-bcv').textContent = `Bs. ${bcv.toFixed(2)}`;
