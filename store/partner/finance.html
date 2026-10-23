@@ -338,8 +338,20 @@
                     </div>
                 </div>
 
+                <!-- 🍎 NUEVO: CAJA DE REINTEGRO POR SUBSIDIO (VERDE) -->
+                <div id="rec-reintegro-box" class="hidden justify-between items-center border-b border-white/5 pb-4">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-emerald-500">Reintegro Subsidio B2B</p>
+                    <p id="rec-reintegro-val" class="text-base font-black text-emerald-500 italic">+$0.00 USD</p>
+                </div>
+
+                <!-- 🍎 NUEVO: TOTAL A TRANSFERIR CONSOLIDADO -->
+                <div class="flex justify-between items-center bg-white/5 px-4 py-3 rounded-xl border border-white/10 mt-2">
+                    <p class="text-[10px] font-black text-[#FFC300] uppercase tracking-widest">Total a Transferir</p>
+                    <p id="rec-total-val" class="text-xl font-black text-white italic tracking-tighter">$0.00 USD</p>
+                </div>
+
                 <!-- Resumen Operativo -->
-                <div class="bg-[#0a0a0f] border border-white/5 p-5 rounded-2xl space-y-3">
+                <div class="bg-[#0a0a0f] border border-white/5 p-5 rounded-2xl space-y-3 mt-6">
                     <div class="flex justify-between items-center">
                         <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Tasa BCV Aplicada</span>
                         <span class="text-[10px] font-mono text-white" id="rec-bcv">Bs. 0.00</span>
@@ -372,6 +384,7 @@
             </div>
         </div>
     </div>
+    
 
     <!-- 🍎 SCRIPT NATIVO: BUSCADOR INSTANTÁNEO EN EL HISTORIAL -->
     <script>
@@ -415,7 +428,7 @@
     <script src="/static/js/store/partner_session.js"></script>
     <script src="/static/js/store/partner_ui.js"></script>
     <script src="/static/js/store/partner_profile.js"></script>
-    <script src="/static/js/store/partner_finance.js?v=3.6"></script>
+    <script src="/static/js/store/partner_finance.js?v=3.7"></script>
     <script src="/static/js/store/partner_main.js?v=1.7"></script>
 
 </body>
