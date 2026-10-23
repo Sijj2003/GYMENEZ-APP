@@ -233,22 +233,29 @@ window.openReceiptModal = function(ticketId) {
         vesBox.classList.remove('flex');
     }
 
-    // 🍎 NUEVO: Mostrar el Reintegro solo si aplica
+    // 🍎 Mostrar el Reintegro solo si aplica, con su equivalente en Bolívares
     if (reintegroBox) {
         if (reintegro > 0) {
             reintegroBox.classList.remove('hidden');
             reintegroBox.classList.add('flex');
             document.getElementById('rec-reintegro-val').textContent = `+$${reintegro.toFixed(2)} USD`;
+            
+            const refEl = document.getElementById('rec-reintegro-ref');
+            if (refEl) refEl.textContent = `~ Bs. ${(reintegro * bcv).toFixed(2)} (Ref)`;
         } else {
             reintegroBox.classList.add('hidden');
             reintegroBox.classList.remove('flex');
         }
     }
 
-    // 🍎 NUEVO: Pintar el Total Final Consolidado
+    // 🍎 Pintar el Total Final Consolidado (USD y VES)
     const totalEl = document.getElementById('rec-total-val');
+    const totalVesEl = document.getElementById('rec-total-ref');
     if (totalEl) {
         totalEl.textContent = `$${totalEqUsd.toFixed(2)} USD`;
+        if (totalVesEl) {
+            totalVesEl.textContent = `~ Bs. ${(totalEqUsd * bcv).toFixed(2)}`;
+        }
     }
 
     document.getElementById('rec-bcv').textContent = `Bs. ${bcv.toFixed(2)}`;
