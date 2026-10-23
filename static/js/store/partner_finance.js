@@ -48,7 +48,7 @@ function isPayoutWindowOpen() {
     const hour = now.getHours();
 
     if (day === 4 && hour >= 7) return true; // Jueves desde las 7:00 AM hasta las 23:59
-    if (day === 5 && hour < 12) return true; // Viernes desde las 00:00 hasta las 11:59 AM
+    if (day === 5 && hour < 16) return true; // Viernes desde las 00:00 hasta las 04:00 PM
     
     return false;
 }
