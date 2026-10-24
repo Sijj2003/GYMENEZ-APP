@@ -197,8 +197,14 @@
                     <div class="bg-[#12121a] p-6 md:p-8 rounded-[2rem] border border-white/5 relative overflow-hidden w-full">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-[#FFC300]/5 rounded-full blur-[40px] -mr-10 -mt-10 pointer-events-none"></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 relative z-10 w-full">
-                            <div class="md:col-span-2 min-w-0">
-                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Nombre Comercial Registrado</label>
+                            <!-- 🍎 NUEVO: Razón Social (Legal) -->
+                            <div class="min-w-0">
+                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Razón Social (Legal)</label>
+                                <input type="text" id="reg-legalName" required class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner min-w-0" placeholder="Ej: Inversiones Gymenez C.A.">
+                            </div>
+                            <!-- 🍎 AJUSTADO: Nombre Comercial -->
+                            <div class="min-w-0">
+                                <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Nombre Comercial (Tienda)</label>
                                 <input type="text" id="reg-storeName" required class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#FFC300] transition shadow-inner min-w-0" placeholder="Ej: Gymenez Performance">
                             </div>
                             <div class="min-w-0">
