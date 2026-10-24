@@ -57,6 +57,34 @@
             max-width: 100%;
             display: inline-block;
         }
+
+        /* 🍎 CORRECCIÓN MÓVIL: Reorganización dinámica para evitar aglutinamiento */
+        @media (max-width: 640px) {
+            #transactions-list > div {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 1.25rem !important;
+            }
+            #transactions-list > div > div:nth-child(2) {
+                width: 100% !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                text-align: left !important;
+            }
+            #transactions-list > div > div:nth-child(2) > div {
+                display: flex !important;
+                align-items: center !important;
+                gap: 0.75rem !important;
+            }
+            #transactions-list > div > div:nth-child(2) > div > p {
+                margin-bottom: 0 !important;
+            }
+            #transactions-list > div > div:nth-child(2) > button {
+                margin-top: 0 !important;
+                width: auto !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-[#030305] text-white selection:bg-[#FFC300] selection:text-black min-h-screen md:h-screen flex flex-col md:flex-row relative overflow-x-hidden md:overflow-hidden">
@@ -297,8 +325,9 @@
     </div>
 
     <!-- MODAL DE RECIBO PREMIUM B2B -->
+    <!-- 🍎 CORRECCIÓN MÓVIL: Cambiado overflow-hidden por max-h-[90vh] overflow-y-auto hide-scroll para permitir desplazamiento interior -->
     <div id="receipt-modal" class="fixed inset-0 z-[110] bg-black/90 backdrop-blur-xl hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-[#050508] border border-white/10 w-full max-w-md rounded-[2rem] shadow-[0_0_80px_rgba(255,195,0,0.1)] transform scale-95 transition-transform duration-500 overflow-hidden relative">
+        <div class="bg-[#050508] border border-white/10 w-full max-w-md rounded-[2rem] shadow-[0_0_80px_rgba(255,195,0,0.1)] transform scale-95 transition-transform duration-500 max-h-[90vh] overflow-y-auto hide-scroll relative">
             
             <!-- Gymenez Header -->
             <div class="bg-gradient-to-b from-[#12121a] to-[#050508] border-b border-white/5 p-8 text-center relative">
@@ -338,13 +367,13 @@
                     </div>
                 </div>
 
-                <!-- 🍎 NUEVO: CAJA DE REINTEGRO POR SUBSIDIO (VERDE) -->
+                <!-- CAJA DE REINTEGRO POR SUBSIDIO (VERDE) -->
                 <div id="rec-reintegro-box" class="hidden justify-between items-center border-b border-white/5 pb-4">
                     <p class="text-[10px] font-black uppercase tracking-widest text-emerald-500">Reintegro Wallet Gymenez</p>
                     <p id="rec-reintegro-val" class="text-base font-black text-emerald-500 italic">+$0.00 USD</p>
                 </div>
 
-                <!-- 🍎 NUEVO: TOTAL A TRANSFERIR CONSOLIDADO -->
+                <!-- TOTAL A TRANSFERIR CONSOLIDADO -->
                 <div class="flex justify-between items-center bg-white/5 px-4 py-3 rounded-xl border border-white/10 mt-2">
                     <p class="text-[10px] font-black text-[#FFC300] uppercase tracking-widest">Total a Transferir</p>
                     <p id="rec-total-val" class="text-xl font-black text-white italic tracking-tighter">$0.00 USD</p>
@@ -386,13 +415,12 @@
     </div>
     
 
-    <!-- 🍎 SCRIPT NATIVO: BUSCADOR INSTANTÁNEO EN EL HISTORIAL -->
+    <!-- SCRIPT NATIVO: BUSCADOR INSTANTÁNEO EN EL HISTORIAL -->
     <script>
         function searchFinanceHistory() {
             const query = document.getElementById('search-finance').value.toLowerCase();
             const list = document.getElementById('transactions-list');
             
-            // Asume que los elementos inyectados por JS son los DIVs directos
             const items = list.querySelectorAll(':scope > div:not(#no-finance-results)'); 
             let hasResults = false;
 
@@ -406,7 +434,6 @@
                 }
             });
 
-            // Mensaje de estado vacío para la búsqueda
             let noResultsMsg = document.getElementById('no-finance-results');
             if (!hasResults && items.length > 0) {
                 if (!noResultsMsg) {
@@ -424,7 +451,6 @@
         }
     </script>
     <script src="/static/js/store/partner_cache.js"></script>
-
     <script src="/static/js/store/partner_session.js"></script>
     <script src="/static/js/store/partner_ui.js"></script>
     <script src="/static/js/store/partner_profile.js"></script>
