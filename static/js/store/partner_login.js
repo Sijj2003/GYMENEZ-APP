@@ -241,6 +241,8 @@ document.getElementById('form-register-action').addEventListener('submit', async
     btn.disabled = true;
 
     const formData = new FormData();
+    // 🍎 NUEVO: Capturar Razón Social
+    formData.append('legalName', document.getElementById('reg-legalName').value);
     formData.append('storeName', document.getElementById('reg-storeName').value);
     formData.append('docType', document.getElementById('reg-docType').value);
     formData.append('docNumber', document.getElementById('reg-docNumber').value);
