@@ -146,7 +146,7 @@
             <a href="/store/home.html" class="inline-block bg-[#FFC300] text-black px-10 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:scale-[1.02] hover:bg-yellow-400 transition-all shadow-[0_10px_30px_rgba(255,195,0,0.2)]">Volver a la Tienda</a>
         </div>
 
-        <!-- 🍎 CONTENEDOR MAESTRO DEL GRID -->
+        <!-- CONTENEDOR MAESTRO DEL GRID -->
         <div id="checkout-container" class="grid grid-cols-1 lg:grid-cols-12 gap-10 hidden w-full items-start">
             
             <!-- ========================================== -->
@@ -276,7 +276,7 @@
                             </button>
                         </div>
 
-                        <!-- 🍎 ALERTAS DE LOGÍSTICA HÍBRIDA -->
+                        <!-- ALERTAS DE LOGÍSTICA HÍBRIDA -->
                         <div id="hybrid-logistics-alerts" class="space-y-4 mt-6">
                             
                             <!-- Alerta Multi-Tienda -->
@@ -332,42 +332,63 @@
                         </p>
                     </div>
 
-                    <!-- Panel de Medios de Pago -->
+                    <!-- 🍎 INICIO CORRECCIÓN QUIRÚRGICA: PANEL DE PAGOS -->
 <section class="bg-white/5 p-6 md:p-8 rounded-[2rem] border border-white/10 backdrop-blur-xl shadow-xl">
     <h3 class="text-xl font-bold uppercase text-white mb-6 tracking-wide">Medio de Pago</h3>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div id="card-pm" onclick="selectPaymentMethod('pago_movil')" class="payment-card cursor-pointer relative w-full p-5 rounded-2xl border-2 border-[#FFC300] bg-[#FFC300]/10 transition-all duration-300 overflow-hidden shadow-[0_0_15px_rgba(255,195,0,0.15)] group">
+    <!-- 🍎 1. GRID ACTUALIZADO A 4 COLUMNAS EN ESCRITORIO, 2 EN MÓVIL -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        
+        <!-- 🍎 NUEVA TARJETA: DÉBITO INMEDIATO C2P -->
+        <div id="card-c2p" onclick="selectPaymentMethod('c2p')" class="payment-card cursor-pointer relative w-full p-4 md:p-5 rounded-2xl border-2 border-white/5 bg-white/5 hover:border-white/20 transition-all duration-300 overflow-hidden group">
             <div class="flex items-center justify-between mb-3 relative z-10">
-                <div class="w-10 h-10 rounded-xl bg-[#FFC300]/20 flex items-center justify-center text-[#FFC300] transition-transform group-hover:scale-110">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#FFC300] transition-transform group-hover:scale-110">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
-                <div id="check-pm" class="w-5 h-5 rounded-full border-2 border-[#FFC300] flex items-center justify-center transition-all duration-300">
-                    <div class="w-2.5 h-2.5 rounded-full bg-[#FFC300] transition-transform duration-300 scale-100"></div>
+                <div id="check-c2p" class="w-5 h-5 rounded-full border-2 border-gray-600 flex items-center justify-center transition-all duration-300">
+                    <div class="w-2.5 h-2.5 rounded-full bg-transparent transition-transform duration-300 scale-0"></div>
                 </div>
             </div>
             <div class="relative z-10 text-left">
-                <span class="block text-xs font-black uppercase tracking-wider text-white">Pago Móvil</span>
-                <span class="block text-[10px] text-gray-400 font-semibold mt-1">Bolívares (Tasa BCV)</span>
+                <span class="block text-[11px] md:text-xs font-black uppercase tracking-wider text-gray-400 transition-colors">Débito C2P</span>
+                <span class="block text-[9px] md:text-[10px] text-gray-500 font-semibold mt-1 transition-colors">Cobro Inmediato</span>
             </div>
         </div>
 
-        <div id="card-binance" onclick="selectPaymentMethod('binance')" class="payment-card cursor-pointer relative w-full p-5 rounded-2xl border-2 border-white/5 bg-white/5 hover:border-white/20 transition-all duration-300 overflow-hidden group">
+        <!-- TARJETA PAGO MÓVIL CLÁSICO -->
+        <div id="card-pm" onclick="selectPaymentMethod('pago_movil')" class="payment-card cursor-pointer relative w-full p-4 md:p-5 rounded-2xl border-2 border-white/5 bg-white/5 hover:border-white/20 transition-all duration-300 overflow-hidden group">
+            <div class="flex items-center justify-between mb-3 relative z-10">
+                <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#FFC300] transition-transform group-hover:scale-110">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                </div>
+                <div id="check-pm" class="w-5 h-5 rounded-full border-2 border-gray-600 flex items-center justify-center transition-all duration-300">
+                    <div class="w-2.5 h-2.5 rounded-full bg-transparent transition-transform duration-300 scale-0"></div>
+                </div>
+            </div>
+            <div class="relative z-10 text-left">
+                <span class="block text-[11px] md:text-xs font-black uppercase tracking-wider text-gray-400 transition-colors">Pago Móvil</span>
+                <span class="block text-[9px] md:text-[10px] text-gray-500 font-semibold mt-1 transition-colors">Reporte Manual</span>
+            </div>
+        </div>
+
+        <!-- TARJETA BINANCE -->
+        <div id="card-binance" onclick="selectPaymentMethod('binance')" class="payment-card cursor-pointer relative w-full p-4 md:p-5 rounded-2xl border-2 border-white/5 bg-white/5 hover:border-white/20 transition-all duration-300 overflow-hidden group">
             <div class="flex items-center justify-between mb-3 relative z-10">
                 <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-yellow-400 transition-transform group-hover:scale-110">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                 </div>
                 <div id="check-binance" class="w-5 h-5 rounded-full border-2 border-gray-600 flex items-center justify-center transition-all duration-300">
                     <div class="w-2.5 h-2.5 rounded-full bg-transparent transition-transform duration-300 scale-0"></div>
                 </div>
             </div>
             <div class="relative z-10 text-left">
-                <span class="block text-xs font-black uppercase tracking-wider text-white transition-colors">Binance Pay</span>
-                <span class="block text-[10px] text-gray-500 font-semibold mt-1 transition-colors">USDT (Sin comisiones)</span>
+                <span class="block text-[11px] md:text-xs font-black uppercase tracking-wider text-gray-400 transition-colors">Binance Pay</span>
+                <span class="block text-[9px] md:text-[10px] text-gray-500 font-semibold mt-1 transition-colors">USDT</span>
             </div>
         </div>
 
-        <div id="card-intl" onclick="selectPaymentMethod('paypal')" class="payment-card cursor-pointer relative w-full p-5 rounded-2xl border-2 border-white/5 bg-white/5 hover:border-white/20 transition-all duration-300 overflow-hidden group">
+        <!-- TARJETA PAYPAL -->
+        <div id="card-intl" onclick="selectPaymentMethod('paypal')" class="payment-card cursor-pointer relative w-full p-4 md:p-5 rounded-2xl border-2 border-white/5 bg-white/5 hover:border-white/20 transition-all duration-300 overflow-hidden group">
             <div class="flex items-center justify-between mb-3 relative z-10">
                 <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-blue-400 transition-transform group-hover:scale-110">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
@@ -377,8 +398,8 @@
                 </div>
             </div>
             <div class="relative z-10 text-left">
-                <span class="block text-xs font-black uppercase tracking-wider text-white transition-colors">TDC / PayPal</span>
-                <span class="block text-[10px] text-gray-500 font-semibold mt-1 transition-colors">USD Internacional</span>
+                <span class="block text-[11px] md:text-xs font-black uppercase tracking-wider text-gray-400 transition-colors">TDC/PayPal</span>
+                <span class="block text-[9px] md:text-[10px] text-gray-500 font-semibold mt-1 transition-colors">USD Intl.</span>
             </div>
         </div>
     </div>
@@ -415,56 +436,75 @@
                 </div>
 
                 <div id="data-intl" class="hidden text-center py-6">
-    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Paga de forma segura sin salir de la tienda</p>
-    <div class="max-w-sm mx-auto bg-gray-200 p-6 rounded-[2rem] border-2 border-[#FFC300] shadow-[0_0_25px_rgba(255,195,0,0.25)] relative overflow-hidden">
-        <div id="paypal-button-container" class="w-full relative z-10"></div>
-    </div>
-</div>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Paga de forma segura sin salir de la tienda</p>
+                    <div class="max-w-sm mx-auto bg-gray-200 p-6 rounded-[2rem] border-2 border-[#FFC300] shadow-[0_0_25px_rgba(255,195,0,0.25)] relative overflow-hidden">
+                        <div id="paypal-button-container" class="w-full relative z-10"></div>
+                    </div>
+                </div>
 
             <div id="verification-inputs">
-                <div id="payment-origin-data" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 transition-all duration-300">
+                
+                <!-- 🍎 CONTENEDOR C2P: Banco, Teléfono, Cédula, Token -->
+                <div id="payment-origin-data" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 transition-all duration-300">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Banco Emisor</label>
                         <select id="pay-banco-origen" class="w-full bg-[#050508] border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-[#FFC300] transition appearance-none cursor-pointer">
-    <option value="">Seleccione banco emisor...</option>
-    <option value="0102">0102 - Banco de Venezuela</option>
-    <option value="0104">0104 - Venezolano de Crédito</option>
-    <option value="0105">0105 - Banco Mercantil</option>
-    <option value="0108">0108 - BBVA Provincial</option>
-    <option value="0114">0114 - Bancaribe</option>
-    <option value="0115">0115 - Banco Exterior</option>
-    <option value="0128">0128 - Banco Caroní</option>
-    <option value="0134">0134 - Banesco</option>
-    <option value="0137">0137 - Banco Sofitasa</option>
-    <option value="0138">0138 - Banco Plaza</option>
-    <option value="0146">0146 - Bangente</option>
-    <option value="0151">0151 - BFC Banco Fondo Común</option>
-    <option value="0156">0156 - 100% Banco</option>
-    <option value="0157">0157 - DelSur Banco Universal</option>
-    <option value="0163">0163 - Banco del Tesoro</option>
-    <option value="0166">0166 - Banco Agrícola de Venezuela</option>
-    <option value="0168">0168 - Bancrecer</option>
-    <option value="0169">0169 - Mi Banco</option>
-    <option value="0171">0171 - Banco Activo</option>
-    <option value="0172">0172 - Bancamiga</option>
-    <option value="0174">0174 - Banplus</option>
-    <option value="0175">0175 - Banco Bicentenario</option>
-    <option value="0177">0177 - BANFANB</option>
-    <option value="0191">0191 - BNC (Banco Nacional de Crédito)</option>
-</select>
+                            <option value="">Seleccione banco emisor...</option>
+                            <option value="0102">0102 - Banco de Venezuela</option>
+                            <option value="0104">0104 - Venezolano de Crédito</option>
+                            <option value="0105">0105 - Banco Mercantil</option>
+                            <option value="0108">0108 - BBVA Provincial</option>
+                            <option value="0114">0114 - Bancaribe</option>
+                            <option value="0115">0115 - Banco Exterior</option>
+                            <option value="0128">0128 - Banco Caroní</option>
+                            <option value="0134">0134 - Banesco</option>
+                            <option value="0137">0137 - Banco Sofitasa</option>
+                            <option value="0138">0138 - Banco Plaza</option>
+                            <option value="0146">0146 - Bangente</option>
+                            <option value="0151">0151 - BFC Banco Fondo Común</option>
+                            <option value="0156">0156 - 100% Banco</option>
+                            <option value="0157">0157 - DelSur Banco Universal</option>
+                            <option value="0163">0163 - Banco del Tesoro</option>
+                            <option value="0166">0166 - Banco Agrícola de Venezuela</option>
+                            <option value="0168">0168 - Bancrecer</option>
+                            <option value="0169">0169 - Mi Banco</option>
+                            <option value="0171">0171 - Banco Activo</option>
+                            <option value="0172">0172 - Bancamiga</option>
+                            <option value="0174">0174 - Banplus</option>
+                            <option value="0175">0175 - Banco Bicentenario</option>
+                            <option value="0177">0177 - BANFANB</option>
+                            <option value="0191">0191 - BNC (Banco Nacional de Crédito)</option>
+                        </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Teléfono Emisor</label>
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Celular Afiliado</label>
                         <input type="text" id="pay-telefono-origen" maxlength="11" placeholder="Ej: 04141234567" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-[#050508] border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-[#FFC300] transition">
                     </div>
                 </div>
 
+                <!-- 🍎 NUEVO: Contenedor específico para Cédula y Token OTP -->
+                <div id="c2p-token-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 transition-all duration-300 hidden">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Cédula Identidad</label>
+                        <input type="text" id="pay-documento-origen" placeholder="V12345678" class="w-full bg-[#050508] border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-[#FFC300] transition uppercase">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-[#FFC300] mb-2 ml-1 flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            Clave Dinámica (C2P)
+                        </label>
+                        <input type="text" id="pay-token-c2p" maxlength="10" placeholder="Código SMS o App" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-[#050508] border border-[#FFC300]/30 rounded-xl px-4 py-3.5 text-lg font-bold text-[#FFC300] focus:outline-none focus:border-[#FFC300] transition text-center tracking-widest shadow-[0_0_15px_rgba(255,195,0,0.1)]">
+                    </div>
+                </div>
+
+                <!-- Contenedor de Referencia Tradicional -->
                 <div id="reference-container" class="mb-8 transition-all duration-300">
                     <label id="lbl-reference" class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 ml-1 text-center md:text-left">N° de Referencia Bancaria</label>
-                    <input type="text" id="pay-reference" required class="w-full bg-[#050508] border border-white/10 hover:border-[#FFC300]/50 rounded-xl px-6 py-4 text-lg text-white focus:outline-none focus:border-[#FFC300] transition placeholder-gray-700 text-center tracking-[0.2em] font-bold shadow-inner" placeholder="Escriba los últimos dígitos...">
+                    <input type="text" id="pay-reference" class="w-full bg-[#050508] border border-white/10 hover:border-[#FFC300]/50 rounded-xl px-6 py-4 text-lg text-white focus:outline-none focus:border-[#FFC300] transition placeholder-gray-700 text-center tracking-[0.2em] font-bold shadow-inner" placeholder="Escriba los últimos dígitos...">
                 </div>
             </div>
 
+            <!-- Botones Finales -->
             <div class="flex flex-col sm:flex-row gap-4 pt-4 border-t border-white/5">
                 <button type="button" id="btn-cancel-vault" class="w-full sm:w-1/3 bg-transparent border border-white/10 text-gray-400 h-14 rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 hover:text-white transition-all">
                     Cancelar
@@ -477,8 +517,9 @@
         </form>
     </div>
 </section>
-   </div> <!-- 🍎 CIERRA EL VAULT-VIEW -->
-</div>                 
+<!-- 🍎 FIN CORRECCIÓN QUIRÚRGICA -->
+                   </div> <!-- CIERRA EL VAULT-VIEW -->
+                </div>                 
             <!-- ========================================== -->
             <!-- COLUMNA DERECHA (RESUMEN FLOTANTE) -->
             <!-- ========================================== -->
@@ -491,7 +532,7 @@
                     
                     <!-- Tarjetas de Producto -->
                     <div id="cart-items-container" class="space-y-4 mb-8 max-h-[50vh] overflow-y-auto pr-2 hide-scroll">
-                        <!-- Llenado por checkout.js (Ya tiene el código estricto) -->
+                        <!-- Llenado por checkout.js -->
                     </div>
 
                     <div class="w-full h-px bg-white/10 mb-8"></div>
@@ -499,14 +540,13 @@
                     <!-- Panel de Totales Dinámico -->
                     <div class="space-y-4">
                         
-                        <!-- 🍎 1. Precio Original (Tachado Controlado por JS) -->
+                        <!-- 1. Precio Original -->
                         <div class="flex justify-between items-center text-gray-400">
                             <span class="text-[10px] uppercase font-bold tracking-widest">Subtotal Original</span>
-                            <!-- Se quitó la clase 'line-through' fija -->
                             <span id="summary-raw-total" class="font-medium text-gray-500 text-sm">$0.00</span>
                         </div>
                         
-                        <!-- 🍎 2. Fila de Ahorro (Gancho Binance) -->
+                        <!-- 2. Fila de Ahorro (Gancho Binance) -->
                         <div id="summary-savings-row" class="hidden flex justify-between items-center text-emerald-400 bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
                             <span id="summary-savings-text" class="text-[10px] uppercase font-bold tracking-widest">Ahorro por Descuentos</span>
                             <span id="summary-savings" class="font-bold text-sm">-$0.00</span>
@@ -557,7 +597,7 @@
             </div>
             <h2 class="text-3xl md:text-4xl font-[900] uppercase tracking-tight text-white mb-4 relative z-10">Orden Recibida</h2>
             <p class="text-gray-400 text-sm max-w-md mx-auto mb-10 leading-relaxed font-medium relative z-10">
-                Su transacción con referencia <strong id="success-ref" class="text-white bg-white/10 px-2 py-1 rounded"></strong> ha sido enviada al departamento de auditoría financiera.
+                Su transacción con referencia <strong id="success-ref" class="text-white bg-white/10 px-2 py-1 rounded"></strong> ha sido enviada al departamento de logística.
             </p>
             <a href="/store/account.html" class="inline-block relative z-10 bg-white text-black px-10 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:scale-[1.02] transition-all shadow-xl">
                 Rastrear Envío
