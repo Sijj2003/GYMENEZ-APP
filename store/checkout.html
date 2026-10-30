@@ -332,14 +332,11 @@
                         </p>
                     </div>
 
-                    <!-- 🍎 INICIO CORRECCIÓN QUIRÚRGICA: PANEL DE PAGOS -->
 <section class="bg-white/5 p-6 md:p-8 rounded-[2rem] border border-white/10 backdrop-blur-xl shadow-xl">
     <h3 class="text-xl font-bold uppercase text-white mb-6 tracking-wide">Medio de Pago</h3>
 
-    <!-- 🍎 1. GRID ACTUALIZADO A 4 COLUMNAS EN ESCRITORIO, 2 EN MÓVIL -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         
-        <!-- 🍎 NUEVA TARJETA: DÉBITO INMEDIATO C2P -->
         <div id="card-c2p" onclick="selectPaymentMethod('c2p')" class="payment-card cursor-pointer relative w-full p-4 md:p-5 rounded-2xl border-2 border-white/5 bg-white/5 hover:border-white/20 transition-all duration-300 overflow-hidden group">
             <div class="flex items-center justify-between mb-3 relative z-10">
                 <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#FFC300] transition-transform group-hover:scale-110">
@@ -355,7 +352,6 @@
             </div>
         </div>
 
-        <!-- TARJETA PAGO MÓVIL CLÁSICO -->
         <div id="card-pm" onclick="selectPaymentMethod('pago_movil')" class="payment-card cursor-pointer relative w-full p-4 md:p-5 rounded-2xl border-2 border-white/5 bg-white/5 hover:border-white/20 transition-all duration-300 overflow-hidden group">
             <div class="flex items-center justify-between mb-3 relative z-10">
                 <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#FFC300] transition-transform group-hover:scale-110">
@@ -371,7 +367,6 @@
             </div>
         </div>
 
-        <!-- TARJETA BINANCE -->
         <div id="card-binance" onclick="selectPaymentMethod('binance')" class="payment-card cursor-pointer relative w-full p-4 md:p-5 rounded-2xl border-2 border-white/5 bg-white/5 hover:border-white/20 transition-all duration-300 overflow-hidden group">
             <div class="flex items-center justify-between mb-3 relative z-10">
                 <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-yellow-400 transition-transform group-hover:scale-110">
@@ -387,7 +382,6 @@
             </div>
         </div>
 
-        <!-- TARJETA PAYPAL -->
         <div id="card-intl" onclick="selectPaymentMethod('paypal')" class="payment-card cursor-pointer relative w-full p-4 md:p-5 rounded-2xl border-2 border-white/5 bg-white/5 hover:border-white/20 transition-all duration-300 overflow-hidden group">
             <div class="flex items-center justify-between mb-3 relative z-10">
                 <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-blue-400 transition-transform group-hover:scale-110">
@@ -444,7 +438,6 @@
 
             <div id="verification-inputs">
                 
-                <!-- 🍎 CONTENEDOR C2P: Banco, Teléfono, Cédula, Token -->
                 <div id="payment-origin-data" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 transition-all duration-300">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Banco Emisor</label>
@@ -482,7 +475,6 @@
                     </div>
                 </div>
 
-                <!-- 🍎 NUEVO: Contenedor específico para Cédula y Token OTP -->
                 <div id="c2p-token-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 transition-all duration-300 hidden">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Cédula Identidad</label>
@@ -504,20 +496,29 @@
                 </div>
             </div>
 
-            <!-- Botones Finales -->
+            <!-- 🍎 BOTONES FINALES ACTUALIZADOS CON BOTÓN SOLICITAR SMS -->
             <div class="flex flex-col sm:flex-row gap-4 pt-4 border-t border-white/5">
                 <button type="button" id="btn-cancel-vault" class="w-full sm:w-1/3 bg-transparent border border-white/10 text-gray-400 h-14 rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 hover:text-white transition-all">
                     Cancelar
                 </button>
-                <button type="submit" id="btn-process-order" disabled class="w-full sm:w-2/3 bg-[#FFC300] text-black h-14 rounded-full font-bold uppercase tracking-widest text-xs hover:scale-[1.02] hover:bg-yellow-400 transition-all disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(255,195,0,0.2)]">
-                    <span id="btn-process-text">Procesar Compra</span>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                
+                <!-- Contenedor del Botón Final (Oculto inicialmente en C2P) -->
+                <div class="w-full sm:w-2/3 flex">
+                    <button type="submit" id="btn-process-order" disabled class="w-full bg-[#FFC300] text-black h-14 rounded-full font-bold uppercase tracking-widest text-xs hover:scale-[1.02] hover:bg-yellow-400 transition-all disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(255,195,0,0.2)]">
+                        <span id="btn-process-text">Procesar Compra</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </button>
+                </div>
+
+                <!-- 🍎 NUEVO BOTÓN: Solicitar SMS (Solo visible en C2P) -->
+                <button type="button" id="btn-request-sms" class="hidden w-full sm:w-2/3 bg-white text-black h-14 rounded-full font-bold uppercase tracking-widest text-xs hover:scale-[1.02] hover:bg-gray-200 transition-all flex items-center justify-center gap-2 shadow-xl">
+                    <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    <span>Solicitar Clave SMS</span>
                 </button>
             </div>
         </form>
     </div>
 </section>
-<!-- 🍎 FIN CORRECCIÓN QUIRÚRGICA -->
                    </div> <!-- CIERRA EL VAULT-VIEW -->
                 </div>                 
             <!-- ========================================== -->
@@ -698,7 +699,7 @@
     <script src="/static/js/store/checkout_summary.js?v=4.1"></script>
     <script src="/static/js/store/checkout_shipping.js?v=4.0"></script>
     <script src="/static/js/store/checkout_vault.js?v=4.0"></script>
-    <script src="/static/js/store/checkout_payment.js?v=4.2"></script>
+    <script src="/static/js/store/checkout_payment.js?v=4.3"></script>
     <script src="/static/js/store/checkout_wizard_init.js?v=4.0"></script>
 
     <!-- Scripts adicionales mantenidos -->
