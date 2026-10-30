@@ -2,9 +2,12 @@
 // 💳 MÓDULO 6: GESTIÓN DE PAGO Y ORDEN FINAL (Premium Inline UI)
 // ====================================================================
 
-// Usamos el objeto global window para evitar choques de variables declaradas en otros archivos
 window.availablePaymentMethods = window.availablePaymentMethods || {};
-window.currentPaymentMethod = window.currentPaymentMethod || null; // 1. Sin selección por defecto
+window.currentPaymentMethod = window.currentPaymentMethod || null; 
+
+// 🍎 NUEVO: Variable global para almacenar el intent_id temporal del C2P
+window.c2pIntentId = null; 
+window.c2pExternalRef = null;
 
 /**
  * 🛠️ Configura los datos iniciales y muestra el formulario
@@ -32,7 +35,6 @@ window.setupPaymentUI = function(methods) {
         if (document.getElementById('bin-email')) document.getElementById('bin-email').innerText = methods.binance.email;
     }
 
-    // Inyectar gancho visual a la tarjeta Binance (Badge Recomendado)
     const binanceCard = document.getElementById('card-binance');
     if (binanceCard && !binanceCard.querySelector('.badge-recomendado')) {
         const badge = document.createElement('div');
@@ -50,8 +52,8 @@ window.setupPaymentUI = function(methods) {
  */
 window.selectPaymentMethod = function(method) {
     window.currentPaymentMethod = method;
+    window.c2pIntentId = null; // 🍎 Reiniciamos el intent si cambia de método
 
-    // 🍎 AÑADIDO: Agregamos el método 'c2p' al diccionario visual (Necesitarás un div id="card-c2p" en tu HTML)
     const cards = {
         'c2p': { card: 'card-c2p', check: 'check-c2p', color: '#FFC300' }, 
         'pago_movil': { card: 'card-pm', check: 'check-pm', color: '#FFC300' },
@@ -102,16 +104,20 @@ function updatePaymentFormFields() {
     const refContainer = document.getElementById('reference-container');
     const verificationInputs = document.getElementById('verification-inputs');
     
-    // 🍎 AÑADIDO: Elementos específicos para el Débito C2P y contenedor del Token
     const c2pContainer = document.getElementById('c2p-token-container'); 
     
     const bancoOrigen = document.getElementById('pay-banco-origen');
     const tlfOrigen = document.getElementById('pay-telefono-origen');
-    const docOrigen = document.getElementById('pay-documento-origen'); // 🍎 NUEVO input Cédula
-    const tokenC2P = document.getElementById('pay-token-c2p');       // 🍎 NUEVO input Token
+    const docOrigen = document.getElementById('pay-documento-origen'); 
+    const tokenC2P = document.getElementById('pay-token-c2p');       
     
     const refLabel = document.getElementById('lbl-reference');
     const refInput = document.getElementById('pay-reference');
+    
+    // 🍎 AÑADIDO: Elementos visuales para el flujo de dos pasos C2P
+    const btnRequestSMS = document.getElementById('btn-request-sms');
+    const btnSubmitContainer = document.getElementById('btn-process-order')?.parentElement;
+    
     const btnText = document.getElementById('btn-process-text');
     const cancelBtn = document.getElementById('btn-cancel-vault');
 
@@ -121,22 +127,25 @@ function updatePaymentFormFields() {
         verificationInputs?.classList.add('hidden');
         if (btnText) btnText.innerText = `Seleccione Método de Pago`;
         if (btnText) btnText.parentElement.disabled = true;
+        if (btnSubmitContainer) btnSubmitContainer.style.display = '';
+        if (btnRequestSMS) btnRequestSMS.classList.add('hidden');
         if (cancelBtn) cancelBtn.style.display = ''; 
         return;
     }
 
-    // 🍎 NUEVA LÓGICA: DÉBITO INMEDIATO (C2P)
     if (window.currentPaymentMethod === 'c2p') {
         verificationInputs?.classList.remove('hidden');
         originContainer?.classList.remove('hidden');
-        c2pContainer?.classList.remove('hidden'); // Mostramos campo Cédula y OTP
-        refContainer?.classList.add('hidden');    // Ocultamos Referencia
-        dataPm?.classList.add('hidden');          // Ocultamos los datos bancarios de Gymenez
+        refContainer?.classList.add('hidden');    
+        dataPm?.classList.add('hidden');          
+        
+        // 🍎 LÓGICA 2 PASOS C2P: Ocultamos el OTP al inicio
+        c2pContainer?.classList.add('hidden'); 
         
         if (bancoOrigen) bancoOrigen.required = true;
         if (tlfOrigen) tlfOrigen.required = true;
         if (docOrigen) docOrigen.required = true;
-        if (tokenC2P) tokenC2P.required = true;
+        if (tokenC2P) { tokenC2P.required = true; tokenC2P.value = ''; }
         if (refInput) refInput.required = false;
 
         let totalPmUsd = 0;
@@ -149,17 +158,18 @@ function updatePaymentFormFields() {
         const montoStr = (typeof isBcvValid !== 'undefined' && isBcvValid && typeof currentBcvRate !== 'undefined') 
             ? `Bs. ${formatMoney(totalPmUsd * currentBcvRate)}` 
             : `Procesar Compra`;
-        if (btnText) btnText.innerText = `Debitar ${montoStr}`; // Verbo cambiado a "Debitar"
+        if (btnText) btnText.innerText = `Debitar ${montoStr}`; 
 
-        if (btnText) btnText.parentElement.style.display = '';
+        // 🍎 Ocultamos el botón final de pago y mostramos el de "Solicitar SMS"
+        if (btnSubmitContainer) btnSubmitContainer.style.display = 'none';
+        if (btnRequestSMS) btnRequestSMS.classList.remove('hidden');
         if (cancelBtn) cancelBtn.style.display = ''; 
-    } 
-    // LÓGICA: PAGO MÓVIL CLÁSICO (Manual vía VEXPay)
-    else if (window.currentPaymentMethod === 'pago_movil') {
+        
+    } else if (window.currentPaymentMethod === 'pago_movil') {
         dataPm?.classList.remove('hidden');
         verificationInputs?.classList.remove('hidden');
         originContainer?.classList.remove('hidden');
-        c2pContainer?.classList.add('hidden'); // Ocultamos Token OTP
+        c2pContainer?.classList.add('hidden'); 
         refContainer?.classList.remove('hidden');
         
         if (bancoOrigen) bancoOrigen.required = true;
@@ -184,7 +194,8 @@ function updatePaymentFormFields() {
             : `Procesar Compra`;
         if (btnText) btnText.innerText = `Reportar ${montoStr}`;
 
-        if (btnText) btnText.parentElement.style.display = '';
+        if (btnSubmitContainer) btnSubmitContainer.style.display = '';
+        if (btnRequestSMS) btnRequestSMS.classList.add('hidden');
         if (cancelBtn) cancelBtn.style.display = ''; 
 
     } else if (window.currentPaymentMethod === 'binance') {
@@ -192,6 +203,7 @@ function updatePaymentFormFields() {
         verificationInputs?.classList.remove('hidden');
         originContainer?.classList.add('hidden'); 
         refContainer?.classList.remove('hidden');
+        c2pContainer?.classList.add('hidden');
         
         if (bancoOrigen) bancoOrigen.required = false;
         if (tlfOrigen) tlfOrigen.required = false;
@@ -213,12 +225,14 @@ function updatePaymentFormFields() {
 
         if (btnText) btnText.innerText = `Confirmar Pago $${formatMoney(totalBinanceUsd)} USDT`;
 
-        if (btnText) btnText.parentElement.style.display = '';
+        if (btnSubmitContainer) btnSubmitContainer.style.display = '';
+        if (btnRequestSMS) btnRequestSMS.classList.add('hidden');
         if (cancelBtn) cancelBtn.style.display = ''; 
 
     } else if (window.currentPaymentMethod === 'paypal') {
         dataIntl?.classList.remove('hidden');
         verificationInputs?.classList.add('hidden'); 
+        c2pContainer?.classList.add('hidden');
         
         if (bancoOrigen) bancoOrigen.required = false;
         if (tlfOrigen) tlfOrigen.required = false;
@@ -226,22 +240,19 @@ function updatePaymentFormFields() {
         if (tokenC2P) tokenC2P.required = false;
         if (refInput) refInput.required = false;
 
-        if (btnText) btnText.parentElement.style.display = 'none';
+        if (btnSubmitContainer) btnSubmitContainer.style.display = 'none';
+        if (btnRequestSMS) btnRequestSMS.classList.add('hidden');
         if (cancelBtn) cancelBtn.style.display = ''; 
     }
 
     validateFinalButton();
 }
 
-/**
- * 🔢 Sanitizador estricto para referencias numéricas
- */
 function setupReferenceInputSanitizer() {
     const refInput = document.getElementById('pay-reference');
     const bancoSelect = document.getElementById('pay-banco-origen');
     const tlfInput = document.getElementById('pay-telefono-origen');
     
-    // 🍎 AÑADIDO: Inputs C2P
     const docInput = document.getElementById('pay-documento-origen');
     const tokenInput = document.getElementById('pay-token-c2p');
 
@@ -254,7 +265,6 @@ function setupReferenceInputSanitizer() {
         });
     }
 
-    // 🍎 AÑADIDO: Sanitizar Token OTP (Solo números)
     if (tokenInput) {
         tokenInput.addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/\D/g, ''); 
@@ -267,20 +277,18 @@ function setupReferenceInputSanitizer() {
     if (docInput) docInput.addEventListener('input', validateFinalButton);
 }
 
-/**
- * 🔒 Valida dinámicamente si el botón final debe estar habilitado
- */
 function validateFinalButton() {
     const btn = document.getElementById('btn-process-order');
-    if (!btn) return;
-
+    const btnReqSMS = document.getElementById('btn-request-sms');
+    
     if (!window.currentPaymentMethod) {
-        btn.disabled = true;
+        if(btn) btn.disabled = true;
+        if(btnReqSMS) btnReqSMS.disabled = true;
         return;
     }
 
     if (window.currentPaymentMethod === 'paypal') {
-        btn.disabled = false;
+        if(btn) btn.disabled = false;
         return;
     }
 
@@ -288,32 +296,119 @@ function validateFinalButton() {
     const ref = refInput ? refInput.value.trim() : '';
     const isShippingReady = typeof isShippingComplete !== 'undefined' ? isShippingComplete : true;
 
-    // 🍎 NUEVA VALIDACIÓN: DÉBITO C2P
     if (window.currentPaymentMethod === 'c2p') {
         const banco = document.getElementById('pay-banco-origen')?.value;
         const tlf = document.getElementById('pay-telefono-origen')?.value.trim();
         const doc = document.getElementById('pay-documento-origen')?.value.trim();
         const token = document.getElementById('pay-token-c2p')?.value.trim();
         
-        // El banco debe existir, tlf y doc razonables, y el token de los bancos suele ser 6 a 8 dígitos
-        const isOriginComplete = Boolean(banco) && tlf.length >= 10 && doc.length >= 6 && token.length >= 6;
-        btn.disabled = !(isShippingReady && isOriginComplete);
+        const isDataReadyForSMS = Boolean(banco) && tlf.length >= 10 && doc.length >= 6;
+        if (btnReqSMS) btnReqSMS.disabled = !(isShippingReady && isDataReadyForSMS);
+        
+        const isOriginComplete = isDataReadyForSMS && token.length >= 6 && window.c2pIntentId;
+        if(btn) btn.disabled = !(isShippingReady && isOriginComplete);
     } 
-    // VALIDACIÓN PAGO MÓVIL CLÁSICO
     else if (window.currentPaymentMethod === 'pago_movil') {
         const banco = document.getElementById('pay-banco-origen')?.value;
         const tlf = document.getElementById('pay-telefono-origen')?.value.trim();
         const isOriginComplete = Boolean(banco) && Boolean(tlf);
         
-        btn.disabled = !(/^\d{4,}$/.test(ref) && isShippingReady && isOriginComplete);
+        if(btn) btn.disabled = !(/^\d{4,}$/.test(ref) && isShippingReady && isOriginComplete);
     } 
     else if (window.currentPaymentMethod === 'binance') {
-        btn.disabled = !(ref.length >= 6 && isShippingReady);
+        if(btn) btn.disabled = !(ref.length >= 6 && isShippingReady);
     }
 }
 
+
 // ====================================================================
-// 🛡️ SUBMIT FINAL DE LA ORDEN Y POLLING DE VERIFICACIÓN
+// 🍎 LÓGICA PASO 1: SOLICITUD DE INTENTO SMS C2P
+// ====================================================================
+document.getElementById('btn-request-sms')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-request-sms');
+    const originalText = btn.innerHTML;
+    const token = localStorage.getItem(typeof TOKEN_KEY !== 'undefined' ? TOKEN_KEY : 'jwt_token') || localStorage.getItem('jwt_token');
+
+    const telefonoOrigen = document.getElementById('pay-telefono-origen')?.value.trim();
+    const bancoOrigen = document.getElementById('pay-banco-origen')?.value;
+    const documentoOrigen = document.getElementById('pay-documento-origen')?.value.trim();
+
+    if (!telefonoOrigen || !bancoOrigen || !documentoOrigen) {
+        if (typeof Swal !== 'undefined') Swal.fire("Atención", "Llene Banco, Cédula y Teléfono antes de solicitar la clave.", "warning");
+        return;
+    }
+
+    btn.innerHTML = `<div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Solicitando al Banco...</span>`;
+    btn.disabled = true;
+
+    // Calculamos el total
+    let finalPayloadTotalUsd = 0;
+    (typeof cartItems !== 'undefined' ? cartItems : []).forEach(item => {
+        const qty = item.quantity || item.qty || 1;
+        const pmPrice = parseFloat(item.pmPrice || item.basePrice || item.price);
+        finalPayloadTotalUsd += (pmPrice * qty);
+    });
+
+    const payload = {
+        totalAmount: finalPayloadTotalUsd, 
+        telefono_origen: telefonoOrigen,
+        banco_origen: bancoOrigen,
+        documento_origen: documentoOrigen
+    };
+
+    try {
+        const response = await fetch(`${typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : ''}/api/store/checkout/c2p/request`, {
+            method: 'POST',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            window.c2pIntentId = data.intentId;
+            window.c2pExternalRef = data.externalRef;
+
+            btn.style.display = 'none'; // Ocultamos el botón de SMS
+            
+            // Revelamos el input para el Token OTP y el botón final
+            document.getElementById('c2p-token-container')?.classList.remove('hidden');
+            const btnSubmitContainer = document.getElementById('btn-process-order')?.parentElement;
+            if (btnSubmitContainer) btnSubmitContainer.style.display = '';
+            
+            validateFinalButton(); // Re-evaluar botón final
+
+            if (typeof Swal !== 'undefined' && data.otpRequested) {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Clave solicitada',
+                    text: 'Revisa tus SMS o la app de tu banco.',
+                    showConfirmButton: false,
+                    timer: 4000
+                });
+            }
+        } else {
+            if (typeof Swal !== 'undefined') Swal.fire("Banco Rechazó Petición", data.error || "No se pudo generar la clave.", "error");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    } catch (error) {
+        console.error("Error SMS:", error);
+        if (typeof Swal !== 'undefined') Swal.fire("Error de Conexión", "No pudimos comunicar con la red interbancaria.", "error");
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
+
+
+// ====================================================================
+// 🛡️ LÓGICA PASO 2: SUBMIT FINAL DE LA ORDEN Y POLLING
 // ====================================================================
 document.getElementById('form-checkout-final')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -336,7 +431,6 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
     }
 
     const btn = document.getElementById('btn-process-order');
-    // 🍎 AÑADIDO: Si es C2P inyectamos una referencia automática de control interno
     const reference = window.currentPaymentMethod === 'c2p' ? "C2P-AUTO" : document.getElementById('pay-reference').value.trim();
     const token = localStorage.getItem(typeof TOKEN_KEY !== 'undefined' ? TOKEN_KEY : 'jwt_token') || localStorage.getItem('jwt_token');
     
@@ -374,25 +468,21 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
     
     const telefonoOrigen = document.getElementById('pay-telefono-origen') ? document.getElementById('pay-telefono-origen').value.trim() : '';
     const bancoOrigen = document.getElementById('pay-banco-origen') ? document.getElementById('pay-banco-origen').value : '';
-    // 🍎 AÑADIDO: Captura de los datos exclusivos de C2P
     const documentoOrigen = document.getElementById('pay-documento-origen') ? document.getElementById('pay-documento-origen').value.trim() : '';
     const tokenC2P = document.getElementById('pay-token-c2p') ? document.getElementById('pay-token-c2p').value.trim() : '';
 
-    // Bloqueo de seguridad C2P
-    if (window.currentPaymentMethod === 'c2p' && (!telefonoOrigen || !bancoOrigen || !documentoOrigen || !tokenC2P)) {
-        if (typeof Swal !== 'undefined') Swal.fire("Atención", "Faltan datos de seguridad bancaria para el débito.", "warning");
-        else alert("Faltan datos de seguridad bancaria para el débito.");
-        resetBtn(btn);
-        if (typeof startVaultTimer === 'function') startVaultTimer(new Date().getTime() + 60000); 
-        if (cancelBtn) cancelBtn.disabled = false;
-        return;
+    if (window.currentPaymentMethod === 'c2p') {
+        if (!telefonoOrigen || !bancoOrigen || !documentoOrigen || !tokenC2P || !window.c2pIntentId) {
+            if (typeof Swal !== 'undefined') Swal.fire("Atención", "Faltan datos de seguridad bancaria para el débito.", "warning");
+            resetBtn(btn);
+            if (cancelBtn) cancelBtn.disabled = false;
+            return;
+        }
     }
 
     if (window.currentPaymentMethod === 'pago_movil' && (!telefonoOrigen || !bancoOrigen)) {
-        if (typeof Swal !== 'undefined') Swal.fire("Atención", "Por favor indique el Banco y Teléfono desde el cual realizó el pago.", "warning");
-        else alert("Por favor indique el Banco y Teléfono desde el cual realizó el pago.");
+        if (typeof Swal !== 'undefined') Swal.fire("Atención", "Indique Banco y Teléfono desde el cual pagó.", "warning");
         resetBtn(btn);
-        if (typeof startVaultTimer === 'function') startVaultTimer(new Date().getTime() + 60000); 
         if (cancelBtn) cancelBtn.disabled = false;
         return;
     }
@@ -402,14 +492,13 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
         if (window.currentPaymentMethod === 'binance') {
             finalPayloadTotalUsd += (item.price * item.qty);
         } else if (window.currentPaymentMethod === 'pago_movil' || window.currentPaymentMethod === 'c2p') {
-            // 🍎 AÑADIDO: Ambos métodos en Bolívares usan el precio inflado de Gross-Up
             finalPayloadTotalUsd += (item.pmPrice * item.qty);
         } else {
             finalPayloadTotalUsd += (item.basePrice * item.qty);
         }
     });
 
-    // 🍎 AÑADIDO: Inyectamos los 4 campos financieros en el JSON
+    // 🍎 AÑADIDO: Inyectamos intentId y externalRef para C2P
     const payload = {
         items: cleanItems,
         totalAmount: finalPayloadTotalUsd, 
@@ -419,7 +508,9 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
         telefono_origen: telefonoOrigen,
         banco_origen: bancoOrigen,
         documento_origen: documentoOrigen,
-        c2p_token: tokenC2P
+        c2p_token: tokenC2P,
+        intentId: window.c2pIntentId,        // 🍎 AÑADIDO
+        externalRef: window.c2pExternalRef   // 🍎 AÑADIDO
     };
 
     try {
@@ -433,9 +524,7 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
             body: JSON.stringify(payload)
         });
 
-        if (response.status === 401 || response.status === 403) {
-            return;
-        }
+        if (response.status === 401 || response.status === 403) return;
 
         const data = await response.json();
 
@@ -444,7 +533,7 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
             btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Verificando Banco...</span>`;
 
             let intentos = 0;
-            const maxIntentos = window.currentPaymentMethod === 'c2p' ? 5 : 3; 
+            const maxIntentos = window.currentPaymentMethod === 'c2p' ? 10 : 3; // 🍎 C2P puede tardar más en Webhooks
 
             const verificarEstadoOrden = async () => {
                 try {
@@ -468,7 +557,6 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
                             
                             const successRef = document.getElementById('success-ref');
                             if (successRef) {
-                                // 🍎 AÑADIDO: Si es C2P, mostramos el ID real devuelto por la pasarela VEXPay
                                 successRef.innerText = statusData.payment_details?.vexpay_transaction_id || reference;
                             }
                             
@@ -476,12 +564,21 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
                             return; 
                         } 
                         else if (statusData.status === 'rejected') {
-                            if (typeof Swal !== 'undefined') Swal.fire("Transacción Rechazada", statusData.rejection_reason || statusData.bot_verification_msg || "El banco rechazó la transacción. Verifica los datos e intenta de nuevo.", "error");
-                            else alert(statusData.rejection_reason || statusData.bot_verification_msg || "El banco rechazó la transacción.");
+                            if (typeof Swal !== 'undefined') Swal.fire("Transacción Rechazada", statusData.rejection_reason || "El banco rechazó la transacción.", "error");
                             
                             resetBtn(btn);
-                            if (typeof startVaultTimer === 'function') startVaultTimer(new Date().getTime() + 60000); 
                             if (cancelBtn) cancelBtn.disabled = false;
+                            
+                            // 🍎 Resetear el C2P para intentar de nuevo
+                            window.c2pIntentId = null;
+                            const btnReqSMS = document.getElementById('btn-request-sms');
+                            if (btnReqSMS && window.currentPaymentMethod === 'c2p') {
+                                btnReqSMS.classList.remove('hidden');
+                                document.getElementById('c2p-token-container')?.classList.add('hidden');
+                                const btnSubmitContainer = document.getElementById('btn-process-order')?.parentElement;
+                                if (btnSubmitContainer) btnSubmitContainer.style.display = 'none';
+                                document.getElementById('pay-token-c2p').value = '';
+                            }
                             return; 
                         }
                     }
@@ -489,8 +586,7 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
                     intentos++;
                     
                     if (intentos < maxIntentos) {
-                        // 🍎 AÑADIDO: El Débito es más rápido, hacemos polling a los 4s si es C2P, a los 9s si es manual
-                        const retryTime = window.currentPaymentMethod === 'c2p' ? 4000 : 9000;
+                        const retryTime = window.currentPaymentMethod === 'c2p' ? 5000 : 9000;
                         setTimeout(verificarEstadoOrden, retryTime); 
                     } else {
                         localStorage.removeItem('gymenez_cart');
@@ -510,10 +606,10 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
                                 <div class="w-20 h-20 mx-auto bg-[#FFC300]/10 border-2 border-[#FFC300] text-[#FFC300] rounded-full flex items-center justify-center mb-6 relative z-10">
                                     <svg class="w-10 h-10 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </div>
-                                <h2 class="text-3xl md:text-4xl font-[900] uppercase tracking-tight text-white mb-4 relative z-10">Verificación Demorada</h2>
+                                <h2 class="text-3xl md:text-4xl font-[900] uppercase tracking-tight text-white mb-4 relative z-10">Verificación en Proceso</h2>
                                 <p class="text-gray-400 text-sm max-w-md mx-auto mb-10 leading-relaxed font-medium relative z-10">
-                                    Tu inventario está reservado bajo la ref: <strong class="text-white bg-white/10 px-2 py-1 rounded">${reference}</strong>. Los servidores bancarios tienen alta latencia.<br><br>
-                                    El pago será validado manualmente en breve y te notificaremos.
+                                    Tu inventario está reservado bajo la ref: <strong class="text-white bg-white/10 px-2 py-1 rounded">${window.c2pExternalRef || reference}</strong>.<br><br>
+                                    El banco ha tomado más tiempo del usual para confirmar el SMS o el débito. Te notificaremos el resultado final en tu cuenta.
                                 </p>
                                 <a href="/store/account.html" class="inline-block relative z-10 bg-[#FFC300] text-black px-10 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:scale-[1.02] transition-all shadow-[0_10px_30px_rgba(255,195,0,0.2)]">
                                     Ver Mis Órdenes
@@ -525,29 +621,21 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
 
                 } catch (error) {
                     console.error("Error consultando estado:", error);
-                    if (typeof Swal !== 'undefined') Swal.fire("Interrupción", "Se interrumpió la conexión al validar. Tu orden está a salvo, verifica su estado en tu cuenta.", "info");
-                    else alert("Se interrumpió la conexión al validar.");
                     window.location.href = '/store/account.html';
                 }
             };
 
-            // 🍎 AÑADIDO: Si es C2P, arranca la primera consulta de estado en solo 3 segundos
-            const initialWait = window.currentPaymentMethod === 'c2p' ? 3000 : 9000;
+            const initialWait = window.currentPaymentMethod === 'c2p' ? 4000 : 9000;
             setTimeout(verificarEstadoOrden, initialWait);
 
         } else {
             if (typeof Swal !== 'undefined') Swal.fire("Error", data.error || "Transacción rechazada por el servidor.", "warning");
-            else alert(data.error || "Transacción rechazada por el servidor.");
             resetBtn(btn);
-            if (typeof startVaultTimer === 'function') startVaultTimer(new Date().getTime() + 60000); 
             if (cancelBtn) cancelBtn.disabled = false;
         }
     } catch (error) {
         console.error("Error de red:", error);
-        if (typeof Swal !== 'undefined') Swal.fire("Error de Conexión", "Pérdida de conexión segura. Intente nuevamente.", "error");
-        else alert("Pérdida de conexión segura. Intente nuevamente.");
         resetBtn(btn);
-        if (typeof startVaultTimer === 'function') startVaultTimer(new Date().getTime() + 60000); 
         if (cancelBtn) cancelBtn.disabled = false;
     }
 });
@@ -557,15 +645,10 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
 // ====================================================================
 document.getElementById('btn-cancel-vault')?.addEventListener('click', () => {
     if (typeof vaultInterval !== 'undefined') clearInterval(vaultInterval);
-    
-    // Limpiamos la variable global
     window.currentPaymentMethod = null;
-    
+    window.c2pIntentId = null; 
     const vaultSection = document.getElementById('checkout-vault-section') || document.querySelector('.vault-container') || document.getElementById('vault-view');
-    if (vaultSection) {
-        vaultSection.classList.add('hidden');
-    }
-
+    if (vaultSection) vaultSection.classList.add('hidden');
     const summarySection = document.getElementById('checkout-summary-section') || document.querySelector('.summary-container') || document.getElementById('summary-panel');
     if (summarySection) {
         summarySection.classList.remove('hidden');
@@ -573,9 +656,6 @@ document.getElementById('btn-cancel-vault')?.addEventListener('click', () => {
     }
 });
 
-/**
- * 🔄 Restaura el botón final tras un fallo
- */
 window.resetBtn = function(btn) {
     if (!btn) return;
     btn.disabled = false;
@@ -598,11 +678,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 const cartData = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
                 const itemsToProcess = cartData.items || cartData || [];
 
-                // 🍎 INYECCIÓN ZERO-TRUST PARA PAYPAL CREATE (AHORA CON 3 PRECIOS)
                 const cleanItems = itemsToProcess.map(item => {
                     const itemBestPrice = Number(parseFloat(item.price).toFixed(2));
                     const itemMaxPrice = Number(parseFloat(item.basePrice || item.price).toFixed(2));
-                    const itemPmPrice = Number(parseFloat(item.pmPrice || item.basePrice || item.price).toFixed(2)); // Fallback
+                    const itemPmPrice = Number(parseFloat(item.pmPrice || item.basePrice || item.price).toFixed(2)); 
                     
                     const taintedId = String(item.real_id || item.product_id || item.id);
                     const cleanBaseId = taintedId.includes('_') ? taintedId.split('_')[0] : taintedId;
@@ -613,7 +692,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         real_id: cleanBaseId,         
                         name: item.name || 'Producto',
                         price: itemBestPrice,
-                        pmPrice: itemPmPrice,         // 🍎 Inyectado
+                        pmPrice: itemPmPrice,         
                         basePrice: itemMaxPrice,
                         qty: parseInt(item.quantity || item.qty || 1),
                         storeName: item.storeName || item.store_name || 'Gymenez Store',
@@ -688,11 +767,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     const cartData = JSON.parse(localStorage.getItem('gymenez_cart')) || [];
                     const itemsToProcess = cartData.items || cartData || [];
 
-                    // 🍎 INYECCIÓN ZERO-TRUST PARA PAYPAL CAPTURE (AHORA CON 3 PRECIOS)
                     const cleanItems = itemsToProcess.map(item => {
                         const itemBestPrice = Number(parseFloat(item.price).toFixed(2));
                         const itemMaxPrice = Number(parseFloat(item.basePrice || item.price).toFixed(2));
-                        const itemPmPrice = Number(parseFloat(item.pmPrice || item.basePrice || item.price).toFixed(2)); // Fallback
+                        const itemPmPrice = Number(parseFloat(item.pmPrice || item.basePrice || item.price).toFixed(2)); 
                         
                         const taintedId = String(item.real_id || item.product_id || item.id);
                         const cleanBaseId = taintedId.includes('_') ? taintedId.split('_')[0] : taintedId;
@@ -703,7 +781,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             real_id: cleanBaseId,
                             name: item.name || 'Producto',
                             price: itemBestPrice,
-                            pmPrice: itemPmPrice,         // 🍎 Inyectado
+                            pmPrice: itemPmPrice,         
                             basePrice: itemMaxPrice,
                             qty: parseInt(item.quantity || item.qty || 1),
                             storeName: item.storeName || item.store_name || 'Gymenez Store',
