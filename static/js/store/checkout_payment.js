@@ -302,9 +302,11 @@ function validateFinalButton() {
         const doc = document.getElementById('pay-documento-origen')?.value.trim();
         const token = document.getElementById('pay-token-c2p')?.value.trim();
         
+        // 🍎 CORRECCIÓN: Habilitar "Solicitar SMS" solo con banco, teléfono y cédula.
         const isDataReadyForSMS = Boolean(banco) && tlf.length >= 10 && doc.length >= 6;
         if (btnReqSMS) btnReqSMS.disabled = !(isShippingReady && isDataReadyForSMS);
         
+        // 🍎 CORRECCIÓN: Habilitar el botón final solo cuando haya token y un intentId válido.
         const isOriginComplete = isDataReadyForSMS && token.length >= 6 && window.c2pIntentId;
         if(btn) btn.disabled = !(isShippingReady && isOriginComplete);
     } 
