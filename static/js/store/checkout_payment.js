@@ -695,6 +695,7 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
             validateFinalButton();
         }
     }
+}); // <-- ¡AQUÍ ESTABA EL PARÉNTESIS FALTANTE QUE CAUSABA EL ERROR!
 
 // ====================================================================
 // ❌ BOTÓN CANCELAR (Salir de la bóveda/cronómetro)
