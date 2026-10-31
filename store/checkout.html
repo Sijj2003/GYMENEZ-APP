@@ -281,7 +281,7 @@
                             
                             <!-- Alerta Multi-Tienda -->
                             <div id="alert-multi-store" class="hidden bg-white/5 border border-white/10 p-4 rounded-xl flex items-start gap-3">
-                                <svg class="w-5 h-5 text-gray-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                <svg class="w-5 h-5 text-gray-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012-2v2M7 7h10"></path></svg>
                                 <div>
                                     <span class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-1">Envíos Separados</span>
                                     <p class="text-[10px] text-gray-400 leading-relaxed">Tu orden tiene productos de varias tiendas. Te llegarán en paquetes separados desde cada marca.</p>
@@ -476,28 +476,28 @@
                     </div>
                 </div>
 
-                <!-- 🍎 CONTENEDOR C2P: Cédula (con prefijo) y Token OTP -->
-                <div id="c2p-token-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 transition-all duration-300 hidden">
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Cédula o RIF</label>
-                        <div class="flex">
-                            <select id="c2p-doc-type" class="bg-[#050508] border border-white/10 border-r-0 rounded-l-xl px-3 py-3.5 text-sm text-white focus:outline-none focus:border-[#FFC300] transition appearance-none cursor-pointer">
-                                <option value="V">V</option>
-                                <option value="E">E</option>
-                                <option value="J">J</option>
-                                <option value="P">P</option>
-                                <option value="G">G</option>
-                            </select>
-                            <input type="text" id="pay-documento-origen" placeholder="12345678" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-[#050508] border border-white/10 rounded-r-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-[#FFC300] transition">
-                        </div>
+                <!-- 🍎 NUEVO: CÉDULA SEPARADA (Visible desde el inicio en C2P) -->
+                <div id="c2p-cedula-container" class="mb-4 transition-all duration-300 hidden">
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Cédula o RIF</label>
+                    <div class="flex">
+                        <select id="c2p-doc-type" class="bg-[#050508] border border-white/10 border-r-0 rounded-l-xl px-3 py-3.5 text-sm text-white focus:outline-none focus:border-[#FFC300] transition appearance-none cursor-pointer">
+                            <option value="V">V</option>
+                            <option value="E">E</option>
+                            <option value="J">J</option>
+                            <option value="P">P</option>
+                            <option value="G">G</option>
+                        </select>
+                        <input type="text" id="pay-documento-origen" placeholder="12345678" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-[#050508] border border-white/10 rounded-r-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-[#FFC300] transition">
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase tracking-widest text-[#FFC300] mb-2 ml-1 flex items-center gap-1">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            Clave Dinámica (C2P)
-                        </label>
-                        <input type="text" id="pay-token-c2p" maxlength="10" placeholder="Código SMS o App" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-[#050508] border border-[#FFC300]/30 rounded-xl px-4 py-3.5 text-lg font-bold text-[#FFC300] focus:outline-none focus:border-[#FFC300] transition text-center tracking-widest shadow-[0_0_15px_rgba(255,195,0,0.1)]">
-                    </div>
+                </div>
+
+                <!-- 🍎 TOKEN SEPARADO (Se mantiene oculto hasta recibir el SMS) -->
+                <div id="c2p-token-container" class="mb-8 transition-all duration-300 hidden">
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-[#FFC300] mb-2 ml-1 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        Clave Dinámica (C2P)
+                    </label>
+                    <input type="text" id="pay-token-c2p" maxlength="10" placeholder="Código SMS o App" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-[#050508] border border-[#FFC300]/30 rounded-xl px-4 py-3.5 text-lg font-bold text-[#FFC300] focus:outline-none focus:border-[#FFC300] transition text-center tracking-widest shadow-[0_0_15px_rgba(255,195,0,0.1)]">
                 </div>
 
                 <!-- Contenedor de Referencia Tradicional -->
@@ -710,7 +710,7 @@
     <script src="/static/js/store/checkout_summary.js?v=4.1"></script>
     <script src="/static/js/store/checkout_shipping.js?v=4.0"></script>
     <script src="/static/js/store/checkout_vault.js?v=4.0"></script>
-    <script src="/static/js/store/checkout_payment.js?v=4.7"></script>
+    <script src="/static/js/store/checkout_payment.js?v=4.9"></script>
     <script src="/static/js/store/checkout_wizard_init.js?v=4.0"></script>
 
     <!-- Scripts adicionales mantenidos -->
