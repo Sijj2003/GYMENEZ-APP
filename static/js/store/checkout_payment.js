@@ -104,7 +104,8 @@ function updatePaymentFormFields() {
     const refContainer = document.getElementById('reference-container');
     const verificationInputs = document.getElementById('verification-inputs');
     
-    const c2pContainer = document.getElementById('c2p-token-container'); 
+    const cedulaContainer = document.getElementById('c2p-cedula-container'); 
+    const tokenContainer = document.getElementById('c2p-token-container'); 
     
     const bancoOrigen = document.getElementById('pay-banco-origen');
     const tlfOrigen = document.getElementById('pay-telefono-origen');
@@ -138,8 +139,9 @@ function updatePaymentFormFields() {
         refContainer?.classList.add('hidden');    
         dataPm?.classList.add('hidden');          
         
-        // 🍎 LÓGICA 2 PASOS C2P: Ocultamos el OTP al inicio
-        c2pContainer?.classList.add('hidden'); 
+        // 🍎 C2P: Mostramos cédula, ocultamos token hasta el click
+        cedulaContainer?.classList.remove('hidden');
+        tokenContainer?.classList.add('hidden'); 
         
         if (bancoOrigen) bancoOrigen.required = true;
         if (tlfOrigen) tlfOrigen.required = true;
@@ -159,7 +161,6 @@ function updatePaymentFormFields() {
             : `Procesar Compra`;
         if (btnText) btnText.innerText = `Debitar ${montoStr}`; 
 
-        // 🍎 Ocultamos el botón final de pago y mostramos el de "Solicitar SMS"
         if (btnSubmitContainer) btnSubmitContainer.style.display = 'none';
         if (btnRequestSMS) btnRequestSMS.classList.remove('hidden');
         if (cancelBtn) cancelBtn.style.display = ''; 
@@ -168,7 +169,8 @@ function updatePaymentFormFields() {
         dataPm?.classList.remove('hidden');
         verificationInputs?.classList.remove('hidden');
         originContainer?.classList.remove('hidden');
-        c2pContainer?.classList.add('hidden'); 
+        cedulaContainer?.classList.add('hidden'); 
+        tokenContainer?.classList.add('hidden'); 
         refContainer?.classList.remove('hidden');
         
         if (bancoOrigen) bancoOrigen.required = true;
@@ -202,7 +204,8 @@ function updatePaymentFormFields() {
         verificationInputs?.classList.remove('hidden');
         originContainer?.classList.add('hidden'); 
         refContainer?.classList.remove('hidden');
-        c2pContainer?.classList.add('hidden');
+        cedulaContainer?.classList.add('hidden');
+        tokenContainer?.classList.add('hidden');
         
         if (bancoOrigen) bancoOrigen.required = false;
         if (tlfOrigen) tlfOrigen.required = false;
@@ -231,7 +234,8 @@ function updatePaymentFormFields() {
     } else if (window.currentPaymentMethod === 'paypal') {
         dataIntl?.classList.remove('hidden');
         verificationInputs?.classList.add('hidden'); 
-        c2pContainer?.classList.add('hidden');
+        cedulaContainer?.classList.add('hidden');
+        tokenContainer?.classList.add('hidden');
         
         if (bancoOrigen) bancoOrigen.required = false;
         if (tlfOrigen) tlfOrigen.required = false;
@@ -302,11 +306,11 @@ function validateFinalButton() {
         const docNum = document.getElementById('pay-documento-origen')?.value.trim();
         const token = document.getElementById('pay-token-c2p')?.value.trim();
         
-        // Se habilita pedir SMS al tener Banco, Teléfono y Número de Cédula
+        // Habilitar "Solicitar SMS" solo con banco, teléfono y cédula.
         const isDataReadyForSMS = Boolean(banco) && tlf.length >= 10 && docNum.length >= 6;
         if (btnReqSMS) btnReqSMS.disabled = !(isShippingReady && isDataReadyForSMS);
         
-        // Se habilita Procesar Compra al tener el Token y haber recibido el IntentId del servidor
+        // Habilitar Procesar Compra solo cuando haya token y un intentId válido.
         const isOriginComplete = isDataReadyForSMS && token.length >= 6 && window.c2pIntentId;
         if(btn) btn.disabled = !(isShippingReady && isOriginComplete);
     } 
@@ -344,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     finalPayloadTotalUsd += (pmPrice * qty);
                 });
 
-                // 🍎 FUSIONAMOS PREFIJO + NÚMERO (Ej: "V" + "12345678")
+                // FUSIONAMOS PREFIJO + NÚMERO
                 const docType = document.getElementById('c2p-doc-type')?.value || 'V';
                 const docNum = document.getElementById('pay-documento-origen').value.trim();
                 const documentoCompleto = `${docType}${docNum}`;
@@ -374,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.c2pIntentId = result.intentId;
                     window.c2pExternalRef = result.externalRef;
 
-                    // Mostrar éxito visual y revelar campo
+                    // Mostrar éxito visual y revelar campo token
                     btnReqSMS.style.display = 'none';
                     document.getElementById('c2p-token-container')?.classList.remove('hidden');
                     
