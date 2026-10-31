@@ -95,8 +95,14 @@ function renderCartSummary() {
         
         // 🍎 El precio final se decide según los 3 métodos de pago posibles
         let itemFinalPrice = maxPrice; // Por defecto (PayPal o sin seleccionar)
-        if (window.currentPaymentMethod === 'binance') itemFinalPrice = bestPrice;
-        if (window.currentPaymentMethod === 'pago_movil') itemFinalPrice = pmPrice;
+        
+        if (window.currentPaymentMethod === 'binance') {
+            itemFinalPrice = bestPrice;
+        } 
+        // 🍎 CORRECCIÓN: Agregar c2p en la misma condición de pago_movil
+        else if (window.currentPaymentMethod === 'pago_movil' || window.currentPaymentMethod === 'c2p') {
+            itemFinalPrice = pmPrice;
+        }
         
         const priceToStrikeTotal = priceToStrike * qty;
         const finalPriceTotal = itemFinalPrice * qty;
@@ -219,11 +225,11 @@ function renderCartSummary() {
                 savingsRow.className = "flex justify-between items-center text-emerald-400 bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20";
                 savingsText.innerText = "✅ Ahorro Binance Pay Aplicado";
                 savingsAmount.innerText = `-$${formatMoney(potentialSavings)}`;
-            } else if (window.currentPaymentMethod === 'pago_movil') {
-                // AHORRO PARCIAL APLICADO (Naranja) + GANCHO BINANCE
+            } else if (window.currentPaymentMethod === 'pago_movil' || window.currentPaymentMethod === 'c2p') {
+                // AHORRO PARCIAL APLICADO (Naranja) + GANCHO BINANCE (🍎 Se agregó c2p aquí también)
                 savingsRow.className = "flex justify-between items-center text-orange-400 bg-orange-500/10 p-2 rounded-lg border border-orange-500/20";
                 const pmSavings = rawTotal - cartTotal;
-                savingsText.innerText = "✅ Ahorro Pago Móvil Aplicado";
+                savingsText.innerText = "✅ Ahorro Nacional Aplicado"; // Texto más neutral
                 savingsAmount.innerText = `-$${formatMoney(pmSavings)}`;
             } else {
                 // GANCHO VISUAL UPSELL (Dorado/Naranja) - Para PayPal o Sin Seleccionar
@@ -316,11 +322,11 @@ function renderCartSummary() {
         if(document.getElementById('bcv-rate-display')) document.getElementById('bcv-rate-display').innerText = `Tasa Oficial BCV: Bs. ${formatMoney(currentBcvRate)}`;
         if(vesContainer) vesContainer.classList.remove('hidden');
         if(warningMsg) warningMsg.classList.add('hidden');
-        if(window.currentPaymentMethod === 'pago_movil' && btnProcess) btnProcess.querySelector('span').innerText = `Pagar Bs. ${totalBs}`;
+        if((window.currentPaymentMethod === 'pago_movil' || window.currentPaymentMethod === 'c2p') && btnProcess) btnProcess.querySelector('span').innerText = `Pagar Bs. ${totalBs}`;
     } else {
         if(vesContainer) vesContainer.classList.add('hidden');
         if(warningMsg) warningMsg.classList.remove('hidden');
-        if(window.currentPaymentMethod === 'pago_movil' && btnProcess) btnProcess.querySelector('span').innerText = `Completar Compra (Calcular BCV)`;
+        if((window.currentPaymentMethod === 'pago_movil' || window.currentPaymentMethod === 'c2p') && btnProcess) btnProcess.querySelector('span').innerText = `Completar Compra (Calcular BCV)`;
     }
 
     if (cartItems.length === 0) {
