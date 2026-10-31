@@ -534,7 +534,13 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
             body: JSON.stringify(payload)
         });
 
-        if (response.status === 401 || response.status === 403) return;
+        // 🍎 CORRECCIÓN 1: Evitar que el status 401/403 congele la pantalla sin avisar
+        if (response.status === 401 || response.status === 403) {
+            if (typeof Swal !== 'undefined') Swal.fire("Sesión de Seguridad", "Por favor inicia sesión nuevamente.", "error");
+            resetBtn(btn);
+            if (cancelBtn) cancelBtn.disabled = false;
+            return;
+        }
 
         const data = await response.json();
 
@@ -579,15 +585,17 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
                             resetBtn(btn);
                             if (cancelBtn) cancelBtn.disabled = false;
                             
-                            // 🍎 Resetear el C2P para intentar de nuevo
+                            // 🍎 Resetear el C2P tras rechazo en el Polling
                             window.c2pIntentId = null;
                             const btnReqSMS = document.getElementById('btn-request-sms');
                             if (btnReqSMS && window.currentPaymentMethod === 'c2p') {
                                 btnReqSMS.style.display = '';
+                                btnReqSMS.disabled = false;
                                 document.getElementById('c2p-token-container')?.classList.add('hidden');
                                 const btnSubmitContainer = document.getElementById('btn-process-order')?.parentElement;
                                 if (btnSubmitContainer) btnSubmitContainer.style.display = 'none';
-                                document.getElementById('pay-token-c2p').value = '';
+                                const tokenInput = document.getElementById('pay-token-c2p');
+                                if (tokenInput) tokenInput.value = '';
                                 validateFinalButton();
                             }
                             return; 
@@ -640,16 +648,53 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
             setTimeout(verificarEstadoOrden, initialWait);
 
         } else {
-            if (typeof Swal !== 'undefined') Swal.fire("Error", data.error || "Transacción rechazada por el servidor.", "warning");
+            // 🍎 CORRECCIÓN 2: Manejo de rechazo síncrono INMEDIATO (Fase 2 fallida)
+            if (typeof Swal !== 'undefined') Swal.fire("Transacción Rechazada", data.error || "El banco rechazó la transacción.", "warning");
+            
             resetBtn(btn);
             if (cancelBtn) cancelBtn.disabled = false;
+            
+            // Reconstruir la interfaz para que el usuario pueda pedir otro SMS
+            if (window.currentPaymentMethod === 'c2p') {
+                window.c2pIntentId = null; // Matamos la intención fallida
+                const btnReqSMS = document.getElementById('btn-request-sms');
+                if (btnReqSMS) {
+                    btnReqSMS.style.display = '';
+                    btnReqSMS.disabled = false;
+                }
+                document.getElementById('c2p-token-container')?.classList.add('hidden');
+                
+                const btnSubmitContainer = document.getElementById('btn-process-order')?.parentElement;
+                if (btnSubmitContainer) btnSubmitContainer.style.display = 'none';
+                
+                const tokenInput = document.getElementById('pay-token-c2p');
+                if (tokenInput) tokenInput.value = '';
+                
+                validateFinalButton();
+            }
         }
     } catch (error) {
         console.error("Error de red:", error);
+        if (typeof Swal !== 'undefined') Swal.fire("Error de Conexión", "Problemas de red comunicando con el servidor.", "error");
         resetBtn(btn);
         if (cancelBtn) cancelBtn.disabled = false;
+        
+        // 🍎 CORRECCIÓN 3: Resetear la interfaz C2P incluso si falla la red
+        if (window.currentPaymentMethod === 'c2p') {
+            window.c2pIntentId = null;
+            const btnReqSMS = document.getElementById('btn-request-sms');
+            if (btnReqSMS) {
+                btnReqSMS.style.display = '';
+                btnReqSMS.disabled = false;
+            }
+            document.getElementById('c2p-token-container')?.classList.add('hidden');
+            const btnSubmitContainer = document.getElementById('btn-process-order')?.parentElement;
+            if (btnSubmitContainer) btnSubmitContainer.style.display = 'none';
+            const tokenInput = document.getElementById('pay-token-c2p');
+            if (tokenInput) tokenInput.value = '';
+            validateFinalButton();
+        }
     }
-});
 
 // ====================================================================
 // ❌ BOTÓN CANCELAR (Salir de la bóveda/cronómetro)
