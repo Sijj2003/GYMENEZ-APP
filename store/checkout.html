@@ -435,6 +435,7 @@
                         <div id="paypal-button-container" class="w-full relative z-10"></div>
                     </div>
                 </div>
+            </div>
 
             <div id="verification-inputs">
                 
@@ -475,10 +476,20 @@
                     </div>
                 </div>
 
+                <!-- 🍎 CONTENEDOR C2P: Cédula (con prefijo) y Token OTP -->
                 <div id="c2p-token-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 transition-all duration-300 hidden">
                     <div>
-                        <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Cédula Identidad</label>
-                        <input type="text" id="pay-documento-origen" placeholder="V12345678" class="w-full bg-[#050508] border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-[#FFC300] transition uppercase">
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Cédula o RIF</label>
+                        <div class="flex">
+                            <select id="c2p-doc-type" class="bg-[#050508] border border-white/10 border-r-0 rounded-l-xl px-3 py-3.5 text-sm text-white focus:outline-none focus:border-[#FFC300] transition appearance-none cursor-pointer">
+                                <option value="V">V</option>
+                                <option value="E">E</option>
+                                <option value="J">J</option>
+                                <option value="P">P</option>
+                                <option value="G">G</option>
+                            </select>
+                            <input type="text" id="pay-documento-origen" placeholder="12345678" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-[#050508] border border-white/10 rounded-r-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:border-[#FFC300] transition">
+                        </div>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-widest text-[#FFC300] mb-2 ml-1 flex items-center gap-1">
@@ -699,7 +710,7 @@
     <script src="/static/js/store/checkout_summary.js?v=4.1"></script>
     <script src="/static/js/store/checkout_shipping.js?v=4.0"></script>
     <script src="/static/js/store/checkout_vault.js?v=4.0"></script>
-    <script src="/static/js/store/checkout_payment.js?v=4.4"></script>
+    <script src="/static/js/store/checkout_payment.js?v=4.7"></script>
     <script src="/static/js/store/checkout_wizard_init.js?v=4.0"></script>
 
     <!-- Scripts adicionales mantenidos -->
