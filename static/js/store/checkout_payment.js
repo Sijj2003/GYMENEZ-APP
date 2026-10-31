@@ -114,7 +114,6 @@ function updatePaymentFormFields() {
     const refLabel = document.getElementById('lbl-reference');
     const refInput = document.getElementById('pay-reference');
     
-    // 🍎 AÑADIDO: Elementos visuales para el flujo de dos pasos C2P
     const btnRequestSMS = document.getElementById('btn-request-sms');
     const btnSubmitContainer = document.getElementById('btn-process-order')?.parentElement;
     
@@ -252,9 +251,9 @@ function setupReferenceInputSanitizer() {
     const refInput = document.getElementById('pay-reference');
     const bancoSelect = document.getElementById('pay-banco-origen');
     const tlfInput = document.getElementById('pay-telefono-origen');
-    
     const docInput = document.getElementById('pay-documento-origen');
     const tokenInput = document.getElementById('pay-token-c2p');
+    const docTypeSelect = document.getElementById('c2p-doc-type');
 
     if (refInput) {
         refInput.addEventListener('input', (e) => {
@@ -275,6 +274,7 @@ function setupReferenceInputSanitizer() {
     if (bancoSelect) bancoSelect.addEventListener('change', validateFinalButton);
     if (tlfInput) tlfInput.addEventListener('input', validateFinalButton);
     if (docInput) docInput.addEventListener('input', validateFinalButton);
+    if (docTypeSelect) docTypeSelect.addEventListener('change', validateFinalButton);
 }
 
 function validateFinalButton() {
@@ -299,14 +299,14 @@ function validateFinalButton() {
     if (window.currentPaymentMethod === 'c2p') {
         const banco = document.getElementById('pay-banco-origen')?.value;
         const tlf = document.getElementById('pay-telefono-origen')?.value.trim();
-        const doc = document.getElementById('pay-documento-origen')?.value.trim();
+        const docNum = document.getElementById('pay-documento-origen')?.value.trim();
         const token = document.getElementById('pay-token-c2p')?.value.trim();
         
-        // 🍎 CORRECCIÓN: Habilitar "Solicitar SMS" solo con banco, teléfono y cédula.
-        const isDataReadyForSMS = Boolean(banco) && tlf.length >= 10 && doc.length >= 6;
+        // Se habilita pedir SMS al tener Banco, Teléfono y Número de Cédula
+        const isDataReadyForSMS = Boolean(banco) && tlf.length >= 10 && docNum.length >= 6;
         if (btnReqSMS) btnReqSMS.disabled = !(isShippingReady && isDataReadyForSMS);
         
-        // 🍎 CORRECCIÓN: Habilitar el botón final solo cuando haya token y un intentId válido.
+        // Se habilita Procesar Compra al tener el Token y haber recibido el IntentId del servidor
         const isOriginComplete = isDataReadyForSMS && token.length >= 6 && window.c2pIntentId;
         if(btn) btn.disabled = !(isShippingReady && isOriginComplete);
     } 
@@ -322,89 +322,87 @@ function validateFinalButton() {
     }
 }
 
-
 // ====================================================================
 // 🍎 LÓGICA PASO 1: SOLICITUD DE INTENTO SMS C2P
 // ====================================================================
-document.getElementById('btn-request-sms')?.addEventListener('click', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('btn-request-sms');
-    const originalText = btn.innerHTML;
-    const token = localStorage.getItem(typeof TOKEN_KEY !== 'undefined' ? TOKEN_KEY : 'jwt_token') || localStorage.getItem('jwt_token');
-
-    const telefonoOrigen = document.getElementById('pay-telefono-origen')?.value.trim();
-    const bancoOrigen = document.getElementById('pay-banco-origen')?.value;
-    const documentoOrigen = document.getElementById('pay-documento-origen')?.value.trim();
-
-    if (!telefonoOrigen || !bancoOrigen || !documentoOrigen) {
-        if (typeof Swal !== 'undefined') Swal.fire("Atención", "Llene Banco, Cédula y Teléfono antes de solicitar la clave.", "warning");
-        return;
-    }
-
-    btn.innerHTML = `<div class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Solicitando al Banco...</span>`;
-    btn.disabled = true;
-
-    // Calculamos el total
-    let finalPayloadTotalUsd = 0;
-    (typeof cartItems !== 'undefined' ? cartItems : []).forEach(item => {
-        const qty = item.quantity || item.qty || 1;
-        const pmPrice = parseFloat(item.pmPrice || item.basePrice || item.price);
-        finalPayloadTotalUsd += (pmPrice * qty);
-    });
-
-    const payload = {
-        totalAmount: finalPayloadTotalUsd, 
-        telefono_origen: telefonoOrigen,
-        banco_origen: bancoOrigen,
-        documento_origen: documentoOrigen
-    };
-
-    try {
-        const response = await fetch(`${typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : ''}/api/store/checkout/c2p/request`, {
-            method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-            window.c2pIntentId = data.intentId;
-            window.c2pExternalRef = data.externalRef;
-
-            btn.style.display = 'none'; // Ocultamos el botón de SMS
+document.addEventListener('DOMContentLoaded', () => {
+    const btnReqSMS = document.getElementById('btn-request-sms');
+    
+    if (btnReqSMS) {
+        btnReqSMS.addEventListener('click', async (e) => {
+            e.preventDefault();
             
-            // Revelamos el input para el Token OTP y el botón final
-            document.getElementById('c2p-token-container')?.classList.remove('hidden');
-            const btnSubmitContainer = document.getElementById('btn-process-order')?.parentElement;
-            if (btnSubmitContainer) btnSubmitContainer.style.display = '';
-            
-            validateFinalButton(); // Re-evaluar botón final
+            const originalHTML = btnReqSMS.innerHTML;
+            btnReqSMS.innerHTML = `<svg class="w-5 h-5 animate-spin text-black" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Solicitando al Banco...`;
+            btnReqSMS.disabled = true;
 
-            if (typeof Swal !== 'undefined' && data.otpRequested) {
-                Swal.fire({
-                    toast: true,
-                    position: 'top-end',
-                    icon: 'success',
-                    title: 'Clave solicitada',
-                    text: 'Revisa tus SMS o la app de tu banco.',
-                    showConfirmButton: false,
-                    timer: 4000
+            try {
+                let finalPayloadTotalUsd = 0;
+                (typeof cartItems !== 'undefined' ? cartItems : []).forEach(item => {
+                    const qty = item.quantity || item.qty || 1;
+                    const pmPrice = parseFloat(item.pmPrice || item.basePrice || item.price);
+                    finalPayloadTotalUsd += (pmPrice * qty);
                 });
+
+                // 🍎 FUSIONAMOS PREFIJO + NÚMERO (Ej: "V" + "12345678")
+                const docType = document.getElementById('c2p-doc-type')?.value || 'V';
+                const docNum = document.getElementById('pay-documento-origen').value.trim();
+                const documentoCompleto = `${docType}${docNum}`;
+
+                const payload = {
+                    paymentMethod: 'c2p',
+                    totalAmount: finalPayloadTotalUsd,
+                    banco_origen: document.getElementById('pay-banco-origen').value,
+                    telefono_origen: document.getElementById('pay-telefono-origen').value.trim(),
+                    documento_origen: documentoCompleto
+                };
+
+                const token = localStorage.getItem(typeof TOKEN_KEY !== 'undefined' ? TOKEN_KEY : 'jwt_token') || localStorage.getItem('jwt_token');
+
+                const response = await fetch(`${typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : ''}/api/store/checkout/c2p/request`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    window.c2pIntentId = result.intentId;
+                    window.c2pExternalRef = result.externalRef;
+
+                    // Mostrar éxito visual y revelar campo
+                    btnReqSMS.style.display = 'none';
+                    document.getElementById('c2p-token-container')?.classList.remove('hidden');
+                    
+                    const btnSubmitContainer = document.getElementById('btn-process-order')?.parentElement;
+                    if (btnSubmitContainer) btnSubmitContainer.style.display = '';
+
+                    const tokenInput = document.getElementById('pay-token-c2p');
+                    if (tokenInput) tokenInput.focus();
+
+                    validateFinalButton();
+
+                    if (typeof Swal !== 'undefined' && result.otpRequested) {
+                        Swal.fire({
+                            toast: true, position: 'top-end', icon: 'success',
+                            title: 'Clave solicitada', text: 'Revisa tus SMS o la app del banco.',
+                            showConfirmButton: false, timer: 4000
+                        });
+                    }
+                } else {
+                    throw new Error(result.error || 'El banco rechazó la solicitud.');
+                }
+            } catch (error) {
+                if (typeof Swal !== 'undefined') Swal.fire("Banco Rechazó Petición", error.message, "error");
+                else alert(`Error C2P: ${error.message}`);
+                btnReqSMS.innerHTML = originalHTML;
+                btnReqSMS.disabled = false;
             }
-        } else {
-            if (typeof Swal !== 'undefined') Swal.fire("Banco Rechazó Petición", data.error || "No se pudo generar la clave.", "error");
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-    } catch (error) {
-        console.error("Error SMS:", error);
-        if (typeof Swal !== 'undefined') Swal.fire("Error de Conexión", "No pudimos comunicar con la red interbancaria.", "error");
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+        });
     }
 });
 
@@ -470,7 +468,14 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
     
     const telefonoOrigen = document.getElementById('pay-telefono-origen') ? document.getElementById('pay-telefono-origen').value.trim() : '';
     const bancoOrigen = document.getElementById('pay-banco-origen') ? document.getElementById('pay-banco-origen').value : '';
-    const documentoOrigen = document.getElementById('pay-documento-origen') ? document.getElementById('pay-documento-origen').value.trim() : '';
+    let documentoOrigen = document.getElementById('pay-documento-origen') ? document.getElementById('pay-documento-origen').value.trim() : '';
+    
+    // 🍎 FUSIONAR PREFIJO SI ES C2P
+    if (window.currentPaymentMethod === 'c2p') {
+        const docType = document.getElementById('c2p-doc-type')?.value || 'V';
+        documentoOrigen = `${docType}${documentoOrigen}`;
+    }
+
     const tokenC2P = document.getElementById('pay-token-c2p') ? document.getElementById('pay-token-c2p').value.trim() : '';
 
     if (window.currentPaymentMethod === 'c2p') {
@@ -500,7 +505,6 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
         }
     });
 
-    // 🍎 AÑADIDO: Inyectamos intentId y externalRef para C2P
     const payload = {
         items: cleanItems,
         totalAmount: finalPayloadTotalUsd, 
@@ -509,10 +513,10 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
         wants_free_shipping: wantsFreeShipping,
         telefono_origen: telefonoOrigen,
         banco_origen: bancoOrigen,
-        documento_origen: documentoOrigen,
+        documento_origen: documentoOrigen, // Ya fusionado si es C2P
         c2p_token: tokenC2P,
-        intentId: window.c2pIntentId,        // 🍎 AÑADIDO
-        externalRef: window.c2pExternalRef   // 🍎 AÑADIDO
+        intentId: window.c2pIntentId,        
+        externalRef: window.c2pExternalRef   
     };
 
     try {
@@ -535,7 +539,7 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
             btn.innerHTML = `<div class="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div> <span>Verificando Banco...</span>`;
 
             let intentos = 0;
-            const maxIntentos = window.currentPaymentMethod === 'c2p' ? 10 : 3; // 🍎 C2P puede tardar más en Webhooks
+            const maxIntentos = window.currentPaymentMethod === 'c2p' ? 10 : 3; 
 
             const verificarEstadoOrden = async () => {
                 try {
@@ -575,11 +579,12 @@ document.getElementById('form-checkout-final')?.addEventListener('submit', async
                             window.c2pIntentId = null;
                             const btnReqSMS = document.getElementById('btn-request-sms');
                             if (btnReqSMS && window.currentPaymentMethod === 'c2p') {
-                                btnReqSMS.classList.remove('hidden');
+                                btnReqSMS.style.display = '';
                                 document.getElementById('c2p-token-container')?.classList.add('hidden');
                                 const btnSubmitContainer = document.getElementById('btn-process-order')?.parentElement;
                                 if (btnSubmitContainer) btnSubmitContainer.style.display = 'none';
                                 document.getElementById('pay-token-c2p').value = '';
+                                validateFinalButton();
                             }
                             return; 
                         }
