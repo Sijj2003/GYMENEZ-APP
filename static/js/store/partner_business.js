@@ -50,22 +50,47 @@ function initializeBusinessCenter(settings) {
         creditWidget.classList.add('hidden'); // Ocultar si llegó a 0
     }
 
-    // B. Widget de Bóveda (Wallet Lock - Zero Trust)
+    // B. Widget de Bóveda (Wallet Lock - Híbrido)
     if (settings.has_wallet_configured) {
-        // 1. INYECTAR LOS DATOS GUARDADOS
+        // 1. Inyectar datos en inputs
         document.getElementById('wallet-binance').value = settings.wallet_binance || '';
         document.getElementById('wallet-bank-name').value = settings.wallet_bank_name || '';
         document.getElementById('wallet-bank-account').value = settings.wallet_bank_account || '';
+        document.getElementById('wallet-bank-phone').value = settings.wallet_bank_phone || '';
 
-        // 2. BLOQUEAR LOS CAMPOS (Input usa readonly, Select usa disabled)
-        document.getElementById('wallet-binance').setAttribute('readonly', true);
-        document.getElementById('wallet-bank-name').setAttribute('disabled', true);
-        document.getElementById('wallet-bank-account').setAttribute('readonly', true);
-        
-        // 3. CAMBIAR INTERFAZ
-        document.getElementById('btn-save-wallet').classList.add('hidden');
-        document.getElementById('wallet-locked-msg').classList.remove('hidden');
-        document.getElementById('wallet-locked-msg').classList.add('flex');
+        const badge = document.getElementById('badge-wallet-status');
+
+        if (settings.pago_movil_status === 'verified') {
+            // TODO VERIFICADO Y SELLADO
+            document.getElementById('wallet-binance').setAttribute('readonly', true);
+            document.getElementById('wallet-bank-name').setAttribute('disabled', true);
+            document.getElementById('wallet-bank-account').setAttribute('readonly', true);
+            document.getElementById('wallet-bank-phone').setAttribute('readonly', true);
+            
+            document.getElementById('btn-save-wallet').classList.add('hidden');
+            document.getElementById('wallet-locked-msg').classList.remove('hidden');
+            document.getElementById('wallet-locked-msg').classList.add('flex');
+            
+            if(badge){
+                 badge.innerText = "Bóveda Sellada";
+                 badge.className = "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-3 py-1 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shrink-0 self-start";
+            }
+
+        } else if (settings.pago_movil_status === 'pending_verification') {
+            // EN ESPERA DE MICRO-DEPÓSITOS
+            document.getElementById('wallet-binance').setAttribute('readonly', true);
+            document.getElementById('wallet-bank-name').setAttribute('disabled', true);
+            document.getElementById('wallet-bank-account').setAttribute('readonly', true);
+            document.getElementById('wallet-bank-phone').setAttribute('readonly', true);
+            
+            document.getElementById('btn-save-wallet').classList.add('hidden');
+            document.getElementById('payout-verify-form').classList.remove('hidden');
+
+            if(badge){
+                 badge.innerText = "Pendiente Confirmación";
+                 badge.className = "bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shrink-0 self-start";
+            }
+        }
     }
 
     // C. Modelo de Rentabilidad (Contract Lock - Zero Trust)
@@ -85,21 +110,22 @@ function initializeBusinessCenter(settings) {
 // ====================================================================
 async function saveWallets() {
     const binance = document.getElementById('wallet-binance').value.trim();
-    const bank = document.getElementById('wallet-bank-name').value.trim();
+    const bank = document.getElementById('wallet-bank-name').value;
     const acc = document.getElementById('wallet-bank-account').value.trim();
+    const phone = document.getElementById('wallet-bank-phone').value.trim();
 
-    if (!binance && (!bank || !acc)) {
-        alert("Debes configurar al menos Binance Pay o tu Cuenta Bancaria completa para sellar la bóveda.");
+    if (!binance && (!bank || !acc || !phone)) {
+        alert("Debes configurar Binance Pay o todos los datos Bancarios (Banco, Cuenta y Teléfono) para sellar la bóveda.");
         return;
     }
 
-    const confirm = window.confirm("ATENCIÓN: Por protocolos Zero-Trust y Anti-Lavado de Dinero (AML), estas cuentas no podrán ser modificadas desde este panel una vez guardadas. ¿Confirmas que los datos pertenecen estrictamente a la Razón Social / Titular de la tienda?");
-    
+    const confirm = window.confirm("ATENCIÓN: Se registrarán estos datos bajo la titularidad de su Cédula/RIF. Una vez verificados no podrán modificarse. ¿Desea continuar?");
     if (!confirm) return;
 
     const token = localStorage.getItem(TOKEN_KEY);
     const btn = document.getElementById('btn-save-wallet');
-    btn.innerHTML = "Sellando Bóveda...";
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = "Procesando Registro...";
     btn.classList.add('pointer-events-none', 'opacity-80');
 
     try {
@@ -109,7 +135,12 @@ async function saveWallets() {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ binance: binance, bank_name: bank, bank_account: acc })
+            body: JSON.stringify({ 
+                binance: binance, 
+                bank_name: bank, 
+                bank_account: acc,
+                bank_phone: phone
+            })
         });
         
         const data = await res.json();
@@ -118,12 +149,53 @@ async function saveWallets() {
         if (data.success) {
             window.location.reload(); 
         } else {
-            btn.innerHTML = "Guardar Bóveda";
+            btn.innerHTML = originalHtml;
             btn.classList.remove('pointer-events-none', 'opacity-80');
         }
     } catch (error) {
         alert("Error de conexión al sellar la bóveda.");
-        btn.innerHTML = "Guardar Bóveda";
+        btn.innerHTML = originalHtml;
+        btn.classList.remove('pointer-events-none', 'opacity-80');
+    }
+}
+
+async function verifyWallet() {
+    const amount1 = document.getElementById('verify-amount-1').value.trim();
+    const amount2 = document.getElementById('verify-amount-2').value.trim();
+
+    if (!amount1 || !amount2) {
+        alert("Por favor, ingrese ambos montos para validar su cuenta.");
+        return;
+    }
+
+    const token = localStorage.getItem(TOKEN_KEY);
+    const btn = document.getElementById('btn-verify-wallet');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "Validando con el Banco...";
+    btn.classList.add('pointer-events-none', 'opacity-80');
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/partner/settings/wallet/verify`, {
+            method: 'POST',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ amount1: amount1, amount2: amount2 })
+        });
+        
+        const data = await res.json();
+        alert(data.message);
+        
+        if (data.success) {
+            window.location.reload(); 
+        } else {
+            btn.innerHTML = originalText;
+            btn.classList.remove('pointer-events-none', 'opacity-80');
+        }
+    } catch (error) {
+        alert("Error de red al intentar verificar los montos.");
+        btn.innerHTML = originalText;
         btn.classList.remove('pointer-events-none', 'opacity-80');
     }
 }
@@ -145,7 +217,7 @@ function openContractModal(modelName) {
     `;
 
     if (modelName === 'Neto Garantizado') {
-        contractText += `<p><strong>Cláusula 1 (Mecánica):</strong> La Tienda establece que el margen de ganancia líquida sobre el precio base del producto es inamovible. Gymenez Store inflará algorítmicamente el "Precio de Vitrina" para garantizar que el Cliente Final absorba el 10% de intermediación tecnológica y los recargos de las plataformas bancarias o procesadores.</p>`;
+        contractText += `<p><strong>Cláusula 1 (Mecánica):</strong> La Tienda establece que el margen de ganancia líquida sobre el precio base del producto es inamovible. Gymenez Store inflará algorítmicamente el "Precio de Vitrina" para garantizar que el Cliente Final absorba el 10% de intermediación tecnológica y los recargos de las platforms bancarias o procesadores.</p>`;
     } else if (modelName === 'Absorción B2B') {
         contractText += `<p><strong>Cláusula 1 (Mecánica):</strong> La Tienda establece un precio de venta fijo y competitivo en el catálogo. La Tienda asume explícitamente el pago de la intermediación tecnológica (10%) y el costo de la pasarela de pago seleccionada por el Cliente. Estos montos serán deducidos matemáticamente en el panel de Escrow antes de la liquidación de fondos.</p>`;
     } else {
