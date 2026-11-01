@@ -205,39 +205,65 @@
                             </div>
                         </div>
                         
-                        <!-- Transferencia Bancaria -->
+                        <!-- Bóveda Bancaria Híbrida (Manual + Automatizada) -->
                         <div class="bg-[#12121a] border border-white/5 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 flex flex-col min-w-0">
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
-                                <h3 class="text-sm font-[900] uppercase italic text-white break-words">Cuenta Bancaria (Nacional)</h3>
-                                <span class="bg-white/5 text-gray-400 border border-white/10 px-3 py-1 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shrink-0 self-start">Solo Transferencia</span>
+                                <h3 class="text-sm font-[900] uppercase italic text-white break-words">Cuenta Bancaria y Pago Móvil</h3>
+                                <span id="badge-wallet-status" class="bg-white/5 text-gray-400 border border-white/10 px-3 py-1 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shrink-0 self-start">Requiere Configuración</span>
                             </div>
-                            <div class="space-y-4">
+                            
+                            <!-- Formulario Principal -->
+                            <div id="payout-method-form" class="space-y-4">
                                 <div>
                                     <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Banco / Institución</label>
                                     <select id="wallet-bank-name" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-4 md:px-5 py-4 text-xs md:text-sm font-bold text-white focus:outline-none focus:border-white/30 transition-colors cursor-pointer truncate">
                                         <option value="" disabled selected>Selecciona un Banco</option>
-                                        <option value="Bancamiga">Bancamiga</option>
-                                        <option value="Bancaribe">Bancaribe</option>
-                                        <option value="Banco Activo">Banco Activo</option>
-                                        <option value="Banco Bicentenario">Banco Bicentenario</option>
-                                        <option value="Banco Caroní">Banco Caroní</option>
-                                        <option value="Banco de Venezuela">Banco de Venezuela</option>
-                                        <option value="Banco del Tesoro">Banco del Tesoro</option>
-                                        <option value="Banco Exterior">Banco Exterior</option>
-                                        <option value="Banco Mercantil">Banco Mercantil</option>
-                                        <option value="Banco Nacional de Crédito (BNC)">Banco Nacional de Crédito (BNC)</option>
-                                        <option value="Banco Plaza">Banco Plaza</option>
-                                        <option value="Banco Provincial">Banco Provincial</option>
-                                        <option value="Banco Sofitasa">Banco Sofitasa</option>
-                                        <option value="Banco Venezolano de Crédito">Banco Venezolano de Crédito</option>
-                                        <option value="Banesco">Banesco</option>
-                                        <option value="Banplus">Banplus</option>
+                                        <option value="0172">Bancamiga</option>
+                                        <option value="0114">Bancaribe</option>
+                                        <option value="0171">Banco Activo</option>
+                                        <option value="0175">Banco Bicentenario</option>
+                                        <option value="0128">Banco Caroní</option>
+                                        <option value="0102">Banco de Venezuela</option>
+                                        <option value="0163">Banco del Tesoro</option>
+                                        <option value="0115">Banco Exterior</option>
+                                        <option value="0105">Banco Mercantil</option>
+                                        <option value="0191">Banco Nacional de Crédito (BNC)</option>
+                                        <option value="0138">Banco Plaza</option>
+                                        <option value="0108">Banco Provincial</option>
+                                        <option value="0137">Banco Sofitasa</option>
+                                        <option value="0104">Banco Venezolano de Crédito</option>
+                                        <option value="0134">Banesco</option>
+                                        <option value="0174">Banplus</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Cuenta de 20 Dígitos</label>
+                                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Cuenta de 20 Dígitos (Transferencias Manuales)</label>
                                     <input type="text" id="wallet-bank-account" placeholder="0134-xxxx-xxxx-xxxx-xxxx" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-xs md:text-sm font-bold text-white focus:outline-none focus:border-white/30 transition-colors break-words">
                                 </div>
+                                <div>
+                                    <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Teléfono Pago Móvil (Liquidación Automática)</label>
+                                    <input type="text" id="wallet-bank-phone" placeholder="04141234567" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-xs md:text-sm font-bold text-white focus:outline-none focus:border-white/30 transition-colors break-words">
+                                    <p class="text-[9px] text-gray-500 mt-2 pl-1 font-medium">Se registrará automáticamente bajo la titularidad de su RIF/CI.</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Módulo de Verificación (Micro-Depósitos) -->
+                            <div id="payout-verify-form" class="space-y-4 hidden mt-6 pt-6 border-t border-white/10">
+                                <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-4">
+                                     <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">Verificación de Identidad Requerida</p>
+                                     <p class="text-[9px] text-gray-400 leading-relaxed">Se han emitido dos transferencias (micro-depósitos) menores a Bs. 1.00 hacia su banco. Ingrese los montos exactos recibidos para habilitar la liquidación automática.</p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                         <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Monto 1 (Ej. 0.37)</label>
+                                         <input type="text" id="verify-amount-1" placeholder="0.00" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-xs md:text-sm font-bold text-white focus:outline-none focus:border-blue-400 transition-colors">
+                                    </div>
+                                    <div>
+                                         <label class="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 pl-1">Monto 2 (Ej. 0.82)</label>
+                                         <input type="text" id="verify-amount-2" placeholder="0.00" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-xs md:text-sm font-bold text-white focus:outline-none focus:border-blue-400 transition-colors">
+                                    </div>
+                                </div>
+                                <button id="btn-verify-wallet" onclick="verifyWallet()" class="w-full mt-4 bg-blue-500 text-white font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-2xl hover:bg-blue-600 transition shadow-lg shrink-0">Confirmar Montos</button>
                             </div>
                         </div>
                     </div>
@@ -413,7 +439,7 @@
     <!-- SCRIPTS -->
     <script src="/static/js/store/partner_session.js"></script>
     <script src="/static/js/store/partner_profile.js"></script>
-    <script src="/static/js/store/partner_business.js?v=1.4"></script>
+    <script src="/static/js/store/partner_business.js?v=1.5"></script>
     <script src="/static/js/store/partner_main.js?v=1.1"></script>
 
 </body>
