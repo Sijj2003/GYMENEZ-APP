@@ -30,9 +30,15 @@ window.fetchTickets = async function() {
         const data = await res.json();
         if (res.ok && data.success) {
             allTickets = data.tickets;
+            
+            // 🍎 NUEVO: Actualizar el widget de saldo de VEXPay en el header
+            const masterBalanceEl = document.getElementById('master-balance');
+            if (masterBalanceEl && data.master_vexpay_balance !== undefined) {
+                masterBalanceEl.textContent = `Bs. ${parseFloat(data.master_vexpay_balance).toFixed(2)}`;
+            }
+
             renderList();
             
-            // Refrescar el dossier si hay un ticket activo
             if (activeTicketId) {
                 const t = allTickets.find(x => x.ticket_id === activeTicketId);
                 if (t) loadTicketDossier(t);
@@ -108,25 +114,25 @@ window.selectTicket = function(id) {
 };
 
 function loadTicketDossier(t) {
-    // 1. Header
     document.getElementById('t-id').textContent = t.ticket_id;
     document.getElementById('t-store-name').textContent = t.store_name;
     
     const reqDate = new Date(t.requested_at).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short' });
     document.getElementById('t-date').textContent = `Solicitado el: ${reqDate}`;
 
-    // 2. Extraer montos y dependencias visuales
     const puroUsd = t.financials?.puro_usd || 0;
     const puroVes = t.financials?.puro_ves || 0;
     const rate = t.financials?.tasa_bcv_cierre || 0;
 
-    // 3. Manejo de Estados y Cajas de Acción
     const statusB = document.getElementById('t-status');
     const actionBox = document.getElementById('payment-action-box');
     const receiptBox = document.getElementById('payment-receipt-box');
     
     const inputUsd = document.getElementById('input-ref-usd');
     const inputVes = document.getElementById('input-ref-ves');
+    
+    // 🍎 NUEVO: Contenedor del Botón de Liquidación Automática VEXPay
+    const vexpayBox = document.getElementById('vexpay-auto-box');
 
     if (t.status === 'pending_transfer') {
         statusB.textContent = 'Pendiente por Pagar';
@@ -137,12 +143,19 @@ function loadTicketDossier(t) {
         inputUsd.value = ''; 
         inputVes.value = '';
 
-        // Ocultar/Mostrar cajas de input de referencia dinámicamente
         if (puroUsd > 0) inputUsd.classList.remove('hidden');
         else inputUsd.classList.add('hidden');
 
         if (puroVes > 0) inputVes.classList.remove('hidden');
         else inputVes.classList.add('hidden');
+
+        // 🍎 Lógica Híbrida: Mostrar botón VEXPay solo si se deben Bolívares y la Bóveda está sellada (verified)
+        if (puroVes > 0 && t.partner_pago_movil_status === 'verified' && t.partner_vexpay_method_id) {
+            vexpayBox.classList.remove('hidden');
+            document.getElementById('auto-vex-amount').textContent = `Bs. ${puroVes.toFixed(2)}`;
+        } else {
+            vexpayBox.classList.add('hidden');
+        }
 
     } else {
         statusB.textContent = 'Liquidado';
@@ -155,7 +168,6 @@ function loadTicketDossier(t) {
         document.getElementById('t-receipt-date').textContent = `Pagado el: ${execDate}`;
     }
 
-    // 4. Inyectar Desglose Matemático
     document.getElementById('t-puro-usd').textContent = `$${puroUsd.toFixed(2)}`;
     
     const vesEl = document.getElementById('t-puro-ves');
@@ -170,7 +182,6 @@ function loadTicketDossier(t) {
     document.getElementById('t-bcv-ref').textContent = `Tasa BCV Cierre: Bs. ${rate.toFixed(2)}`;
     document.getElementById('t-orders-count').textContent = `${t.orders_count} Entregas procesadas`;
 
-    // 5. Inyectar Datos de Bóveda
     document.getElementById('t-binance').textContent = t.wallet_binance || 'N/A';
     document.getElementById('t-bank-name').textContent = t.wallet_bank_name || 'N/A';
     document.getElementById('t-bank-account').textContent = t.wallet_bank_account || 'N/A';
@@ -179,7 +190,7 @@ function loadTicketDossier(t) {
 // ==========================================
 // 🛡️ ACCIONES DE LIQUIDACIÓN
 // ==========================================
-window.executePayment = async function() {
+window.executeManualPayment = async function() {
     const t = allTickets.find(x => x.ticket_id === activeTicketId);
     if (!t) return;
 
@@ -189,7 +200,6 @@ window.executePayment = async function() {
     let refUsd = document.getElementById('input-ref-usd').value.trim();
     let refVes = document.getElementById('input-ref-ves').value.trim();
 
-    // Validar que se ingresen las referencias según las monedas adeudadas
     if (puroUsd > 0 && !refUsd) {
         showUIFeedback("Ingresa la referencia de Binance.", "error");
         return;
@@ -205,16 +215,34 @@ window.executePayment = async function() {
     
     const combinedReference = finalRefs.join(' | ');
 
-    if (!confirm("💰 ¿Confirmas que los fondos han sido enviados y deseas sellar este ticket como PAGADO?")) return;
+    if (!confirm("💰 LIQUIDACIÓN MANUAL: ¿Confirmas que los fondos han sido enviados y deseas sellar este ticket?")) return;
+    
+    _sendPaymentRequest({ payment_reference: combinedReference });
+};
 
+// 🍎 NUEVA FUNCIÓN: Ejecución Automática VEXPay
+window.executeAutoPayment = async function() {
+    const t = allTickets.find(x => x.ticket_id === activeTicketId);
+    if (!t) return;
+    
+    const puroVes = t.financials?.puro_ves || 0;
+
+    if (!confirm(`⚡ ALERTA DE DISPERSIÓN AUTOMÁTICA:\n\nSe deducirán Bs. ${puroVes.toFixed(2)} de tu saldo maestro en VEXPay y se enviarán de inmediato a la cuenta de ${t.store_name}.\n\n¿Estás seguro de autorizar esta operación?`)) return;
+
+    // Enviar una bandera especial para que el Backend sepa que debe disparar la API
+    _sendPaymentRequest({ auto_vexpay: true });
+};
+
+// 🍎 Función auxiliar para reciclar el Fetch (DRY Code)
+async function _sendPaymentRequest(payload) {
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/b2b/treasury/ticket/${activeTicketId}/pay`, {
-            method: 'PUT', headers: getSecureHeaders(), body: JSON.stringify({ payment_reference: combinedReference })
+            method: 'PUT', headers: getSecureHeaders(), body: JSON.stringify(payload)
         });
         const data = await res.json();
         
         if (res.ok) {
-            showUIFeedback("Liquidación sellada exitosamente.");
+            showUIFeedback("Liquidación procesada y sellada exitosamente.");
             window.fetchTickets();
         } else {
             showUIFeedback(data.error || "Error al procesar el pago.", "error");
@@ -222,7 +250,7 @@ window.executePayment = async function() {
     } catch (e) {
         showUIFeedback("Falla de red.", "error");
     }
-};
+}
 
 // ==========================================
 // 🚀 INICIALIZACIÓN
