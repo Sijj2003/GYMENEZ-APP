@@ -30,9 +30,16 @@
                 <div class="flex-shrink-0 flex items-center gap-3">
                     <h2 class="text-sm font-bold text-gray-300 uppercase tracking-widest">Tesorería B2B</h2>
                 </div>
-                <button onclick="fetchTickets()" class="w-9 h-9 rounded-xl bg-white/5 text-gray-400 border border-white/10 flex items-center justify-center hover:bg-white hover:text-black hover:border-white transition-all shadow-sm" title="Actualizar">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                </button>
+                <!-- 🍎 NUEVO WIDGET: Saldo Maestro VEXPay -->
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-[8px] text-gray-500 font-bold uppercase tracking-widest leading-none">Saldo VEXPay</p>
+                        <p id="master-balance" class="text-xs font-black text-emerald-400">Bs. --</p>
+                    </div>
+                    <button onclick="fetchTickets()" class="w-9 h-9 rounded-xl bg-white/5 text-gray-400 border border-white/10 flex items-center justify-center hover:bg-white hover:text-black hover:border-white transition-all shadow-sm" title="Actualizar">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    </button>
+                </div>
             </header>
 
             <div class="p-4 border-b border-white/5 shrink-0 bg-[#0a0a0f] space-y-3">
@@ -121,19 +128,37 @@
                         </div>
                     </div>
 
-                    <!-- Ejecución del Pago -->
-                    <div id="payment-action-box" class="bg-emerald-950/20 border border-emerald-500/30 rounded-2xl p-6">
-                        <h4 class="text-sm font-black text-emerald-500 uppercase tracking-widest mb-2">Liquidación Manual</h4>
-                        <p class="text-xs text-gray-400 mb-5">Transfiere el monto exacto a la bóveda destino e ingresa el código de referencia para sellar el ticket.</p>
+                    <!-- 🍎 NUEVO BLOQUE: Ejecución de Pagos (Híbrido) -->
+                    <div id="payment-action-box" class="space-y-4">
                         
-                        <div class="flex flex-col sm:flex-row gap-3 items-start">
-                            <div class="flex-1 w-full flex flex-col gap-2">
-                                <input type="text" id="input-ref-usd" placeholder="Ref. Binance Pay (Ej: 192837)" class="hidden w-full executive-input px-4 py-3 rounded-xl text-sm font-mono font-bold">
-                                <input type="text" id="input-ref-ves" placeholder="Ref. Transferencia/Pago Móvil" class="hidden w-full executive-input px-4 py-3 rounded-xl text-sm font-mono font-bold">
+                        <!-- Opción A: Botón de Liquidación Automática VEXPay -->
+                        <div id="vexpay-auto-box" class="hidden bg-sky-950/20 border border-sky-500/30 rounded-2xl p-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-black text-sky-500 uppercase tracking-widest flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    Liquidación Automática (VEXPay)
+                                </h4>
+                                <p class="text-[10px] text-gray-400 mt-1 max-w-md">Bóveda confirmada. El sistema deducirá <span id="auto-vex-amount" class="text-white font-bold">Bs. --</span> de tu saldo maestro y lo enviará al instante a la tienda.</p>
                             </div>
-                            <button onclick="executePayment()" class="px-6 py-3 mt-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition shadow-sm whitespace-nowrap h-full">
-                                💸 Sellar Pago
+                            <button onclick="executeAutoPayment()" class="w-full sm:w-auto px-6 py-4 bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition shadow-[0_0_15px_rgba(2,132,199,0.3)] hover:shadow-[0_0_20px_rgba(2,132,199,0.5)] whitespace-nowrap">
+                                Disparar Fondos
                             </button>
+                        </div>
+
+                        <!-- Opción B: Liquidación Manual -->
+                        <div class="bg-emerald-950/10 border border-emerald-500/20 rounded-2xl p-6">
+                            <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Cierre de Ticket Manual</h4>
+                            <p class="text-[10px] text-gray-500 mb-5">Si pagas por fuera (Binance, Zelle o transferencia de otro banco), ingresa las referencias aquí.</p>
+                            
+                            <div class="flex flex-col sm:flex-row gap-3 items-start">
+                                <div class="flex-1 w-full flex flex-col gap-2">
+                                    <input type="text" id="input-ref-usd" placeholder="Ref. Binance Pay (Ej: 192837)" class="hidden w-full executive-input px-4 py-3 rounded-xl text-sm font-mono font-bold">
+                                    <input type="text" id="input-ref-ves" placeholder="Ref. Transferencia / Pago Móvil" class="hidden w-full executive-input px-4 py-3 rounded-xl text-sm font-mono font-bold">
+                                </div>
+                                <button onclick="executeManualPayment()" class="px-6 py-3 mt-1 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 hover:text-emerald-400 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition shadow-sm whitespace-nowrap h-full">
+                                    Sellar Manualmente
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -153,6 +178,6 @@
     </main>
 
     <script src="/static/js/admin/admin_middleware.js"></script>
-    <script src="/static/js/admin/billing.js?v=1.2"></script>
+    <script src="/static/js/admin/billing.js?v=1.3"></script>
 </body>
 </html>
