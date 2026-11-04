@@ -233,7 +233,22 @@ function loadPartnerDossier(p) {
         });
     }
 
-    // 4. Tab: Finanzas, Bóveda y Contrato
+    // 🍎 4. NUEVA TAB: Cuentas Bancarias (Liquidación)
+    document.getElementById('d-wallet-binance').textContent = p.wallet_binance || 'No configurado';
+    document.getElementById('d-wallet-bank-name').textContent = p.wallet_bank_name || 'No configurado';
+    document.getElementById('d-wallet-bank-account').textContent = p.wallet_bank_account || 'No configurado';
+    document.getElementById('d-wallet-bank-phone').textContent = p.wallet_bank_phone || 'No configurado';
+    
+    const wStatusTab = document.getElementById('p-wallet-status-tab');
+    if (p.pago_movil_status === 'verified') {
+        wStatusTab.innerHTML = '<span class="text-emerald-400 font-bold uppercase tracking-widest">Verificado (VEXPay Activo)</span>';
+    } else if (p.pago_movil_status === 'pending_verification') {
+        wStatusTab.innerHTML = '<span class="text-amber-500 font-bold uppercase tracking-widest">Pendiente (Micro-depósitos)</span>';
+    } else {
+        wStatusTab.innerHTML = '<span class="text-gray-500 font-bold uppercase tracking-widest">Sin Configurar</span>';
+    }
+
+    // 5. Tab: Finanzas, Bóveda y Contrato
     document.getElementById('p-contract-model').textContent = p.commission_model || 'No Firmado';
     const btnRevoke = document.getElementById('btn-revoke-contract');
     if(p.commission_model && p.commission_model !== 'No Firmado') {
@@ -242,17 +257,7 @@ function loadPartnerDossier(p) {
         btnRevoke.classList.add('hidden');
     }
 
-    const wStatus = document.getElementById('p-wallet-status');
-    const wBtn = document.getElementById('btn-reset-wallet');
-    if (p.has_wallet) {
-        wStatus.innerHTML = '<span class="text-emerald-400 font-bold">Bóveda Sellada (Activa)</span>';
-        wBtn.classList.remove('hidden');
-    } else {
-        wStatus.innerHTML = '<span class="text-gray-500">Bóveda sin configurar / Sello roto</span>';
-        wBtn.classList.add('hidden');
-    }
-
-    // 📜 RENDERIZAR HISTORIAL DE CONTRATOS REVOCADOS
+    // Historial Legal de Contratos Revocados
     const historyList = document.getElementById('p-contract-history-list');
     historyList.innerHTML = '';
     const history = p.contract_history || [];
@@ -260,7 +265,6 @@ function loadPartnerDossier(p) {
     if(history.length === 0) {
         historyList.innerHTML = '<p class="text-xs text-gray-500 font-bold uppercase tracking-widest text-center py-4">No hay historial legal archivado.</p>';
     } else {
-        // Revertimos el array para mostrar los más recientes arriba
         [...history].reverse().forEach(h => {
             const dateStr = new Date(h.revoked_at).toLocaleString('es-VE', {
                 day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit'
@@ -333,6 +337,32 @@ window.resetWallet = async function() {
         const res = await fetch(`${API_BASE_URL}/api/admin/b2b/partner/${activePartnerId}/reset-wallet`, { method: 'PUT', headers: getSecureHeaders() });
         if(res.ok) { showUIFeedback("Sello de bóveda roto correctamente."); window.fetchPartners(); }
     } catch(e) { showUIFeedback("Falla de red.", "error"); }
+};
+
+// 🍎 NUEVO: Función para eliminar el método de pago en VEXPay
+window.resetPartnerWallet = async function(partnerId = activePartnerId) {
+    if (!partnerId) return;
+    const confirmacion = confirm("⚠️ ATENCIÓN: ¿Confirmas que deseas eliminar el método de pago bancario de este partner en VEXPay? Esto reseteará su bóveda local y le permitirá introducir un banco nuevo.");
+    if (!confirmacion) return;
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/b2b/partner/${partnerId}/wallet/reset`, {
+            method: 'POST',
+            headers: getSecureHeaders()
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+            showUIFeedback("✅ " + (data.message || "Método de pago eliminado con éxito."));
+            window.fetchPartners(); // Refrescamos el panel para actualizar estados
+        } else {
+            showUIFeedback("❌ " + (data.error || "Error al resetear la bóveda."), "error");
+        }
+    } catch (error) {
+        console.error("Error en la solicitud:", error);
+        showUIFeedback("Error crítico al intentar resetear la bóveda.", "error");
+    }
 };
 
 // 📞 Edición de Teléfono
