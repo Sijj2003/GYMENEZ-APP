@@ -116,6 +116,8 @@
                 <div class="flex overflow-x-auto hide-scroll gap-6 md:gap-8 px-5 md:px-8 border-b border-white/5 shrink-0 bg-[#050508]">
                     <button class="d-tab-btn active" data-target="d-content-kyc">Auditoría KYC</button>
                     <button class="d-tab-btn" data-target="d-content-security">Ciberseguridad</button>
+                    <!-- 🍎 NUEVA PESTAÑA: Datos de Liquidación -->
+                    <button class="d-tab-btn" data-target="d-content-wallet">Cuentas Bancarias</button>
                     <button class="d-tab-btn" data-target="d-content-finance">Bóveda & Contrato</button>
                 </div>
 
@@ -193,7 +195,63 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: Finanzas y Contrato -->
+                <!-- 🍎 Tab 3: Cuentas Bancarias (NUEVA PESTAÑA DE LIQUIDACIÓN) -->
+                <div id="d-content-wallet" class="d-tab-content hidden flex-1 overflow-y-auto p-5 md:p-8 hide-scroll">
+                    <div class="max-w-4xl space-y-6">
+                        <div class="bg-[#0a0a0f] border border-white/5 rounded-2xl p-6">
+                            <h4 class="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-4 border-b border-white/5 pb-3">Cuentas Destino para Liquidación B2B</h4>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                <!-- Cuenta Binance -->
+                                <div class="p-4 bg-gray-900/50 border border-white/5 rounded-xl">
+                                    <label class="block text-[9px] font-black text-[#F3BA2F] uppercase tracking-widest mb-2">Binance Pay (ID / Email)</label>
+                                    <p id="d-wallet-binance" class="text-sm font-mono text-white break-all">No configurado</p>
+                                </div>
+                                
+                                <!-- Cuenta Bancaria Nacional -->
+                                <div class="p-4 bg-gray-900/50 border border-white/5 rounded-xl">
+                                    <label class="block text-[9px] font-black text-sky-400 uppercase tracking-widest mb-2">Banco Nacional (Código)</label>
+                                    <p id="d-wallet-bank-name" class="text-sm font-mono text-white">No configurado</p>
+                                </div>
+
+                                <!-- Número de Cuenta -->
+                                <div class="p-4 bg-gray-900/50 border border-white/5 rounded-xl">
+                                    <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Número de Cuenta</label>
+                                    <p id="d-wallet-bank-account" class="text-sm font-mono text-white">No configurado</p>
+                                </div>
+
+                                <!-- Teléfono Pago Móvil -->
+                                <div class="p-4 bg-gray-900/50 border border-white/5 rounded-xl">
+                                    <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Teléfono Pago Móvil</label>
+                                    <p id="d-wallet-bank-phone" class="text-sm font-mono text-white">No configurado</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-sky-950/10 border border-sky-500/20 rounded-2xl p-6">
+                            <div class="flex flex-col md:flex-row justify-between items-start mb-4 gap-4">
+                                <div>
+                                    <h4 class="text-sm font-black text-sky-500 uppercase tracking-widest mb-1">Estado en Pasarela VEXPay</h4>
+                                    <p id="p-wallet-status-tab" class="text-xs text-gray-400 font-medium">Verificando estado...</p>
+                                </div>
+                                <div class="wallet-controls">
+                                    <!-- 🍎 BOTÓN DE LIBERACIÓN DE BÓVEDA CONECTADO A TU BACKEND -->
+                                    <button onclick="resetPartnerWallet(currentPartnerId)" class="w-full md:w-auto px-6 py-3 bg-red-600/20 hover:bg-red-600 border border-red-500/50 text-red-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition shadow-sm flex items-center justify-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        Eliminar Método de Pago (VEXPay)
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-black/40 border border-white/5 rounded-xl">
+                                <p class="text-[10px] text-gray-500 leading-relaxed uppercase font-bold tracking-widest">
+                                    <span class="text-white font-black">Control B2B:</span> Si el Partner cometió un error en su cuenta bancaria o desea registrar un banco distinto, utiliza este botón para borrar su método de pago en VEXPay y limpiar su registro. Esto le permitirá ingresar datos nuevos desde su panel.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Finanzas y Contrato -->
                 <div id="d-content-finance" class="d-tab-content hidden flex-1 overflow-y-auto p-5 md:p-8 hide-scroll">
                     <div class="max-w-4xl space-y-6">
                         <div class="bg-[#0a0a0f] border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -204,23 +262,6 @@
                             <button id="btn-revoke-contract" onclick="revokeContract()" class="hidden px-4 py-2 bg-orange-600/20 border border-orange-500/30 text-orange-500 hover:bg-orange-600 hover:text-white text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors shadow-sm">
                                 📜 Revocar Contrato
                             </button>
-                        </div>
-
-                        <div class="bg-sky-950/10 border border-sky-500/20 rounded-2xl p-6">
-                            <div class="flex flex-col md:flex-row justify-between items-start mb-4 gap-4">
-                                <div>
-                                    <h4 class="text-sm font-black text-sky-500 uppercase tracking-widest mb-1">Bóveda de Pagos (Wallet)</h4>
-                                    <p id="p-wallet-status" class="text-xs text-gray-400 font-medium">Verificando estado...</p>
-                                </div>
-                                <button id="btn-reset-wallet" onclick="resetWallet()" class="hidden w-full md:w-auto px-6 py-3 bg-sky-600/20 hover:bg-sky-600 border border-sky-500/50 hover:text-white text-sky-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition shadow-sm">
-                                    🔓 Romper Sello Bancario
-                                </button>
-                            </div>
-                            <div class="p-4 bg-black/40 border border-white/5 rounded-xl">
-                                <p class="text-[10px] text-gray-500 leading-relaxed uppercase font-bold tracking-widest">
-                                    <span class="text-white font-black">Protocolo de Seguridad:</span> Al configurar sus datos de cobro por primera vez, la bóveda del partner se sella automáticamente para evitar desvíos de fondos por hackers. Usa el botón superior para desellarla solo si el dueño de la tienda lo solicita explícitamente.
-                                </p>
-                            </div>
                         </div>
 
                         <!-- 📜 HISTORIAL DE CONTRATOS REVOCADOS -->
@@ -239,5 +280,24 @@
 
     <script src="/static/js/admin/admin_middleware.js"></script>
     <script src="/static/js/admin/store_orders.js?v=1.7"></script>
+    
+    <script>
+        // Lógica simple para cambiar pestañas
+        document.querySelectorAll('.d-tab-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.d-tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.d-tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                    content.classList.remove('block');
+                });
+                
+                button.classList.add('active');
+                const targetId = button.getAttribute('data-target');
+                const targetContent = document.getElementById(targetId);
+                targetContent.classList.remove('hidden');
+                targetContent.classList.add('block');
+            });
+        });
+    </script>
 </body>
 </html>
