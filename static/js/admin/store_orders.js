@@ -416,6 +416,82 @@ window.editPartnerEmail = async function() {
 };
 
 // ==========================================
+// 🍎 LÓGICA DE PARTIDAS DOBLES (TESORERÍA B2B)
+// ==========================================
+
+window.processVexPay = async function(ticketId) {
+    if (!confirm("💳 VEXPAY: Estás a punto de disparar fondos reales en Bolívares hacia el banco del partner. ¿Proceder?")) return;
+    
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/b2b/payouts/${ticketId}/process`, {
+            method: 'POST',
+            headers: getSecureHeaders(),
+            body: JSON.stringify({ payment_type: 'ves_auto' })
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+            showUIFeedback(data.message || "Fondos dispersados vía VEXPay.", "success");
+            // Aquí deberías llamar a la función que recarga la vista del ticket actual (ej. window.loadAdminTickets())
+        } else {
+            showUIFeedback(data.error || "Error al procesar VEXPay.", "error");
+        }
+    } catch(e) { showUIFeedback("Falla de conexión al procesar pago.", "error"); }
+};
+
+window.processManualBinance = async function(ticketId, refInputId) {
+    const ref = document.getElementById(refInputId)?.value;
+    if (!ref || ref.trim() === '') {
+        showUIFeedback("Debes ingresar el número de referencia de Binance Pay.", "error");
+        return;
+    }
+    
+    if (!confirm(`💵 BINANCE: ¿Confirmas que enviaste los fondos USDT y la referencia ${ref} es correcta?`)) return;
+    
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/b2b/payouts/${ticketId}/process`, {
+            method: 'POST',
+            headers: getSecureHeaders(),
+            body: JSON.stringify({ payment_type: 'binance', payment_reference: ref.trim() })
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+            showUIFeedback(data.message || "Porción de Binance liquidada.", "success");
+             // Aquí deberías llamar a la función que recarga la vista del ticket actual
+        } else {
+            showUIFeedback(data.error || "Error al procesar pago de Binance.", "error");
+        }
+    } catch(e) { showUIFeedback("Falla de conexión al procesar pago.", "error"); }
+};
+
+window.processManualVes = async function(ticketId, refInputId) {
+    const ref = document.getElementById(refInputId)?.value;
+    if (!ref || ref.trim() === '') {
+        showUIFeedback("Debes ingresar el número de referencia del Pago Móvil / Transferencia manual.", "error");
+        return;
+    }
+    
+    if (!confirm(`🏦 BANCO NACIONAL: ¿Confirmas el envío manual en Bs. con referencia ${ref}?`)) return;
+    
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/b2b/payouts/${ticketId}/process`, {
+            method: 'POST',
+            headers: getSecureHeaders(),
+            body: JSON.stringify({ payment_type: 'ves_manual', payment_reference: ref.trim() })
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+            showUIFeedback(data.message || "Porción en Bolívares liquidada manualmente.", "success");
+            // Aquí deberías llamar a la función que recarga la vista del ticket actual
+        } else {
+            showUIFeedback(data.error || "Error al procesar pago manual.", "error");
+        }
+    } catch(e) { showUIFeedback("Falla de conexión al procesar pago.", "error"); }
+};
+
+// ==========================================
 // 🚀 INICIALIZACIÓN
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
