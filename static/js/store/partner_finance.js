@@ -39,16 +39,15 @@ async function fetchFinancialData() {
     }
 }
 
-// 🛡️ REGLA B2B: Jueves 7:00 AM a Viernes 11:59 AM
+// 🛡️ REGLA B2B: Martes y Viernes desde las 8:00 AM
 function isPayoutWindowOpen() {
     const now = new Date();
-    // Ajuste simple para zona horaria local. 
-    // day: 0=Dom, 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab
+    // JS getDay(): 0=Dom, 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab
     const day = now.getDay(); 
     const hour = now.getHours();
 
-    if (day === 6 && hour >= 7) return true; // Jueves desde las 7:00 AM hasta las 23:59
-    if (day === 1 && hour < 23) return true; // Viernes desde las 00:00 hasta las 04:00 PM
+    // Martes (2) o Viernes (5) desde las 8:00 AM
+    if ((day === 2 || day === 5) && hour >= 8) return true;
     
     return false;
 }
@@ -88,7 +87,7 @@ function updateFinancialUI(snapshot) {
         setButtonState(btnPayout, false, 'Liquidación en Proceso', 'bg-white/5 text-blue-400 border-blue-500/30');
     } 
     else if (!windowOpen) {
-        setButtonState(btnPayout, false, 'Abre Jueves 7:00 AM', 'bg-white/5 text-gray-500 border-white/10');
+        setButtonState(btnPayout, false, 'Abre Martes/Viernes 8:00 AM', 'bg-white/5 text-gray-500 border-white/10');
     } 
     else if (currentLiquidableUsdEquiv <= 0) {
         setButtonState(btnPayout, false, 'Sin Fondos Disponibles', 'bg-white/5 text-gray-500 border-white/10');
@@ -209,12 +208,14 @@ window.openReceiptModal = function(ticketId) {
 
     document.getElementById('rec-id').textContent = ticket.id;
     
-    // 🍎 NUEVA MATEMÁTICA ZERO-TRUST
-    const reintegroUsd = ticket.financials.reintegro_aplicado_usd || 0;
-    // Si hubo reintegro en USD, se resta del puro_usd visual para mostrar solo las ventas, el reintegro se muestra aparte
-    const usdVentas = (ticket.financials.puro_usd || 0) - reintegroUsd; 
+    // 🍎 NUEVA MATEMÁTICA ZERO-TRUST BIMONETARIA
+    const reintegroUsdPuro = ticket.financials.reintegro_hacia_usd_puro || 0;
+    const reintegroVesPuro = ticket.financials.reintegro_hacia_ves_puro || 0;
     
-    const ves = ticket.financials.puro_ves || 0;
+    // Mostramos las ventas restando el subsidio, para que cuadre exacto con las tablas
+    const usdVentas = (ticket.financials.puro_usd || 0) - reintegroUsdPuro; 
+    const vesVentas = (ticket.financials.puro_ves || 0) - reintegroVesPuro; 
+    
     const bcv = ticket.financials.tasa_bcv_cierre || 0;
     const totalEqUsd = ticket.financials.total_equivalente_usd || 0;
 
@@ -229,6 +230,7 @@ window.openReceiptModal = function(ticketId) {
         return '<span class="text-[8px] text-gray-600 font-bold tracking-wider">N/A</span>';
     };
 
+    // Bloque Dólares Venta Real
     if (usdVentas > 0 || ticket.binance_status !== 'not_required') {
         usdBox.classList.remove('hidden');
         usdBox.classList.add('flex');
@@ -240,10 +242,11 @@ window.openReceiptModal = function(ticketId) {
         usdBox.classList.remove('flex');
     }
 
-    if (ves > 0 || ticket.ves_status !== 'not_required') {
+    // Bloque Bolívares Venta Real
+    if (vesVentas > 0 || ticket.ves_status !== 'not_required') {
         vesBox.classList.remove('hidden');
         vesBox.classList.add('flex');
-        document.getElementById('rec-ves-val').textContent = `Bs. ${ves.toFixed(2)}`;
+        document.getElementById('rec-ves-val').textContent = `Bs. ${vesVentas.toFixed(2)}`;
         const badgeEl = document.getElementById('rec-ves-badge');
         if (badgeEl) badgeEl.innerHTML = getBadgeUI(ticket.ves_status);
     } else {
@@ -251,16 +254,44 @@ window.openReceiptModal = function(ticketId) {
         vesBox.classList.remove('flex');
     }
 
+    // Bloque Dinámico de Reintegros (Soporta múltiples monedas de cashback)
     if (reintegroBox) {
-        if (reintegroUsd > 0) {
-            reintegroBox.classList.remove('hidden');
-            reintegroBox.classList.add('flex');
-            document.getElementById('rec-reintegro-val').textContent = `+$${reintegroUsd.toFixed(2)} USD`;
-            const badgeEl = document.getElementById('rec-reintegro-badge');
-            if (badgeEl) badgeEl.innerHTML = getBadgeUI(ticket.binance_status);
+        if (reintegroUsdPuro > 0 || reintegroVesPuro > 0) {
+            reintegroBox.classList.remove('hidden', 'items-center', 'justify-between');
+            reintegroBox.classList.add('flex', 'flex-col', 'gap-3', 'items-stretch');
+            
+            let htmlContent = ``;
+            
+            if (reintegroUsdPuro > 0) {
+                htmlContent += `
+                <div class="flex justify-between items-center w-full">
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-emerald-500">Subsidio USD</p>
+                        <div class="mt-1.5">${getBadgeUI(ticket.binance_status)}</div>
+                    </div>
+                    <p class="text-lg font-black text-emerald-500 italic">+$${reintegroUsdPuro.toFixed(2)} USD</p>
+                </div>`;
+            }
+            
+            if (reintegroVesPuro > 0) {
+                const eqUsd = bcv > 0 ? (reintegroVesPuro / bcv) : 0;
+                htmlContent += `
+                <div class="flex justify-between items-center w-full ${reintegroUsdPuro > 0 ? 'pt-3 border-t border-emerald-500/20' : ''}">
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-emerald-500">Subsidio VES</p>
+                        <div class="mt-1.5">${getBadgeUI(ticket.ves_status)}</div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-black text-emerald-500 italic">+Bs. ${reintegroVesPuro.toFixed(2)}</p>
+                        <p class="text-[9px] text-emerald-400/70 font-bold mt-1">~ $${eqUsd.toFixed(2)} USD</p>
+                    </div>
+                </div>`;
+            }
+            
+            reintegroBox.innerHTML = htmlContent;
         } else {
             reintegroBox.classList.add('hidden');
-            reintegroBox.classList.remove('flex');
+            reintegroBox.classList.remove('flex', 'flex-col');
         }
     }
 
