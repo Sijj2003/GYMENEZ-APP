@@ -134,23 +134,37 @@ function loadTicketDossier(t) {
     // 🍎 NUEVO: Contenedor del Botón de Liquidación Automática VEXPay
     const vexpayBox = document.getElementById('vexpay-auto-box');
 
-    if (t.status === 'pending_transfer') {
-        statusB.textContent = 'Pendiente por Pagar';
-        statusB.className = 'px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest bg-amber-500/10 text-amber-500 border border-amber-500/30';
+    // 🛡️ LÓGICA DE PAGOS PARCIALES PARA EL FRONTEND
+    const binancePaid = t.binance_status === 'paid';
+    const vesPaid = t.ves_status === 'paid';
+
+    if (t.status === 'pending_transfer' || t.status === 'partial_transfer') {
+        statusB.textContent = t.status === 'partial_transfer' ? 'Pago Parcial' : 'Pendiente por Pagar';
+        statusB.className = t.status === 'partial_transfer' 
+            ? 'px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest bg-sky-500/10 text-sky-500 border border-sky-500/30'
+            : 'px-2.5 py-1 rounded-md text-[9px] font-[900] uppercase tracking-widest bg-amber-500/10 text-amber-500 border border-amber-500/30';
+            
         actionBox.classList.remove('hidden');
         receiptBox.classList.add('hidden');
         
         inputUsd.value = ''; 
         inputVes.value = '';
 
-        if (puroUsd > 0) inputUsd.classList.remove('hidden');
-        else inputUsd.classList.add('hidden');
+        // Ocultar los inputs de las porciones que ya fueron pagadas
+        if (puroUsd > 0 && !binancePaid) {
+            inputUsd.classList.remove('hidden');
+        } else {
+            inputUsd.classList.add('hidden');
+        }
 
-        if (puroVes > 0) inputVes.classList.remove('hidden');
-        else inputVes.classList.add('hidden');
+        if (puroVes > 0 && !vesPaid) {
+            inputVes.classList.remove('hidden');
+        } else {
+            inputVes.classList.add('hidden');
+        }
 
-        // 🍎 Lógica Híbrida: Mostrar botón VEXPay solo si se deben Bolívares y la Bóveda está sellada (verified)
-        if (puroVes > 0 && t.partner_pago_movil_status === 'verified' && t.partner_vexpay_method_id) {
+        // Mostrar botón VEXPay solo si se deben Bolívares (aún no pagados) y la bóveda está sellada
+        if (puroVes > 0 && !vesPaid && t.partner_pago_movil_status === 'verified' && t.partner_vexpay_method_id) {
             vexpayBox.classList.remove('hidden');
             document.getElementById('auto-vex-amount').textContent = `Bs. ${puroVes.toFixed(2)}`;
         } else {
@@ -163,7 +177,13 @@ function loadTicketDossier(t) {
         actionBox.classList.add('hidden');
         receiptBox.classList.remove('hidden');
         
-        document.getElementById('t-receipt-ref').textContent = `Ref: ${t.payment_reference || 'N/A'}`;
+        // Formatear referencia para mostrar ambas si existen
+        let finalRefDisplay = t.payment_reference || 'N/A';
+        if (t.binance_reference && t.ves_reference && t.binance_reference !== t.ves_reference) {
+             finalRefDisplay = `BIN: ${t.binance_reference} | VES: ${t.ves_reference}`;
+        }
+        
+        document.getElementById('t-receipt-ref').textContent = `Ref: ${finalRefDisplay}`;
         const execDate = t.executed_at ? new Date(t.executed_at).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short' }) : '--';
         document.getElementById('t-receipt-date').textContent = `Pagado el: ${execDate}`;
     }
@@ -188,7 +208,7 @@ function loadTicketDossier(t) {
 }
 
 // ==========================================
-// 🛡️ ACCIONES DE LIQUIDACIÓN
+// 🛡️ ACCIONES DE LIQUIDACIÓN (AJUSTADAS A ZERO-TRUST)
 // ==========================================
 window.executeManualPayment = async function() {
     const t = allTickets.find(x => x.ticket_id === activeTicketId);
@@ -196,28 +216,41 @@ window.executeManualPayment = async function() {
 
     const puroUsd = t.financials?.puro_usd || 0;
     const puroVes = t.financials?.puro_ves || 0;
+    
+    const binancePaid = t.binance_status === 'paid';
+    const vesPaid = t.ves_status === 'paid';
 
     let refUsd = document.getElementById('input-ref-usd').value.trim();
     let refVes = document.getElementById('input-ref-ves').value.trim();
 
-    if (puroUsd > 0 && !refUsd) {
+    // Validar referencias solo de lo que se deba
+    if (puroUsd > 0 && !binancePaid && !refUsd) {
         showUIFeedback("Ingresa la referencia de Binance.", "error");
         return;
     }
-    if (puroVes > 0 && !refVes) {
+    if (puroVes > 0 && !vesPaid && !refVes) {
         showUIFeedback("Ingresa la referencia del Banco.", "error");
         return;
     }
 
-    let finalRefs = [];
-    if (puroUsd > 0) finalRefs.push(`BIN: ${refUsd}`);
-    if (puroVes > 0) finalRefs.push(`VES: ${refVes}`);
-    
-    const combinedReference = finalRefs.join(' | ');
+    if (!confirm("💰 LIQUIDACIÓN MANUAL: ¿Confirmas que los fondos han sido enviados y deseas sellar esta porción?")) return;
 
-    if (!confirm("💰 LIQUIDACIÓN MANUAL: ¿Confirmas que los fondos han sido enviados y deseas sellar este ticket?")) return;
-    
-    _sendPaymentRequest({ payment_reference: combinedReference });
+    // 🛡️ Enviar las peticiones de forma individual para respetar la arquitectura de Partida Doble del Backend
+    try {
+        if (puroUsd > 0 && !binancePaid && refUsd) {
+            await _sendPaymentRequestCore({ payment_type: 'binance', payment_reference: refUsd });
+        }
+        
+        if (puroVes > 0 && !vesPaid && refVes) {
+            await _sendPaymentRequestCore({ payment_type: 'ves_manual', payment_reference: refVes });
+        }
+        
+        showUIFeedback("Transacciones manuales procesadas exitosamente.");
+        window.fetchTickets();
+        
+    } catch (e) {
+        showUIFeedback("Error durante la liquidación manual.", "error");
+    }
 };
 
 // 🍎 NUEVA FUNCIÓN: Ejecución Automática VEXPay
@@ -229,26 +262,35 @@ window.executeAutoPayment = async function() {
 
     if (!confirm(`⚡ ALERTA DE DISPERSIÓN AUTOMÁTICA:\n\nSe deducirán Bs. ${puroVes.toFixed(2)} de tu saldo maestro en VEXPay y se enviarán de inmediato a la cuenta de ${t.store_name}.\n\n¿Estás seguro de autorizar esta operación?`)) return;
 
-    // Enviar una bandera especial para que el Backend sepa que debe disparar la API
-    _sendPaymentRequest({ auto_vexpay: true });
+    // 🛡️ CORRECCIÓN: Enviar la directiva Zero-Trust que el backend espera
+    try {
+        await _sendPaymentRequestCore({ payment_type: 'ves_auto' });
+        showUIFeedback("Dispersión VEXPay ejecutada exitosamente.");
+        window.fetchTickets();
+    } catch (e) {
+        // El error ya es manejado por el Core
+    }
 };
 
-// 🍎 Función auxiliar para reciclar el Fetch (DRY Code)
-async function _sendPaymentRequest(payload) {
+// 🍎 Función auxiliar asíncrona centralizada
+async function _sendPaymentRequestCore(payload) {
     try {
         const res = await fetch(`${API_BASE_URL}/api/admin/b2b/treasury/ticket/${activeTicketId}/pay`, {
             method: 'PUT', headers: getSecureHeaders(), body: JSON.stringify(payload)
         });
         const data = await res.json();
         
-        if (res.ok) {
-            showUIFeedback("Liquidación procesada y sellada exitosamente.");
-            window.fetchTickets();
-        } else {
+        if (!res.ok) {
             showUIFeedback(data.error || "Error al procesar el pago.", "error");
+            throw new Error(data.error); // Detiene la ejecución si falla (importante para pagos dobles)
         }
+        
+        return data;
     } catch (e) {
-        showUIFeedback("Falla de red.", "error");
+        if (e.message !== "Error al procesar el pago.") {
+           showUIFeedback("Falla de red.", "error");
+        }
+        throw e;
     }
 }
 
