@@ -423,8 +423,8 @@ window.processVexPay = async function(ticketId) {
     if (!confirm("💳 VEXPAY: Estás a punto de disparar fondos reales en Bolívares hacia el banco del partner. ¿Proceder?")) return;
     
     try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/b2b/payouts/${ticketId}/process`, {
-            method: 'POST',
+        const res = await fetch(`${API_BASE_URL}/api/admin/b2b/treasury/ticket/${ticketId}/pay`, {
+            method: 'PUT',
             headers: getSecureHeaders(),
             body: JSON.stringify({ payment_type: 'ves_auto' })
         });
@@ -449,8 +449,8 @@ window.processManualBinance = async function(ticketId, refInputId) {
     if (!confirm(`💵 BINANCE: ¿Confirmas que enviaste los fondos USDT y la referencia ${ref} es correcta?`)) return;
     
     try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/b2b/payouts/${ticketId}/process`, {
-            method: 'POST',
+        const res = await fetch(`${API_BASE_URL}/api/admin/b2b/treasury/ticket/${ticketId}/pay`, {
+            method: 'PUT',
             headers: getSecureHeaders(),
             body: JSON.stringify({ payment_type: 'binance', payment_reference: ref.trim() })
         });
@@ -475,8 +475,8 @@ window.processManualVes = async function(ticketId, refInputId) {
     if (!confirm(`🏦 BANCO NACIONAL: ¿Confirmas el envío manual en Bs. con referencia ${ref}?`)) return;
     
     try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/b2b/payouts/${ticketId}/process`, {
-            method: 'POST',
+        const res = await fetch(`${API_BASE_URL}/api/admin/b2b/treasury/ticket/${ticketId}/pay`, {
+            method: 'PUT',
             headers: getSecureHeaders(),
             body: JSON.stringify({ payment_type: 'ves_manual', payment_reference: ref.trim() })
         });
