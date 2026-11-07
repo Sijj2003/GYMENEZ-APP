@@ -47,7 +47,7 @@ function isPayoutWindowOpen() {
     const hour = now.getHours();
 
     // Martes (2) o Viernes (5) desde las 8:00 AM
-    if ((day === 2 || day === 5) && hour >= 8) return true;
+    if ((day === 6 || day === 5) && hour >= 8) return true;
     
     return false;
 }
