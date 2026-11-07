@@ -82,7 +82,7 @@ function updateFinancialUI(snapshot) {
 
     // 🛡️ VALIDACIÓN ESTRICTA: Ventana de tiempo y Límite de 1 por semana
     const windowOpen = isPayoutWindowOpen();
-    const hasActiveTicket = snapshot.transactions.some(tx => tx.status === 'payout_requested' || tx.status === 'ticket_pending');
+    const hasActiveTicket = snapshot.transactions.some(tx => tx.status === 'payout_requested' || tx.status === 'ticket_pending' || tx.status === 'ticket_partial');
 
     if (hasActiveTicket) {
         setButtonState(btnPayout, false, 'Liquidación en Proceso', 'bg-white/5 text-blue-400 border-blue-500/30');
@@ -129,7 +129,13 @@ function renderTransactions(transactions) {
             if (tx.status === 'ticket_paid') {
                 badge = `<span class="text-[9px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Pagado</span>`;
                 icon = `<div class="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500 shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        </div>`;
+                actionBtn = `<button onclick="openReceiptModal('${tx.id}')" class="mt-2 text-[9px] font-black uppercase tracking-widest text-[#FFC300] hover:text-white flex items-center justify-end gap-1 w-full transition">Ver Recibo <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>`;
+            } else if (tx.status === 'ticket_partial') {
+                badge = `<span class="text-[9px] font-black uppercase tracking-widest text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">Pago Parcial</span>`;
+                icon = `<div class="w-10 h-10 rounded-full bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-500 shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>`;
                 actionBtn = `<button onclick="openReceiptModal('${tx.id}')" class="mt-2 text-[9px] font-black uppercase tracking-widest text-[#FFC300] hover:text-white flex items-center justify-end gap-1 w-full transition">Ver Recibo <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>`;
             } else {
@@ -137,6 +143,7 @@ function renderTransactions(transactions) {
                 icon = `<div class="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>`;
+                actionBtn = `<button onclick="openReceiptModal('${tx.id}')" class="mt-2 text-[9px] font-black uppercase tracking-widest text-[#FFC300] hover:text-white flex items-center justify-end gap-1 w-full transition">Ver Desglose <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>`;
             }
         } else {
             // RENDERIZADO DE ORDEN INDIVIDUAL
@@ -202,68 +209,86 @@ window.openReceiptModal = function(ticketId) {
 
     document.getElementById('rec-id').textContent = ticket.id;
     
-    const usd = ticket.financials.puro_usd || 0;
+    // 🍎 NUEVA MATEMÁTICA ZERO-TRUST
+    const reintegroUsd = ticket.financials.reintegro_aplicado_usd || 0;
+    // Si hubo reintegro en USD, se resta del puro_usd visual para mostrar solo las ventas, el reintegro se muestra aparte
+    const usdVentas = (ticket.financials.puro_usd || 0) - reintegroUsd; 
+    
     const ves = ticket.financials.puro_ves || 0;
     const bcv = ticket.financials.tasa_bcv_cierre || 0;
-    
-    // 🍎 NUEVO: Extraer reintegro y total
-    const reintegro = ticket.financials.reintegro_aplicado_usd || 0;
     const totalEqUsd = ticket.financials.total_equivalente_usd || 0;
 
     const usdBox = document.getElementById('rec-usd-box');
     const vesBox = document.getElementById('rec-ves-box');
-    const reintegroBox = document.getElementById('rec-reintegro-box'); // 🍎 NUEVO CONTENEDOR
+    const reintegroBox = document.getElementById('rec-reintegro-box'); 
+    
+    // Función auxiliar para los badges independientes
+    const getBadgeUI = (status) => {
+        if (status === 'paid') return '<span class="px-2 py-0.5 rounded text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold tracking-wider">Transferido</span>';
+        if (status === 'pending') return '<span class="px-2 py-0.5 rounded text-[8px] bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold tracking-wider">Procesando</span>';
+        return '<span class="text-[8px] text-gray-600 font-bold tracking-wider">N/A</span>';
+    };
 
-    if (usd > 0) {
+    if (usdVentas > 0 || ticket.binance_status !== 'not_required') {
         usdBox.classList.remove('hidden');
         usdBox.classList.add('flex');
-        document.getElementById('rec-usd-val').textContent = `$${usd.toFixed(2)}`;
+        document.getElementById('rec-usd-val').textContent = `$${usdVentas.toFixed(2)}`;
+        const badgeEl = document.getElementById('rec-usd-badge');
+        if (badgeEl) badgeEl.innerHTML = getBadgeUI(ticket.binance_status);
     } else {
         usdBox.classList.add('hidden');
         usdBox.classList.remove('flex');
     }
 
-    if (ves > 0) {
+    if (ves > 0 || ticket.ves_status !== 'not_required') {
         vesBox.classList.remove('hidden');
         vesBox.classList.add('flex');
         document.getElementById('rec-ves-val').textContent = `Bs. ${ves.toFixed(2)}`;
-        document.getElementById('rec-ves-ref').textContent = `~ $${(ves / bcv).toFixed(2)} USD (Ref)`;
+        const badgeEl = document.getElementById('rec-ves-badge');
+        if (badgeEl) badgeEl.innerHTML = getBadgeUI(ticket.ves_status);
     } else {
         vesBox.classList.add('hidden');
         vesBox.classList.remove('flex');
     }
 
-    // 🍎 Mostrar el Reintegro solo si aplica, con su equivalente en Bolívares
     if (reintegroBox) {
-        if (reintegro > 0) {
+        if (reintegroUsd > 0) {
             reintegroBox.classList.remove('hidden');
             reintegroBox.classList.add('flex');
-            document.getElementById('rec-reintegro-val').textContent = `+$${reintegro.toFixed(2)} USD`;
-            
-            const refEl = document.getElementById('rec-reintegro-ref');
-            if (refEl) refEl.textContent = `~ Bs. ${(reintegro * bcv).toFixed(2)} (Ref)`;
+            document.getElementById('rec-reintegro-val').textContent = `+$${reintegroUsd.toFixed(2)} USD`;
+            const badgeEl = document.getElementById('rec-reintegro-badge');
+            if (badgeEl) badgeEl.innerHTML = getBadgeUI(ticket.binance_status);
         } else {
             reintegroBox.classList.add('hidden');
             reintegroBox.classList.remove('flex');
         }
     }
 
-    // 🍎 Pintar el Total Final Consolidado (USD y VES)
     const totalEl = document.getElementById('rec-total-val');
-    const totalVesEl = document.getElementById('rec-total-ref');
     if (totalEl) {
         totalEl.textContent = `$${totalEqUsd.toFixed(2)} USD`;
-        if (totalVesEl) {
-            totalVesEl.textContent = `~ Bs. ${(totalEqUsd * bcv).toFixed(2)}`;
-        }
     }
 
     document.getElementById('rec-bcv').textContent = `Bs. ${bcv.toFixed(2)}`;
     document.getElementById('rec-orders').textContent = `${ticket.orders_count} Entregas`;
     
-    const execDate = ticket.executed_at && ticket.executed_at !== 'None' ? new Date(ticket.executed_at).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short' }) : 'Pendiente';
+    // Título del footer del modal basado en el estado
+    const footerTitleEl = document.getElementById('rec-footer-title');
+    if (footerTitleEl) {
+         if (ticket.ticket_status === 'paid') {
+             footerTitleEl.textContent = 'LIQUIDACIÓN COMPLETADA';
+             footerTitleEl.className = 'text-[9px] font-bold uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-md border border-emerald-500/20 mb-2 inline-block';
+         } else if (ticket.ticket_status === 'partial_transfer') {
+             footerTitleEl.textContent = 'PAGO PARCIAL ENVIADO';
+             footerTitleEl.className = 'text-[9px] font-bold uppercase tracking-widest text-sky-400 bg-sky-500/10 px-3 py-1 rounded-md border border-sky-500/20 mb-2 inline-block';
+         } else {
+             footerTitleEl.textContent = 'TICKET EN ESPERA';
+             footerTitleEl.className = 'text-[9px] font-bold uppercase tracking-widest text-blue-400 bg-blue-500/10 px-3 py-1 rounded-md border border-blue-500/20 mb-2 inline-block';
+         }
+    }
+
+    const execDate = ticket.executed_at && ticket.executed_at !== 'None' ? new Date(ticket.executed_at).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short' }) : 'Asignando recursos...';
     document.getElementById('rec-date').textContent = execDate;
-    document.getElementById('rec-ref').textContent = ticket.payment_reference || 'No registrada';
 
     const modal = document.getElementById('receipt-modal');
     modal.classList.remove('hidden');
