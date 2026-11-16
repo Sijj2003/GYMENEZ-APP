@@ -1,17 +1,19 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { 
-      "source": "/fitness", 
-      "destination": "/templates/information/fitness.html" 
-    },
-    { 
-      "source": "/eats", 
-      "destination": "/templates/information/eats.html" 
-    },
-    { 
-      "source": "/on", 
-      "destination": "/templates/information/on.html" 
+    { "source": "/fitness",  "destination": "/information/fitness.html" },
+    { "source": "/eats",     "destination": "/information/eats.html" },
+    { "source": "/on",       "destination": "/information/on.html" },
+    { "source": "/store",    "destination": "/store/home.html" },
+    { "source": "/terms",    "destination": "/terms.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options",        "value": "SAMEORIGIN" }
+      ]
     }
   ]
 }
