@@ -6,10 +6,10 @@ Disallow: /apps/admin/
 Disallow: /apps/user/
 Disallow: /billing/
 
-# Bloqueo de lógica interna y bases de datos
+# Bloqueo de lógica interna
 Disallow: /static/js/admin/
 Disallow: /static/js/dashboard/
 Disallow: /static/js/billing/
 
 # Enlace directo al mapa estructural
-Sitemap: https://gymenez.com/sitemap.xml
+Sitemap: https://www.gymenez.com/sitemap.xml
