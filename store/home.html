@@ -7,15 +7,35 @@
     <meta name="description" content="Gymenez Store: suplementos, indumentaria técnica y accesorios deportivos de élite. Compra directo de tiendas aliadas verificadas en Venezuela.">
     <link rel="canonical" href="https://www.gymenez.com/store/home.html" />
 
-      <!-- Open Graph -->
+    <!-- Open Graph -->
     <meta property="og:title"       content="Gymenez Store | Marketplace Deportivo">
     <meta property="og:description" content="Suplementos, ropa técnica y accesorios deportivos. Tiendas aliadas verificadas en un solo lugar.">
     <meta property="og:url"         content="https://www.gymenez.com/store/home.html">
     <meta property="og:type"        content="website">
     <meta property="og:site_name"   content="Gymenez">
+
+    <!-- Schema.org -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Store",
+      "name": "Gymenez Store",
+      "alternateName": "Gymenez Marketplace",
+      "url": "https://www.gymenez.com/store/home.html",
+      "description": "Marketplace oficial de Gymenez. Suplementos, indumentaria técnica y accesorios deportivos de tiendas aliadas verificadas.",
+      "currenciesAccepted": "USD, VES",
+      "paymentAccepted": "Transferencia, Pago móvil, Zelle",
+      "areaServed": "Venezuela",
+      "parentOrganization": {
+        "@type": "Organization",
+        "name": "Gymenez",
+        "url": "https://www.gymenez.com"
+      }
+    }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/static/css/store/home.css">
-    
     <script>
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { gymenez: { dark: '#030305', accent: '#FFC300' } } } } }
     </script>
