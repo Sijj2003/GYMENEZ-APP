@@ -39,6 +39,15 @@
     <script>
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { gymenez: { dark: '#030305', accent: '#FFC300' } } } } }
     </script>
+    <style>
+        .logo-gymenez-brand {
+            background: linear-gradient(90deg, #FFC300 0%, #FFC300 48%, #FFFFFF 52%, #FFFFFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: inline-block;
+        }
+    </style>
 </head>
 <body class="selection:bg-[#FFC300] selection:text-black min-h-screen flex flex-col relative pb-20 md:pb-0">
 
@@ -58,14 +67,8 @@
     
     <!-- NUEVO LOGO GYMENEZ STORE OPTIMIZADO -->
     <a href="/store/home.html" class="flex flex-col items-center justify-center group z-20">
-        <!-- Texto para Google (SEO) -->
-        <span class="sr-only">Gymenez Store</span>
-
-        <!-- Estructura visual animada -->
-        <div class="flex items-center leading-none" aria-hidden="true">
-            <span class="text-[#FFC300] font-[900] text-xl md:text-2xl uppercase italic tracking-tighter transition-transform group-hover:scale-105">GYM</span>
-            <span class="text-white font-[900] text-xl md:text-2xl uppercase italic tracking-tighter">ENEZ</span>
-        </div>
+        <!-- Logo Unificado para SEO y Renderizado Visual -->
+        <span class="logo-gymenez-brand font-[900] text-xl md:text-2xl uppercase italic tracking-tighter transition-transform group-hover:scale-105 leading-none">GYMENEZ</span>
         
         <!-- Subtítulo STORE -->
         <span class="text-white text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em] underline decoration-1 underline-offset-[3px] decoration-white/50 -mt-1 ml-2 transition-all duration-300 group-hover:decoration-[#FFC300]">
